@@ -16,6 +16,22 @@ public record struct AtelInst(byte instruction, ushort? operand) {
     }
 }
 
+/*
+ * The REQ family of opcodes can be prefixed with:
+ * - `F` ("Force") to force the request to be sent
+ *    A normal REQ opcode is aborted/fails if the target worker already has a queued same-priority request
+ * - `T` ("Tagged") to only send the request if an identical one is not already pending
+ * - `B` ("Branching") to only send the request if a predicate allows it.
+ *    It is unknown how Branching is meant to be used, or what the predicate is.
+ * - `P` ("Player") to send the reqeuest to a specific Chr in combat
+ * The Branching prefix may be combined with the Force and Tagged prefixes.
+ * Other prefixes cannot be combined
+ * 
+ * Additionally, REQ opcodes can be suffixed with:
+ * - `SW` ("Start Wait") to await the start of the requested function before continuing execution of the script
+ * - `EW` ("End Wait") to await the end of the requested function before continuing execution of the script
+ */
+
 public enum AtelOp : byte {
     NOP        = 0x0,
     LOR        = 0x1,
@@ -71,12 +87,12 @@ public enum AtelOp : byte {
     JSR        = 0xB3,
     RTS        = 0x34,
     CALL       = 0xB5,
-    REQ        = 0x36, // Request execution
-    REQSW      = 0x37, // Request execution (wait for start)
-    REQEW      = 0x38, // Request execution (wait for end)
-    PREQ       = 0x39, // "Player" request execution
-    PREQSW     = 0x3A, // "Player" request execution (wait for start)
-    PREQEW     = 0x3B, // "Player" request execution (wait for end)
+    REQ        = 0x36,
+    REQSW      = 0x37,
+    REQEW      = 0x38,
+    PREQ       = 0x39,
+    PREQSW     = 0x3A,
+    PREQEW     = 0x3B,
     RET        = 0x3C,
     RETN       = 0x3D,
     RETT       = 0x3E,
@@ -86,21 +102,21 @@ public enum AtelOp : byte {
     PUSHT      = 0xC2,
     PUSHVP     = 0xC3,
     PUSHFIX    = 0xC4,
-    FREQ       = 0x45, // Request execution (Force)
-    TREQ       = 0x46, // Request execution (if it is not already requested)
-    BREQ       = 0x47, // Request execution (Branching)
-    BFREQ      = 0x48, // Request execution (Branching) (Force)
-    BTREQ      = 0x49, // Request execution (Branching) (if it is not already requestedd)
-    FREQSW     = 0x4A, // Request execution (Force) (wait for start)
-    TREQSW     = 0x4B, // Request execution (if it is not already requested) (wait for start)
-    BREQSW     = 0x4C, // Request execution (Branching) (wait for start)
-    BFREQSW    = 0x4D, // Request execution (Branching) (Force) (wait for start)
-    BTREQSW    = 0x4E, // Request execution (Branching) (if it is not already requested) (wait for start)
-    FREQEW     = 0x4F, // Request execution (Force) (wait for end)
-    TREQEW     = 0x50, // Request execution (if it is not already requested) (wait for end)
-    BREQEW     = 0x51, // Request execution (Branching) (wait for end)
-    BFREQEW    = 0x52, // Request execution (Branching) (Force) (wait for end)
-    BTREQEW    = 0x53, // Request execution (Branching) (if it is not already requested) (wait for end)
+    FREQ       = 0x45,
+    TREQ       = 0x46,
+    BREQ       = 0x47,
+    BFREQ      = 0x48,
+    BTREQ      = 0x49,
+    FREQSW     = 0x4A,
+    TREQSW     = 0x4B,
+    BREQSW     = 0x4C,
+    BFREQSW    = 0x4D,
+    BTREQSW    = 0x4E,
+    FREQEW     = 0x4F,
+    TREQEW     = 0x50,
+    BREQEW     = 0x51,
+    BFREQEW    = 0x52,
+    BTREQEW    = 0x53,
     DRET       = 0x54,
     POPXJMP    = 0xD5,
     POPXCJMP   = 0xD6,

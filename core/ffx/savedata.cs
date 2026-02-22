@@ -150,10 +150,10 @@ public unsafe struct SaveData {
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public struct JechtSpheresData {
-        public ushort flags_spheres_seen;
-        private byte __0x2;
-        public byte collected_amount;
+    public struct JechtSphereData {
+        public  ushort flags_spheres_seen;
+        private byte   __0x2;
+        public  byte   collected_amount;
 
         public bool seen_besaid_village     { readonly get { return flags_spheres_seen.get_bit(0); } set { flags_spheres_seen.set_bit(0, value); } }
         public bool seen_thunder_plains     { readonly get { return flags_spheres_seen.get_bit(1); } set { flags_spheres_seen.set_bit(1, value); } }

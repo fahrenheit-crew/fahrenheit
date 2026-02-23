@@ -193,6 +193,8 @@ public unsafe struct Chr {
     [FieldOffset(0xDCC)] public byte     stat_death;
     [FieldOffset(0xDCD)] public bool     stat_escape_flag;
     [FieldOffset(0xDCE)] public byte     stat_stone;
+    [FieldOffset(0xDD0)] public bool     capture;  // Set to True in MsCalcCommand if command uses weapon properties and attacker has Capture auto-ability
+    [FieldOffset(0xDD1)] public bool     captured; // Set to True on death if capture is True and the monster has a valid capture index
     [FieldOffset(0xDD2)] public bool     stat_exist_flag;
     [FieldOffset(0xDD6)] public byte     stat_action;
     [FieldOffset(0xDD7)] public bool     in_ctb_list;

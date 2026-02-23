@@ -233,7 +233,11 @@ public unsafe struct Btl {
     [FieldOffset(0x2008)] public       uint   last_com;
     [FieldOffset(0x210C)] public       byte   ambush_state;
 
-    // Can only capture monsters if 0. save_data->tidus_limit_uses only increases if not 2. Cannot steal if 2? PlySave battle_count and enemies_defeated fields only increment if not 2.
+    // In vanilla:
+    // - Can only capture monsters if 0.
+    // - save_data->tidus_limit_uses only increases if not 2.
+    // - Cannot steal if 2?
+    // - PlySave battle_count and enemies_defeated fields only increment if not 2.
     [FieldOffset(0x2115)] public       byte   battle_type; 
 
     [FieldOffset(0x2121)] public       byte   battle_end_type;

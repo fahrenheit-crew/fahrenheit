@@ -10,26 +10,27 @@
     <File Path="README.md" />
     <File Path="THIRD-PARTY-NOTICES" />
   </Folder>
-  <Project Path="core/fh/Fahrenheit.csproj" />
-  <Project Path="core/runtime/Fahrenheit.Runtime.csproj" />
-  <Project Path="core/stage0/Fahrenheit.Loader.Stage0.vcxproj">
-    <Platform Solution="*|Any CPU" Project="Win32" />
-    <Platform Solution="*|ARM64" Project="x64" />
-  </Project>
-  <Project Path="core/stage1/Fahrenheit.Loader.Stage1.vcxproj">
-    <Platform Solution="*|Any CPU" Project="Win32" />
-    <Platform Solution="*|ARM64" Project="x64" />
-  </Project>
   <Project Path="core/atelier/Fahrenheit.Tools.Atelier.csproj" />
   <Project Path="core/dedit/Fahrenheit.Tools.DEdit.csproj" />
   <Project Path="core/eedit/Fahrenheit.Tools.EEdit.csproj" />
+  <Project Path="core/fh/Fahrenheit.csproj" />
   <Project Path="core/inspector/Fahrenheit.Tools.Inspector.csproj" />
   <Project Path="core/modmgr/Fahrenheit.Tools.ModManager.csproj" />
+  <Project Path="core/runtime/Fahrenheit.Runtime.csproj" />
+  <Project Path="core/sdk/Fahrenheit.Sdk.csproj" />
+  <Project Path="core/stage0/Fahrenheit.Loader.Stage0.vcxproj" >
+    <Platform Solution="*|Any CPU" Project="Win32" />
+    <Platform Solution="*|ARM64" Project="x64" />
+  </Project>
+  <Project Path="core/stage1/Fahrenheit.Loader.Stage1.vcxproj" >
+    <Platform Solution="*|Any CPU" Project="Win32" />
+    <Platform Solution="*|ARM64" Project="x64" />
+  </Project>
   <Project Path="core/step/Fahrenheit.Tools.STEP.csproj" />
-  <Project Path="test/Fahrenheit.Tests.csproj" />
   <Project Path="mods/csr/Fahrenheit.Mods.CSR.csproj" />
   <Project Path="mods/dbg/Fahrenheit.Mods.Debug.csproj" />
   <Project Path="mods/efp/Fahrenheit.Mods.EFP.csproj" />
   <Project Path="mods/template/Fahrenheit.Mods.Template.csproj" />
   <Project Path="mods/truerng/Fahrenheit.Mods.TrueRNG.csproj" />
+  <Project Path="test/Fahrenheit.Tests.csproj" />
 </Solution>

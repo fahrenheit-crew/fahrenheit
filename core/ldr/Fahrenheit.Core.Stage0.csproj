@@ -1,0 +1,41 @@
+﻿<Project>
+
+    <!-- ASSEMBLY BASIC PROPERTIES -->
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>disable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <RuntimeIdentifier>win-x86</RuntimeIdentifier>
+    </PropertyGroup>
+
+    <!-- ASSEMBLY ADDITIONAL PROPERTIES -->
+    <PropertyGroup>
+        <AssemblyName>fhldr</AssemblyName>
+        <AssemblyTitle>Fahrenheit 'Stage 0' Loader, Managed</AssemblyTitle>
+        <Product>&gt;Fahrenheit 'Stage 0' Loader, Managed</Product>
+    </PropertyGroup>
+
+    <!-- PUBLISH SETTINGS -->
+    <PropertyGroup>
+        <PublishSingleFile>true</PublishSingleFile>
+        <SelfContained>false</SelfContained>
+    </PropertyGroup>
+
+    <!-- SDK REFERENCES -->
+    <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
+    <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+
+    <!-- SHARED FILE LINKS -->
+    <ItemGroup>
+        <None Include="$(SolutionDir).editorconfig" Link=".editorconfig" />
+    </ItemGroup>
+
+    <!-- PACKAGE REFERENCES -->
+    <ItemGroup>
+        <PackageReference Include="System.CommandLine" Version="2.0.0-beta5.25306.1" />
+        <PackageReference Include="TerraFX.Interop.Windows" Version="10.0.26100.6" />
+    </ItemGroup>
+
+</Project>

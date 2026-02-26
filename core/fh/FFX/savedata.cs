@@ -244,7 +244,8 @@ public unsafe struct SaveData {
     [FieldOffset(0x3D10)] public       uint           unlocked_primers;
     [FieldOffset(0x3D14)] public       uint           battle_count;
     [FieldOffset(0x3D48)] public       uint           gil;
-    [FieldOffset(0x3D58)] public fixed byte           party_order[20];
+    [FieldOffset(0x3D58)] public fixed byte           party_frontline[3];
+    [FieldOffset(0x3D5B)] public fixed byte           party_backline[17];
     [FieldOffset(0x3D6C)] public       LimitAbilityMap     ability_map_limit;
     [FieldOffset(0x3DA4)] public       uint           yojimbo_compatibility;
     [FieldOffset(0x3DA8)] public       uint           yojimbo_type; // unknown size

@@ -33,9 +33,9 @@
         Custom display attributes.
         -->
         
-        <Company>https://github.com/peppy-enterprises/fahrenheit</Company>
+        <Company>https://github.com/fahrenheit-crew/fahrenheit</Company>
         <Copyright>Copyright © The Fahrenheit contributors</Copyright>
-        <Version>1.0.0-alpha05</Version>
+        <Version>1.0.0-alpha07</Version>
 	</PropertyGroup>
     
     <PropertyGroup>

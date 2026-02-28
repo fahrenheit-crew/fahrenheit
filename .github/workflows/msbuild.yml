@@ -28,9 +28,12 @@ env:
   FEED_URL: https://nuget.pkg.github.com/fahrenheit-crew/index.json
   VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/fahrenheit-crew/index.json,readwrite"
 
+# packages permission is for NuGet caching of Detours/nethost build artifacts, https://learn.microsoft.com/en-us/vcpkg/consume/binary-caching-github-packages?pivots=windows-runner
+# id-write permission is for NuGet Trusted Publishing, https://learn.microsoft.com/en-us/nuget/nuget-org/trusted-publishing
 permissions:
   contents: write
   packages: write
+  id-token: write  # enable GitHub OIDC token issuance for this job
 
 jobs:
   build:
@@ -107,3 +110,23 @@ jobs:
       working-directory: ${{ github.workspace }}
       shell: pwsh
       run: gh release upload ${{ github.event.release.tag_name }} fahrenheit_${{ matrix.os }}_${{ matrix.architecture }}_${{ env.BUILD_CONFIGURATION }}_${{ github.event.release.tag_name }}.zip
+      
+    - name: Pack for NuGet
+      if: github.event_name == 'release' && github.event.action == 'published' 
+      working-directory: ${{ github.workspace }}
+      shell: pwsh
+      run: msbuild /m /p:Configuration /p:Configuration=${{ env.BUILD_CONFIGURATION }} /t:Pack .\core\fh\Fahrenheit.csproj
+      
+    # Get a short-lived NuGet API key
+    - name: NuGet login (OIDC → temp API key)
+      if: github.event_name == 'release' && github.event.action == 'published'
+      uses: NuGet/login@v1
+      id: nuget_login
+      with:
+        user: ${{ secrets.NUGET_USER }}
+      
+    - name: Upload NuGet package
+      if: github.event_name == 'release' && github.event.action == 'published'
+      working-directory: ${{ github.workspace }}
+      shell: pwsh
+      run: dotnet nuget push "./artifacts/pkg/rel/*.nupkg" --api-key ${{steps.nuget_login.outputs.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json

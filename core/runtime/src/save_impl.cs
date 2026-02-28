@@ -162,7 +162,7 @@ public unsafe sealed class FhSaveExtensionModule : FhModule {
     }
 
     /* [fkelava 16/01/26 14:29]
-     * https://github.com/peppy-enterprises/fahrenheit/issues/70
+     * https://github.com/fahrenheit-crew/fahrenheit/issues/70
      *
      * Loading in the game is a multi-step process:
      * 1) Data from the disk is loaded to `SaveDataManager::getRefBuffer`.

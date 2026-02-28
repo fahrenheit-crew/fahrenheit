@@ -13,7 +13,7 @@
         <PackageIcon>fh_base_256.png</PackageIcon>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <RepositoryType>git</RepositoryType>
-        <RepositoryUrl>https://github.com/peppy-enterprises/fahrenheit.git</RepositoryUrl>
+        <RepositoryUrl>https://github.com/fahrenheit-crew/fahrenheit.git</RepositoryUrl>
     </PropertyGroup>
 
     <!-- PACKAGING EXTRA FILES -->

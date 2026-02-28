@@ -10,7 +10,7 @@
 
         <PackageId>Fahrenheit</PackageId>
         <Authors>The Fahrenheit contributors</Authors>
-        <Description>A mod framework for the Final Fantasy X/X-2 HD Remasters.</Description>
+        <Description>The mod framework for the Final Fantasy X/X-2 HD Remasters.</Description>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <PackageIcon>fh_base_256.png</PackageIcon>
         <PackageReadmeFile>README.md</PackageReadmeFile>

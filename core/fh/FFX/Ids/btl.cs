@@ -42,6 +42,7 @@ public static class BtlId {
     public const T_XBtlId BTL_BSIL07_02  = 0x0048_0002;
     public const T_XBtlId BTL_BSIL07_50  = 0x0048_0032;
     public const T_XBtlId BTL_BSIL07_51  = 0x0048_0033;
+    public const T_XBtlId BTL_BSIL07_70  = 0x0048_0046;
 
     // bsil04
     public const T_XBtlId BTL_BSIL04_00  = 0x0045_0000;
@@ -149,6 +150,7 @@ public static class BtlId {
     public const T_XBtlId BTL_KINO00_04  = 0x00DC_0004;
     public const T_XBtlId BTL_KINO00_05  = 0x00DC_0005;
     public const T_XBtlId BTL_KINO00_06  = 0x00DC_0006;
+    public const T_XBtlId BTL_KINO00_70  = 0x00DC_0046;
 
     // kino01
     public const T_XBtlId BTL_KINO01_00  = 0x00DD_0000;
@@ -158,6 +160,9 @@ public static class BtlId {
     public const T_XBtlId BTL_KINO01_04  = 0x00DD_0004;
     public const T_XBtlId BTL_KINO01_05  = 0x00DD_0005;
     public const T_XBtlId BTL_KINO01_06  = 0x00DD_0006;
+    public const T_XBtlId BTL_KINO01_70  = 0x00DD_0046;
+    public const T_XBtlId BTL_KINO01_71  = 0x00DD_0047;
+    public const T_XBtlId BTL_KINO01_72  = 0x00DD_0048;
 
     // kino05
     public const T_XBtlId BTL_KINO05_00  = 0x00E1_0000;
@@ -168,6 +173,8 @@ public static class BtlId {
     public const T_XBtlId BTL_KINO05_05  = 0x00E1_0005;
     public const T_XBtlId BTL_KINO05_06  = 0x00E1_0006;
     public const T_XBtlId BTL_KINO05_07  = 0x00E1_0007;
+    public const T_XBtlId BTL_KINO05_70  = 0x00E1_0046;
+    public const T_XBtlId BTL_KINO05_71  = 0x00E1_0047;
 
     // kino02
     public const T_XBtlId BTL_KINO02_00  = 0x00DE_0000;
@@ -238,6 +245,8 @@ public static class BtlId {
     public const T_XBtlId BTL_KAMI03_05  = 0x012F_0005;
     public const T_XBtlId BTL_KAMI03_06  = 0x012F_0006;
     public const T_XBtlId BTL_KAMI03_07  = 0x012F_0007;
+    public const T_XBtlId BTL_KAMI03_70  = 0x012F_0046;
+    public const T_XBtlId BTL_KAMI03_71  = 0x012F_0047;
 
     // mcfr00
     public const T_XBtlId BTL_MCFR00_00  = 0x0136_0000;
@@ -265,6 +274,7 @@ public static class BtlId {
     public const T_XBtlId BTL_MCYT00_20  = 0x0154_0014;
     public const T_XBtlId BTL_MCYT00_21  = 0x0154_0015;
     public const T_XBtlId BTL_MCYT00_22  = 0x0154_0016;
+    public const T_XBtlId BTL_MCYT00_70  = 0x0154_0046;
 
     // maca03
     public const T_XBtlId BTL_MACA03_00  = 0x014D_0000;
@@ -327,6 +337,7 @@ public static class BtlId {
     public const T_XBtlId BTL_BIKA03_30  = 0x0161_001E;
     public const T_XBtlId BTL_BIKA03_31  = 0x0161_001F;
     public const T_XBtlId BTL_BIKA03_32  = 0x0161_0020;
+    public const T_XBtlId BTL_BIKA03_70  = 0x0161_0046;
 
     // azit03
     public const T_XBtlId BTL_AZIT03_00  = 0x016B_0000;
@@ -341,6 +352,7 @@ public static class BtlId {
 
     // hiku15
     public const T_XBtlId BTL_HIKU15_00  = 0x018B_0000;
+    public const T_XBtlId BTL_HIKU15_70  = 0x018B_0046;
 
     // bvyt00
     public const T_XBtlId BTL_BVYT00_00  = 0x019A_0000;
@@ -445,6 +457,11 @@ public static class BtlId {
     public const T_XBtlId BTL_NAGI05_24  = 0x01AE_0018;
     public const T_XBtlId BTL_NAGI05_25  = 0x01AE_0019;
     public const T_XBtlId BTL_NAGI05_50  = 0x01AE_0032;
+    public const T_XBtlId BTL_NAGI05_70  = 0x01AE_0046;
+    public const T_XBtlId BTL_NAGI05_71  = 0x01AE_0047;
+    public const T_XBtlId BTL_NAGI05_72  = 0x01AE_0048;
+    public const T_XBtlId BTL_NAGI05_73  = 0x01AE_0049;
+    public const T_XBtlId BTL_NAGI05_74  = 0x01AE_004A;
 
     // mtgz01
     public const T_XBtlId BTL_MTGZ01_00  = 0x01E6_0000;
@@ -454,6 +471,7 @@ public static class BtlId {
     public const T_XBtlId BTL_MTGZ01_04  = 0x01E6_0004;
     public const T_XBtlId BTL_MTGZ01_05  = 0x01E6_0005;
     public const T_XBtlId BTL_MTGZ01_10  = 0x01E6_000A;
+    public const T_XBtlId BTL_MTGZ01_70  = 0x01E6_0046;
 
     // mtgz02
     public const T_XBtlId BTL_MTGZ02_00  = 0x01E7_0000;
@@ -496,6 +514,7 @@ public static class BtlId {
 
     // dome06
     public const T_XBtlId BTL_DOME06_00  = 0x0209_0000;
+    public const T_XBtlId BTL_DOME06_70  = 0x0209_0046;
 
     // ssbt00
     public const T_XBtlId BTL_SSBT00_00  = 0x0235_0000;

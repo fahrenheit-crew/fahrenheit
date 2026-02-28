@@ -228,6 +228,7 @@ public unsafe struct SaveData {
     [FieldOffset(0xBEC)]  public       ushort         story_progress;
     [FieldOffset(0xC5C)]  public       byte           anima_seals_unlocked;
     [FieldOffset(0xC60)]  public       uint           current_airship_location;
+    [FieldOffset(0xC7B)]  public       byte           optional_aeons_unlocked;
     [FieldOffset(0xC7C)]  public       JechtSphereData     jecht_spheres;
     [FieldOffset(0xC81)]  public       ushort         unlocked_airship_destinations;
     [FieldOffset(0xC89)]  public       byte           completion_flags_dark_valefor;
@@ -243,7 +244,9 @@ public unsafe struct SaveData {
     [FieldOffset(0x3D10)] public       uint           unlocked_primers;
     [FieldOffset(0x3D14)] public       uint           battle_count;
     [FieldOffset(0x3D48)] public       uint           gil;
-    [FieldOffset(0x3D58)] public fixed byte           party_order[7];
+    [FieldOffset(0x3D58)] public fixed byte           party_frontline[3];
+    [FieldOffset(0x3D5B)] public fixed byte           party_backline[17];
+    [FieldOffset(0x3D6C)] public       LimitAbilityMap     ability_map_limit;
     [FieldOffset(0x3DA4)] public       uint           yojimbo_compatibility;
     [FieldOffset(0x3DA8)] public       uint           yojimbo_type; // unknown size
     [FieldOffset(0x3DAC)] public       uint           tidus_limit_uses;
@@ -338,4 +341,8 @@ public unsafe struct SaveData {
     public bool has_unlocked_airship_destination_battle_site    { readonly get { return unlocked_airship_destinations.get_bit( 9); } set { unlocked_airship_destinations.set_bit( 9, value); } }
     public bool has_unlocked_airship_destination_sanubia_sands  { readonly get { return unlocked_airship_destinations.get_bit(10); } set { unlocked_airship_destinations.set_bit(10, value); } }
     public bool has_unlocked_airship_destination_penance        { readonly get { return unlocked_airship_destinations.get_bit(11); } set { unlocked_airship_destinations.set_bit(11, value); } }
+    
+    public bool has_anima         { readonly get { return optional_aeons_unlocked.get_bit(0); } set { optional_aeons_unlocked.set_bit(0, value); } }
+    public bool has_yojimbo       { readonly get { return optional_aeons_unlocked.get_bit(1); } set { optional_aeons_unlocked.set_bit(1, value); } }
+    public bool has_magus_sisters { readonly get { return optional_aeons_unlocked.get_bit(2); } set { optional_aeons_unlocked.set_bit(2, value); } }
 }

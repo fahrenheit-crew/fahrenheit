@@ -1,30 +1,30 @@
 [submodule "mods/template"]
 	path = mods/template
-	url = https://github.com/peppy-enterprises/fh-mods-template
+	url = https://github.com/fahrenheit-crew/fh-mods-template
 [submodule "mods/csr"]
 	path = mods/csr
-	url = https://github.com/peppy-enterprises/fh-mods-csr
+	url = https://github.com/fahrenheit-crew/fh-mods-csr
 [submodule "mods/dbg"]
 	path = mods/dbg
-	url = https://github.com/peppy-enterprises/fh-mods-debug
+	url = https://github.com/fahrenheit-crew/fh-mods-debug
 [submodule "mods/truerng"]
 	path = mods/truerng
-	url = https://github.com/peppy-enterprises/fh-mods-truerng
+	url = https://github.com/fahrenheit-crew/fh-mods-truerng
 [submodule "mods/efp"]
 	path = mods/efp
-	url = https://github.com/peppy-enterprises/fh-mods-efp
+	url = https://github.com/fahrenheit-crew/fh-mods-efp
 [submodule "tools/dedit"]
 	path = core/dedit
-	url = https://github.com/peppy-enterprises/fh-tools-dedit
+	url = https://github.com/fahrenheit-crew/fh-tools-dedit
 [submodule "tools/step"]
 	path = core/step
-	url = https://github.com/peppy-enterprises/fh-tools-step
+	url = https://github.com/fahrenheit-crew/fh-tools-step
 [submodule "tools/atelier"]
 	path = core/atelier
-	url = https://github.com/peppy-enterprises/fh-tools-atelier
+	url = https://github.com/fahrenheit-crew/fh-tools-atelier
 [submodule "tools/inspector"]
 	path = core/inspector
-	url = https://github.com/peppy-enterprises/fh-tools-inspector
+	url = https://github.com/fahrenheit-crew/fh-tools-inspector
 [submodule "tools/eedit"]
 	path = core/eedit
-	url = https://github.com/peppy-enterprises/fh-tools-eedit
+	url = https://github.com/fahrenheit-crew/fh-tools-eedit

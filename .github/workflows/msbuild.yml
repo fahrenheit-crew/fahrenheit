@@ -24,9 +24,9 @@ env:
 
   # https://learn.microsoft.com/en-us/vcpkg/consume/binary-caching-github-packages?pivots=windows-runner
   # VCPKG binary caching setup
-  USERNAME: peppy-enterprises
-  FEED_URL: https://nuget.pkg.github.com/peppy-enterprises/index.json
-  VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/peppy-enterprises/index.json,readwrite"
+  USERNAME: fahrenheit-crew
+  FEED_URL: https://nuget.pkg.github.com/fahrenheit-crew/index.json
+  VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/fahrenheit-crew/index.json,readwrite"
 
 permissions:
   contents: write

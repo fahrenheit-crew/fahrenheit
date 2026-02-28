@@ -1,5 +1,13 @@
 <Project>	
-	
+    
+    <PropertyGroup>
+        <!--
+        Makes it such that projects must be explicitly marked packable.
+        -->
+    
+        <IsPackable>false</IsPackable>
+    </PropertyGroup>
+    
     <PropertyGroup>
         <!--
         Artifact path handling.

@@ -1,4 +1,4 @@
-﻿<Project>
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <!--
         See https://learn.microsoft.com/en-us/nuget/reference/msbuild-targets#pack-target,
@@ -6,6 +6,8 @@
 
     <!-- PACKAGING PROPERTIES -->
     <PropertyGroup>
+        <IsPackable>true</IsPackable>
+
         <PackageId>Fahrenheit</PackageId>
         <Authors>The Fahrenheit contributors</Authors>
         <Description>A mod framework for the Final Fantasy X/X-2 HD Remasters.</Description>
@@ -38,10 +40,6 @@
         <AssemblyTitle>Fahrenheit Mod Framework</AssemblyTitle>
         <Product>Fahrenheit Mod Framework</Product>
     </PropertyGroup>
-
-    <!-- SDK REFERENCES -->
-    <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
-    <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
 
     <!-- SHARED FILE LINKS -->
     <ItemGroup>

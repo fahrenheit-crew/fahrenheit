@@ -1,4 +1,4 @@
-﻿<Project>
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <!-- ASSEMBLY BASIC PROPERTIES -->
     <PropertyGroup>
@@ -16,10 +16,6 @@
         <AssemblyTitle>Fahrenheit Runtime Library</AssemblyTitle>
         <Product>Fahrenheit Runtime Library</Product>
     </PropertyGroup>
-
-    <!-- SDK REFERENCES -->
-    <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
-    <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
 
     <!-- SHARED FILE LINKS -->
     <ItemGroup>

@@ -1,5 +1,5 @@
-<Project>	
-  
+<Project>
+
     <!-- ASSEMBLY BASIC PROPERTIES -->
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
@@ -13,19 +13,6 @@
 
     <!-- SDK REFERENCES -->
     <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
-
-    <!-- SHARED FILE LINKS -->
-    <ItemGroup>
-        <None Include="$(SolutionDir).editorconfig" Link=".editorconfig" />
-    </ItemGroup>
-
-    <!-- PROJECT REFERENCES -->
-    <ItemGroup>
-        <ProjectReference Include="..\..\core\fh\Fahrenheit.csproj">
-            <Private>false</Private>
-            <ExcludeAssets>runtime;native</ExcludeAssets>
-        </ProjectReference>
-    </ItemGroup>
 
     <!-- ASSETS: MANIFEST -->
     <ItemGroup>
@@ -43,7 +30,7 @@
         <None Remove="efl/**" />
         <None Include="efl/x/**/*;efl/x2/**/*" CopyToOutputDirectory="Always" />
     </ItemGroup>
-    
+
     <!-- ASSETS: GENERIC -->
     <ItemGroup>
         <None Include="resources/**" CopyToOutputDirectory="Always" />

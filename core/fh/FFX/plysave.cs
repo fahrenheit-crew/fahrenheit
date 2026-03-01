@@ -47,9 +47,9 @@ public struct PlySave {
     [FieldOffset(0x3E)] public  AbilityMap               abi_map;
     [FieldOffset(0x4A)] public  AutoAbilityEffectsMap    auto_ability_effects;
     [FieldOffset(0x50)] public  uint                     battle_count;
-    [FieldOffset(0x54)] public  uint                     enemies_defeated_count;
-    [FieldOffset(0x58)] public  uint                     death_count;
-    [FieldOffset(0x5C)] public  uint                     limits_charged_count;
+    [FieldOffset(0x54)] public  uint                     enemies_defeated;
+    [FieldOffset(0x58)] public  uint                     deaths;
+    [FieldOffset(0x5C)] public  uint                     limits_charged;
     [FieldOffset(0x60)] public  PlySaveLimitModeCtrArray limit_mode_counters;
     [FieldOffset(0x88)] public  OverdriveModeFlags       obtained_limit_modes;
     [FieldOffset(0x8C)] private uint                     __0x8C;

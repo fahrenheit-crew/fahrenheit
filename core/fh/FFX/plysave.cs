@@ -43,7 +43,7 @@ public struct PlySave {
     [FieldOffset(0x3A)] public  byte                     limit_charge_max;
     [FieldOffset(0x3B)] public  byte                     slv_available;
     [FieldOffset(0x3C)] public  byte                     slv_spent;
-    [FieldOffset(0x3D)] public  byte                     __0x3D; //Set to 0x17 on aeon death -> Aeon becomes greyed out in summon menu and unselectable
+    [FieldOffset(0x3D)] public  byte                     __0x3D; // Set to 0x17 on aeon death -> Aeon becomes greyed out in summon menu and unselectable
     [FieldOffset(0x3E)] public  AbilityMap               abi_map;
     [FieldOffset(0x4A)] public  AutoAbilityEffectsMap    auto_ability_effects;
     [FieldOffset(0x50)] public  uint                     battle_count;

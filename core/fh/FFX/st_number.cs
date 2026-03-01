@@ -11,5 +11,5 @@ public struct StNumber {
     [FieldOffset(0x0)] public byte  category;   
     
     [FieldOffset(0x1)] public byte  type;
-    [FieldOffset(0x2)] public short command_id; // Can also be an Aeon id if category is 0x1 (Yuna)
+    [FieldOffset(0x2)] public ushort command_id; // Can also be an Aeon id if category is 0x1 (Yuna)
 }

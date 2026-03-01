@@ -167,91 +167,97 @@ public unsafe struct SaveData {
     }
 
 
-    [FieldOffset(0x0)]    public       ushort         current_room_id;
-    [FieldOffset(0x2)]    public       ushort         last_room_id;
-    [FieldOffset(0x4)]    public       ushort         now_eventjump_map_no;
-    [FieldOffset(0x6)]    public       ushort         last_eventjump_map_no;
-    [FieldOffset(0x8)]    public       ushort         now_eventjump_map_id;
-    [FieldOffset(0xA)]    public       ushort         last_eventjump_map_id;
-    [FieldOffset(0xC)]    public       byte           current_spawnpoint;
-    [FieldOffset(0xD)]    public       byte           last_spawnpoint;
-    [FieldOffset(0xE)]    public       ushort         atel_save_dic_index;
-    [FieldOffset(0x10)]   public       byte           atel_battle_scene_group;
-    [FieldOffset(0x11)]   public       byte           fade_mode;
-    [FieldOffset(0x12)]   public       byte           fade_time;
-    [FieldOffset(0x13)]   public       byte           battle_status; // bitfield
-    [FieldOffset(0x18)]   public fixed uint           flying_ship_pos[2]; // bitfield
-    [FieldOffset(0x20)]   public       byte           atel_is_push_member;
-    [FieldOffset(0x21)]   public fixed byte           atel_push_frontline[3];
-    [FieldOffset(0x24)]   public       byte           atel_push_party;
-    [FieldOffset(0x28)]   public       byte           is_cam_underwater;
-    [FieldOffset(0x29)]   public       byte           is_map_underwater;
-    [FieldOffset(0x2B)]   public       byte           tk_event_new_game;
-    [FieldOffset(0x2C)]   public fixed uint           affection[8];
-    [FieldOffset(0x4C)]   public fixed uint           affection_room_flags[20]; // bitfield
-    [FieldOffset(0xB4)]   public       ushort         item_map_x; // meaning unknown
-    [FieldOffset(0xB6)]   public       ushort         item_map_y; // meaning unknown
-    [FieldOffset(0xB8)]   public       ushort         saved_current_spawnpoint; // Used when loading save
-    [FieldOffset(0xBA)]   public       ushort         saved_current_room_id;    // Used when loading save
-    [FieldOffset(0xBC)]   public       int            time;
-    [FieldOffset(0xC0)]   public       ushort         saved_current_room_id2; // Never read?
-    [FieldOffset(0xC2)]   public       ushort         saved_last_room_id; // Used when loading save
-    [FieldOffset(0xC4)]   public       ushort         saved_now_eventjump_map_no;
-    [FieldOffset(0xC6)]   public       ushort         saved_last_eventjump_map_no;
-    [FieldOffset(0xC8)]   public       ushort         saved_now_eventjump_map_id;
-    [FieldOffset(0xCA)]   public       ushort         saved_last_eventjump_map_id;
-    [FieldOffset(0xCC)]   public       byte           saved_current_spawnpoint2; // Never read?
-    [FieldOffset(0xCE)]   public       byte           saved_last_spawnpoint; // Used when loading save
-    [FieldOffset(0xD1)]   public       byte           albhed_rikku;
-    [FieldOffset(0xD2)]   public       byte           drop_shadow_mode;
-    [FieldOffset(0xD4)]   public       ushort         atel_force_place_id_value;
-    [FieldOffset(0xD6)]   public       byte           atel_force_place_id;
-    [FieldOffset(0xD7)]   public       byte           atel_water_btl_effect;
-    [FieldOffset(0xD8)]   public       uint           on_memory_movie_file_no;
-    [FieldOffset(0xDC)]   public       uint           on_memory_movie_mode;
-    [FieldOffset(0xE0)]   public       uint           on_memory_movie;
-    [FieldOffset(0xE4)]   public       int            rand_encounter_modifiers;
-    [FieldOffset(0xE8)]   public       ushort         btl_end_tag_always;
-    [FieldOffset(0xEA)]   public       ushort         sphere_monitor;
-    [FieldOffset(0x279)]  public       byte           progression_flags_calm_lands_quest;
-    [FieldOffset(0x287)]  public       byte           progression_flags_belgemine_fight;
-    [FieldOffset(0x28B)]  public       byte           progression_flags_monster_arena_unlock_quest;
-    [FieldOffset(0x2F0)]  public       byte           progression_flags_energy_blast;
-    [FieldOffset(0x300)]  public       byte           progression_flags_remiem_temple;
-    [FieldOffset(0x3BE)]  public       byte           progression_flags_omega_ruins;
-    [FieldOffset(0x3C0)]  public       byte           progression_flags_home;
-    [FieldOffset(0x3F1)]  public       byte           progression_flags_thunder_plains;
-    [FieldOffset(0x3FC)]  public       ushort         lightning_dodging_total_bolts;
-    [FieldOffset(0x3FE)]  public       ushort         lightning_dodging_total_dodges;
-    [FieldOffset(0x400)]  public       ushort         lightning_dodging_highest_consecutive_dodges;
-    [FieldOffset(0x5EC)]  public       bool           soundtrack_type;
-    [FieldOffset(0xBEC)]  public       ushort         story_progress;
-    [FieldOffset(0xC5C)]  public       byte           anima_seals_unlocked;
-    [FieldOffset(0xC60)]  public       uint           current_airship_location;
-    [FieldOffset(0xC7B)]  public       byte           optional_aeons_unlocked;
-    [FieldOffset(0xC7C)]  public       JechtSphereData     jecht_spheres;
-    [FieldOffset(0xC81)]  public       ushort         unlocked_airship_destinations;
-    [FieldOffset(0xC89)]  public       byte           completion_flags_dark_valefor;
-    [FieldOffset(0xC8A)]  public       byte           completion_flags_dark_ifrit;
-    [FieldOffset(0xC8B)]  public       byte           completion_flags_dark_ixion;
-    [FieldOffset(0xC8C)]  public       byte           completion_flags_dark_shiva;
-    [FieldOffset(0xC8D)]  public       byte           completion_flags_dark_bahamut;
-    [FieldOffset(0xC8E)]  public       byte           completion_flags_dark_yojimbo;
-    [FieldOffset(0xC8F)]  public       byte           completion_flags_dark_anima;
-    [FieldOffset(0xC90)]  public       byte           completion_flags_dark_magus_sisters;
-    [FieldOffset(0xC91)]  public       byte           penance_unlock_state;
-    [FieldOffset(0x3D0C)] public       uint           config;
-    [FieldOffset(0x3D10)] public       uint           unlocked_primers;
-    [FieldOffset(0x3D14)] public       uint           battle_count;
-    [FieldOffset(0x3D48)] public       uint           gil;
-    [FieldOffset(0x3D58)] public fixed byte           party_frontline[3];
-    [FieldOffset(0x3D5B)] public fixed byte           party_backline[17];
-    [FieldOffset(0x3D6C)] public       LimitAbilityMap     ability_map_limit;
-    [FieldOffset(0x3DA4)] public       uint           yojimbo_compatibility;
-    [FieldOffset(0x3DA8)] public       uint           yojimbo_type; // unknown size
-    [FieldOffset(0x3DAC)] public       uint           tidus_limit_uses;
-    [FieldOffset(0x3DB0)] public       uint           successful_rikku_steals;
-    [FieldOffset(0x3DB4)] public       uint           bribe_gil_spent;
+    [FieldOffset(0x0)]    public       ushort          current_room_id;
+    [FieldOffset(0x2)]    public       ushort          last_room_id;
+    [FieldOffset(0x4)]    public       ushort          now_eventjump_map_no;
+    [FieldOffset(0x6)]    public       ushort          last_eventjump_map_no;
+    [FieldOffset(0x8)]    public       ushort          now_eventjump_map_id;
+    [FieldOffset(0xA)]    public       ushort          last_eventjump_map_id;
+    [FieldOffset(0xC)]    public       byte            current_spawnpoint;
+    [FieldOffset(0xD)]    public       byte            last_spawnpoint;
+    [FieldOffset(0xE)]    public       ushort          atel_save_dic_index;
+    [FieldOffset(0x10)]   public       byte            atel_battle_scene_group;
+    [FieldOffset(0x11)]   public       byte            fade_mode;
+    [FieldOffset(0x12)]   public       byte            fade_time;
+    [FieldOffset(0x13)]   public       byte            battle_status; // bitfield
+    [FieldOffset(0x18)]   public fixed uint            flying_ship_pos[2]; // bitfield
+    [FieldOffset(0x20)]   public       byte            atel_is_push_member;
+    [FieldOffset(0x21)]   public fixed byte            atel_push_frontline[3];
+    [FieldOffset(0x24)]   public       byte            atel_push_party;
+    [FieldOffset(0x28)]   public       byte            is_cam_underwater;
+    [FieldOffset(0x29)]   public       byte            is_map_underwater;
+    [FieldOffset(0x2B)]   public       byte            tk_event_new_game;
+    [FieldOffset(0x2C)]   public fixed uint            affection[8];
+    [FieldOffset(0x4C)]   public fixed uint            affection_room_flags[20]; // bitfield
+    [FieldOffset(0xB4)]   public       ushort          item_map_x; // meaning unknown
+    [FieldOffset(0xB6)]   public       ushort          item_map_y; // meaning unknown
+    [FieldOffset(0xB8)]   public       ushort          saved_current_spawnpoint; // Used when loading save
+    [FieldOffset(0xBA)]   public       ushort          saved_current_room_id;    // Used when loading save
+    [FieldOffset(0xBC)]   public       int             time;
+    [FieldOffset(0xC0)]   public       ushort          saved_current_room_id2; // Never read?
+    [FieldOffset(0xC2)]   public       ushort          saved_last_room_id; // Used when loading save
+    [FieldOffset(0xC4)]   public       ushort          saved_now_eventjump_map_no;
+    [FieldOffset(0xC6)]   public       ushort          saved_last_eventjump_map_no;
+    [FieldOffset(0xC8)]   public       ushort          saved_now_eventjump_map_id;
+    [FieldOffset(0xCA)]   public       ushort          saved_last_eventjump_map_id;
+    [FieldOffset(0xCC)]   public       byte            saved_current_spawnpoint2; // Never read?
+    [FieldOffset(0xCE)]   public       byte            saved_last_spawnpoint; // Used when loading save
+    [FieldOffset(0xD1)]   public       byte            albhed_rikku;
+    [FieldOffset(0xD2)]   public       byte            drop_shadow_mode;
+    [FieldOffset(0xD4)]   public       ushort          atel_force_place_id_value;
+    [FieldOffset(0xD6)]   public       byte            atel_force_place_id;
+    [FieldOffset(0xD7)]   public       byte            atel_water_btl_effect;
+    [FieldOffset(0xD8)]   public       uint            on_memory_movie_file_no;
+    [FieldOffset(0xDC)]   public       uint            on_memory_movie_mode;
+    [FieldOffset(0xE0)]   public       uint            on_memory_movie;
+    [FieldOffset(0xE4)]   public       int             rand_encounter_modifiers;
+    [FieldOffset(0xE8)]   public       ushort          btl_end_tag_always;
+    [FieldOffset(0xEA)]   public       ushort          sphere_monitor;
+    [FieldOffset(0x279)]  public       byte            progression_flags_calm_lands_quest;
+    [FieldOffset(0x287)]  public       byte            progression_flags_belgemine_fight;
+    [FieldOffset(0x28B)]  public       byte            progression_flags_monster_arena_unlock_quest;
+    [FieldOffset(0x2F0)]  public       byte            progression_flags_energy_blast;
+    [FieldOffset(0x300)]  public       byte            progression_flags_remiem_temple;
+    [FieldOffset(0x337)]  public       byte            luca_controllable_character;
+    [FieldOffset(0x3BE)]  public       byte            progression_flags_omega_ruins;
+    [FieldOffset(0x3C0)]  public       byte            progression_flags_home;
+    [FieldOffset(0x3F1)]  public       byte            progression_flags_thunder_plains;
+    [FieldOffset(0x3FC)]  public       ushort          lightning_dodging_total_bolts;
+    [FieldOffset(0x3FE)]  public       ushort          lightning_dodging_total_dodges;
+    [FieldOffset(0x400)]  public       ushort          lightning_dodging_highest_consecutive_dodges;
+    [FieldOffset(0x5EC)]  public       bool            soundtrack_type;
+    [FieldOffset(0xBEC)]  public       ushort          story_progress;
+    [FieldOffset(0xC38)]  public       bool            celestial_mirror_obtained;
+    [FieldOffset(0xC39)]  public       byte            celestials_obtained;
+    [FieldOffset(0xC5C)]  public       byte            anima_seals_unlocked;
+    [FieldOffset(0xC60)]  public       uint            current_airship_location;
+    [FieldOffset(0xC6C)]  public       byte            celestials_half_powered;
+    [FieldOffset(0xC6D)]  public       byte            celestials_full_powered;
+    [FieldOffset(0xC7B)]  public       byte            optional_aeons_unlocked;
+    [FieldOffset(0xC7C)]  public       JechtSphereData jecht_spheres;
+    [FieldOffset(0xC81)]  public       ushort          unlocked_airship_destinations;
+    [FieldOffset(0xC89)]  public       byte            completion_flags_dark_valefor;
+    [FieldOffset(0xC8A)]  public       byte            completion_flags_dark_ifrit;
+    [FieldOffset(0xC8B)]  public       byte            completion_flags_dark_ixion;
+    [FieldOffset(0xC8C)]  public       byte            completion_flags_dark_shiva;
+    [FieldOffset(0xC8D)]  public       byte            completion_flags_dark_bahamut;
+    [FieldOffset(0xC8E)]  public       byte            completion_flags_dark_yojimbo;
+    [FieldOffset(0xC8F)]  public       byte            completion_flags_dark_anima;
+    [FieldOffset(0xC90)]  public       byte            completion_flags_dark_magus_sisters;
+    [FieldOffset(0xC91)]  public       byte            penance_unlock_state;
+    [FieldOffset(0xCD7)]  public fixed byte            battle_dialog_lines_seen[42];
+    [FieldOffset(0x3D0C)] public       uint            config;
+    [FieldOffset(0x3D10)] public       uint            unlocked_primers;
+    [FieldOffset(0x3D14)] public       uint            battle_count;
+    [FieldOffset(0x3D48)] public       uint            gil;
+    [FieldOffset(0x3D58)] public fixed byte            party_frontline[3];
+    [FieldOffset(0x3D5B)] public fixed byte            party_backline[17];
+    [FieldOffset(0x3D6C)] public       LimitAbilityMap ability_map_limit;
+    [FieldOffset(0x3DA4)] public       uint            yojimbo_compatibility;
+    [FieldOffset(0x3DA8)] public       uint            yojimbo_type; // unknown size
+    [FieldOffset(0x3DAC)] public       uint            tidus_limit_uses;
+    [FieldOffset(0x3DB0)] public       uint            successful_rikku_steals;
+    [FieldOffset(0x3DB4)] public       uint            bribe_gil_spent;
 
     [FieldOffset(0x3DCC)] public EventFlags           event_flags;
     [FieldOffset(0x3ECC)] public InventoryTypes       inventory_ids;

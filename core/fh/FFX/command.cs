@@ -28,7 +28,7 @@ public struct Command {
     [FieldOffset(0x18)] public  byte              sub_menu_cat;
     [FieldOffset(0x19)] public  byte              user_id;
     [FieldOffset(0x1A)] public  byte              flags_target;
-    [FieldOffset(0x1B)] public  byte              flags_use;
+    [FieldOffset(0x1B)] public  byte              flags_usage;
     [FieldOffset(0x1C)] public  uint              flags_misc;
     [FieldOffset(0x20)] public  byte              flags_damage;
     [FieldOffset(0x21)] public  bool              steals_gil;
@@ -108,6 +108,15 @@ public struct Command {
     public bool is_cleanse                  { readonly get { return flags_damage.get_bit(5); } set { flags_damage.set_bit(5, value); } }
     public bool ignores_break_damage_limit  { readonly get { return flags_damage.get_bit(6); } set { flags_damage.set_bit(6, value); } }
     public bool innate_break_damage_limit   { readonly get { return flags_damage.get_bit(7); } set { flags_damage.set_bit(7, value); } }
+
+    public bool party_preview_enabled       { readonly get { return party_preview.get_bit(0); } set { party_preview.set_bit(0, value); } }
+    public bool party_preview_mp            { readonly get { return party_preview.get_bit(1); } set { party_preview.set_bit(1, value); } }
+    public bool party_preview_status        { readonly get { return party_preview.get_bit(2); } set { party_preview.set_bit(2, value); } }
+    public bool party_preview_world_map     { readonly get { return party_preview.get_bit(3); } set { party_preview.set_bit(3, value); } }
+    public bool party_preview_rename_card_1 { readonly get { return party_preview.get_bit(4); } set { party_preview.set_bit(4, value); } }
+    public bool party_preview_sphere        { readonly get { return party_preview.get_bit(5); } set { party_preview.set_bit(5, value); } }
+    public bool party_preview_hp            { readonly get { return party_preview.get_bit(6); } set { party_preview.set_bit(6, value); } }
+    public bool party_preview_rename_card_2 { readonly get { return party_preview.get_bit(7); } set { party_preview.set_bit(7, value); } }
 
     public bool damages_hp  { readonly get { return flags_damage_class.get_bit(0); } set { flags_damage_class.set_bit(0, value); } }
     public bool damages_mp  { readonly get { return flags_damage_class.get_bit(1); } set { flags_damage_class.set_bit(1, value); } }

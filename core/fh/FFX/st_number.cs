@@ -5,7 +5,11 @@ namespace Fahrenheit.FFX;
 /// </summary>
 [StructLayout(LayoutKind.Explicit, Size = 0x4)]
 public struct StNumber {
-    [FieldOffset(0x0)] public byte  category;   // Can either be a valid <see cref="PlySaveId"> id or submenu id
+    /// <summary>
+    ///     Can either be a valid <see cref="PlySaveId"> id or submenu id
+    /// </summary>
+    [FieldOffset(0x0)] public byte  category;   
+    
     [FieldOffset(0x1)] public byte  type;
     [FieldOffset(0x2)] public short command_id; // Can also be an Aeon id if category is 0x1 (Yuna)
 }

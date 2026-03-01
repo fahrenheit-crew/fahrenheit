@@ -1,0 +1,68 @@
+<Project>
+    <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+
+    <!-- fkelava 30/09/25 23:05
+    https://github.com/dotnet/sdk/issues/1366
+
+    When mods reference a Fahrenheit mod, the Framework Library or the Support Library
+    for either game, they must not copy any of those - or their dependencies - to output alongside them.
+
+    This is accomplished by structuring a ProjectReference as such:
+
+    <ProjectReference Include="..\..\core\framework\Fahrenheit.Core.csproj">
+        <Private>false</Private>
+        <ExcludeAssets>runtime;native</ExcludeAssets>
+    </ProjectReference>
+
+    The problem are transitive dependencies. If a mod references a mod which references e.g.
+    the FF X Support Library, MSBuild will fail to respect the chain of ExcludeAssets tags
+    and the Support Library will be emitted alongside the mod, which is invalid and will cause issues.
+
+    This target solves that problem.
+    -->
+	<Target Name="_MakeTransitiveProjectRefsNonPrivate" AfterTargets="IncludeTransitiveProjectReferences">
+	    <ItemGroup>
+	        <!-- remove the transitive project references and re-add them as non-private project references -->
+	        <ProjectReference Remove="@(_TransitiveProjectReferences)" />
+	        <ProjectReference Include="@(_TransitiveProjectReferences)" Private="False" />
+	    </ItemGroup>
+    </Target>
+
+    <!-- fkelava 01/10/25 11:17
+    https://github.com/dotnet/sdk/issues/25411
+    https://learn.microsoft.com/en-us/dotnet/core/deploying/single-file/overview?tabs=cli#post-processing-binaries-before-bundling
+
+    We have a number of large runtime and native deps such as ImGui and TerraFX. It is desirable that they are shared.
+
+    For mods, this is expressed fairly simply. All mods must use <ExcludeAssets>runtime;native</ExcludeAssets>
+    when referencing other Fahrenheit libraries to avoid type mismatches. The loader ensures that each mod
+    is only loaded once, and that the core libraries are all loaded before any mods are. The load order
+    should ensure mods load correctly relative to one another.
+
+    .NET typically does not probe anything but trusted framework paths when DLL loading. All other dependencies
+    are inserted into a `.deps.json` file with a path hint. <ExcludeAssets> has the side effect of purging
+    the associated dependency's hint, implicitly demanding that it be loaded before it is required.
+
+    This is always true for the usual use case, the plugin framework. For standalone tools
+    this is never true and causes load errors. An alternative, <ExcludeFromSingleFile> is
+    available, but suffers from two crippling flaws:
+    - it has no effect on <PackageReference>s
+    - it does not exclude transitive runtime and native dependencies of a <ProjectReference>
+
+    Until it does, we specify it to get a valid `.deps.json`, then purge shared dep DLLs in this target to simulate its effect.
+    -->
+    <Target Name="ExplicitRemoveFromFilesToBundle" BeforeTargets="GenerateSingleFileBundle" DependsOnTargets="PrepareForBundle">
+        <Message Text="List of bundle objects before purging: '@(FilesToBundle)'" Importance="High" />
+
+        <!--
+        To my unfathomable irritation, the only way I've been able to perform this is by regex.
+        -->
+        <ItemGroup>
+            <FilesToBundle Remove="@(FilesToBundle)" Condition="
+            $([System.Text.RegularExpressions.Regex]::IsMatch('%(Filename)',
+            '\A(?:TerraFX\.Interop\.Windows|Hexa\.NET\.(?:DirectXTex|ImGui|ImGui\.Backends)|HexaGen\.(?:Runtime|Runtime\.COM)|ImGuiImpl|cimgui|DirectXTex)\z'))" />
+        </ItemGroup>
+
+        <Message Text="List of bundle objects after purging: '@(FilesToBundle)'" Importance="High" />
+    </Target>
+</Project>

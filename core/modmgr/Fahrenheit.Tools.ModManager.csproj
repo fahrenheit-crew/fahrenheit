@@ -1,4 +1,4 @@
-﻿<Project>
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <!-- ASSEMBLY BASIC PROPERTIES -->
     <PropertyGroup>
@@ -27,10 +27,6 @@
     <PropertyGroup>
         <ApplicationIcon>..\..\assets\fh_base_256.ico</ApplicationIcon>
     </PropertyGroup>
-
-    <!-- SDK REFERENCES -->
-    <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
-    <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
 
     <!-- SHARED FILE LINKS -->
     <ItemGroup>

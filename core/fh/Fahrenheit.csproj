@@ -1,4 +1,28 @@
-﻿<Project>
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <!--
+        See https://learn.microsoft.com/en-us/nuget/reference/msbuild-targets#pack-target,
+    -->
+
+    <!-- PACKAGING PROPERTIES -->
+    <PropertyGroup>
+        <IsPackable>true</IsPackable>
+
+        <PackageId>Fahrenheit</PackageId>
+        <Authors>The Fahrenheit contributors</Authors>
+        <Description>The mod framework for the Final Fantasy X/X-2 HD Remasters.</Description>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageIcon>fh_base_256.png</PackageIcon>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <RepositoryType>git</RepositoryType>
+        <RepositoryUrl>https://github.com/fahrenheit-crew/fahrenheit.git</RepositoryUrl>
+    </PropertyGroup>
+
+    <!-- PACKAGING EXTRA FILES -->
+    <ItemGroup>
+        <None Include="..\..\assets\fh_base_256.png" Pack="true" PackagePath="\"/>
+        <None Include="..\..\README.md" Pack="true" PackagePath="\"/>
+    </ItemGroup>
 
     <!-- ASSEMBLY BASIC PROPERTIES -->
     <PropertyGroup>
@@ -16,10 +40,6 @@
         <AssemblyTitle>Fahrenheit Mod Framework</AssemblyTitle>
         <Product>Fahrenheit Mod Framework</Product>
     </PropertyGroup>
-
-    <!-- SDK REFERENCES -->
-    <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
-    <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
 
     <!-- SHARED FILE LINKS -->
     <ItemGroup>

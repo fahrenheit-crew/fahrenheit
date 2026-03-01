@@ -2,7 +2,7 @@
 
 A Final Fantasy X/X-2 reverse-engineering project and mod framework.
 
-![banner](https://raw.githubusercontent.com/peppy-enterprises/fahrenheit/refs/heads/main/assets/fh_banner.png)
+![banner](https://raw.githubusercontent.com/fahrenheit-crew/fahrenheit/refs/heads/main/assets/fh_banner.png)
 
 ## What is Fahrenheit?
 Fahrenheit is a reverse-engineering project for the [Final Fantasy X and X-2 HD Remasters](https://store.steampowered.com/app/359870/).
@@ -18,7 +18,7 @@ Fahrenheit, like all of these tools, is free for you to analyze, improve, learn 
 
 ## Cloning, building from source and testing
 Fahrenheit includes submodules. To clone them all, use
-``git clone --recurse-submodules https://github.com/peppy-enterprises/fahrenheit``.
+``git clone --recurse-submodules https://github.com/fahrenheit-crew/fahrenheit``.
 
 Ensure the folder you cloned to does not contain special characters. This can cause build errors.
 
@@ -70,9 +70,9 @@ Time permitting, the goals (in no specific order) of the project are:
 Yes. Feel free to join us in [Cid's Salvage Ship](https://discord.gg/AGx2grw9nD), a Discord server that supports Fahrenheit and related efforts.
 
 ## License
-Fahrenheit source code is licensed under the [MIT](https://github.com/peppy-enterprises/fahrenheit/blob/main/LICENSE.txt) license.
+Fahrenheit source code is licensed under the [MIT](https://github.com/fahrenheit-crew/fahrenheit/blob/main/LICENSE.txt) license.
 
 Assets (the contents of the ``assets`` folder) may be used in forks of Fahrenheit, but _not_ for any other purpose!
 
 For third-party code license notices, please see
-[THIRD-PARTY-NOTICES](https://github.com/peppy-enterprises/fahrenheit/blob/main/THIRD-PARTY-NOTICES.txt).
+[THIRD-PARTY-NOTICES](https://github.com/fahrenheit-crew/fahrenheit/blob/main/THIRD-PARTY-NOTICES.txt).

@@ -1,15 +1,61 @@
 <Project>	
-	<PropertyGroup>
+    
+    <PropertyGroup>
+        <!--
+        Makes it such that projects must be explicitly marked packable.
+        -->
+    
+        <IsPackable>false</IsPackable>
+    </PropertyGroup>
+    
+    <PropertyGroup>
+        <!--
+        Artifact path handling.
+        -->
+    
         <_FhOutDir Condition="'$(Configuration)'=='Release'">$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', 'artifacts', 'deploy', 'rel'))</_FhOutDir>
         <_FhOutDir Condition="'$(Configuration)'=='Debug'">$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', 'artifacts', 'deploy', 'dbg'))</_FhOutDir>
         <_FhBaseIntermediateOutputPath>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', 'artifacts', 'obj', '$(MSBuildProjectName)'))</_FhBaseIntermediateOutputPath>
         <_FhBaseOutputPath>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', 'artifacts', 'build', '$(MSBuildProjectName)'))</_FhBaseOutputPath>
         <_FhOutDirBin>$([MSBuild]::NormalizeDirectory('$(_FhOutDir)', 'bin'))</_FhOutDirBin>
         <_FhOutDirMods>$([MSBuild]::NormalizeDirectory('$(_FhOutDir)', 'mods', '$(AssemblyName)'))</_FhOutDirMods>
-        
+        <_FhOutDirPkg Condition="'$(Configuration)'=='Release'">$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', 'artifacts', 'pkg', 'rel'))</_FhOutDirPkg>
+        <_FhOutDirPkg Condition="'$(Configuration)'=='Debug'">$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', 'artifacts', 'pkg', 'dbg'))</_FhOutDirPkg>
+      
+        <PackageOutputPath>$(_FhOutDirPkg)</PackageOutputPath>
         <PublishDir>$(_FhOutDirBin)</PublishDir>
         <BaseOutputPath>$(_FhBaseOutputPath)</BaseOutputPath>
         <BaseIntermediateOutputPath>$(_FhBaseIntermediateOutputPath)</BaseIntermediateOutputPath>
-        <Company>https://github.com/peppy-enterprises/fahrenheit</Company>
+    </PropertyGroup>
+    
+    <PropertyGroup>
+        <!--
+        For ease of enabling Source Link, we embed PDBs.
+        -->
+        
+        <DebugType>embedded</DebugType>
+    </PropertyGroup>
+    
+    <PropertyGroup>
+        <!--
+        Custom display attributes.
+        -->
+        
+        <Company>https://github.com/fahrenheit-crew/fahrenheit</Company>
+        <Copyright>Copyright © The Fahrenheit contributors</Copyright>
+        <Version>1.0.0-alpha07</Version>
 	</PropertyGroup>
+    
+    <PropertyGroup>
+        <!--
+        NuGet Package Explorer complains if a package is not built 'deterministically'.
+
+        See https://docs.github.com/en/actions/reference/workflows-and-actions/variables,
+        https://github.com/terrafx/terrafx.interop.windows/blob/7d3e679e74be9da3584b4d4c4689e10422cc485f/Directory.Build.props#L44.
+        -->
+    
+        <ContinuousIntegrationBuild Condition="'$(GITHUB_RUN_ID)' != ''">true</ContinuousIntegrationBuild>
+    
+    </PropertyGroup>
+    
 </Project>

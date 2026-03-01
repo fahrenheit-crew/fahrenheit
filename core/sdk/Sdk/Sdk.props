@@ -1,0 +1,39 @@
+<Project>
+
+    <!-- ASSEMBLY BASIC PROPERTIES -->
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>disable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <RuntimeIdentifier>win-x86</RuntimeIdentifier>
+        <EnableDynamicLoading>true</EnableDynamicLoading>
+        <DebugType>embedded</DebugType>
+    </PropertyGroup>
+
+    <!-- SDK REFERENCES -->
+    <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
+
+    <!-- ASSETS: MANIFEST -->
+    <ItemGroup>
+        <None Include="$(AssemblyName).manifest.json" CopyToOutputDirectory="Always" />
+    </ItemGroup>
+
+    <!-- ASSETS: LOCALIZATION -->
+    <ItemGroup>
+        <None Remove="lang/**" />
+        <None Include="lang/*.json" CopyToOutputDirectory="Always" />
+    </ItemGroup>
+
+    <!-- ASSETS: EXTERNAL FILE LOADER -->
+    <ItemGroup>
+        <None Remove="efl/**" />
+        <None Include="efl/x/**/*;efl/x2/**/*" CopyToOutputDirectory="Always" />
+    </ItemGroup>
+
+    <!-- ASSETS: GENERIC -->
+    <ItemGroup>
+        <None Include="resources/**" CopyToOutputDirectory="Always" />
+    </ItemGroup>
+
+</Project>

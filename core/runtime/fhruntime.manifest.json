@@ -4,7 +4,7 @@
     "Desc":"The essential runtime components of the Fahrenheit mod framework.",
     "Authors":"The Fahrenheit contributors",
     "Version":"1.0.0-alpha",
-    "Link":"https://github.com/peppy-enterprises/fahrenheit",
+    "Link":"https://github.com/fahrenheit-crew/fahrenheit",
     "Dependencies":[],
     "LoadAfter":[],
     "Flags":"NONE"

@@ -28,10 +28,11 @@ public struct Command {
     [FieldOffset(0x18)] public  byte              sub_menu_cat;
     [FieldOffset(0x19)] public  byte              user_id;
     [FieldOffset(0x1A)] public  byte              flags_target;
+    [FieldOffset(0x1B)] public  byte              flags_use; //better name for this?
     [FieldOffset(0x1C)] public  uint              flags_misc;
     [FieldOffset(0x20)] public  byte              flags_damage;
     [FieldOffset(0x21)] public  bool              steals_gil;
-    [FieldOffset(0x22)] public  bool              has_party_preview;
+    [FieldOffset(0x22)] public  byte              party_preview;
     [FieldOffset(0x23)] public  byte              flags_damage_class;
     [FieldOffset(0x24)] public  byte              ctb_rank;
     [FieldOffset(0x25)] public  byte              mp_cost;
@@ -46,13 +47,13 @@ public struct Command {
     [FieldOffset(0x2E)] public  StatusMap         status_map;
     [FieldOffset(0x47)] public  StatusDurationMap status_duration_map;
     [FieldOffset(0x54)] public  StatusExtraFlags  flags_status_extra;
+    [FieldOffset(0x56)] public  byte              flags_buffs_stat;
     [FieldOffset(0x58)] public  byte              overdrive_category;
     [FieldOffset(0x59)] public  byte              buff_amount;
     [FieldOffset(0x5A)] public  byte              flags_buffs_mix;
-    [FieldOffset(0x56)] public  byte              flags_buffs_stat;
 
     public  bool is_top_level_in_menu { get { return flags_menu.get_bit(0); } set { flags_menu.set_bit (0, value); } }
-    private bool _menu_f4             { get { return flags_menu.get_bit(3); } set { flags_menu.set_bit (3, value); } }
+    private bool _menu_f4             { get { return flags_menu.get_bit(3); } set { flags_menu.set_bit (3, value); } } //Only on Skill, Special, Blk/Wht Magic
     public  bool opens_sub_menu       { get { return flags_menu.get_bit(4); } set { flags_menu.set_bit (4, value); } }
 
     public  bool can_target        { readonly get { return flags_target.get_bit(0); } set { flags_target.set_bit(0, value); } }
@@ -63,6 +64,10 @@ public struct Command {
     public  bool targets_team      { readonly get { return flags_target.get_bit(5); } set { flags_target.set_bit(5, value); } }
     public  bool targets_dead      { readonly get { return flags_target.get_bit(6); } set { flags_target.set_bit(6, value); } }
     private bool _targets_f8       { readonly get { return flags_target.get_bit(7); } set { flags_target.set_bit(7, value); } }
+
+    public  bool use_long_range { readonly get { return flags_use.get_bit(0); } set { flags_use.set_bit(0, value); } } //Command can be used at long range
+    private bool use_f2         { readonly get { return flags_use.get_bit(1); } set { flags_use.set_bit(1, value); } }
+    public  bool use_cursor     { readonly get { return flags_use.get_bit(2); } set { flags_use.set_bit(2, value); } } //If 0, cursor is invisible
 
     public  bool is_usable_outside_combat { readonly get { return flags_misc.get_bit ( 0);    } set { flags_misc.set_bit ( 0,    value); } }
     public  bool is_usable_in_combat      { readonly get { return flags_misc.get_bit ( 1);    } set { flags_misc.set_bit ( 1,    value); } }
@@ -86,14 +91,14 @@ public struct Command {
     public  bool uses_tier3_cast_anim     { readonly get { return flags_misc.get_bit (21);    } set { flags_misc.set_bit (21,    value); } }
     public  bool destroys_user            { readonly get { return flags_misc.get_bit (22);    } set { flags_misc.set_bit (22,    value); } }
     public  bool misses_living_targets    { readonly get { return flags_misc.get_bit (23);    } set { flags_misc.set_bit (23,    value); } }
-    private bool _anim_f1                 { readonly get { return flags_misc.get_bit (24);    } set { flags_misc.set_bit (24,    value); } }
-    private bool _anim_f2                 { readonly get { return flags_misc.get_bit (25);    } set { flags_misc.set_bit (25,    value); } }
-    private bool _anim_f3                 { readonly get { return flags_misc.get_bit (26);    } set { flags_misc.set_bit (26,    value); } }
-    private bool _anim_f4                 { readonly get { return flags_misc.get_bit (27);    } set { flags_misc.set_bit (27,    value); } }
-    private bool _anim_f5                 { readonly get { return flags_misc.get_bit (28);    } set { flags_misc.set_bit (28,    value); } }
+    public  bool charges_limit_gauge      { readonly get { return flags_misc.get_bit (24);    } set { flags_misc.set_bit (24,    value); } } //If limit mode is Warrior/Healer
+    public  bool empties_limit_gauge      { readonly get { return flags_misc.get_bit (25);    } set { flags_misc.set_bit (25,    value); } }
+    public  bool show_spellcast_aura      { readonly get { return flags_misc.get_bit (26);    } set { flags_misc.set_bit (26,    value); } }
+    public  bool user_runs_off            { readonly get { return flags_misc.get_bit (27);    } set { flags_misc.set_bit (27,    value); } } //Escape
+    public  bool can_copycat              { readonly get { return flags_misc.get_bit (28);    } set { flags_misc.set_bit (28,    value); } }
     private bool _anim_f6                 { readonly get { return flags_misc.get_bit (29);    } set { flags_misc.set_bit (29,    value); } }
-    private bool _anim_f7                 { readonly get { return flags_misc.get_bit (30);    } set { flags_misc.set_bit (30,    value); } }
-    private bool _anim_f8                 { readonly get { return flags_misc.get_bit (31);    } set { flags_misc.set_bit (31,    value); } }
+    public  bool aeon_limit               { readonly get { return flags_misc.get_bit (30);    } set { flags_misc.set_bit (30,    value); } } //Only set on Aeon Overdrives
+    public  bool bribe                    { readonly get { return flags_misc.get_bit (31);    } set { flags_misc.set_bit (31,    value); } } //Enemy runs off?
 
     public bool deals_physical_damage       { readonly get { return flags_damage.get_bit(0); } set { flags_damage.set_bit(0, value); } }
     public bool deals_magical_damage        { readonly get { return flags_damage.get_bit(1); } set { flags_damage.set_bit(1, value); } }

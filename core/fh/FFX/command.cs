@@ -69,36 +69,36 @@ public struct Command {
     private bool uses_f2      { readonly get { return flags_use.get_bit(1); } set { flags_use.set_bit(1, value); } }
     public  bool uses_cursor { readonly get { return flags_use.get_bit(2); } set { flags_use.set_bit(2, value); } } // If false, cursor is invisible
 
-    public  bool is_usable_outside_combat { readonly get { return flags_misc.get_bit ( 0);    } set { flags_misc.set_bit ( 0,    value); } }
-    public  bool is_usable_in_combat      { readonly get { return flags_misc.get_bit ( 1);    } set { flags_misc.set_bit ( 1,    value); } }
-    public  bool display_move_name        { readonly get { return flags_misc.get_bit ( 2);    } set { flags_misc.set_bit ( 2,    value); } }
-    public  uint accuracy_formula         { readonly get { return flags_misc.get_bits( 3, 3); } set { flags_misc.set_bits( 3, 3, value); } }
-    public  bool is_affected_by_darkness  { readonly get { return flags_misc.get_bit ( 6);    } set { flags_misc.set_bit ( 6,    value); } }
-    public  bool is_affected_by_reflect   { readonly get { return flags_misc.get_bit ( 7);    } set { flags_misc.set_bit ( 7,    value); } }
-    public  bool absorbs_dmg              { readonly get { return flags_misc.get_bit ( 8);    } set { flags_misc.set_bit ( 8,    value); } }
-    public  bool steals_item              { readonly get { return flags_misc.get_bit ( 9);    } set { flags_misc.set_bit ( 9,    value); } }
-    public  bool is_in_use_menu           { readonly get { return flags_misc.get_bit (10);    } set { flags_misc.set_bit (10,    value); } }
-    public  bool is_in_sub_menu           { readonly get { return flags_misc.get_bit (11);    } set { flags_misc.set_bit (11,    value); } }
-    public  bool is_in_trigger_menu       { readonly get { return flags_misc.get_bit (12);    } set { flags_misc.set_bit (12,    value); } }
-    public  bool inflicts_delay_weak      { readonly get { return flags_misc.get_bit (13);    } set { flags_misc.set_bit (13,    value); } }
-    public  bool inflicts_delay_strong    { readonly get { return flags_misc.get_bit (14);    } set { flags_misc.set_bit (14,    value); } }
-    public  bool targets_randomly         { readonly get { return flags_misc.get_bit (15);    } set { flags_misc.set_bit (15,    value); } }
-    public  bool is_piercing              { readonly get { return flags_misc.get_bit (16);    } set { flags_misc.set_bit (16,    value); } }
-    public  bool is_affected_by_silence   { readonly get { return flags_misc.get_bit (17);    } set { flags_misc.set_bit (17,    value); } }
-    public  bool uses_weapon_properties   { readonly get { return flags_misc.get_bit (18);    } set { flags_misc.set_bit (18,    value); } }
-    public  bool is_trigger_command       { readonly get { return flags_misc.get_bit (19);    } set { flags_misc.set_bit (19,    value); } }
-    public  bool uses_tier1_cast_anim     { readonly get { return flags_misc.get_bit (20);    } set { flags_misc.set_bit (20,    value); } }
-    public  bool uses_tier3_cast_anim     { readonly get { return flags_misc.get_bit (21);    } set { flags_misc.set_bit (21,    value); } }
-    public  bool destroys_user            { readonly get { return flags_misc.get_bit (22);    } set { flags_misc.set_bit (22,    value); } }
-    public  bool misses_living_targets    { readonly get { return flags_misc.get_bit (23);    } set { flags_misc.set_bit (23,    value); } }
-    public  bool charges_limit_gauge      { readonly get { return flags_misc.get_bit (24);    } set { flags_misc.set_bit (24,    value); } } // If limit mode is Warrior/Healer
-    public  bool empties_limit_gauge      { readonly get { return flags_misc.get_bit (25);    } set { flags_misc.set_bit (25,    value); } }
-    public  bool show_spellcast_aura      { readonly get { return flags_misc.get_bit (26);    } set { flags_misc.set_bit (26,    value); } }
-    public  bool should_run_away          { readonly get { return flags_misc.get_bit (27);    } set { flags_misc.set_bit (27,    value); } } // Escape & Switch
-    public  bool can_copycat              { readonly get { return flags_misc.get_bit (28);    } set { flags_misc.set_bit (28,    value); } }
-    private bool _anim_f6                 { readonly get { return flags_misc.get_bit (29);    } set { flags_misc.set_bit (29,    value); } }
-    public  bool is_aeon_limit            { readonly get { return flags_misc.get_bit (30);    } set { flags_misc.set_bit (30,    value); } } // Only set on Aeon Overdrives
-    public  bool is_bribe                 { readonly get { return flags_misc.get_bit (31);    } set { flags_misc.set_bit (31,    value); } } // Enemy runs off?
+    public  bool is_usable_outside_combat  { readonly get { return flags_misc.get_bit ( 0);    } set { flags_misc.set_bit ( 0,    value); } }
+    public  bool is_usable_in_combat       { readonly get { return flags_misc.get_bit ( 1);    } set { flags_misc.set_bit ( 1,    value); } }
+    public  bool display_move_name         { readonly get { return flags_misc.get_bit ( 2);    } set { flags_misc.set_bit ( 2,    value); } }
+    public  uint accuracy_formula          { readonly get { return flags_misc.get_bits( 3, 3); } set { flags_misc.set_bits( 3, 3, value); } }
+    public  bool is_affected_by_darkness   { readonly get { return flags_misc.get_bit ( 6);    } set { flags_misc.set_bit ( 6,    value); } }
+    public  bool is_affected_by_reflect    { readonly get { return flags_misc.get_bit ( 7);    } set { flags_misc.set_bit ( 7,    value); } }
+    public  bool absorbs_dmg               { readonly get { return flags_misc.get_bit ( 8);    } set { flags_misc.set_bit ( 8,    value); } }
+    public  bool steals_item               { readonly get { return flags_misc.get_bit ( 9);    } set { flags_misc.set_bit ( 9,    value); } }
+    public  bool is_in_use_menu            { readonly get { return flags_misc.get_bit (10);    } set { flags_misc.set_bit (10,    value); } }
+    public  bool is_in_sub_menu            { readonly get { return flags_misc.get_bit (11);    } set { flags_misc.set_bit (11,    value); } }
+    public  bool is_in_trigger_menu        { readonly get { return flags_misc.get_bit (12);    } set { flags_misc.set_bit (12,    value); } }
+    public  bool inflicts_delay_weak       { readonly get { return flags_misc.get_bit (13);    } set { flags_misc.set_bit (13,    value); } }
+    public  bool inflicts_delay_strong     { readonly get { return flags_misc.get_bit (14);    } set { flags_misc.set_bit (14,    value); } }
+    public  bool targets_randomly          { readonly get { return flags_misc.get_bit (15);    } set { flags_misc.set_bit (15,    value); } }
+    public  bool is_piercing               { readonly get { return flags_misc.get_bit (16);    } set { flags_misc.set_bit (16,    value); } }
+    public  bool is_affected_by_silence    { readonly get { return flags_misc.get_bit (17);    } set { flags_misc.set_bit (17,    value); } }
+    public  bool uses_weapon_properties    { readonly get { return flags_misc.get_bit (18);    } set { flags_misc.set_bit (18,    value); } }
+    public  bool is_trigger_command        { readonly get { return flags_misc.get_bit (19);    } set { flags_misc.set_bit (19,    value); } }
+    public  bool uses_tier1_cast_anim      { readonly get { return flags_misc.get_bit (20);    } set { flags_misc.set_bit (20,    value); } }
+    public  bool uses_tier3_cast_anim      { readonly get { return flags_misc.get_bit (21);    } set { flags_misc.set_bit (21,    value); } }
+    public  bool destroys_user             { readonly get { return flags_misc.get_bit (22);    } set { flags_misc.set_bit (22,    value); } }
+    public  bool misses_living_targets     { readonly get { return flags_misc.get_bit (23);    } set { flags_misc.set_bit (23,    value); } }
+    public  bool charges_limit_gauge       { readonly get { return flags_misc.get_bit (24);    } set { flags_misc.set_bit (24,    value); } } // If limit mode is Warrior/Healer
+    public  bool empties_limit_gauge       { readonly get { return flags_misc.get_bit (25);    } set { flags_misc.set_bit (25,    value); } }
+    public  bool show_user_casting_effects { readonly get { return flags_misc.get_bit (26);    } set { flags_misc.set_bit (26,    value); } }
+    public  bool should_run_away           { readonly get { return flags_misc.get_bit (27);    } set { flags_misc.set_bit (27,    value); } } // Escape & Switch
+    public  bool can_copycat               { readonly get { return flags_misc.get_bit (28);    } set { flags_misc.set_bit (28,    value); } }
+    private bool _anim_f6                  { readonly get { return flags_misc.get_bit (29);    } set { flags_misc.set_bit (29,    value); } }
+    public  bool is_aeon_limit             { readonly get { return flags_misc.get_bit (30);    } set { flags_misc.set_bit (30,    value); } } // Only set on Aeon Overdrives
+    public  bool is_bribe                  { readonly get { return flags_misc.get_bit (31);    } set { flags_misc.set_bit (31,    value); } } // Enemy runs off?
 
     public bool deals_physical_damage       { readonly get { return flags_damage.get_bit(0); } set { flags_damage.set_bit(0, value); } }
     public bool deals_magical_damage        { readonly get { return flags_damage.get_bit(1); } set { flags_damage.set_bit(1, value); } }

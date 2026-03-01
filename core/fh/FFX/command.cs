@@ -65,9 +65,9 @@ public struct Command {
     public  bool targets_dead      { readonly get { return flags_target.get_bit(6); } set { flags_target.set_bit(6, value); } }
     private bool _targets_f8       { readonly get { return flags_target.get_bit(7); } set { flags_target.set_bit(7, value); } }
 
-    public  bool is_ranged   { readonly get { return flags_use.get_bit(0); } set { flags_use.set_bit(0, value); } } // Command can be used at long range
-    private bool uses_f2     { readonly get { return flags_use.get_bit(1); } set { flags_use.set_bit(1, value); } }
-    public  bool uses_cursor { readonly get { return flags_use.get_bit(2); } set { flags_use.set_bit(2, value); } } // If false, cursor is invisible
+    public  bool is_ranged   { readonly get { return flags_usage.get_bit(0); } set { flags_usage.set_bit(0, value); } } // Command can be used at long range
+    private bool uses_f2     { readonly get { return flags_usage.get_bit(1); } set { flags_usage.set_bit(1, value); } }
+    public  bool uses_cursor { readonly get { return flags_usage.get_bit(2); } set { flags_usage.set_bit(2, value); } } // If false, cursor is invisible
 
     public  bool is_usable_outside_combat  { readonly get { return flags_misc.get_bit ( 0);    } set { flags_misc.set_bit ( 0,    value); } }
     public  bool is_usable_in_combat       { readonly get { return flags_misc.get_bit ( 1);    } set { flags_misc.set_bit ( 1,    value); } }

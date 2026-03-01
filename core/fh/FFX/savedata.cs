@@ -228,11 +228,11 @@ public unsafe struct SaveData {
     [FieldOffset(0x5EC)]  public       bool            soundtrack_type;
     [FieldOffset(0xBEC)]  public       ushort          story_progress;
     [FieldOffset(0xC38)]  public       bool            celestial_mirror_obtained;
-    [FieldOffset(0xC39)]  public       byte            celestials_obtained;
+    [FieldOffset(0xC39)]  public       byte            celestials_obtained; // bitfield
     [FieldOffset(0xC5C)]  public       byte            anima_seals_unlocked;
     [FieldOffset(0xC60)]  public       uint            current_airship_location;
-    [FieldOffset(0xC6C)]  public       byte            celestials_half_powered;
-    [FieldOffset(0xC6D)]  public       byte            celestials_full_powered;
+    [FieldOffset(0xC6C)]  public       byte            celestials_half_powered; // bitfield
+    [FieldOffset(0xC6D)]  public       byte            celestials_full_powered; // bitfield
     [FieldOffset(0xC7B)]  public       byte            optional_aeons_unlocked;
     [FieldOffset(0xC7C)]  public       JechtSphereData jecht_spheres;
     [FieldOffset(0xC81)]  public       ushort          unlocked_airship_destinations;

@@ -9,7 +9,7 @@ public struct PlySaveLimitModeCtrArray {
 
 [StructLayout(LayoutKind.Explicit, Pack = 4, Size = 0x94)]
 public struct PlySave {
-    [FieldOffset(0x00)] private uint                     __0x0;
+    [FieldOffset(0x00)] public  uint                     name_offset;
     [FieldOffset(0x04)] public  uint                     base_hp;
     [FieldOffset(0x08)] public  uint                     base_mp;
     [FieldOffset(0x0C)] public  byte                     base_strength;
@@ -20,8 +20,7 @@ public struct PlySave {
     [FieldOffset(0x11)] public  byte                     base_luck;
     [FieldOffset(0x12)] public  byte                     base_evasion;
     [FieldOffset(0x13)] public  byte                     base_accuracy;
-    [FieldOffset(0x14)] private ushort                   __0x14;
-    [FieldOffset(0x16)] private ushort                   __0x16;
+    [FieldOffset(0x14)] public  uint                     total_ap;
     [FieldOffset(0x18)] public  uint                     ap;
     [FieldOffset(0x1C)] public  uint                     hp;
     [FieldOffset(0x20)] public  uint                     mp;
@@ -44,13 +43,13 @@ public struct PlySave {
     [FieldOffset(0x3A)] public  byte                     limit_charge_max;
     [FieldOffset(0x3B)] public  byte                     slv_available;
     [FieldOffset(0x3C)] public  byte                     slv_spent;
-    [FieldOffset(0x3D)] private byte                     __0x3D;
+    [FieldOffset(0x3D)] public  byte                     __0x3D; //Set to 0x17 on aeon death -> Aeon becomes greyed out in summon menu and unselectable
     [FieldOffset(0x3E)] public  AbilityMap               abi_map;
     [FieldOffset(0x4A)] public  AutoAbilityEffectsMap    auto_ability_effects;
     [FieldOffset(0x50)] public  uint                     battle_count;
-    [FieldOffset(0x54)] public  uint                     enemies_defeated;
-    [FieldOffset(0x58)] private uint                     __0x58;
-    [FieldOffset(0x5C)] private uint                     __0x5C;
+    [FieldOffset(0x54)] public  uint                     enemies_defeated_count;
+    [FieldOffset(0x58)] public  uint                     death_count;
+    [FieldOffset(0x5C)] public  uint                     limits_charged_count;
     [FieldOffset(0x60)] public  PlySaveLimitModeCtrArray limit_mode_counters;
     [FieldOffset(0x88)] public  OverdriveModeFlags       obtained_limit_modes;
     [FieldOffset(0x8C)] private uint                     __0x8C;
@@ -75,7 +74,7 @@ public struct PlySave {
     public ushort limit_mode_ctr_ally      { readonly get { return limit_mode_counters[13]; } set { limit_mode_counters[13] = value; } }
     public ushort limit_mode_ctr_sufferer  { readonly get { return limit_mode_counters[14]; } set { limit_mode_counters[14] = value; } }
     public ushort limit_mode_ctr_daredevil { readonly get { return limit_mode_counters[15]; } set { limit_mode_counters[15] = value; } }
-    public ushort limit_mode_ctr_liner     { readonly get { return limit_mode_counters[16]; } set { limit_mode_counters[16] = value; } }
+    public ushort limit_mode_ctr_loner     { readonly get { return limit_mode_counters[16]; } set { limit_mode_counters[16] = value; } }
     public ushort limit_mode_ctr_unused1   { readonly get { return limit_mode_counters[17]; } set { limit_mode_counters[17] = value; } }
     public ushort limit_mode_ctr_unused2   { readonly get { return limit_mode_counters[18]; } set { limit_mode_counters[18] = value; } }
     public ushort limit_mode_ctr_aeons     { readonly get { return limit_mode_counters[19]; } set { limit_mode_counters[19] = value; } }

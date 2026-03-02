@@ -71,11 +71,11 @@ public unsafe sealed class FhLocalStateModule : FhModule {
                 using FileStream state_meta_fs = File.Open(state_meta_fn, FileMode.Open,         FileAccess.Read, FileShare.None);
                 using FileStream state_fs      = File.Open(state_fn,      FileMode.OpenOrCreate, FileAccess.Read, FileShare.Read);
 
-                _logger.Info($"Reading metadata for module {module_type}.");
+                _logger.Debug($"Reading metadata for module {module_type}.");
                 FhLocalStateInfo state_meta = JsonSerializer.Deserialize<FhLocalStateInfo>(state_meta_fs, FhUtil.InternalJsonOpts)
                     ?? throw new Exception("FH_E_LOCAL_STATE_META_BLOCK_NULL");
 
-                _logger.Info($"{state_fn} -> {module_type}.");
+                _logger.Debug($"{state_fn} -> {module_type}.");
                 module_context.Module.load_local_state(state_fs, state_meta);
             }
         }
@@ -98,10 +98,10 @@ public unsafe sealed class FhLocalStateModule : FhModule {
                 using FileStream state_meta_fs = File.Open(state_meta_fn, FileMode.Create,       FileAccess.Write, FileShare.None);
                 using FileStream state_fs      = File.Open(state_fn,      FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read);
 
-                _logger.Info($"Writing metadata for module {module_type}.");
+                _logger.Debug($"Writing metadata for module {module_type}.");
                 state_meta_fs.Write(JsonSerializer.SerializeToUtf8Bytes(state_meta, FhUtil.InternalJsonOpts));
 
-                _logger.Info($"{module_type} -> {state_fn}.");
+                _logger.Debug($"{module_type} -> {state_fn}.");
                 module_context.Module.save_local_state(state_fs);
             }
         }

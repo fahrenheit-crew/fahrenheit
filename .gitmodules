@@ -22,9 +22,6 @@
 [submodule "tools/atelier"]
 	path = core/atelier
 	url = https://github.com/fahrenheit-crew/fh-tools-atelier
-[submodule "tools/inspector"]
-	path = core/inspector
-	url = https://github.com/fahrenheit-crew/fh-tools-inspector
 [submodule "tools/eedit"]
 	path = core/eedit
 	url = https://github.com/fahrenheit-crew/fh-tools-eedit

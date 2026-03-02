@@ -1,0 +1,37 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <!-- ASSEMBLY BASIC PROPERTIES -->
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>disable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <RuntimeIdentifier>win-x86</RuntimeIdentifier>
+    </PropertyGroup>
+
+    <!-- ASSEMBLY ADDITIONAL PROPERTIES -->
+    <PropertyGroup>
+        <AssemblyName>fhinspect</AssemblyName>
+        <AssemblyTitle>Fahrenheit Structure Inspector</AssemblyTitle>
+        <Product>Fahrenheit Structure Inspector</Product>
+    </PropertyGroup>
+
+    <!-- PUBLISH SETTINGS -->
+    <PropertyGroup>
+        <PublishSingleFile>true</PublishSingleFile>
+        <SelfContained>false</SelfContained>
+    </PropertyGroup>
+
+    <!-- SHARED FILE LINKS -->
+    <ItemGroup>
+        <None Include="$(SolutionDir).editorconfig" Link=".editorconfig" />
+    </ItemGroup>
+
+    <!-- EXTERNAL PROJECT REFS -->
+    <ItemGroup>
+        <PackageReference Include="ObjectLayoutInspector" Version="0.1.4" />
+        <PackageReference Include="System.CommandLine" Version="2.0.0-beta5.25306.1" />
+    </ItemGroup>
+
+</Project>

@@ -1,0 +1,4 @@
+# Fahrenheit 'Inspector'
+
+A simple console app wrapper around Sergey Teplyakov's excellent [ObjectLayoutInspector](https://github.com/SergeyTeplyakov/ObjectLayoutInspector).
+Used to verify the layout of various structures in the Fahrenheit libraries.

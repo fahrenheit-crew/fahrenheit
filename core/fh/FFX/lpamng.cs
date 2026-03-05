@@ -80,6 +80,7 @@ public unsafe struct LpAbilityMapEngine {
     [FieldOffset(0xF828)]  public SphereGridNodeTypeInfoArray node_type_infos;
     [FieldOffset(0x11088)] public SphereGridChrInfoArray      party_infos;
 
+    [FieldOffset(0x112F4)] public float          current_halo_width;
     [FieldOffset(0x112FC)] public short          selected_node_idx;
     [FieldOffset(0x11308)] public Vector4        cam_desired_pos;
     [FieldOffset(0x11318)] public Vector4        cam_limited_pos;

@@ -88,8 +88,8 @@ public unsafe struct LpAbilityMapEngine {
     [FieldOffset(0x115CB)] public SphereGridTilt tilt_level;
     [FieldOffset(0x115CC)] public SphereGridZoom zoom_level;
     [FieldOffset(0x115D0)] public ushort         zoom_time_left; // in frames
-    [FieldOffset(0x115DC)] public float          start_zoom;
-    [FieldOffset(0x115E0)] public float          target_zoom;
+    [FieldOffset(0x115DC)] public float          zoom_start;
+    [FieldOffset(0x115E0)] public float          zoom_target;
     [FieldOffset(0x11620)] public float          move_progress; // per link/knot
     [FieldOffset(0x11624)] public float          move_speed;
     [FieldOffset(0x11632)] public short          move_target_node_idx;

@@ -59,14 +59,14 @@ public unsafe struct SphereGridLink {
     }
 }
 
-[StructLayout(LayoutKind.Explicit, Pack = 1, Size = 0x18)]
+[StructLayout(LayoutKind.Sequential)]
 public struct SphereGridLinkPoint {
-    [FieldOffset(0x0)]  public float x;
-    [FieldOffset(0x4)]  public float y;
-    [FieldOffset(0x8)]  public float offset_x1;
-    [FieldOffset(0xC)]  public float offset_y2;
-    [FieldOffset(0x10)] public float offset_x2;
-    [FieldOffset(0x14)] public float offset_y1;
+    public float x;
+    public float y;
+    public float offset_x1;
+    public float offset_y2;
+    public float offset_x2;
+    public float offset_y1;
 
     //TODO: Document why this uses `Unsafe`.
     public Vector2 pos {
@@ -117,18 +117,16 @@ public unsafe struct SphereGridNode {
         return (SphereGridLink*)link_ptrs[idx];
     }
 
-    public int link_count {
-        get {
-            int count = 0;
+    public int get_link_count() {
+        int count = 0;
 
-            foreach (uint ptr in link_ptrs) {
-                if ((SphereGridLink*)ptr is not null) {
-                    count++;
-                }
+        foreach (uint ptr in link_ptrs) {
+            if ((SphereGridLink*)ptr is not null) {
+                count++;
             }
-
-            return count;
         }
+
+        return count;
     }
 
     /// <summary>Get the indices of nodes connected to this node by at least one link.</summary>
@@ -136,13 +134,17 @@ public unsafe struct SphereGridNode {
     ///     The index of the node this is called on.<br/>
     ///     If <c>null</c>, attempts to search for it in <see cref="Globals.SphereGrid.lpamng"/>.
     /// </param>
+    /// <param name="set">
+    ///     The HashSet to return.
+    /// </param>
     /// <returns>A HashSet of the neighbouring nodes.</returns>
-    public HashSet<short> get_neighbour_indices(short? self_idx) {
+    public HashSet<short> get_neighbour_indices(short? self_idx, HashSet<short>? set = null) {
         if (self_idx is null && Globals.SphereGrid.lpamng->get_node_idx(this, out short? node_idx)) {
             self_idx ??= node_idx;
         }
 
-        HashSet<short> set = [];
+        set?.Clear();
+        set ??= [];
 
         foreach (uint ptr in link_ptrs) {
             SphereGridLink* link = (SphereGridLink*)ptr;
@@ -338,7 +340,7 @@ public static partial class FhEnumExt {
 
     public static bool is_skill_node(this NodeType node_type) {
         return node_type is >= NodeType.DELAY_ATTACK and <= NodeType.QUICK_HIT
-                         or >= NodeType.FULL_BREAK and <= NodeType.NAB_GIL;
+                         or >= NodeType.FULL_BREAK   and <= NodeType.NAB_GIL;
     }
 
     public static bool is_special_node(this NodeType node_type) {

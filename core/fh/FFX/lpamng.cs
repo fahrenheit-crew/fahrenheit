@@ -90,9 +90,13 @@ public unsafe struct LpAbilityMapEngine {
     [FieldOffset(0x115D0)] public ushort         zoom_time_left; // in frames
     [FieldOffset(0x115DC)] public float          start_zoom;
     [FieldOffset(0x115E0)] public float          target_zoom;
-    [FieldOffset(0x11620)] public float          move_progress; // per link/knot
-    [FieldOffset(0x11624)] public float          move_speed;
-    [FieldOffset(0x11632)] public short          move_target_node_idx;
+    [FieldOffset(0x11620)] public float          moving_progress; // per link/knot
+    [FieldOffset(0x11624)] public float          moving_speed;
+    [FieldOffset(0x11628)] public float          moving_halo_start_width;
+    [FieldOffset(0x1162C)] public float          moving_halo_target_width;
+    [FieldOffset(0x11632)] public short          next_move_target_node_idx;
+    [FieldOffset(0x11634)] public short          last_move_target_node_idx;
+    [FieldOffset(0x11638)] public byte           moving_chr_id;
     [FieldOffset(0x1165C)] public byte*          activated_node_name_ptr;
     [FieldOffset(0x116A8)] public int            should_update_node; // a node idx to update a specific node, -1 for all
     [FieldOffset(0x116AC)] public int            should_update;

@@ -166,6 +166,7 @@ public unsafe struct SphereGridNodeTypeInfo {
     public struct Vec2s16Array {
         private Vec2s16 _data;
     }
+
     [FieldOffset(0x0C)] public short        width;
     [FieldOffset(0x0E)] public short        height;
 

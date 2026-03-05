@@ -9,6 +9,13 @@ public struct LVec3f {
     public float latch;
 }
 
+public struct Vector4i {
+    public int x;
+    public int y;
+    public int z;
+    public int w;
+}
+
 public struct Vec2s16 {
     public short x;
     public short y;

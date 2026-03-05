@@ -38,7 +38,7 @@ public unsafe struct SphereGridLink {
     [FieldOffset(0x4)]  public short anchor_idx;
     [FieldOffset(0xC)]  public byte  activated_by;
     [FieldOffset(0xD)]  public byte  point_count;
-    [FieldOffset(0xE)]  public byte  field_0xe;
+    [FieldOffset(0xE)]  public byte  __0xE;
     
     [FieldOffset(0x10)] public SphereGridLinkPoint* points;
 
@@ -106,7 +106,7 @@ public unsafe struct SphereGridNode {
     [FieldOffset(0x22)] public  SphereGridNodeProperties properties;
     [FieldOffset(0x24)] public  byte                     move_cost; // Only nonzero when moving
 
-    [FieldOffset(0x26)] public        ushort field14_0x26;
+    [FieldOffset(0x26)] public  ushort                   __0x26;
 
     public NodeType node_type {
         get => _node_type == -1 ? NodeType.NULL : (NodeType)_node_type;
@@ -169,7 +169,7 @@ public unsafe struct SphereGridNodeTypeInfo {
     [FieldOffset(0x0C)] public short        width;
     [FieldOffset(0x0E)] public short        height;
 
-    [FieldOffset(0x10)] public float        field5_0x10;
+    [FieldOffset(0x10)] public float        __0x10;
     [FieldOffset(0x14)] public Vec2s16Array pos; // activation indicator offset per character
     public Vector2 size => new Vector2(width, height) * new Vector2(Globals.SphereGrid.lpamng->current_zoom);
 }
@@ -183,17 +183,17 @@ public unsafe struct SphereGridChrInfo {
     [FieldOffset(0x28)] public uint    c;
     [FieldOffset(0x2C)] public byte*   chr_name;
     [FieldOffset(0x30)] public short   name_width; // min 32
-    [FieldOffset(0x32)] public short   field7_0x32;
-    [FieldOffset(0x38)] public short   field_0x38;
+    [FieldOffset(0x32)] public short   __0x32;
+    [FieldOffset(0x38)] public short   __0x38;
     [FieldOffset(0x3C)] public float   pos_circle_radius;
-    [FieldOffset(0x40)] public uint    field_0x40;
+    [FieldOffset(0x40)] public uint    __0x40;
     [FieldOffset(0x44)] public short   current_node_idx;
-    [FieldOffset(0x46)] public short   field22_0x46;
-    [FieldOffset(0x48)] public short   field23_0x48;
-    [FieldOffset(0x4a)] public short   field24_0x4a;
+    [FieldOffset(0x46)] public short   __0x46;
+    [FieldOffset(0x48)] public short   __0x48;
+    [FieldOffset(0x4A)] public short   __0x4A;
     
-    [FieldOffset(0x4c)] public short   field25_0x4c;
-    [FieldOffset(0x4e)] public byte    field26_0x4e;
+    [FieldOffset(0x4C)] public short   __0x4C;
+    [FieldOffset(0x4E)] public byte    __0x4E;
 }
 
 public enum NodeType : byte {

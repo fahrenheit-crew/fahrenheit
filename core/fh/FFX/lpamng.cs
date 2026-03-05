@@ -80,6 +80,7 @@ public unsafe struct LpAbilityMapEngine {
     [FieldOffset(0xF828)]  public SphereGridNodeTypeInfoArray node_type_infos;
     [FieldOffset(0x11088)] public SphereGridChrInfoArray      party_infos;
 
+    [FieldOffset(0x112F4)] public float          current_halo_width;
     [FieldOffset(0x112FC)] public short          selected_node_idx;
     [FieldOffset(0x11308)] public Vector4        cam_desired_pos;
     [FieldOffset(0x11318)] public Vector4        cam_limited_pos;
@@ -90,9 +91,14 @@ public unsafe struct LpAbilityMapEngine {
     [FieldOffset(0x115D0)] public ushort         zoom_time_left; // in frames
     [FieldOffset(0x115DC)] public float          zoom_start;
     [FieldOffset(0x115E0)] public float          zoom_target;
-    [FieldOffset(0x11620)] public float          move_progress; // per link/knot
-    [FieldOffset(0x11624)] public float          move_speed;
-    [FieldOffset(0x11632)] public short          move_target_node_idx;
+    [FieldOffset(0x11620)] public float          moving_progress; // per link/knot
+    [FieldOffset(0x11624)] public float          moving_speed;
+    [FieldOffset(0x11628)] public float          moving_halo_start_width;
+    [FieldOffset(0x1162C)] public float          moving_halo_target_width;
+    [FieldOffset(0x11630)] public short          move_start_node_idx;
+    [FieldOffset(0x11632)] public short          next_move_target_node_idx;
+    [FieldOffset(0x11634)] public short          last_move_target_node_idx;
+    [FieldOffset(0x11638)] public byte           moving_chr_id;
     [FieldOffset(0x1165C)] public byte*          activated_node_name_ptr;
     [FieldOffset(0x116A8)] public int            should_update_node; // a node idx to update a specific node, -1 for all
     [FieldOffset(0x116AC)] public int            should_update;

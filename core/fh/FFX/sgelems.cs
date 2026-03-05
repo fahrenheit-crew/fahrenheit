@@ -138,13 +138,12 @@ public unsafe struct SphereGridNode {
     ///     The HashSet to return.
     /// </param>
     /// <returns>A HashSet of the neighbouring nodes.</returns>
-    public HashSet<short> get_neighbour_indices(short? self_idx, HashSet<short>? set = null) {
+    public HashSet<short> get_neighbour_indices(short? self_idx) {
         if (self_idx is null && Globals.SphereGrid.lpamng->get_node_idx(this, out short? node_idx)) {
             self_idx ??= node_idx;
         }
 
-        set?.Clear();
-        set ??= [];
+        HashSet<short> set = [];
 
         foreach (uint ptr in link_ptrs) {
             SphereGridLink* link = (SphereGridLink*)ptr;

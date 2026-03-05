@@ -59,15 +59,16 @@ public unsafe struct SphereGridLink {
     }
 }
 
-[StructLayout(LayoutKind.Explicit, Pack = 1, Size = 0x18)]
-public unsafe struct SphereGridLinkPoint {
-    [FieldOffset(0x0)]  public float x;
-    [FieldOffset(0x4)]  public float y;
-    [FieldOffset(0x8)]  public float offset_x1;
-    [FieldOffset(0xC)]  public float offset_y2;
-    [FieldOffset(0x10)] public float offset_x2;
-    [FieldOffset(0x14)] public float offset_y1;
+[StructLayout(LayoutKind.Sequential)]
+public struct SphereGridLinkPoint {
+    public float x;
+    public float y;
+    public float offset_x1;
+    public float offset_y2;
+    public float offset_x2;
+    public float offset_y1;
 
+    //TODO: Document why this uses `Unsafe`.
     public Vector2 pos {
         get => Unsafe.As<float, Vector2>(ref x);
         set => Unsafe.As<float, Vector2>(ref x) = value;
@@ -78,30 +79,30 @@ public unsafe struct SphereGridLinkPoint {
 
 [Flags]
 public enum SphereGridNodeProperties : byte {
-    NONE             = 0,
-    CAN_MOVE_TO      = 1 << 0,
-    HAS_MOVE_OUTLINE = 1 << 1,
+    NONE        = 0,
+    CAN_TARGET  = 1 << 0,
+    HIGHLIGHTED = 1 << 1,
 }
 
 public static partial class FhEnumExt {
-    public static bool get(this SphereGridNodeProperties flags, SphereGridNodeProperties flag) {
-        return (flags & flag) != 0;
-    }
-
-    public static void set(this SphereGridNodeProperties flags, SphereGridNodeProperties flag, bool value) {
-        if (value) flags |= flag;
-        else flags &= ~flag;
-    }
+    public static bool can_target    (this SphereGridNodeProperties flags) => flags.HasFlag(SphereGridNodeProperties.CAN_TARGET);
+    public static bool is_highlighted(this SphereGridNodeProperties flags) => flags.HasFlag(SphereGridNodeProperties.HIGHLIGHTED);
 }
 
 [StructLayout(LayoutKind.Explicit, Pack = 1, Size = 0x28)]
 public unsafe struct SphereGridNode {
-    [FieldOffset(0x0)]  public        short x;
-    [FieldOffset(0x2)]  public        short y;
-    [FieldOffset(0x6)]  private       short _node_type;
-    [FieldOffset(0xC)]  private fixed uint  links_ptr[5];
-    [FieldOffset(0x21)] public        byte  activated_by;
-    [FieldOffset(0x22)] public        SphereGridNodeProperties properties;
+    [InlineArray(5)]
+    public struct LinkPtrArray {
+        private uint _ptr;
+    }
+
+    [FieldOffset(0x0)]  public  short                    x;
+    [FieldOffset(0x2)]  public  short                    y;
+    [FieldOffset(0x6)]  private short                    _node_type;
+    [FieldOffset(0xC)]  public  LinkPtrArray             link_ptrs;
+    [FieldOffset(0x21)] public  byte                     activated_by;
+    [FieldOffset(0x22)] public  SphereGridNodeProperties properties;
+    [FieldOffset(0x24)] public  byte                     move_cost; // Only nonzero when moving
 
     public NodeType node_type {
         get => _node_type == -1 ? NodeType.NULL : (NodeType)_node_type;
@@ -112,9 +113,46 @@ public unsafe struct SphereGridNode {
     public Vector2 pos => new(x, y);
     public Vector2 size => type_info.size;
 
-    public SphereGridLink* get_link(int link_idx) {
-        if (link_idx is < 0 or > 5) throw new IndexOutOfRangeException(nameof(link_idx));
-        return (SphereGridLink*)links_ptr[link_idx];
+    public SphereGridLink* get_link(int idx) {
+        return (SphereGridLink*)link_ptrs[idx];
+    }
+
+    public int get_link_count() {
+        int count = 0;
+
+        foreach (uint ptr in link_ptrs) {
+            if ((SphereGridLink*)ptr is not null) {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    /// <summary>Get the indices of nodes connected to this node by at least one link.</summary>
+    /// <param name="self_idx">
+    ///     The index of the node this is called on.<br/>
+    ///     If <c>null</c>, attempts to search for it in <see cref="Globals.SphereGrid.lpamng"/>.
+    /// </param>
+    /// <param name="set">
+    ///     The HashSet to return.
+    /// </param>
+    /// <returns>A HashSet of the neighbouring nodes.</returns>
+    public HashSet<short> get_neighbour_indices(short? self_idx) {
+        if (self_idx is null && Globals.SphereGrid.lpamng->get_node_idx(this, out short? node_idx)) {
+            self_idx ??= node_idx;
+        }
+
+        HashSet<short> set = [];
+
+        foreach (uint ptr in link_ptrs) {
+            SphereGridLink* link = (SphereGridLink*)ptr;
+
+            short other_idx = link->node_a_idx != self_idx ? link->node_a_idx : link->node_b_idx;
+            set.Add(other_idx);
+        }
+
+        return set;
     }
 }
 
@@ -133,7 +171,7 @@ public unsafe struct SphereGridChrInfo {
     [FieldOffset(0x2C)] public byte*   chr_name;
     [FieldOffset(0x30)] public short   name_width; // min 32
     [FieldOffset(0x3C)] public float   pos_circle_radius;
-    [FieldOffset(0x44)] public ushort  current_node_idx;
+    [FieldOffset(0x44)] public short   current_node_idx;
 }
 
 public enum NodeType : byte {
@@ -288,29 +326,42 @@ public enum NodeType : byte {
 }
 
 public static partial class FhEnumExt {
-    public static bool is_lock_node(this NodeType node_type)
-        => node_type is NodeType.LOCK_1
-                     or NodeType.LOCK_2
-                     or NodeType.LOCK_3
-                     or NodeType.LOCK_4;
+    public static bool is_lock_node(this NodeType node_type) {
+        return node_type is NodeType.LOCK_1
+                         or NodeType.LOCK_2
+                         or NodeType.LOCK_3
+                         or NodeType.LOCK_4;
+    }
 
-    public static bool is_attribute_node(this NodeType node_type)
-        => node_type is (>= NodeType.STRENGTH_1 and <= NodeType.MP_10);
+    public static bool is_attribute_node(this NodeType node_type) {
+        return node_type is >= NodeType.STRENGTH_1 and <= NodeType.MP_10;
+    }
 
-    public static bool is_skill_node(this NodeType node_type)
-        => node_type is (>= NodeType.DELAY_ATTACK and <= NodeType.QUICK_HIT)
-                     or (>= NodeType.FULL_BREAK and <= NodeType.NAB_GIL);
+    public static bool is_skill_node(this NodeType node_type) {
+        return node_type is >= NodeType.DELAY_ATTACK and <= NodeType.QUICK_HIT
+                         or >= NodeType.FULL_BREAK   and <= NodeType.NAB_GIL;
+    }
 
-    public static bool is_special_node(this NodeType node_type)
-        => node_type is (>= NodeType.STEAL and <= NodeType.BRIBE)
-                     or NodeType.PILFER_GIL
-                     or NodeType.QUICK_POCKETS;
+    public static bool is_special_node(this NodeType node_type) {
+        return node_type is >= NodeType.STEAL and <= NodeType.BRIBE
+                         or NodeType.PILFER_GIL
+                         or NodeType.QUICK_POCKETS;
+    }
 
-    public static bool is_white_magic(this NodeType node_type)
-        => node_type is (>= NodeType.CURE and <= NodeType.AUTO_LIFE);
+    public static bool is_white_magic(this NodeType node_type) {
+        return node_type is >= NodeType.CURE and <= NodeType.AUTO_LIFE;
+    }
 
-    public static bool is_black_magic(this NodeType node_type)
-        => node_type is (>= NodeType.BLIZZARD and <= NodeType.ULTIMA);
+    public static bool is_black_magic(this NodeType node_type) {
+        return node_type is >= NodeType.BLIZZARD and <= NodeType.ULTIMA;
+    }
+
+    public static bool is_ability_node(this NodeType node_type) {
+        return node_type.is_skill_node()
+            || node_type.is_special_node()
+            || node_type.is_white_magic()
+            || node_type.is_black_magic();
+    }
 
     public static int normalize(this NodeType node_type) {
         if (node_type == NodeType.NULL) return -1;

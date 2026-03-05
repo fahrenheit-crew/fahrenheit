@@ -175,26 +175,29 @@ public unsafe struct SphereGridNodeTypeInfo {
     public Vector2 size => new Vector2(width, height) * new Vector2(Globals.SphereGrid.lpamng->current_zoom);
 }
 
-[StructLayout(LayoutKind.Explicit, Pack = 1, Size = 0x50)]
+[StructLayout(LayoutKind.Sequential)]
 public unsafe struct SphereGridChrInfo {
-    [FieldOffset(0x0)]  public Vector4 pos;
-    [FieldOffset(0x10)] public Vector4 label_pos;
-    [FieldOffset(0x20)] public uint    a;
-    [FieldOffset(0x24)] public uint    b;
-    [FieldOffset(0x28)] public uint    c;
-    [FieldOffset(0x2C)] public byte*   chr_name;
-    [FieldOffset(0x30)] public short   name_width; // min 32
-    [FieldOffset(0x32)] public short   __0x32;
-    [FieldOffset(0x38)] public short   __0x38;
-    [FieldOffset(0x3C)] public float   pos_circle_radius;
-    [FieldOffset(0x40)] public uint    __0x40;
-    [FieldOffset(0x44)] public short   current_node_idx;
-    [FieldOffset(0x46)] public short   __0x46;
-    [FieldOffset(0x48)] public short   __0x48;
-    [FieldOffset(0x4A)] public short   __0x4A;
-    
-    [FieldOffset(0x4C)] public short   __0x4C;
-    [FieldOffset(0x4E)] public byte    __0x4E;
+    public  Vector4 pos;
+    public  Vector4 label_pos;
+    public  uint    a;
+    public  uint    b;
+    public  uint    c;
+    public  byte*   chr_name;
+    public  short   name_width; // min 32
+    public  short   __0x32;
+    private ushort  __0x34_pad;
+    private ushort  __0x36_pad;
+    public  short   __0x38;
+    private ushort  __0x3A_pad;
+    public  float   pos_circle_radius;
+    public  uint    __0x40;
+    public  short   current_node_idx;
+    public  short   __0x46;
+    public  short   __0x48;
+    public  short   __0x4A;
+    public  short   __0x4C;
+    public  byte    __0x4E;
+    private byte    __0x4F_pad;
 }
 
 public enum NodeType : byte {

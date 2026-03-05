@@ -94,6 +94,7 @@ public unsafe struct LpAbilityMapEngine {
     [FieldOffset(0x11624)] public float          moving_speed;
     [FieldOffset(0x11628)] public float          moving_halo_start_width;
     [FieldOffset(0x1162C)] public float          moving_halo_target_width;
+    [FieldOffset(0x11630)] public short          move_start_node_idx;
     [FieldOffset(0x11632)] public short          next_move_target_node_idx;
     [FieldOffset(0x11634)] public short          last_move_target_node_idx;
     [FieldOffset(0x11638)] public byte           moving_chr_id;

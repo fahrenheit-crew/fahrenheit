@@ -1,9 +1,0 @@
-<Project>	
-	<!-- Import parent Directory.Build.props -->
-    <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" Condition="'' != $([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
-
-    <PropertyGroup>
-        <!-- Set output directory for mod projects. -->
-        <PublishDir>$(_FhOutDirMods)</PublishDir>
-	</PropertyGroup>
-</Project>

@@ -152,6 +152,8 @@ public unsafe struct SphereGridNode {
         foreach (uint ptr in link_ptrs) {
             SphereGridLink* link = (SphereGridLink*)ptr;
 
+            if (link is null) continue;
+
             short other_idx = link->node_a_idx != self_idx ? link->node_a_idx : link->node_b_idx;
             set.Add(other_idx);
         }

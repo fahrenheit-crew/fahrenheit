@@ -125,9 +125,7 @@ public unsafe struct SphereGridNode {
         int count = 0;
 
         foreach (uint ptr in link_ptrs) {
-            if ((SphereGridLink*)ptr is not null) {
-                count++;
-            }
+            if (ptr != 0) count++;
         }
 
         return count;

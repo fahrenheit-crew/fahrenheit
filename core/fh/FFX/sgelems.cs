@@ -150,9 +150,9 @@ public unsafe struct SphereGridNode {
         HashSet<short> set = [];
 
         foreach (uint ptr in link_ptrs) {
+            if (ptr == 0) continue;
+        
             SphereGridLink* link = (SphereGridLink*)ptr;
-
-            if (link is null) continue;
 
             short other_idx = link->node_a_idx != self_idx ? link->node_a_idx : link->node_b_idx;
             set.Add(other_idx);

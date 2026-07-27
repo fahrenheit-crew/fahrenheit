@@ -8,8 +8,6 @@ using System.Collections.Generic;
 namespace Fahrenheit.Tools.ModManager;
 
 internal static partial class ModManager {
-    private static string _dir_game;
-
     private static List<ModData> _installed_mods = [];
 
     internal static void init() {

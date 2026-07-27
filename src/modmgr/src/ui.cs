@@ -42,10 +42,6 @@ internal static partial class ModManager {
             ImGui.MenuItem("Import EFL Mod");
             ImGui.Separator();
 
-            ImGui.MenuItem("Import Mod List");
-            ImGui.MenuItem("Export Mod List");
-            ImGui.Separator();
-
             ImGui.MenuItem("Import Mod Pack");
             ImGui.MenuItem("Export Mod Pack");
 

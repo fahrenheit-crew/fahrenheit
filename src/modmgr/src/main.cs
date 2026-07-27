@@ -129,6 +129,8 @@ internal sealed unsafe class Program {
         ImGuiImplOpenGL3.SetCurrentContext(ctx);
         ImGuiImplOpenGL3.Init             ((byte*)null);
 
+        ModManager.init();
+
         /* [fkelava 20/07/26 00:17]
          * See comment beneath main loop body.
          */
@@ -164,7 +166,7 @@ internal sealed unsafe class Program {
             ImGui           .NewFrame();
 
             // Draw the mod manager UI
-            ModManager.UI();
+            ModManager.render();
 
             // Rendering
             ImGui.Render();

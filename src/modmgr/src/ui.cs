@@ -53,12 +53,14 @@ internal static partial class ModManager {
         }
 
         if (ImGui.BeginMenu("Play")) {
-            ImGui.MenuItem("Final Fantasy X HD Remaster");
-            ImGui.MenuItem("Final Fantasy X-2 HD Remaster");
+            ImGui.MenuItem("Final Fantasy X");
+            ImGui.MenuItem("Final Fantasy X-2");
+            ImGui.MenuItem("Final Fantasy X-2 Last Mission");
             ImGui.Separator();
 
-            ImGui.MenuItem("Final Fantasy X HD Remaster (for Debugging)");
-            ImGui.MenuItem("Final Fantasy X-2 HD Remaster (for Debugging)");
+            ImGui.MenuItem("Final Fantasy X (for Debugging)");
+            ImGui.MenuItem("Final Fantasy X-2 HD (for Debugging)");
+            ImGui.MenuItem("Final Fantasy X-2 Last Mission (for Debugging)");
 
             ImGui.EndMenu();
         }

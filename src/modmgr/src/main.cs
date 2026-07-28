@@ -19,7 +19,7 @@ namespace Fahrenheit.Tools.ModManager;
  * Legibility is thus rather poor. You have been warned.
  */
 
-internal sealed unsafe class Program {
+internal unsafe sealed class Program {
 
     // SDL3
     private static SDLWindow*   _sdl_window;

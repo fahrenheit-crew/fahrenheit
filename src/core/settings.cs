@@ -239,3 +239,9 @@ public class FhSettingNumber<T>(string id, T def_value, T? min, T? max, T? step)
         };
     }
 }
+
+public class FhSettingToggle(string id, bool def_value) : FhSetting<bool>(id, def_value) {
+    internal override void render() {
+        ImGui.Checkbox($"##setting.{id}", ref _value);
+    }
+}

@@ -14,7 +14,8 @@ internal static partial class ModManager {
         ImGuiWindowFlags main_window_flags =
                 ImGuiWindowFlags.MenuBar
               | ImGuiWindowFlags.NoDecoration
-              | ImGuiWindowFlags.NoMove;
+              | ImGuiWindowFlags.NoMove
+              | ImGuiWindowFlags.NoBringToFrontOnFocus;
 
         ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0f);
         ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, 0f);
@@ -46,35 +47,8 @@ internal static partial class ModManager {
         ImGui.Unindent();
 
         ImGui.End();
-    }
 
-    private static void _render_menu_bar() {
-        if (!ImGui.BeginMenuBar()) return;
-
-        if (ImGui.BeginMenu("Mods")) {
-            ImGui.MenuItem("Install External Mod");
-            ImGui.MenuItem("Import EFL Mod");
-            ImGui.Separator();
-
-            ImGui.MenuItem("Import Mod Pack");
-            ImGui.MenuItem("Export Mod Pack");
-
-            ImGui.EndMenu();
-        }
-
-        if (ImGui.BeginMenu("Play")) {
-            ImGui.MenuItem("Final Fantasy X");
-            ImGui.MenuItem("Final Fantasy X-2");
-            ImGui.MenuItem("Final Fantasy X-2 Last Mission");
-            ImGui.Separator();
-
-            ImGui.MenuItem("Final Fantasy X (for Debugging)");
-            ImGui.MenuItem("Final Fantasy X-2 HD (for Debugging)");
-            ImGui.MenuItem("Final Fantasy X-2 Last Mission (for Debugging)");
-
-            ImGui.EndMenu();
-        }
-
-        ImGui.EndMenuBar();
+        // Additional windows
+        render_config();
     }
 }

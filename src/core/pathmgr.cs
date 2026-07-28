@@ -37,6 +37,7 @@ internal sealed class FhFinder {
     private const string _dirname_rsrc  = "resources";
     private const string _dirname_efl   = "efl";
 
+    internal readonly DirectoryInfo Game;
     internal readonly DirectoryInfo Binaries;
     internal readonly DirectoryInfo Config;
     internal readonly DirectoryInfo Mods;
@@ -48,6 +49,7 @@ internal sealed class FhFinder {
         // If this somehow throws, we really have no business executing at all.
         string cwd_parent = Directory.GetParent(Directory.GetCurrentDirectory())?.FullName!;
 
+        Game     = new(Path.Join(cwd_parent, @"..\..\"));
         Binaries = Directory.CreateDirectory(Path.Join(cwd_parent, _dirname_bin));
         Config   = Directory.CreateDirectory(Path.Join(cwd_parent, _dirname_cfg));
         Mods     = Directory.CreateDirectory(Path.Join(cwd_parent, _dirname_mods));

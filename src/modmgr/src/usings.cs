@@ -15,6 +15,7 @@ global using SDLWindowPtrB = Hexa.NET.ImGui.Backends.SDL3.SDLWindowPtr;
 
 // C# stdlib essentials
 global using System;
+global using System.Collections.Generic;
 global using System.Drawing;
 global using System.Runtime.CompilerServices;
 global using System.Runtime.InteropServices;

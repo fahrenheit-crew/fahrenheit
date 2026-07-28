@@ -9,7 +9,7 @@ internal static partial class ModManager {
     internal static List<string> debug_log = [];
 
     public static void render() {
-        ImGui.ShowDemoWindow();
+        // ImGui.ShowDemoWindow();
 
         ImGuiWindowFlags main_window_flags =
                 ImGuiWindowFlags.MenuBar

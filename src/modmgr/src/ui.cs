@@ -6,6 +6,8 @@
 namespace Fahrenheit.Tools.ModManager;
 
 internal static partial class ModManager {
+    internal static List<string> debug_log = [];
+
     public static void render() {
         ImGui.ShowDemoWindow();
 
@@ -30,6 +32,18 @@ internal static partial class ModManager {
         _render_menu_bar();
 
         ImGui.Text("This is a mod manager! :D");
+
+        ImGui.Text("Installed mods:");
+        ImGui.Indent();
+        render_modlist();
+        ImGui.Unindent();
+
+        ImGui.Text("Log:");
+        ImGui.Indent();
+        foreach (string line in debug_log) {
+            ImGui.Text(line);
+        }
+        ImGui.Unindent();
 
         ImGui.End();
     }

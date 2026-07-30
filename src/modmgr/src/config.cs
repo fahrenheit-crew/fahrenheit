@@ -15,6 +15,15 @@ internal struct ModManagerConfig() : IEquatable<ModManagerConfig> {
         return other.show_advanced_options == show_advanced_options;
     }
 
+    public override bool Equals(object? other) {
+        return other is ModManagerConfig other_config
+            && Equals(other_config);
+    }
+
+    public override int GetHashCode() {
+        return show_advanced_options.GetHashCode();
+    }
+
     public static bool operator ==(ModManagerConfig left, ModManagerConfig right) {
         return left.Equals(right);
     }
@@ -50,7 +59,7 @@ internal static partial class ModManager {
         _show_config_window = true;
     }
 
-    internal static bool _show_config_window = false;
+    internal static bool _show_config_window;
     internal static void render_config() {
         if (!_show_config_window) return;
 

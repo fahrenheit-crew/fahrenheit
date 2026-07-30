@@ -18,7 +18,7 @@ internal enum ModLoadResult {
 }
 
 internal static partial class ModManager {
-    internal static FhImGuiHelper   ImGuiHelper = new();
+    internal static FhImGuiHelper ImGuiHelper = new();
 
     internal static LinkedList<ModData> installed_mods = [];
 
@@ -50,10 +50,14 @@ internal static partial class ModManager {
                 var load_result = try_load_mod(mod_name);
 
                 if (load_result.result == ModLoadResult.OK) {
+                    DirectoryInfo mod_dir = new(Path.Join(FhEnvironment.Finder.Mods.FullName, mod_name));
+
                     ModData mod = new() {
                         manifest = load_result.manifest!,
                         enabled = true,
+                        size_on_disk = ModManagerUtil.get_folder_size(mod_dir),
                     };
+
                     installed_mods.AddLast(mod);
                     debug_log.Add($"  Loaded mod!");
                 } else {
@@ -78,6 +82,7 @@ internal static partial class ModManager {
                 ModData mod = new() {
                     manifest = load_result.manifest!,
                     enabled = false,
+                    size_on_disk = ModManagerUtil.get_folder_size(mod_dir),
                 };
                 installed_mods.AddLast(mod);
                 debug_log.Add($"  Loaded mod!");

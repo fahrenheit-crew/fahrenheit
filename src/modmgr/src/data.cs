@@ -9,4 +9,25 @@ namespace Fahrenheit.Tools.ModManager;
 internal struct ModData {
     public FhManifest manifest;
     public bool enabled;
+    public long size_on_disk;
+
+    public string get_size_string() {
+        float kilobyte = 1024f;
+        float megabyte = 1024f * kilobyte;
+        float gigabyte = 1024f * megabyte;
+
+        if (size_on_disk > gigabyte) {
+            return $"{size_on_disk / gigabyte:F1} GB";
+        }
+
+        if (size_on_disk > megabyte) {
+            return $"{size_on_disk / megabyte:F1} MB";
+        }
+
+        if (size_on_disk > kilobyte) {
+            return $"{size_on_disk / kilobyte:F1} KB";
+        }
+
+        return $"{size_on_disk} B";
+    }
 }

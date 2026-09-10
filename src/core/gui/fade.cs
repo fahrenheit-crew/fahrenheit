@@ -53,6 +53,10 @@ public class FadeHelper : Timer {
         remaining = length;
 
         on_end = when_done;
+
+        if (length < 0.0001f && on_end is not null) {
+            on_end();
+        }
     }
 
     /// <summary>Calculate the current color.</summary>

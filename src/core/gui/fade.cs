@@ -7,8 +7,8 @@ namespace Fahrenheit.Gui;
 
 /// <summary>Provides utilities to help with fading from one color to another.</summary>
 public class FadeHelper : Timer {
-    protected uint color_from;
-    protected uint color_to;
+    public uint color_from { get; protected set; }
+    public uint color_to   { get; protected set; }
 
     /// <summary>
     ///     Create a new FadeHelper to fade from and to specified colors over a given amount of time.
@@ -53,6 +53,10 @@ public class FadeHelper : Timer {
         remaining = length;
 
         on_end = when_done;
+
+        if (length < 0.0001f && on_end is not null) {
+            on_end();
+        }
     }
 
     /// <summary>Calculate the current color.</summary>

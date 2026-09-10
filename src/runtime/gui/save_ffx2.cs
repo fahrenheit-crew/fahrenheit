@@ -51,6 +51,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
     private UiMode  _mode;
     private UiFocus _focus;
 
+    private readonly float      _fade_length = FhUtil.select(0.5f, 0.35f, 0.0f);
     private readonly FadeHelper _fade;
 
     private readonly List<string> _set_list = [ ];
@@ -93,13 +94,15 @@ public sealed class FhSaveUiX2 : FhSaveUi {
     private bool     _scrollbar_dragging;
     private Vector2? _scrollbar_held_pos;
 
-    private bool should_handle_input => !_scrollbar_dragging && _fade.is_done;
+    // We block input when fading out, for example so you can't requests two loads of a file.
+    // We block input when fading in as well, but only for a short time to make the UI feel snappy.
+    private bool is_fade_blocking_input => !(_fade.is_done || (_fade.color_to == COLOR_TRANS && _fade.progress > 0.3f));
+    private bool should_handle_input    => !_scrollbar_dragging && !is_fade_blocking_input;
 
     public FhSaveUiX2() {
         _current_scrollable = _scrollable_saves;
 
-        float fade_duration = FhGlobal.game_id is FhGameId.FFX2 ? 0.35f : 0.01f;
-        _fade = new FadeHelper(0, 0, fade_duration);
+        _fade = new FadeHelper(0, 0, _fade_length);
     }
 
     public override bool init(FhModContext context, FileStream global_state) {
@@ -137,18 +140,27 @@ public sealed class FhSaveUiX2 : FhSaveUi {
         ui_fade();
     }
 
-    private void handle_input_list() {
+    private void fade_out(Action action) {
+        _fade.restart(
+            _fade.get_color(),
+            COLOR_BLACK,
+            _fade_length * _fade.progress,
+            action
+        );
+    }
+
+    private bool handle_input_list() {
         if (_mode == UiMode.SAVE_LIST) {
             if (_scrollable_saves.max == 0) {
                 _focus = UiFocus.ACTIVE_SET;
-                return;
+                return false;
             }
 
             if (FhApi.Gui.is_any_pressed(FhApi.Gui.keys_up)
              && _current_scrollable.hovered == 0
             ) {
                 _focus = UiFocus.ACTIVE_SET;
-                return;
+                return true;
             }
         }
 
@@ -159,63 +171,54 @@ public sealed class FhSaveUiX2 : FhSaveUi {
 
             if (_mode == UiMode.SAVE_LIST) {
                 if (is_saving && hovered == 0) {
-                    FhApi.Saves.save(0);
+                    fade_out(() => FhApi.Saves.save(0));
                 }
                 else {
                     FhSaveDisplayData save = FhApi.Saves.display_data[hovered];
-                    _fade.restart(
-                        COLOR_TRANS,
-                        COLOR_BLACK,
-                        null,
-                        () => execute(save.slot)
-                    );
+                    fade_out(() => execute(save.slot));
                 }
 
-                return;
+                return true;
             }
 
             if (_mode == UiMode.SET_SWAP) {
                 string hovered_set = _set_list[hovered];
                 switch_set(hovered_set);
 
-                return;
+                return true;
             }
         }
+
+        return false;
     }
 
-    private void handle_input_active_set() {
+    private bool handle_input_active_set() {
         if (_mode == UiMode.SAVE_LIST && FhApi.Gui.is_any_pressed(FhApi.Gui.keys_down) && _current_scrollable.max > 0) {
             _focus = UiFocus.LIST;
             _current_scrollable.hovered = _current_scrollable.current;
 
-            return;
+            return true;
         }
 
         if (FhApi.Gui.is_any_pressed(FhApi.Gui.keys_confirm)) {
             change_mode(UiMode.SET_SWAP);
+            return true;
         }
+
+        return false;
     }
 
     private void handle_input() {
         if (!should_handle_input) return;
 
-        switch (_focus) {
-            case UiFocus.LIST:       handle_input_list();       break;
-            case UiFocus.ACTIVE_SET: handle_input_active_set(); break;
-
-            default: throw new NotImplementedException();
-        }
+        if (_focus == UiFocus.LIST       && handle_input_list())       return;
+        if (_focus == UiFocus.ACTIVE_SET && handle_input_active_set()) return;
 
         if (FhApi.Gui.is_any_pressed(FhApi.Gui.keys_cancel)) {
             if (_mode == UiMode.SET_SWAP)
                 change_mode(UiMode.SAVE_LIST);
             else
-                _fade.restart(
-                    COLOR_TRANS,
-                    COLOR_BLACK,
-                    null,
-                    () => FhApi.Saves.exit_cancel()
-                );
+                fade_out(() => FhApi.Saves.exit_cancel());
         }
     }
 
@@ -235,7 +238,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             ? FhApi.Saves.get_slots_used() + 1 // Add one for New Save Data button
             : FhApi.Saves.display_data.Count;
 
-        _fade.restart(COLOR_BLACK, COLOR_TRANS);
+        _fade.restart(COLOR_BLACK, COLOR_TRANS, _fade_length);
     }
 
     private void post_close(EventArgs e) {
@@ -919,7 +922,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             button_suv.p1 + shadow_offset,
             0x88000000
         );
-        
+
         draw.AddImage(
             plate,
             button_suv.p0,
@@ -1251,12 +1254,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
 
         // Handle input
         if (mouse_clicked(save_rect.scale_to_aspect(aspect_helper))) {
-            _fade.restart(
-                COLOR_TRANS,
-                COLOR_BLACK,
-                null,
-                () => execute(save.slot)
-            );
+            fade_out(() => execute(save.slot));
         }
     }
 

@@ -48,7 +48,7 @@ public sealed class FhSaveUiX : FhSaveUi {
     private UiMode  _mode;
     private UiFocus _focus;
 
-    private          float      _fade_length = FhUtil.select(0.5f, 0.35f, 0.01f);
+    private readonly float      _fade_length = FhUtil.select(0.5f, 0.35f, 0.0f);
     private readonly FadeHelper _fade;
 
     private readonly List<string> _set_list = [ ];

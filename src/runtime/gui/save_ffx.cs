@@ -175,7 +175,7 @@ public sealed class FhSaveUiX : FhSaveUi {
 
             if (_mode == UiMode.SAVE_LIST) {
                 if (is_saving && hovered == 0) {
-                    FhApi.Saves.save(0);
+                    fade_out(() => FhApi.Saves.save(0));
                 }
                 else {
                     FhSaveDisplayData save = FhApi.Saves.display_data[hovered];

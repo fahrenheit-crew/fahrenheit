@@ -1156,7 +1156,7 @@ public sealed class FhSaveUiX : FhSaveUi {
 
         // Handle input
         if (mouse_clicked(save_rect.scale_to_aspect(aspect_helper))) {
-            FhApi.Saves.save(0);
+            fade_out(() => FhApi.Saves.save(0));
         }
     }
 

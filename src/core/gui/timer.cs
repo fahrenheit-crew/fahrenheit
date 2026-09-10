@@ -41,6 +41,7 @@ public class Timer {
 
         if (length < 0.0001f && on_end is not null) {
             on_end();
+            on_end = null; // Prevent the on_end action from executing twice
         }
     }
 
@@ -53,6 +54,7 @@ public class Timer {
 
         if (old_remaining > remaining && is_done && on_end is not null) {
             on_end();
+            on_end = null; // Prevent the on_end action from executing twice
         }
 
         return is_done;
@@ -72,6 +74,7 @@ public class Timer {
 
         if (length < 0.0001f && on_end is not null) {
             on_end();
+            on_end = null; // Prevent the on_end action from executing twice
         }
     }
 }

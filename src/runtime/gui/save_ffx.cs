@@ -153,18 +153,18 @@ public sealed class FhSaveUiX : FhSaveUi {
         );
     }
 
-    private void handle_input_list() {
+    private bool handle_input_list() {
         if (_mode == UiMode.SAVE_LIST) {
             if (_scrollable_saves.max == 0) {
                 _focus = UiFocus.ACTIVE_SET;
-                return;
+                return false;
             }
 
             if (FhApi.Gui.is_any_pressed(FhApi.Gui.keys_up)
              && _current_scrollable.hovered == 0
             ) {
                 _focus = UiFocus.ACTIVE_SET;
-                return;
+                return true;
             }
         }
 
@@ -182,37 +182,49 @@ public sealed class FhSaveUiX : FhSaveUi {
                     fade_out(() => execute(save.slot));
                 }
 
-                return;
+                return true;
             }
 
             if (_mode == UiMode.SET_SWAP) {
                 string hovered_set = _set_list[hovered];
                 switch_set(hovered_set);
 
-                return;
+                return true;
             }
         }
+
+        return false;
     }
 
-    private void handle_input_active_set() {
+    private bool handle_input_active_set() {
         if (_mode == UiMode.SAVE_LIST && FhApi.Gui.is_any_pressed(FhApi.Gui.keys_down) && _current_scrollable.max > 0) {
             _focus = UiFocus.LIST;
             _current_scrollable.hovered = _current_scrollable.current;
 
-            return;
+            return true;
         }
 
         if (FhApi.Gui.is_any_pressed(FhApi.Gui.keys_confirm)) {
             change_mode(UiMode.SET_SWAP);
+            return true;
         }
+
+        return false;
     }
 
     private void handle_input() {
         if (!should_handle_input) return;
 
         switch (_focus) {
-            case UiFocus.LIST:       handle_input_list();       break;
-            case UiFocus.ACTIVE_SET: handle_input_active_set(); break;
+            case UiFocus.LIST:
+                if (handle_input_list())
+                    return;
+                break;
+
+            case UiFocus.ACTIVE_SET:
+                if (handle_input_active_set())
+                    return;
+                break;
 
             default: throw new NotImplementedException();
         }

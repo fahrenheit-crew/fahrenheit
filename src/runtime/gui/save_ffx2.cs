@@ -97,7 +97,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
     // We block input when fading out, for example so you can't requests two loads of a file.
     // We block input when fading in as well, but only for a short time to make the UI feel snappy.
     private bool is_fade_blocking_input => !(_fade.is_done || (_fade.color_to == COLOR_TRANS && _fade.progress > 0.3f));
-    private bool should_handle_input => !_scrollbar_dragging && !is_fade_blocking_input;
+    private bool should_handle_input    => !_scrollbar_dragging && !is_fade_blocking_input;
 
     public FhSaveUiX2() {
         _current_scrollable = _scrollable_saves;

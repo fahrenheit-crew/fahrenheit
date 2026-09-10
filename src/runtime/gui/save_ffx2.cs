@@ -144,7 +144,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
         _fade.restart(
             _fade.get_color(),
             COLOR_BLACK,
-            _fade_length * (1f - _fade.progress),
+            _fade_length * _fade.progress,
             action
         );
     }

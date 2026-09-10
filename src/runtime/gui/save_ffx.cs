@@ -215,19 +215,8 @@ public sealed class FhSaveUiX : FhSaveUi {
     private void handle_input() {
         if (!should_handle_input) return;
 
-        switch (_focus) {
-            case UiFocus.LIST:
-                if (handle_input_list())
-                    return;
-                break;
-
-            case UiFocus.ACTIVE_SET:
-                if (handle_input_active_set())
-                    return;
-                break;
-
-            default: throw new NotImplementedException();
-        }
+        if (_focus == UiFocus.LIST       && handle_input_list())       return;
+        if (_focus == UiFocus.ACTIVE_SET && handle_input_active_set()) return;
 
         if (FhApi.Gui.is_any_pressed(FhApi.Gui.keys_cancel)) {
             if (_mode == UiMode.SET_SWAP)

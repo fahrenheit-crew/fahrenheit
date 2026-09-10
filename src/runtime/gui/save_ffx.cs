@@ -766,7 +766,7 @@ public sealed class FhSaveUiX : FhSaveUi {
             ? display_data.Count + 1
             : display_data.Count;
 
-         if (!is_saving && display_data.Count == 0) {
+        if (!is_saving && display_data.Count == 0) {
             ui_no_saves();
             return;
         }

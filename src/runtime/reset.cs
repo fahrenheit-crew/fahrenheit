@@ -31,7 +31,7 @@ public sealed class FhSoftResetModule : FhModule {
             FhUtil.set_at<byte>  (FhUtil.select(0xD2A8E0, 0x9F78A0, 0x9F78A0), 2); // btl.battle_state    = END
             return;
         }
-          
+
         FhCall.graphicDestroyFmv.fnptr!();
         FhCall.AtelJumpGameOver .fnptr!();
     }

@@ -19,7 +19,7 @@ namespace Fahrenheit.Runtime;
  * - ffx_ps2\ffx\proj\prog\cdidx\jp\sizetbl.vita.bin
  *
  * When the game loads a PS2 asset, it will look up these fixed tables and allocate a buffer according
- * to the file's original size. The EFL will correctly intercept the file open call and replace the file, 
+ * to the file's original size. The EFL will correctly intercept the file open call and replace the file,
  * but if it differs in size from the original, the game will crash.
  *
  * While users can create fixed-up size tables, that won't work if mods want to coexist.

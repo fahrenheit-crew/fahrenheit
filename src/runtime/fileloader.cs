@@ -11,7 +11,7 @@ namespace Fahrenheit.Runtime;
  *
  * While the game never uses it, it has full support for native file I/O. On Windows, this manifests as HANDLEs.
  * Thus, at file load time, we can give the game a HANDLE to a file on disk, and it will do the book-keeping for us.
- * 
+ *
  * As a bonus, we permit the user to load assets from the currently inactive game.
  *
  * Some files load under slightly different rules and need different handling. See `cd.cs`.
@@ -38,14 +38,14 @@ using EflIndex = Dictionary<string, string>;
 public unsafe sealed class FhFileLoaderModule : FhModule {
 
     private static ReadOnlySpan<byte> _stream_prefix      => "/"u8;
-    private static ReadOnlySpan<byte> _vbf_secondary_path => FhGlobal.game_id is FhGameId.FFX 
+    private static ReadOnlySpan<byte> _vbf_secondary_path => FhGlobal.game_id is FhGameId.FFX
         ? @"data\FFX2_Data.vbf"u8
         : @"data\FFX_Data.vbf"u8;
 
     /* [fkelava 21/08/26 02:12]
      * BigFileStream and BigFileHandle (and PStreamFile) will store pointers
      * to their stream prefixes and/or VBF names, and expect them to be permanently valid.
-     * 
+     *
      * Thus we allocate some unmanaged memory to keep them alive and pinned forever.
      */
 
@@ -112,12 +112,12 @@ public unsafe sealed class FhFileLoaderModule : FhModule {
     /* [fkelava 25/08/26 20:00]
      * There's a nasty race condition hidden here. Normally, Fahrenheit initialization does not run game code. It is intended
      * that game code does not run until all hooks have installed, to ensure no calls 'escape' hooking from an interested module.
-     *  
-     * The 'allocator fix' module wants to hook that initializer. If it doesn't, we lose its benefits. However, intra-DLL, Fahrenheit 
-     * leaves the initialization order of modules undefined. If we blithely `_init_crossload` in `init`, and this module ran `init` 
-     * before the 'allocator fix' module did, the call would go through before that module could hook it. 
+     *
+     * The 'allocator fix' module wants to hook that initializer. If it doesn't, we lose its benefits. However, intra-DLL, Fahrenheit
+     * leaves the initialization order of modules undefined. If we blithely `_init_crossload` in `init`, and this module ran `init`
+     * before the 'allocator fix' module did, the call would go through before that module could hook it.
      * We therefore defer it to `fiosInitialize`, when the game sets up the primary VBF.
-     * 
+     *
      * Note also the 'creative' use of chaining from another method, our hook of the stream prefix setter, to avoid a stack overflow.
      */
 
@@ -127,13 +127,13 @@ public unsafe sealed class FhFileLoaderModule : FhModule {
 
         FhCall.BigFileStream_ctor                                    .fnptr!(_ptr_vbf_secondary);
         FhCall.BigFileStream_setStreamPrefix.chain_from(h_vbf_sp_set).fnptr!(_ptr_vbf_secondary, ptr_prefix);
-        
+
         if (FhCall.BigFileStream_registerBigFile.fnptr!(_ptr_vbf_secondary, _ptr_vbf_secondary_path) == 0)
             throw new Exception("Failed to initialize cross-loader function. Your game data may be corrupt or missing.");
     }
 
     /// <summary>
-    ///     Searches the secondary VBF for an asset to match the given path, 
+    ///     Searches the secondary VBF for an asset to match the given path,
     ///     and attempts to load it into the given <see cref="PStreamFile"/>.
     /// </summary>
     /// <param name="ptr_this">The <see cref="PStreamFile"/> to attempt a crossload into.</param>
@@ -158,11 +158,11 @@ public unsafe sealed class FhFileLoaderModule : FhModule {
     ///     Normalizes the paths the game uses to address files.
     /// </summary>
     private static void normalize_path(ReadOnlySpan<byte> src, Span<byte> dest) {
-        
+
         /* [fkelava 22/08/26 18:16]
         * `size` is NOT the length of the string passed in `src`.
-        * 
-        * In fact, `src` and `dest` will regularly contain garbage off the end, 
+        *
+        * In fact, `src` and `dest` will regularly contain garbage off the end,
         * so all searches must be constrained by `strlen(src)`.
         */
 
@@ -173,10 +173,10 @@ public unsafe sealed class FhFileLoaderModule : FhModule {
          * - A path might not have the stream prefix prepended.
          * - Some shader paths have the wrong file extension.
          * - Some paths have the wrong platform ID.
-         * 
+         *
          * The second and third could have been completely avoided by the developers
          * if they were more attentive, but they weren't, so we replicate those fixes.
-         * 
+         *
          * The first, however, is different in Fahrenheit's case; because we simplify the stream
          * prefix from '../../..' to '/', we must also remove now-invalid prefixes. We also
          * fix the fourth case where an old-style 'host0' path is used.
@@ -224,7 +224,7 @@ public unsafe sealed class FhFileLoaderModule : FhModule {
     /* [fkelava 21/08/26 14:10]
      * The game has the concept of a 'stream prefix', prepended to any and all paths. For some silly reason,
      * the default is '../../..'. We can simplify it, which is desirable so the user need not remember it.
-     * 
+     *
      * Note that the VBF stream prefix can't be empty. The game will take an access violation if so.
      */
 
@@ -247,18 +247,18 @@ public unsafe sealed class FhFileLoaderModule : FhModule {
 
     /* [fkelava 22/08/26 15:20]
      * Buckle up. This is where things get bad.
-     * 
+     *
      * Simplifying the stream prefix, on paper, should not be problematic. The game has a path normalizer
      * function `fiosUnifyFilename`, so at worst we have to reimplement just that, right?
-     * 
+     *
      * The game's usage of path normalization is, at best, inconsistent. It manages to fail in almost every way possible:
      * - Blindly hardcoding the normal '../../..' stream prefix into a path.
      * - Blindly opening a path without normalizing.
      * - Blindly hashing a path without normalizing, then looking up tables with it.
-     * 
+     *
      * In other words, the only reason why the path handling in the default game works _at all_ is because
      * the hardcoded stream prefix ties together an incoherent mess of code that does not function independently.
-     * 
+     *
      * To fix this, we have to insert path normalization in all the places the developers failed to. As you may well imagine,
      * this is a minefield and you can never tell exactly where the whole thing will fall off the rails next.
      */
@@ -301,7 +301,7 @@ public unsafe sealed class FhFileLoaderModule : FhModule {
     private VFile* h_vbf_fopen(BigFileStream* ptr_this, byte* ptr_file_name) {
         VFile* rv = FhCall.BigFileStream_openFile.chain_from(h_vbf_fopen).fnptr!(ptr_this, ptr_file_name);
 
-        if (rv == null) { 
+        if (rv == null) {
             _logger.Error($"{Marshal.PtrToStringAnsi((nint)ptr_file_name)} not found in VBF {Marshal.PtrToStringAnsi((nint)ptr_this->ptr_handle_0x10->ptr_file_path)}");
         }
 
@@ -326,13 +326,13 @@ public unsafe sealed class FhFileLoaderModule : FhModule {
                 PStreamFile* rv = FhCall.Phyre_PSerialization_PStreamFile_ctor.chain_from(h_fopen).fnptr!(ptr_this, ptr_path_normalized, read_only, p3, p4, p5);
                 return _crossload(rv, ptr_path_normalized);
             }
-            
+
             /* [fkelava 01/10/24 16:49]
              * FFX.exe+208100 at +2081B9 onward:
              * if (readOnly) { pvVar4 = CreateFileW(path, 1, 1, 0, 3, 0x08000000, 0); }
              * else          { pvVar4 = CreateFileW(path, 2, 0, 0, 4, 0x08000000, 0); }
              */
-            
+
             fixed (char* ptr_path_modded = path_modded) {
                 FILE_ACCESS_RIGHTS        access      = read_only
                     ? FILE_ACCESS_RIGHTS.FILE_READ_DATA
@@ -343,9 +343,9 @@ public unsafe sealed class FhFileLoaderModule : FhModule {
                 FILE_CREATION_DISPOSITION disposition = read_only
                     ? FILE_CREATION_DISPOSITION.OPEN_EXISTING
                     : FILE_CREATION_DISPOSITION.OPEN_ALWAYS;
-            
+
                 FILE_FLAGS_AND_ATTRIBUTES flags = FILE_FLAGS_AND_ATTRIBUTES.FILE_FLAG_SEQUENTIAL_SCAN;
-            
+
                 ptr_this->handle_vbf = null;
                 ptr_this->handle_os  = PInvoke.CreateFileW(
                     ptr_path_modded,
@@ -356,14 +356,14 @@ public unsafe sealed class FhFileLoaderModule : FhModule {
                     flags,
                     HANDLE.Null);
             }
-            
+
             if (ptr_this->handle_os == HANDLE.INVALID_HANDLE_VALUE) {
                 _logger.Error($"Replacement file open failed for {path_modded} - bailing out");
-            
+
                 PStreamFile* rv = FhCall.Phyre_PSerialization_PStreamFile_ctor.chain_from(h_fopen).fnptr!(ptr_this, ptr_path_normalized, read_only, p3, p4, p5);
                 return _crossload(rv, ptr_path_normalized);
             }
-            
+
             return ptr_this;
         }
     }

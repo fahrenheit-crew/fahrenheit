@@ -36,8 +36,8 @@ namespace Fahrenheit.Runtime;
 [SupportedOSPlatform("windows5.1.2600")]
 public unsafe sealed class FhMallocModule : FhModule {
 
-    private static nuint _reserved { 
-        get => FhUtil.get_at<nuint>(FhUtil.select(0x153CD44, 0x14E6AB4, 0x14E6AB4)); 
+    private static nuint _reserved {
+        get => FhUtil.get_at<nuint>(FhUtil.select(0x153CD44, 0x14E6AB4, 0x14E6AB4));
         set => FhUtil.set_at       (FhUtil.select(0x153CD44, 0x14E6AB4, 0x14E6AB4), value);
     }
 
@@ -134,7 +134,7 @@ public unsafe sealed class FhMallocModule : FhModule {
 
     public override void render_imgui() {
 #if DEBUG
-        if (!ImGui.Begin("Fh.MDbg")) { 
+        if (!ImGui.Begin("Fh.MDbg")) {
             ImGui.End();
             return;
         }
@@ -142,7 +142,7 @@ public unsafe sealed class FhMallocModule : FhModule {
         ImGui.Text($"Committed: 0x{_committed:X8}");
         ImGui.Text($"Reserved:  0x{_reserved:X8}");
         ImGui.End();
-#endif 
+#endif
     }
 
 }

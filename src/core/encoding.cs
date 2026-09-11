@@ -6,17 +6,17 @@
 namespace Fahrenheit;
 
 /* [fkelava 03/09/26 16:30]
- * The game uses a custom text encoding to save space on disk. Text may contain 
- * embedded 'ops' or commands which modify its display, reference script variables, 
- * or expand macros. This is an encoder and decoder for all languages of FF X and 
+ * The game uses a custom text encoding to save space on disk. Text may contain
+ * embedded 'ops' or commands which modify its display, reference script variables,
+ * or expand macros. This is an encoder and decoder for all languages of FF X and
  * non-CJK languages of FF X-2/LM; it round-trips all original game dialogue byte-perfectly,
  * with some additional bugfixes for things which never worked in the original.
- * 
+ *
  * The frontend for this functionality is DEdit.
- * 
+ *
  * Input to this encoder is 'DEdit' or 'Fahrenheit' text syntax. It is similar, but not identical,
  * to text syntax in the FFXDataParser. Commands are given between curly brackets, ex. {END}.
- * 
+ *
  * Consult the tests and `_op_*` literals in the source below for all supported syntax elements.
  */
 
@@ -147,7 +147,7 @@ public static class FhEncoding {
     ///     Gets the first argument of a text <paramref name="op"/> from an UTF-8 plaintext <paramref name="expression"/>.
     /// </summary>
     private static byte _get_op_arg1(
-        in ReadOnlySpan<byte> expression, 
+        in ReadOnlySpan<byte> expression,
         in ReadOnlySpan<byte> op
     ) {
         return byte.Parse(expression[ op.Length .. (op.Length + 2) ], NumberStyles.HexNumber); // inverse of $"{arg1:X2}"
@@ -157,7 +157,7 @@ public static class FhEncoding {
     ///     Gets the second argument of a text <paramref name="op"/> from an UTF-8 plaintext <paramref name="expression"/>.
     /// </summary>
     private static byte _get_op_arg2(
-        in ReadOnlySpan<byte> expression, 
+        in ReadOnlySpan<byte> expression,
         in ReadOnlySpan<byte> op
     ) {
         return byte.Parse(expression[ (op.Length + 3) .. (op.Length + 5) ], NumberStyles.HexNumber); // inverse of $"{arg1:X2}:{arg2:X2}"
@@ -169,7 +169,7 @@ public static class FhEncoding {
     /// </summary>
     /// <returns>The amount of bytes written to <paramref name="dest"/>.</returns>
     private static int _decode_op(
-        in Span<byte> dest, 
+        in Span<byte> dest,
            byte       op_code
     ) {
         ReadOnlySpan<byte> op = _select_op_literal(op_code);
@@ -184,7 +184,7 @@ public static class FhEncoding {
     /// </summary>
     /// <returns>The amount of bytes written to <paramref name="dest"/>.</returns>
     private static int _decode_op(
-        in Span<byte> dest, 
+        in Span<byte> dest,
            byte       op_code,
            byte       op_arg1
     ) {
@@ -200,7 +200,7 @@ public static class FhEncoding {
     /// </summary>
     /// <returns>The amount of bytes written to <paramref name="dest"/>.</returns>
     private static int _decode_op(
-        in Span<byte> dest, 
+        in Span<byte> dest,
            byte       op_code,
            byte       op_arg1,
            byte       op_arg2
@@ -217,9 +217,9 @@ public static class FhEncoding {
     /// </summary>
     /// <returns>The amount of bytes written to <paramref name="dest"/>.</returns>
     private static int _decode_char(
-        in ReadOnlySpan<byte> src, 
-                   Span<byte> dest, 
-           FhLangId           lang, 
+        in ReadOnlySpan<byte> src,
+                   Span<byte> dest,
+           FhLangId           lang,
            FhGameId           game
     ) {
         return _is_cjk(lang)
@@ -232,7 +232,7 @@ public static class FhEncoding {
     /// </summary>
     /// <returns>The amount of bytes written to <paramref name="dest"/>.</returns>
     private static int _encode_char(
-        in Span<byte> dest, 
+        in Span<byte> dest,
            int        index
     ) {
         int i = 0;
@@ -307,9 +307,9 @@ public static class FhEncoding {
     /// <remarks>Only valid for Chinese, Japanese, and Korean game languages.</remarks>
     /// <returns>The amount of bytes written to <paramref name="dest"/>.</returns>
     private static int _decode_cjk(
-        in ReadOnlySpan<byte> src, 
-                   Span<byte> dest, 
-           FhLangId           lang, 
+        in ReadOnlySpan<byte> src,
+                   Span<byte> dest,
+           FhLangId           lang,
            FhGameId           game
     ) {
         // FFX.exe+646250 (DecodingGamecodeJPCHKR) - cleaned up rewrite
@@ -369,9 +369,9 @@ public static class FhEncoding {
     /// <remarks>Only valid for Western game languages, i.e. not Chinese, Japanese, or Korean.</remarks>
     /// <returns>The amount of bytes written to <paramref name="dest"/>.</returns>
     private static int _decode_we(
-        in ReadOnlySpan<byte> src, 
-                   Span<byte> dest, 
-           FhLangId           lang, 
+        in ReadOnlySpan<byte> src,
+                   Span<byte> dest,
+           FhLangId           lang,
            FhGameId           game
     ) {
         // FFX.exe+6463a0 (DecodingGamecodeUK) - cleaned up rewrite
@@ -538,7 +538,7 @@ public static class FhEncoding {
     ///     Such a buffer is given as the second argument to <see cref="write_indices(in ReadOnlySpan{byte}, Span{byte}, FhTextIndexType)"/>.
     /// </remarks>
     public static int compute_index_buffer_size(
-        in ReadOnlySpan<byte> src, 
+        in ReadOnlySpan<byte> src,
            FhTextIndexType    index_type
     ) {
         int offset = 0;
@@ -566,8 +566,8 @@ public static class FhEncoding {
     ///     <see cref="compute_index_buffer_size(in ReadOnlySpan{byte}, FhTextIndexType)"/> on the source text.
     /// </remarks>
     public static void write_indices(
-        in ReadOnlySpan<byte> src, 
-                   Span<byte> dest, 
+        in ReadOnlySpan<byte> src,
+                   Span<byte> dest,
            FhTextIndexType    index_type
     ) {
         int src_offset  = 0;
@@ -596,8 +596,8 @@ public static class FhEncoding {
     ///     Reads a text file index of a given <paramref name="index_type"/>.
     /// </summary>
     public static int read_index(
-        in  ReadOnlySpan<byte> src, 
-            FhTextIndexType    index_type, 
+        in  ReadOnlySpan<byte> src,
+            FhTextIndexType    index_type,
         out int                consumed
     ) {
         consumed = index_type switch {
@@ -643,9 +643,9 @@ public static class FhEncoding {
     /// </summary>
     /// <returns>The amount of bytes written to <paramref name="dest"/>.</returns>
     private static int _write_index(
-        Span<byte>      dest, 
-        int             value, 
-        int             option_count, 
+        Span<byte>      dest,
+        int             value,
+        int             option_count,
         FhTextIndexType index_type
     ) {
         if (index_type is FhTextIndexType.I32_X1) {
@@ -684,7 +684,7 @@ public static class FhEncoding {
     /// </summary>
     /// <returns>The number of bytes written to <paramref name="dest"/>.</returns>
     private static int _encode_expr(
-        in ReadOnlySpan<byte> expression, 
+        in ReadOnlySpan<byte> expression,
                    Span<byte> dest
     ) {
         byte               op_code = _select_op_code   (expression);
@@ -728,7 +728,7 @@ public static class FhEncoding {
     ///     Computes, in bytes, how large a buffer should be to store the encoded contents of <paramref name="src"/>.
     /// </summary>
     public static int compute_encode_buffer_size(
-        in ReadOnlySpan<byte> src, 
+        in ReadOnlySpan<byte> src,
            FhLangId?          lang  = default,
            FhGameId?          game  = default,
            FhEncodingFlags    flags = default
@@ -852,9 +852,9 @@ public static class FhEncoding {
     /// </summary>
     /// <returns>The size of a buffer that can store the decoded contents of <paramref name="src"/>.</returns>
     public static int compute_decode_buffer_size(
-        in ReadOnlySpan<byte> src, 
-           FhLangId?          lang  = default, 
-           FhGameId?          game  = default, 
+        in ReadOnlySpan<byte> src,
+           FhLangId?          lang  = default,
+           FhGameId?          game  = default,
            FhEncodingFlags    flags = default
     ) {
         Span<byte> dest = stackalloc byte[64];

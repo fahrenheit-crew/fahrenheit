@@ -9,8 +9,8 @@ namespace Fahrenheit.Runtime.Gui;
  * The game's original save UI is implemented in ActionScript, in a Flash file rendered
  * using the Iggy library. The game interacts with it using a callback system.
  * This is inefficient, and execution time scales almost quadratically with the number of saves.
- * 
- * Since we allow multiple sets of saves, each of an unlimited size, the original UI becomes too slow. 
+ *
+ * Since we allow multiple sets of saves, each of an unlimited size, the original UI becomes too slow.
  * For that reason, and to permit its customization, we bypass it in favor of ImGui replacements.
  */
 

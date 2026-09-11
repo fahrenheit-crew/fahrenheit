@@ -156,7 +156,7 @@ internal sealed class FhLoader {
 
     /// <summary>Retrieves an already loaded <see cref="Assembly"/> for a given <see cref="AssemblyName"/>, if one exists.</summary>
     /// <remarks>
-    ///     Only one copy of a given Fahrenheit (core or mod) DLL may be loaded 
+    ///     Only one copy of a given Fahrenheit (core or mod) DLL may be loaded
     ///     in a given session, and is shared among all of its users.
     /// </remarks>
     internal Assembly? get_shared_assembly(AssemblyName assembly_name) {

@@ -24,15 +24,15 @@ namespace Fahrenheit;
 ///     The game's supported languages.
 /// </summary>
 public enum FhLangId : byte {
-    Japanese = 0,
-    English  = 1,
-    French   = 2,
-    Spanish  = 3,
-    German   = 4,
-    Italian  = 5,
-    Korean   = 9,
-    Chinese  = 10,
-    Debug    = 11
+    JP  = 0,
+    US  = 1,
+    FR  = 2,
+    SP  = 3,
+    DE  = 4,
+    IT  = 5,
+    KR  = 9,
+    CH  = 10,
+    DBG = 11
 }
 
 /* [fkelava 16/10/25 19:54]
@@ -295,9 +295,9 @@ public static class FhEncoding {
     private static bool _is_cjk(
         FhLangId lang
     ) {
-        return lang is FhLangId.Chinese
-                    or FhLangId.Japanese
-                    or FhLangId.Korean;
+        return lang is FhLangId.CH
+                    or FhLangId.JP
+                    or FhLangId.KR;
     }
 
     /// <summary>
@@ -352,9 +352,9 @@ public static class FhEncoding {
         Range copy_range = sjistbl_idx switch {
          <= 0x32                                                     => sjistbl_idx       .. (sjistbl_idx + 3),
             0x33                                                     => sjistbl_idx       .. (sjistbl_idx + 2),
-          > 0x33 when lang is FhLangId.Chinese || sjistbl_idx < 0x78 => (sjistbl_idx - 1) .. (sjistbl_idx + 2),
+          > 0x33 when lang is FhLangId.CH || sjistbl_idx < 0x78 => (sjistbl_idx - 1) .. (sjistbl_idx + 2),
             0x78                                                     => (sjistbl_idx - 1) .. (sjistbl_idx + 1),
-            0xBBB when lang is FhLangId.Japanese                     => (sjistbl_idx - 2) .. sjistbl_idx,
+            0xBBB when lang is FhLangId.JP                     => (sjistbl_idx - 2) .. sjistbl_idx,
             _                                                        => (sjistbl_idx - 2) .. (sjistbl_idx + 1)
         };
 
@@ -468,7 +468,7 @@ public static class FhEncoding {
     private static int _select_correction_cjk(int index, FhLangId lang) {
         index += index switch {
             <= 0x33                                                => 0,
-             > 0x33 when lang is FhLangId.Chinese || index <= 0x78 => 1,
+             > 0x33 when lang is FhLangId.CH || index <= 0x78 => 1,
                _                                                   => 2
         };
 
@@ -834,7 +834,7 @@ public static class FhEncoding {
                 return dest_offset;
             }
 
-            index = lang_id is FhLangId.Chinese or FhLangId.Japanese or FhLangId.Korean
+            index = lang_id is FhLangId.CH or FhLangId.JP or FhLangId.KR
                 ? _select_correction_cjk(index, lang_id)
                 : _select_correction_we (index);
 

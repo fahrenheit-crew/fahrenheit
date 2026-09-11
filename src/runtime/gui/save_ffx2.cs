@@ -1417,9 +1417,9 @@ public sealed class FhSaveUiX2 : FhSaveUi {
 
         // When running in CJK, we slightly reduce the text margin and hardcode
         // the "STORY COMPLETED" string to shorten it and prevent overlap.
-        bool cjk = FhGlobal.lang_id == FhLangId.Chinese
-                || FhGlobal.lang_id == FhLangId.Japanese
-                || FhGlobal.lang_id == FhLangId.Korean;
+        bool cjk = FhGlobal.lang_id == FhLangId.CH
+                || FhGlobal.lang_id == FhLangId.JP
+                || FhGlobal.lang_id == FhLangId.KR;
 
         string completion;
         if (cjk) {

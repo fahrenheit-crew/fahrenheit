@@ -195,7 +195,7 @@ public unsafe class FhGui {
 
     public readonly ImGuiKey[] keys_confirm = [
         ImGuiKey.Enter,
-        FhGlobal.lang_id == FhLangId.Japanese
+        FhGlobal.lang_id == FhLangId.JP
             ? ImGuiKey.GamepadFaceRight
             : ImGuiKey.GamepadFaceDown,
     ];
@@ -203,7 +203,7 @@ public unsafe class FhGui {
     public readonly ImGuiKey[] keys_cancel = [
         ImGuiKey.Escape,
         ImGuiKey.Backspace,
-        FhGlobal.lang_id == FhLangId.Japanese
+        FhGlobal.lang_id == FhLangId.JP
             ? ImGuiKey.GamepadFaceDown
             : ImGuiKey.GamepadFaceRight,
     ];

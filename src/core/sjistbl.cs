@@ -25,16 +25,16 @@ public static class FhShiftJisTables {
     /// </summary>
     public static ReadOnlySpan<byte> get_table(FhLangId lang, FhGameId game) {
         return lang switch {
-            FhLangId.Japanese => game is FhGameId.FFX ? ffx_jp : ffx2_jp,
-            FhLangId.Korean   => game is FhGameId.FFX ? ffx_kr : ffx2_kr,
-            FhLangId.Chinese  => game is FhGameId.FFX ? ffx_ch : ffx2_ch,
-            FhLangId.English  or
-            FhLangId.French   or
-            FhLangId.Spanish  or
-            FhLangId.German   or
-            FhLangId.Italian  => game is FhGameId.FFX ? ffx_us : ffx2_us,
-            FhLangId.Debug    => game is FhGameId.FFX ? ffx_jp : ffx2_jp,
-            _                 => throw new Exception($"no SJIS table known for game {game} and language {lang}"),
+            FhLangId.JP  => game is FhGameId.FFX ? ffx_jp : ffx2_jp,
+            FhLangId.KR  => game is FhGameId.FFX ? ffx_kr : ffx2_kr,
+            FhLangId.CH  => game is FhGameId.FFX ? ffx_ch : ffx2_ch,
+            FhLangId.US  or
+            FhLangId.FR  or
+            FhLangId.SP  or
+            FhLangId.DE  or
+            FhLangId.IT  => game is FhGameId.FFX ? ffx_us : ffx2_us,
+            FhLangId.DBG => game is FhGameId.FFX ? ffx_jp : ffx2_jp,
+            _            => throw new Exception($"no SJIS table known for game {game} and language {lang}"),
         };
     }
 

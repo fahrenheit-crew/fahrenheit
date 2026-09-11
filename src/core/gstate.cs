@@ -54,7 +54,7 @@ public static class FhGlobal {
 
         if (!File.Exists(ini_path)) {
             FhInternal.Log.Warning($"no game INI available to probe language from; fallback to JP");
-            return FhLangId.Japanese;
+            return FhLangId.JP;
         }
 
         using FileStream   ini_stream = File.OpenRead(ini_path);
@@ -65,16 +65,21 @@ public static class FhGlobal {
         int ini_lang_s = ini.IndexOf(ini_lang_key) + ini_lang_key.Length;
         int ini_lang_e = ini[ ini_lang_s .. ].IndexOfAny(line_breaks) + ini_lang_s;
 
+        /* [fkelava 12/09/26 01:17]
+         * Some versions of the remaster have separate locales for
+         * Traditional and Simplified Chinese. Steam, notably, does not.
+         */
+
         return ini[ ini_lang_s .. ini_lang_e ] switch {
-            "en"         => FhLangId.English,
-            "ch" or "cn" => FhLangId.Chinese,
-            "jp"         => FhLangId.Japanese,
-            "kr"         => FhLangId.Korean,
-            "fr"         => FhLangId.French,
-            "es"         => FhLangId.Spanish,
-            "it"         => FhLangId.Italian,
-            "de"         => FhLangId.German,
-            _            => FhLangId.Japanese, // mirror game default behavior
+            "en"         => FhLangId.US,
+            "ch" or "cn" => FhLangId.CH,
+            "jp"         => FhLangId.JP,
+            "kr"         => FhLangId.KR,
+            "fr"         => FhLangId.FR,
+            "es"         => FhLangId.SP,
+            "it"         => FhLangId.IT,
+            "de"         => FhLangId.DE,
+            _            => FhLangId.JP, // mirror game default behavior
         };
     }
 }

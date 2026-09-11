@@ -11,16 +11,17 @@ public unsafe class PosAreaSomethingHelper(nint pBase, PosAreaSomeInfo someInfo)
     public int Length => something.Length;
     public Vector4 this[int i] { get { return something[i]; } set { something[i] = value; } }
 }
+
 public unsafe class BtlAreaHelper(nint pBase, BtlArea* _btlArea) {
     public ref BtlArea btlArea { get { return ref *_btlArea; } }
 
-    public Span<Vector4> party_pos => new((Vector4*)(pBase + btlArea.offset_party_pos), btlArea.count_party_pos);
-    public Span<Vector4> party_run_pos => new((Vector4*)(pBase + btlArea.offset_party_run_pos), btlArea.count_party_pos);
-    public Span<Vector4> aeon_pos => new((Vector4*)(pBase + btlArea.offset_aeon_pos), btlArea.count_aeon_pos);
-    public Span<Vector4> aeon_run_pos => new((Vector4*)(pBase + btlArea.offset_aeon_run_pos), btlArea.count_aeon_pos);
-    public Span<Vector4> enemy_pos => new((Vector4*)(pBase + btlArea.offset_enemy_pos), btlArea.count_enemy_pos);
-    public Span<Vector4> enemy_run_pos => new((Vector4*)(pBase + btlArea.offset_enemy_run_pos), btlArea.count_enemy_pos);
-    public Span<PosAreaSomeInfo> some_info => new((PosAreaSomeInfo*)(pBase + btlArea.offset_some_info), btlArea.count_some_info);
+    public Span<Vector4>         party_pos     => new((Vector4*)        (pBase + btlArea.offset_party_pos),     btlArea.count_party_pos);
+    public Span<Vector4>         party_run_pos => new((Vector4*)        (pBase + btlArea.offset_party_run_pos), btlArea.count_party_pos);
+    public Span<Vector4>         aeon_pos      => new((Vector4*)        (pBase + btlArea.offset_aeon_pos),      btlArea.count_aeon_pos);
+    public Span<Vector4>         aeon_run_pos  => new((Vector4*)        (pBase + btlArea.offset_aeon_run_pos),  btlArea.count_aeon_pos);
+    public Span<Vector4>         enemy_pos     => new((Vector4*)        (pBase + btlArea.offset_enemy_pos),     btlArea.count_enemy_pos);
+    public Span<Vector4>         enemy_run_pos => new((Vector4*)        (pBase + btlArea.offset_enemy_run_pos), btlArea.count_enemy_pos);
+    public Span<PosAreaSomeInfo> some_info     => new((PosAreaSomeInfo*)(pBase + btlArea.offset_some_info),     btlArea.count_some_info);
 
     private PosAreaSomethingHelper[]? _something;
     public PosAreaSomethingHelper[] something {
@@ -61,57 +62,78 @@ public unsafe class BtlAreasHelper(BtlArea* pBase) {
 
 [StructLayout(LayoutKind.Explicit, Pack = 4, Size = 0x10)]
 public unsafe struct PosAreaSomeInfo {
-    [FieldOffset(0x00)] public   uint offset_something;
-    [FieldOffset(0x06)] public   byte count_something;
+    [FieldOffset(0x00)] public uint offset_something;
+    [FieldOffset(0x06)] public byte count_something;
 }
 
-[StructLayout(LayoutKind.Explicit, Pack = 4, Size = 0x60)]
-public unsafe struct BtlArea {
-    [FieldOffset(0x0)]  public   byte    area_type;
-    [FieldOffset(0x1)]  public   byte    area_count;
-    [FieldOffset(0x4)]  public   byte    count_party_pos;
-    [FieldOffset(0x5)]  public   byte    count_aeon_pos;
-    [FieldOffset(0x6)]  public   byte    count_enemy_pos;
-    [FieldOffset(0x8)]  public   byte    count_some_info;
-    [FieldOffset(0x10)] public   uint    offset_party_pos;
-    [FieldOffset(0x14)] public   uint    offset_party_run_pos;
-    [FieldOffset(0x18)] public   uint    offset_aeon_pos;
-    [FieldOffset(0x1C)] public   uint    offset_aeon_run_pos;
-    [FieldOffset(0x20)] public   uint    offset_enemy_pos;
-    [FieldOffset(0x24)] public   uint    offset_enemy_run_pos;
-    [FieldOffset(0x28)] public   uint    offset_some_info;
-    [FieldOffset(0x2C)] public   uint    offset_chunk_end;
-    [FieldOffset(0x30)] public   Vector4 a;
-    [FieldOffset(0x40)] public   Vector4 b;
-    [FieldOffset(0x50)] public   Vector4 c;
+[StructLayout(LayoutKind.Sequential, Size = 0x60)]
+public struct BtlArea {
+    public  byte    area_type;
+    public  byte    area_count;
+    private ushort  _0x02;
+    public  byte    count_party_pos;
+    public  byte    count_aeon_pos;
+    public  byte    count_enemy_pos;
+    private byte    _0x07;
+    public  byte    count_some_info;
+    private byte    _0x09;
+    private uint    _0x0A;
+    private ushort  _0x0E;
+    public  uint    offset_party_pos;
+    public  uint    offset_party_run_pos;
+    public  uint    offset_aeon_pos;
+    public  uint    offset_aeon_run_pos;
+    public  uint    offset_enemy_pos;
+    public  uint    offset_enemy_run_pos;
+    public  uint    offset_some_info;
+    public  uint    offset_chunk_end;
+    public  Vector4 a;
+    public  Vector4 b;
+    public  Vector4 c;
 }
 
-[StructLayout(LayoutKind.Explicit, Pack = 1, Size = 0x28)]
+[StructLayout(LayoutKind.Sequential, Size = 0x28)]
 public struct BtlDebugFlags {
-    [FieldOffset(0x0)] public bool invincible_mon;
-    [FieldOffset(0x1)] public bool invincible_ply;
-    [FieldOffset(0x2)] public bool mon_control;
-
-    [FieldOffset(0x4)] public bool free_camera;
-
-    [FieldOffset(0x8)] public bool no_magic_effects;
-    [FieldOffset(0x9)] public bool no_mp_cost;
-
-    [FieldOffset(0x10)] public bool no_variance;
-    [FieldOffset(0x11)] public bool never_crit;
-    [FieldOffset(0x12)] public bool always_hit;
-    [FieldOffset(0x14)] public bool always_available_overdrive;
-    [FieldOffset(0x15)] public bool always_crit;
-    [FieldOffset(0x16)] public bool always_1_dmg;
-    [FieldOffset(0x17)] public bool always_9999_dmg;
-    [FieldOffset(0x18)] public bool always_99999_dmg;
-    [FieldOffset(0x19)] public bool always_rare_steal;
-    [FieldOffset(0x1A)] public bool ap_x100;
-    [FieldOffset(0x1B)] public bool gil_x100;
-    [FieldOffset(0x1C)] public bool never_overkill;
-    [FieldOffset(0x1D)] public bool permanent_sensor;
-    [FieldOffset(0x1E)] public bool never_charge_overdrive;
-    [FieldOffset(0x27)] public bool never_hit;
+    public  byte invincible_mon;
+    public  byte invincible_ply;
+    public  byte mon_control;
+    private byte _0x03;
+    public  byte free_camera;
+    private byte _0x05;
+    private byte _0x06;
+    private byte _0x07;
+    public  byte no_magic_effects;
+    public  byte no_mp_cost;
+    private byte _0x0A;
+    private byte _0x0B;
+    private byte _0x0C;
+    private byte _0x0D;
+    private byte _0x0E;
+    private byte _0x0F;
+    public  byte no_variance;
+    public  byte never_crit;
+    public  byte always_hit;
+    private byte _0x13;
+    public  byte always_available_overdrive;
+    public  byte always_crit;
+    public  byte always_1_dmg;
+    public  byte always_9999_dmg;
+    public  byte always_99999_dmg;
+    public  byte always_rare_steal;
+    public  byte ap_x100;
+    public  byte gil_x100;
+    public  byte never_overkill;
+    public  byte permanent_sensor;
+    public  byte never_charge_overdrive;
+    private byte _0x1F;
+    private byte _0x20;
+    private byte _0x21;
+    private byte _0x22;
+    private byte _0x23;
+    private byte _0x24;
+    private byte _0x25;
+    private byte _0x26;
+    public  byte never_hit;
 }
 
 [StructLayout(LayoutKind.Explicit, Pack = 4, Size = 0x2150)]

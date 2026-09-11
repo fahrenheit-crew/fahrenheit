@@ -6,8 +6,6 @@
 // ffx_ps2/ffx2/master/jppc/battle/kernel/ply_save.h
 // Switch release of FFX/X-2 HD
 
-using Fahrenheit.FFX;
-
 namespace Fahrenheit.FFX2;
 
 [InlineArray(2)]

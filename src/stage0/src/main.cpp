@@ -5,7 +5,143 @@
 
 #include "fhstage0.h"
 
-void dbg_loop(); // Forward declaration of debugger loop
+PROCESS_INFORMATION process_info;
+
+/*
+ * Filters a core dump to exclude objects which we do not want to record.
+ */
+
+static BOOL CALLBACK stage0_dbg_filter_dump(
+          PVOID                     ptr_callback_param,
+    const PMINIDUMP_CALLBACK_INPUT  ptr_callback_input,
+          PMINIDUMP_CALLBACK_OUTPUT ptr_callback_output) {
+    if (!ptr_callback_input || !ptr_callback_output) return FALSE;
+
+    switch (ptr_callback_input->CallbackType) {
+        case CancelCallback:
+            return FALSE;
+    }
+
+    return TRUE;
+}
+
+/*
+ * Writes a customized core dump.
+ */
+
+static void stage0_dbg_create_dump(
+    DWORD             id_process,
+    DWORD             id_thread,
+    EXCEPTION_RECORD* ptr_exception_record
+) {
+    HANDLE dump_handle = CreateFileW(
+        L"crash_dump.dmp",
+        GENERIC_READ | GENERIC_WRITE,
+        0,
+        nullptr,
+        CREATE_ALWAYS,
+        FILE_ATTRIBUTE_NORMAL,
+        nullptr);
+
+    if (dump_handle == NULL || dump_handle == INVALID_HANDLE_VALUE) {
+        std::wcerr << "Failed to open a file to write the core dump to." << std::endl;
+        return;
+    }
+
+    MINIDUMP_TYPE dump_type = (MINIDUMP_TYPE)(
+        MiniDumpNormal
+      | MiniDumpWithDataSegs
+      | MiniDumpWithHandleData
+      | MiniDumpWithFullMemoryInfo
+      | MiniDumpWithThreadInfo
+      | MiniDumpWithProcessThreadData
+      | MiniDumpWithUnloadedModules);
+
+    /* [fkelava 11/06/26 21:24]
+     * For ClientPointers:
+     * https://learn.microsoft.com/en-us/windows/win32/api/minidumpapiset/ns-minidumpapiset-minidump_exception_information#members
+     * > Set to TRUE if the memory resides in the process being debugged (the target process of the debugger).
+     */
+    CONTEXT faulting_thread_context = { 0 };
+    HANDLE  faulting_thread_handle  = OpenThread(
+        THREAD_GET_CONTEXT,
+        FALSE,
+        id_thread
+    );
+
+    if (faulting_thread_handle == nullptr || faulting_thread_handle == INVALID_HANDLE_VALUE) {
+        std::wcerr << "Failed to open the faulting thread for context capture." << std::endl;
+        return;
+    }
+
+    if (!GetThreadContext(faulting_thread_handle, &faulting_thread_context)) {
+        std::wcerr << "Failed to capture the faulting thread's context." << std::endl;
+        return;
+    }
+
+    EXCEPTION_POINTERS exception_pointers = { 0 };
+    exception_pointers.ContextRecord   = &faulting_thread_context;
+    exception_pointers.ExceptionRecord = ptr_exception_record;
+
+    MINIDUMP_EXCEPTION_INFORMATION info_dump_exception = { 0 };
+    info_dump_exception.ThreadId          = id_thread;
+    info_dump_exception.ExceptionPointers = &exception_pointers;
+    info_dump_exception.ClientPointers    = TRUE;
+
+    MINIDUMP_CALLBACK_INFORMATION info_dump_callback = { 0 };
+    info_dump_callback.CallbackRoutine = (MINIDUMP_CALLBACK_ROUTINE)stage0_dbg_filter_dump;
+    info_dump_callback.CallbackParam   = nullptr;
+
+    std::wcerr << "Dumping process core. Please wait." << std::endl;
+
+    if (!MiniDumpWriteDump(
+        process_info.hProcess,
+        id_process,
+        dump_handle,
+        dump_type,
+        &info_dump_exception,
+        nullptr,
+        &info_dump_callback
+    )) {
+        std::wcerr << "Failed to capture a core dump." << std::endl;
+    }
+
+    CloseHandle(dump_handle);
+}
+
+static void dbg_loop() {
+
+    while (true) {
+        DEBUG_EVENT event;
+
+        WaitForDebugEventEx(&event, INFINITE);
+
+        if (event.dwDebugEventCode == EXIT_PROCESS_DEBUG_EVENT)
+            break;
+
+        if (event.dwDebugEventCode == EXCEPTION_DEBUG_EVENT) {
+            // TODO: absolutely fucking not
+
+            // if (event.u.Exception.ExceptionRecord.ExceptionCode == EXCEPTION_ACCESS_VIOLATION) {
+            //     stage0_dbg_create_dump(
+            //          event.dwProcessId,
+            //          event.dwThreadId,
+            //         &event.u.Exception.ExceptionRecord);
+            //
+            //     break;
+            // }
+        }
+
+        ContinueDebugEvent(
+            event.dwProcessId,
+            event.dwThreadId,
+            DBG_EXCEPTION_NOT_HANDLED
+        );
+    }
+
+}
+
+
 
 int wmain(int argc, wchar_t* argv[ ]) {
     if (argc < 2) {
@@ -14,9 +150,8 @@ int wmain(int argc, wchar_t* argv[ ]) {
         return 1;
     }
 
-    LPCSTR              szDllPath  = "fhstage1.dll";
-    PROCESS_INFORMATION pi;
-    STARTUPINFO         si = { 0 };
+    LPCSTR      szDllPath = "fhstage1.dll";
+    STARTUPINFO si        = { 0 };
 
     si.cb = sizeof(si);
 
@@ -61,7 +196,7 @@ int wmain(int argc, wchar_t* argv[ ]) {
         NULL,
         NULL,
         &si,
-        &pi
+        &process_info
     )) {
         std::wcerr << "Failed to create target process.\n";
         return 1;
@@ -82,8 +217,8 @@ int wmain(int argc, wchar_t* argv[ ]) {
     // Patch IAT of suspended process to inject Stage 1 DLL at position 1.
     //
 
-    if (!DetourUpdateProcessWithDll(pi.hProcess, &szDllPath, 1)) {
-        TerminateProcess(pi.hProcess, ~0u);
+    if (!DetourUpdateProcessWithDll(process_info.hProcess, &szDllPath, 1)) {
+        TerminateProcess(process_info.hProcess, ~0u);
         return FALSE;
     }
 
@@ -97,8 +232,8 @@ int wmain(int argc, wchar_t* argv[ ]) {
     //
 
     if (external_debug) {
-        ResumeThread       (pi.hThread);
-        WaitForSingleObject(pi.hProcess, INFINITE);
+        ResumeThread       (process_info.hThread);
+        WaitForSingleObject(process_info.hProcess, INFINITE);
     }
     else { dbg_loop(); }
 
@@ -108,10 +243,10 @@ int wmain(int argc, wchar_t* argv[ ]) {
     //
 
     DWORD exitCode;
-    BOOL  result = GetExitCodeProcess(pi.hProcess, &exitCode);
+    BOOL  result = GetExitCodeProcess(process_info.hProcess, &exitCode);
 
-    CloseHandle(pi.hProcess);
-    CloseHandle(pi.hThread);
+    CloseHandle(process_info.hProcess);
+    CloseHandle(process_info.hThread);
 
     std::wcout << std::endl;
 

@@ -354,8 +354,8 @@ public static unsafe partial class FhCall {
     // RT - Game UI
 
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-    internal delegate void d_TODrawMessageWindow();
-    internal static FhMethodHandle<d_TODrawMessageWindow> TODrawMessageWindow
+    public delegate void d_TODrawMessageWindow();
+    public static FhMethodHandle<d_TODrawMessageWindow> TODrawMessageWindow
         => new( new FhMethodLocation(0x4ABCE0, 0x391D00) );
 
     // RT - ImGui

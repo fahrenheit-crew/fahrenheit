@@ -36,8 +36,8 @@ namespace Fahrenheit.Runtime;
 [SupportedOSPlatform("windows5.1.2600")]
 public unsafe sealed class FhMallocModule : FhModule {
 
-    private static nuint _reserved { 
-        get => FhUtil.get_at<nuint>(FhUtil.select(0x153CD44, 0x14E6AB4, 0x14E6AB4)); 
+    private static nuint _reserved {
+        get => FhUtil.get_at<nuint>(FhUtil.select(0x153CD44, 0x14E6AB4, 0x14E6AB4));
         set => FhUtil.set_at       (FhUtil.select(0x153CD44, 0x14E6AB4, 0x14E6AB4), value);
     }
 
@@ -99,30 +99,22 @@ public unsafe sealed class FhMallocModule : FhModule {
     }
 
     /* [fkelava 06/08/26 14:29]
-     * As it were, the game doesn't (that we know of) perform any pointer truncation. It could use
-     * 4G of address space safely, but Square/Virtuos forgot to specify the appropriate linker flag.
-     * That's why the game "requires" the "4GB patch". As per the above, it doesn't.
+     * We previously experimented with allocating top-down. However, 'persistent' magic effects
+     * handled using the `op_*` system seem to exhibit some manner of pointer tagging/truncation bug
+     * which precludes our ability to shift the main pool into the space over 0x7FFF_FFFF.
      *
-     * But let's say the user applies the 4GB patch anyway. Not much changes. The OS loader still
-     * places images from circa 0x5000_0000 to 0x7FFF_FFFF like roadblocks, and the large
-     * reserved pool still congests the low reaches of address space. Can we do better?
-     *
-     * The game eventually defers any action by its primary allocator to VirtualAlloc/VirtualFree.
-     * See https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-virtualalloc,
-     * https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-virtualfree.
-     *
-     * By passing MEM_TOP_DOWN, VirtualAlloc can be induced to go top-down; that is, start allocating
-     * from {7|F}FFF_FFFF downwards. This applies to the primary pool as well!
-     * When the game is 4G patched, this leaves a much larger free block under 2G.
+     * This bug recurs regardless as long as the 4GB patch is applied, just less frequently.
+     * Therefore we _temporarily_ disable top-down allocation.
      */
 
     [UnmanagedCallConv(CallConvs = [ typeof(CallConvCdecl) ] )]
     private void* h_mreserve(uint size) {
-        VIRTUAL_ALLOCATION_TYPE alloc_type = FhEnvironment.LargeAddressAware
-            ? VIRTUAL_ALLOCATION_TYPE.MEM_RESERVE | (VIRTUAL_ALLOCATION_TYPE) 0x100_000 // MEM_TOP_DOWN
-            : VIRTUAL_ALLOCATION_TYPE.MEM_RESERVE;
-
-        void* rv = PInvoke.VirtualAlloc(null, size, alloc_type, PAGE_PROTECTION_FLAGS.PAGE_NOACCESS);
+        void* rv = PInvoke.VirtualAlloc(
+            null,
+            size,
+            VIRTUAL_ALLOCATION_TYPE.MEM_RESERVE,
+            PAGE_PROTECTION_FLAGS  .PAGE_NOACCESS
+        );
 
         // The game does not track reversed allocations for some reason.
         if (rv != null) {
@@ -134,7 +126,7 @@ public unsafe sealed class FhMallocModule : FhModule {
 
     public override void render_imgui() {
 #if DEBUG
-        if (!ImGui.Begin("Fh.MDbg")) { 
+        if (!ImGui.Begin("Fh.MDbg")) {
             ImGui.End();
             return;
         }
@@ -142,7 +134,7 @@ public unsafe sealed class FhMallocModule : FhModule {
         ImGui.Text($"Committed: 0x{_committed:X8}");
         ImGui.Text($"Reserved:  0x{_reserved:X8}");
         ImGui.End();
-#endif 
+#endif
     }
 
 }

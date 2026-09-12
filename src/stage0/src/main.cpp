@@ -5,6 +5,8 @@
 
 #include "fhstage0.h"
 
+void dbg_loop(); // Forward declaration of debugger loop
+
 int wmain(int argc, wchar_t* argv[ ]) {
     if (argc < 2) {
         std::wcerr << "Invalid call. You must specify an executable to launch.\n";
@@ -20,7 +22,7 @@ int wmain(int argc, wchar_t* argv[ ]) {
 
     //
     // STEP 1:
-    // Set up args as the game expects them to be..
+    // Set up args as the game expects them to be.
     //
 
     std::wstring args;
@@ -30,18 +32,32 @@ int wmain(int argc, wchar_t* argv[ ]) {
         args.append(L" ");
     }
 
+    /* [fkelava 09/09/26 11:46]
+     * Well-featured systems like Dalamud have an external crash handler that kicks in
+     * when the target binary faults. We could borrow that design, but this is where
+     * having a dedicated launcher/injector pays off; we can repurpose it as a debugger,
+     * and make a crash report from Win32 debugger exception events.
+     *
+     * Passing `--debug` disengages this for when a regular debugger is in use.
+     */
+
+    bool  external_debug = wcsstr(args.c_str(), L"--debug") != NULL;
+    DWORD creation_flags = external_debug
+        ? CREATE_SUSPENDED
+        : DEBUG_ONLY_THIS_PROCESS; // A debugged process is implicitly suspended until debug events are handled/pumped.
+
     //
     // STEP 2:
     // Create process in PROCESS_SUSPENDED state.
     //
 
-    if (!CreateProcess(
+    if (!CreateProcessW(
         NULL,
         &args[0],
         NULL,
         NULL,
         FALSE,
-        CREATE_SUSPENDED,
+        creation_flags,
         NULL,
         NULL,
         &si,
@@ -56,11 +72,9 @@ int wmain(int argc, wchar_t* argv[ ]) {
     // Pause for debugger attach if `--debug` arg is passed.
     //
 
-    if (wcsstr(args.c_str(), L"--debug") != NULL) {
-        std::wcout << "Stage 0 Loader is ready. You can now attach a debugger; press any key to attempt launch.\n";
+    if (external_debug) {
+        std::wcout << "You can now attach a debugger; press any key to attempt launch.\n";
         int i = _getch();
-    } else {
-        std::wcout << "Stage 0 Loader is ready.\n";
     }
 
     //
@@ -82,8 +96,11 @@ int wmain(int argc, wchar_t* argv[ ]) {
     // console, then program execution proceeds.
     //
 
-    ResumeThread       (pi.hThread);
-    WaitForSingleObject(pi.hProcess, INFINITE);
+    if (external_debug) {
+        ResumeThread       (pi.hThread);
+        WaitForSingleObject(pi.hProcess, INFINITE);
+    }
+    else { dbg_loop(); }
 
     //
     // STEP 6:

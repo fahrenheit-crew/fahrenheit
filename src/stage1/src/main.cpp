@@ -31,7 +31,7 @@ hostfxr_close_fn                         g_fnptr_hostfxr_close;
 FILE* g_stdout;
 FILE* g_stderr;
 
-BOOL stage1_eh_install(LPBYTE ptr_main_module); // Forward declaration of EH installer function
+BOOL stage1_eh_suppress(LPBYTE ptr_main_module); // Forward declaration of EH suppressor function
 
 /*
  * Uses the `nethost` library to discover the location of the .NET hosting library,
@@ -67,13 +67,13 @@ static bool load_hostfxr() {
 // Runs before the program's own entrypoint, setting up Fahrenheit.
 static int stage1_main(void) {
     // STEP 5:
-    // If supported, install an EH override which allows us to capture
-    // a customized core dump for easier debugging.
+    // If necessary, suppress the game's SEH filters, so Stage 0
+    // takes over exception handling and core dumping.
     HMODULE hMainModule = GetModuleHandleW(nullptr);
     LPBYTE  pMainModule = reinterpret_cast<LPBYTE>(hMainModule);
 
-    if (!stage1_eh_install(pMainModule)) {
-        std::wcerr << "Failed to install EH hook." << std::endl;
+    if (!stage1_eh_suppress(pMainModule)) {
+        std::wcerr << "Failed to suppress SEH filter." << std::endl;
         exit(EXIT_FAILURE);
     }
 
@@ -197,7 +197,7 @@ static int stage1_main(void) {
 /* [fkelava 21/08/26 14:09]
  * Records the name of the module we're being loaded into and the directory we started from,
  * switches the current working directory to the target's, and hooks its entrypoint.
- * 
+ *
  * This is required because certain other tools expect the game's working directory to be
  * unmodified when they load into the process, which occurs immediately after Stage 1 exits `DllMain`.
  */
@@ -216,13 +216,13 @@ static BOOL stage1_init() {
     }
 
     auto path_target_size = ::GetModuleFileNameW(
-        NULL, 
-        path_target_buf, 
+        NULL,
+        path_target_buf,
         sizeof(path_target_buf) / sizeof(char_t)
     );
 
     auto path_cwd_size = ::GetCurrentDirectoryW(
-        sizeof(path_fh_buf) / sizeof(char_t), 
+        sizeof(path_fh_buf) / sizeof(char_t),
         path_fh_buf
     );
 

@@ -3,6 +3,28 @@
 // This file is part of Fahrenheit, © 2023-2026 The Fahrenheit contributors.
 // It is licensed to you under the GNU Lesser General Public License, version 3.0 or later. See COPYING, COPYING.LESSER.
 
+/* [fkelava 12/09/26 23:26]
+ * One of Fahrenheit's primary design tenets is that it should apply no permanent
+ * modifications to the game binary or folder whatsoever. In keeping with that,
+ * instead of modifying one of the DLLs the game imports as UnX and ffgriever EFL do,
+ * it has an explicit launcher system- the Stage 0 and 1 loaders. If the game is not
+ * launched using it, you get a pristine, unmodified original game.
+ *
+ * The method of choice applied here is reversible IAT patching using MS Detours.
+ * Stage 0 creates the game process and rewrites the IAT to load Stage 1 first,
+ * then serves as the standard output/error pipe for the game.
+ * Stage 1 reverses that modification, then bootstraps .NET and Fahrenheit.
+ *
+ * As Fahrenheit is a .NET modding system for native binaries, it follows that debugging
+ * and stack walking must be carried out in "mixed" mode. Any errors that occur should
+ * ideally include both managed and native frames for the developer's convenience.
+ * Some systems, like Dalamud, implement this using a dedicated crash handler process.
+ *
+ * We go the other way around- Stage 0 is repurposed as a stub debugger that "handles"
+ * exception events, triggers core dumping, and surfaces exception information to the end user.
+ */
+
+
 #include "fhstage0.h"
 
 PROCESS_INFORMATION process_info;
@@ -58,12 +80,29 @@ static void stage0_dbg_create_dump(
       | MiniDumpWithUnloadedModules);
 
     /* [fkelava 11/06/26 21:24]
-     * For ClientPointers:
-     * https://learn.microsoft.com/en-us/windows/win32/api/minidumpapiset/ns-minidumpapiset-minidump_exception_information#members
-     * > Set to TRUE if the memory resides in the process being debugged (the target process of the debugger).
+     * Here we have a problem. MiniDumpWriteDump expects, in MINIDUMP_EXCEPTION_INFORMATION, a PEXCEPTION_POINTERS
+     * consisting of a CONTEXT and EXCEPTION_RECORD. But a debugger, in EXCEPTION_DEBUG_INFO, only gets an EXCEPTION_RECORD.
+     *
+     * Stage0 being a debugger, GetThreadContext solves that, but there's a catch. MINIDUMP_EXCEPTION_INFORMATION has a ClientPointers field:
+     * > Determines where to get the memory regions pointed to by the ExceptionPointers member.
+     * > Set to TRUE if the memory resides in the process being debugged (the target process of the debugger). Otherwise, set to FALSE {...}
+     *
+     * You'd think TRUE applies in this case. Not so: that results in the dump not having an exception record stored.
+     * Because the context is created _here_, FALSE leads to it being properly found. But that, _too_, cannot be correct;
+     * the exception record resides in the process being debugged, while the context resides in the debugger.
+     *
+     * What to do then? The docs do not say, and no example is readily found. We use FALSE as the lesser evil.
+     *
+     * See:
+     * - https://learn.microsoft.com/en-us/windows/win32/api/minwinbase/ns-minwinbase-exception_debug_info
+     * - https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-exception_pointers
+     * - https://learn.microsoft.com/en-us/windows/win32/api/minidumpapiset/ns-minidumpapiset-minidump_exception_information
      */
+
     CONTEXT faulting_thread_context = { 0 };
-    HANDLE  faulting_thread_handle  = OpenThread(
+    faulting_thread_context.ContextFlags = CONTEXT_ALL;
+
+    HANDLE faulting_thread_handle = OpenThread(
         THREAD_GET_CONTEXT,
         FALSE,
         id_thread
@@ -86,7 +125,7 @@ static void stage0_dbg_create_dump(
     MINIDUMP_EXCEPTION_INFORMATION info_dump_exception = { 0 };
     info_dump_exception.ThreadId          = id_thread;
     info_dump_exception.ExceptionPointers = &exception_pointers;
-    info_dump_exception.ClientPointers    = TRUE;
+    info_dump_exception.ClientPointers    = FALSE;
 
     MINIDUMP_CALLBACK_INFORMATION info_dump_callback = { 0 };
     info_dump_callback.CallbackRoutine = (MINIDUMP_CALLBACK_ROUTINE)stage0_dbg_filter_dump;
@@ -109,39 +148,54 @@ static void stage0_dbg_create_dump(
     CloseHandle(dump_handle);
 }
 
-static void dbg_loop() {
+static DWORD dbg_exception(
+    DWORD                 id_process,
+    DWORD                 id_thread,
+    EXCEPTION_DEBUG_INFO* ptr_info_exception
+) {
+    /* [fkelava 12/09/26 23:50]
+     * https://learn.microsoft.com/en-us/windows/win32/api/minwinbase/ns-minwinbase-exception_debug_info#members
+     * > If this member is zero, the debugger has previously encountered the exception.
+     *
+     * We only "handle" exceptions (i.e. dump core) in the first instance.
+     */
+    if (ptr_info_exception->dwFirstChance == 0)
+        return DBG_EXCEPTION_NOT_HANDLED;
 
+    if ((ptr_info_exception->ExceptionRecord.ExceptionFlags & EXCEPTION_NONCONTINUABLE) == EXCEPTION_NONCONTINUABLE) {
+        stage0_dbg_create_dump(
+            id_process,
+            id_thread,
+            &ptr_info_exception->ExceptionRecord);
+
+        return DBG_EXCEPTION_NOT_HANDLED;
+    }
+
+    return DBG_CONTINUE;
+}
+
+static void dbg_loop() {
     while (true) {
         DEBUG_EVENT event;
+        DWORD       continue_state = DBG_EXCEPTION_NOT_HANDLED;
 
         WaitForDebugEventEx(&event, INFINITE);
 
-        if (event.dwDebugEventCode == EXIT_PROCESS_DEBUG_EVENT)
+        DWORD event_code = event.dwDebugEventCode;
+        DWORD id_thread  = event.dwThreadId;
+        DWORD id_process = event.dwProcessId;
+
+        if (event_code == EXIT_PROCESS_DEBUG_EVENT) {
             break;
-
-        if (event.dwDebugEventCode == EXCEPTION_DEBUG_EVENT) {
-            // TODO: absolutely fucking not
-
-            // if (event.u.Exception.ExceptionRecord.ExceptionCode == EXCEPTION_ACCESS_VIOLATION) {
-            //     stage0_dbg_create_dump(
-            //          event.dwProcessId,
-            //          event.dwThreadId,
-            //         &event.u.Exception.ExceptionRecord);
-            //
-            //     break;
-            // }
         }
 
-        ContinueDebugEvent(
-            event.dwProcessId,
-            event.dwThreadId,
-            DBG_EXCEPTION_NOT_HANDLED
-        );
+        if (event_code == EXCEPTION_DEBUG_EVENT) {
+            continue_state = dbg_exception(id_process, id_thread, &event.u.Exception);
+        }
+
+        ContinueDebugEvent(id_process, id_thread, continue_state);
     }
-
 }
-
-
 
 int wmain(int argc, wchar_t* argv[ ]) {
     if (argc < 2) {
@@ -166,15 +220,6 @@ int wmain(int argc, wchar_t* argv[ ]) {
         args.append(argv[i]);
         args.append(L" ");
     }
-
-    /* [fkelava 09/09/26 11:46]
-     * Well-featured systems like Dalamud have an external crash handler that kicks in
-     * when the target binary faults. We could borrow that design, but this is where
-     * having a dedicated launcher/injector pays off; we can repurpose it as a debugger,
-     * and make a crash report from Win32 debugger exception events.
-     *
-     * Passing `--debug` disengages this for when a regular debugger is in use.
-     */
 
     bool  external_debug = wcsstr(args.c_str(), L"--debug") != NULL;
     DWORD creation_flags = external_debug

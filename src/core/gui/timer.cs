@@ -38,16 +38,23 @@ public class Timer {
     public Timer(float time, Action? when_done = null) {
         remaining = length = time;
         on_end    = when_done;
+
+        if (length < 0.0001f && on_end is not null) {
+            on_end();
+            on_end = null; // Prevent the on_end action from executing twice
+        }
     }
 
     /// <summary>Reduce the remaining time in the timer down by the specified delta time.</summary>
     /// <param name="delta">The amount of time to reduce the remaining time by.</param>
     /// <returns>Whether the timer has finished running with this tick.</returns>
     public bool tick(float delta) {
+        float old_remaining = remaining;
         remaining = float.Max(remaining - delta, 0f);
 
-        if (is_done && on_end is {} when_done) {
-            when_done();
+        if (old_remaining > remaining && is_done && on_end is not null) {
+            on_end();
+            on_end = null; // Prevent the on_end action from executing twice
         }
 
         return is_done;
@@ -64,5 +71,10 @@ public class Timer {
         remaining = length;
 
         on_end = when_done;
+
+        if (length < 0.0001f && on_end is not null) {
+            on_end();
+            on_end = null; // Prevent the on_end action from executing twice
+        }
     }
 }

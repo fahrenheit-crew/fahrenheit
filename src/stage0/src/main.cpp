@@ -27,8 +27,6 @@
 
 #include "fhstage0.h"
 
-PROCESS_INFORMATION process_info;
-
 /*
  * Filters a core dump to exclude objects which we do not want to record.
  */
@@ -52,6 +50,7 @@ static BOOL CALLBACK stage0_dbg_filter_dump(
  */
 
 static void stage0_dbg_create_dump(
+    HANDLE            h_process,
     DWORD             id_process,
     DWORD             id_thread,
     EXCEPTION_RECORD* ptr_exception_record
@@ -134,7 +133,7 @@ static void stage0_dbg_create_dump(
     std::wcerr << "Dumping process core. Please wait." << std::endl;
 
     if (!MiniDumpWriteDump(
-        process_info.hProcess,
+        h_process,
         id_process,
         dump_handle,
         dump_type,
@@ -149,6 +148,7 @@ static void stage0_dbg_create_dump(
 }
 
 static DWORD dbg_exception(
+    HANDLE                h_process,
     DWORD                 id_process,
     DWORD                 id_thread,
     EXCEPTION_DEBUG_INFO* ptr_info_exception
@@ -164,6 +164,7 @@ static DWORD dbg_exception(
 
     if ((ptr_info_exception->ExceptionRecord.ExceptionFlags & EXCEPTION_NONCONTINUABLE) == EXCEPTION_NONCONTINUABLE) {
         stage0_dbg_create_dump(
+            h_process,
             id_process,
             id_thread,
             &ptr_info_exception->ExceptionRecord);
@@ -175,6 +176,8 @@ static DWORD dbg_exception(
 }
 
 static void dbg_loop() {
+    HANDLE h_process = { 0 };
+
     while (true) {
         DEBUG_EVENT event;
         DWORD       continue_state = DBG_EXCEPTION_NOT_HANDLED;
@@ -185,12 +188,27 @@ static void dbg_loop() {
         DWORD id_thread  = event.dwThreadId;
         DWORD id_process = event.dwProcessId;
 
+        if (event_code == CREATE_PROCESS_DEBUG_EVENT) {
+            h_process = event.u.CreateProcessInfo.hProcess;
+        }
+
         if (event_code == EXIT_PROCESS_DEBUG_EVENT) {
-            break;
+            /* [fkelava 13/09/26 02:03]
+             * Per https://learn.microsoft.com/en-us/windows/win32/debug/debugging-events:
+             *
+             * > The kernel-mode portion of process shutdown cannot be completed
+             * > until the debugger that receives this event calls ContinueDebugEvent.
+             * >
+             * > The system closes the debugger's handle to the exiting process
+             * > and all of the process's threads. The debugger should not close these handles.
+             */
+
+            ContinueDebugEvent(id_process, id_thread, continue_state);
+            return;
         }
 
         if (event_code == EXCEPTION_DEBUG_EVENT) {
-            continue_state = dbg_exception(id_process, id_thread, &event.u.Exception);
+            continue_state = dbg_exception(h_process, id_process, id_thread, &event.u.Exception);
         }
 
         ContinueDebugEvent(id_process, id_thread, continue_state);
@@ -204,8 +222,9 @@ int wmain(int argc, wchar_t* argv[ ]) {
         return 1;
     }
 
-    LPCSTR      szDllPath = "fhstage1.dll";
-    STARTUPINFO si        = { 0 };
+    LPCSTR              szDllPath = "fhstage1.dll";
+    PROCESS_INFORMATION pi;
+    STARTUPINFO         si = { 0 };
 
     si.cb = sizeof(si);
 
@@ -241,7 +260,7 @@ int wmain(int argc, wchar_t* argv[ ]) {
         NULL,
         NULL,
         &si,
-        &process_info
+        &pi
     )) {
         std::wcerr << "Failed to create target process.\n";
         return 1;
@@ -262,8 +281,8 @@ int wmain(int argc, wchar_t* argv[ ]) {
     // Patch IAT of suspended process to inject Stage 1 DLL at position 1.
     //
 
-    if (!DetourUpdateProcessWithDll(process_info.hProcess, &szDllPath, 1)) {
-        TerminateProcess(process_info.hProcess, ~0u);
+    if (!DetourUpdateProcessWithDll(pi.hProcess, &szDllPath, 1)) {
+        TerminateProcess(pi.hProcess, ~0u);
         return FALSE;
     }
 
@@ -277,8 +296,8 @@ int wmain(int argc, wchar_t* argv[ ]) {
     //
 
     if (external_debug) {
-        ResumeThread       (process_info.hThread);
-        WaitForSingleObject(process_info.hProcess, INFINITE);
+        ResumeThread       (pi.hThread);
+        WaitForSingleObject(pi.hProcess, INFINITE);
     }
     else { dbg_loop(); }
 
@@ -288,10 +307,10 @@ int wmain(int argc, wchar_t* argv[ ]) {
     //
 
     DWORD exitCode;
-    BOOL  result = GetExitCodeProcess(process_info.hProcess, &exitCode);
+    BOOL  result = GetExitCodeProcess(pi.hProcess, &exitCode);
 
-    CloseHandle(process_info.hProcess);
-    CloseHandle(process_info.hThread);
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
 
     std::wcout << std::endl;
 

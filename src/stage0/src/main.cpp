@@ -24,17 +24,14 @@
  * exception events, triggers core dumping, and surfaces exception information to the end user.
  */
 
-
 #include "fhstage0.h"
 
-/*
- * Filters a core dump to exclude objects which we do not want to record.
- */
-
+// Filters objects from a core dump being created.
 static BOOL CALLBACK stage0_dbg_filter_dump(
           PVOID                     ptr_callback_param,
     const PMINIDUMP_CALLBACK_INPUT  ptr_callback_input,
-          PMINIDUMP_CALLBACK_OUTPUT ptr_callback_output) {
+          PMINIDUMP_CALLBACK_OUTPUT ptr_callback_output
+) {
     if (!ptr_callback_input || !ptr_callback_output) return FALSE;
 
     switch (ptr_callback_input->CallbackType) {
@@ -45,15 +42,12 @@ static BOOL CALLBACK stage0_dbg_filter_dump(
     return TRUE;
 }
 
-/*
- * Writes a customized core dump.
- */
-
+// Writes a core dump to disk.
 static void stage0_dbg_create_dump(
-    HANDLE            h_process,
-    DWORD             id_process,
-    DWORD             id_thread,
-    EXCEPTION_RECORD* ptr_exception_record
+    HANDLE            h_process,           // The handle to the process being dumped.
+    DWORD             id_process,          // The ID of the process being dumped.
+    DWORD             id_thread,           // The ID of the faulting thread in the process being dumped.
+    EXCEPTION_RECORD* ptr_exception_record // A pointer to the record of the exception bringing the process down.
 ) {
     HANDLE dump_handle = CreateFileW(
         L"crash_dump.dmp",
@@ -147,11 +141,12 @@ static void stage0_dbg_create_dump(
     CloseHandle(dump_handle);
 }
 
-static DWORD dbg_exception(
-    HANDLE                h_process,
-    DWORD                 id_process,
-    DWORD                 id_thread,
-    EXCEPTION_DEBUG_INFO* ptr_info_exception
+// Handles exception events, returning whether to continue or treat the exception as unhandled.
+static DWORD stage0_dbg_exception(
+    HANDLE                h_process,         // The handle to the process that encountered an exception.
+    DWORD                 id_process,        // The ID of the process that encountered an exception.
+    DWORD                 id_thread,         // The ID of the faulting thread in the process that encountered an exception.
+    EXCEPTION_DEBUG_INFO* ptr_info_exception // A pointer to information about the exception.
 ) {
     /* [fkelava 12/09/26 23:50]
      * https://learn.microsoft.com/en-us/windows/win32/api/minwinbase/ns-minwinbase-exception_debug_info#members
@@ -175,7 +170,15 @@ static DWORD dbg_exception(
     return DBG_CONTINUE;
 }
 
-static void dbg_loop() {
+// The main loop of the debugger. Handles incoming debug events.
+static void stage0_dbg_loop() {
+    /* [fkelava 13/09/26 02:39]
+     * See https://learn.microsoft.com/en-us/windows/win32/debug/debugging-events,
+     * https://learn.microsoft.com/en-us/windows/win32/debug/writing-the-debugger-s-main-loop.
+     *
+     * The relevant passages are given in comments.
+     */
+
     HANDLE h_process = { 0 };
 
     while (true) {
@@ -190,12 +193,20 @@ static void dbg_loop() {
 
         if (event_code == CREATE_PROCESS_DEBUG_EVENT) {
             h_process = event.u.CreateProcessInfo.hProcess;
+
+            /* [fkelava 13/09/26 02:03]
+             * > The handle to the process's image file has GENERIC_READ access and is opened for read-sharing.
+             * > The debugger should close this handle while processing CREATE_PROCESS_DEBUG_EVENT.
+             */
+            HANDLE image_file_handle = event.u.CreateProcessInfo.hFile;
+
+            if (image_file_handle != nullptr && image_file_handle != INVALID_HANDLE_VALUE) {
+                CloseHandle(image_file_handle);
+            }
         }
 
         if (event_code == EXIT_PROCESS_DEBUG_EVENT) {
             /* [fkelava 13/09/26 02:03]
-             * Per https://learn.microsoft.com/en-us/windows/win32/debug/debugging-events:
-             *
              * > The kernel-mode portion of process shutdown cannot be completed
              * > until the debugger that receives this event calls ContinueDebugEvent.
              * >
@@ -208,14 +219,17 @@ static void dbg_loop() {
         }
 
         if (event_code == EXCEPTION_DEBUG_EVENT) {
-            continue_state = dbg_exception(h_process, id_process, id_thread, &event.u.Exception);
+            continue_state = stage0_dbg_exception(h_process, id_process, id_thread, &event.u.Exception);
         }
 
         ContinueDebugEvent(id_process, id_thread, continue_state);
     }
 }
 
-int wmain(int argc, wchar_t* argv[ ]) {
+int wmain(
+    int      argc,
+    wchar_t* argv[ ]
+) {
     if (argc < 2) {
         std::wcerr << "Invalid call. You must specify an executable to launch.\n";
         std::wcerr << "Usage: fhstage0.exe {EXECUTABLE_TO_LAUNCH} {ARGS}\n";
@@ -228,11 +242,7 @@ int wmain(int argc, wchar_t* argv[ ]) {
 
     si.cb = sizeof(si);
 
-    //
-    // STEP 1:
     // Set up args as the game expects them to be.
-    //
-
     std::wstring args;
 
     for (int i = 1; i < argc; i++) {
@@ -245,11 +255,7 @@ int wmain(int argc, wchar_t* argv[ ]) {
         ? CREATE_SUSPENDED
         : DEBUG_ONLY_THIS_PROCESS; // A debugged process is implicitly suspended until debug events are handled/pumped.
 
-    //
-    // STEP 2:
-    // Create process in PROCESS_SUSPENDED state.
-    //
-
+    // Create target process in suspended or debugged state.
     if (!CreateProcessW(
         NULL,
         &args[0],
@@ -266,21 +272,14 @@ int wmain(int argc, wchar_t* argv[ ]) {
         return 1;
     }
 
-    //
-    // STEP 3:
-    // Pause for debugger attach if `--debug` arg is passed.
-    //
-
+    // Pause for external debugger attach if `--debug` arg is passed.
     if (external_debug) {
         std::wcout << "You can now attach a debugger; press any key to attempt launch.\n";
         int i = _getch();
     }
 
-    //
-    // STEP 4:
-    // Patch IAT of suspended process to inject Stage 1 DLL at position 1.
-    //
 
+    // Patch IAT of suspended process to inject Stage 1 DLL at position 1.
     if (!DetourUpdateProcessWithDll(pi.hProcess, &szDllPath, 1)) {
         TerminateProcess(pi.hProcess, ~0u);
         return FALSE;
@@ -288,23 +287,13 @@ int wmain(int argc, wchar_t* argv[ ]) {
 
     std::wcout << "Stage 0 Loader complete. Moving to Stage 1.\n";
 
-    //
-    // STEP 5:
-    // Stage 1 loads first, hooks program entrypoint and performs .NET hosting and
-    // initialization, undoes IAT changes, pipes process stdout/stderr to Stage 0
-    // console, then program execution proceeds.
-    //
-
+    // Either wait for the process to exit if an external debugger is connected,
+    // or begin pumping debug events with the Stage 0 stub debugger.
     if (external_debug) {
         ResumeThread       (pi.hThread);
         WaitForSingleObject(pi.hProcess, INFINITE);
     }
-    else { dbg_loop(); }
-
-    //
-    // STEP 6:
-    // Wait for program to (un)naturally terminate.
-    //
+    else { stage0_dbg_loop(); }
 
     DWORD exitCode;
     BOOL  result = GetExitCodeProcess(pi.hProcess, &exitCode);

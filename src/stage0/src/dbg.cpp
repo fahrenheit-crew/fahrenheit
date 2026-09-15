@@ -17,6 +17,9 @@
 
 #include "fhstage0.h"
 
+wchar_t path_dir_cache[MAX_PATH] = { 0 };
+wchar_t path_dir_crash[MAX_PATH] = { 0 };
+
 static void stage0_dbg_symbolicate(
     HANDLE       h_process,
     STACKFRAME64 stack_frame
@@ -35,11 +38,45 @@ static void stage0_dbg_symbolicate(
         return;
     }
 
-    /*
-     *
-     *
-     *
-     */
+    SYMSRV_INDEX_INFOW symsrv_info = { 0 };
+    symsrv_info.sizeofstruct = sizeof(SYMSRV_INDEX_INFOW);
+
+    if (!SymSrvGetFileIndexInfoW(
+        module.LoadedImageName,
+        &symsrv_info,
+        0
+    )) {
+        std::wcerr << "SymSrvGetFileIndexInfoW() failed with code 0x" << std::hex << GetLastError() << std::endl;
+        return;
+    }
+
+    wchar_t pdb_path[1024] = { 0 };
+
+    GUID zero    = { 0 };
+    bool use_sig = (memcmp(&symsrv_info.guid, &zero, sizeof(zero)) == 0);
+
+    PVOID id    = use_sig
+        ? (PVOID) &symsrv_info.sig
+        : (PVOID) &symsrv_info.guid;
+    DWORD flags = use_sig
+        ? SSRVOPT_DWORDPTR
+        : SSRVOPT_GUIDPTR;
+
+    if (!SymFindFileInPathW(
+        h_process,
+        NULL,
+        symsrv_info.pdbfile,
+        id,
+        symsrv_info.age,
+        0,
+        flags,
+        pdb_path,
+        NULL,
+        NULL
+    )) {
+        std::wcerr << "SymFindFileInPathW() failed with code 0x" << std::hex << GetLastError() << std::endl;
+    }
+
     SYMBOL_INFO_PACKAGEW sym = { 0 };
     sym.si.SizeOfStruct = sizeof(SYMBOL_INFOW);
     sym.si.MaxNameLen   = MAX_SYM_NAME;
@@ -396,8 +433,57 @@ static BOOL stage0_dbg_process_module(
     return TRUE;
 }
 
+// Prepares the directories the debugger requires to operate.
+static BOOL stage0_dbg_init() {
+    wchar_t path_dir_base[MAX_PATH] = { 0 };
+
+    DWORD path_base_size = ::GetModuleFileNameW(
+        NULL,
+        path_dir_base,
+        sizeof(path_dir_base) / sizeof(wchar_t)
+    );
+
+    if (path_base_size == 0) {
+        std::wcerr << "[!] GetModuleFileNameW() failed, error code: " << GetLastError() << std::endl;
+        return FALSE;
+    }
+
+    /* [fkelava 15/09/26 14:54]
+     * We have to remove the last path element twice to get from /bin/fhstage0.exe to the base directory.
+     */
+    if (PathCchRemoveFileSpec(path_dir_base, MAX_PATH) != S_OK ||
+        PathCchRemoveFileSpec(path_dir_base, MAX_PATH) != S_OK) {
+        std::wcerr << "[!] PathCchRemoveFileSpec() failed" << std::endl;
+        return FALSE;
+    }
+
+    if (FAILED(StringCchCatW(path_dir_cache, MAX_PATH, path_dir_base)) ||
+        FAILED(StringCchCatW(path_dir_cache, MAX_PATH, L"\\cache"))    ||
+        FAILED(StringCchCatW(path_dir_crash, MAX_PATH, path_dir_base)) ||
+        FAILED(StringCchCatW(path_dir_crash, MAX_PATH, L"\\crash"))
+    ) {
+        std::wcerr << "[!] StringCchCatW() failed" << std::endl;
+        return FALSE;
+    }
+
+    if ((!CreateDirectoryW(path_dir_cache, NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
+        (!CreateDirectoryW(path_dir_crash, NULL) && GetLastError() != ERROR_ALREADY_EXISTS)
+    ) {
+        std::wcerr << "[!] CreateDirectoryW() failed, code: " << GetLastError() << std::endl;
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 // The main loop of the debugger. Handles incoming debug events.
 void stage0_dbg_loop() {
+    BOOL init_failed = FALSE;
+    if (!stage0_dbg_init()) {
+        std::wcerr << "Failed to create cache and crash directories. Aborting." << std::endl;
+        init_failed = TRUE;
+    }
+
     /* [fkelava 13/09/26 02:39]
      * See https://learn.microsoft.com/en-us/windows/win32/debug/debugging-events,
      * https://learn.microsoft.com/en-us/windows/win32/debug/writing-the-debugger-s-main-loop.
@@ -421,12 +507,24 @@ void stage0_dbg_loop() {
         if (event_code == CREATE_PROCESS_DEBUG_EVENT) {
             h_process = event.u.CreateProcessInfo.hProcess;
 
+            if (init_failed) {
+                TerminateProcess(h_process, 1);
+                return;
+            }
+
+            wchar_t sym_search_path[1024] = { 0 };
+            swprintf_s(
+                sym_search_path,
+                L"cache*%s;SRV*https://msdl.microsoft.com/download/symbols",
+                path_dir_cache
+            );
+
             SymSetOptions(
                 SYMOPT_UNDNAME                // Undecorate/demangle names where possible.
               | SYMOPT_DEFERRED_LOADS         // Only load symbols at point of use, i.e. the stack walk.
               | SYMOPT_FAIL_CRITICAL_ERRORS); // Fail silently, without prompting.
 
-            if (!SymInitializeW(h_process, NULL, FALSE)) {
+            if (!SymInitializeW(h_process, sym_search_path, FALSE)) {
                 std::wcerr << "[!] SymInitializeW failed" << std::endl;
                 TerminateProcess(h_process, GetLastError());
 

@@ -74,7 +74,6 @@ int wmain(
         int i = _getch();
     }
 
-
     // Patch IAT of suspended process to inject Stage 1 DLL at position 1.
     if (!DetourUpdateProcessWithDll(pi.hProcess, &path_dll, 1)) {
         TerminateProcess(pi.hProcess, ~0u);

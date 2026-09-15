@@ -20,8 +20,8 @@ using main_fn = int(*)(void);
 main_fn g_fnptr_main_original = nullptr; // A function pointer to the game's original entrypoint.
 main_fn g_fnptr_main_target   = nullptr; // A function pointer to our modified Stage 1 entrypoint.
 
-char_t path_target_buf[MAX_PATH]; // The path to the binary we're being loaded into.
-char_t path_fh_buf    [MAX_PATH]; // The path to the `fahrenheit/bin` directory we were started in.
+wchar_t path_target_buf[MAX_PATH]; // The path to the binary we're being loaded into.
+wchar_t path_fh_buf    [MAX_PATH]; // The path to the `fahrenheit/bin` directory we were started in.
 
 hostfxr_initialize_for_runtime_config_fn g_fnptr_hostfxr_init;
 hostfxr_set_runtime_property_value_fn    g_fnptr_hostfxr_set_runtime_property;
@@ -39,8 +39,8 @@ BOOL stage1_eh_suppress(LPBYTE ptr_main_module); // Forward declaration of EH su
  */
 
 static bool load_hostfxr() {
-    char_t path_hostfxr_buf[MAX_PATH];
-    size_t path_hostfxr_size = sizeof(path_hostfxr_buf) / sizeof(char_t);
+    wchar_t path_hostfxr_buf[MAX_PATH];
+    size_t  path_hostfxr_size = sizeof(path_hostfxr_buf) / sizeof(wchar_t);
 
     int rc = get_hostfxr_path(path_hostfxr_buf, &path_hostfxr_size, nullptr);
     if (rc != 0) {
@@ -79,13 +79,13 @@ static int stage1_main(void) {
 
     // STEP 6:
     // Declare the name, type, and location of the bootstrap method to invoke.
-    std::basic_string<char_t> path_cwd = path_fh_buf;
+    std::basic_string<wchar_t> path_cwd = path_fh_buf;
 
-    const std::basic_string<char_t> path_fh_runtimeconfig = path_cwd + L"\\fh.runtimeconfig.json";
-    const std::basic_string<char_t> path_fh_dll           = path_cwd + L"\\fh.dll";
+    const std::basic_string<wchar_t> path_fh_runtimeconfig = path_cwd + L"\\fh.runtimeconfig.json";
+    const std::basic_string<wchar_t> path_fh_dll           = path_cwd + L"\\fh.dll";
 
-    const char_t* fh_init_type   = L"Fahrenheit.FhEnvironment, fh";
-    const char_t* fh_init_method = L"boot";
+    const wchar_t* fh_init_type   = L"Fahrenheit.FhEnvironment, fh";
+    const wchar_t* fh_init_method = L"boot";
 
     // STEP 7:
     // Load HostFxr. This library will locate the .NET runtime for us.
@@ -218,11 +218,11 @@ static BOOL stage1_init() {
     auto path_target_size = ::GetModuleFileNameW(
         NULL,
         path_target_buf,
-        sizeof(path_target_buf) / sizeof(char_t)
+        sizeof(path_target_buf) / sizeof(wchar_t)
     );
 
     auto path_cwd_size = ::GetCurrentDirectoryW(
-        sizeof(path_fh_buf) / sizeof(char_t),
+        sizeof(path_fh_buf) / sizeof(wchar_t),
         path_fh_buf
     );
 
@@ -236,7 +236,7 @@ static BOOL stage1_init() {
         return FALSE;
     }
 
-    std::basic_string<char_t> target_path = path_target_buf;
+    std::basic_string<wchar_t> target_path = path_target_buf;
     std::wcout << "Stage 1 Loader executing for: " << target_path << std::endl;
 
     HRESULT hr = PathCchRemoveFileSpec(path_target_buf, MAX_PATH);

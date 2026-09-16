@@ -39,7 +39,7 @@ BOOL stage1_eh_suppress() {
         return FALSE;
     }
 
-    if (FAILED(StringCchCopyW(exe_name, MAX_PATH, ptr_dirsep))) {
+    if (FAILED(StringCchCopyW(exe_name, MAX_PATH, ptr_dirsep + 1))) {
         fwprintf_s(stderr, L"[!] StringCchCopyW failed.\n");
         return FALSE;
     }

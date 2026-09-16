@@ -1565,6 +1565,27 @@ public static partial class FhCall {
     public static FhMethodHandle<d_AbmapPositionPlyTag> AbmapPositionPlyTag
         => new( new FhMethodLocation("FFX.exe", 0x658080) );
 
+    // Unofficial naming
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void d_AbmapFlagConnectedLinks(SphereGridLinkProperties with_flags);
+    public static FhMethodHandle<d_AbmapFlagConnectedLinks> AbmapFlagConnectedLinks
+        => new( new FhMethodLocation("FFX.exe", 0x658DF0) );
+
+    // Unofficial naming
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void d_AbmapCalcMoveCosts(short target_node, short slv, byte ply_id);
+    public static FhMethodHandle<d_AbmapCalcMoveCosts> AbmapCalcMoveCosts
+        => new( new FhMethodLocation("FFX.exe", 0x6474D0) );
+
+    // Unofficial naming
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate int d_AbmapCalcMoveCost(short target_node, int arg2);
+    public static FhMethodHandle<d_AbmapCalcMoveCost> AbmapCalcMoveCost
+        => new( new FhMethodLocation("FFX.exe", 0x647560) );
+
+    // Symbol skipped (deemed uninterpretable):
+    // __stdcall void +AbmapFlagConnectedLinks(SphereGridLinkProperties param_1) at 00a58df0
+
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public unsafe delegate void d_FUN_00a58ff0(void* function);
     public static FhMethodHandle<d_FUN_00a58ff0> FUN_00a58ff0

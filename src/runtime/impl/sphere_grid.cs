@@ -8,15 +8,17 @@ using Fahrenheit.FFX.Ids;
 
 using FhXCall = Fahrenheit.FFX.FhCall;
 
+using static Fahrenheit.FFX.Globals.SphereGrid;
+
 namespace Fahrenheit.Runtime.Impl;
 
 [FhLoad(FhGameId.FFX)]
 public unsafe class SphereGridReimplModule : FhModule {
-    private LpAbilityMapEngine* lpamng => Globals.SphereGrid.lpamng;
-
     public override bool init(FhModContext mod_context, FileStream global_state_file) {
         return FhXCall.AbmapState_ChoosingMoveTarget.hook(this, h_state_choosing_move_target)
-            && FhXCall.AbmapState_Warping.hook(this, h_state_warping);
+            && FhXCall.AbmapState_Warping.hook(this, h_state_warping)
+            && FhXCall.AbmapCalcMoveCosts.hook(this, h_calc_move_costs)
+            && FhXCall.AbmapCalcMoveCost.hook(this, h_calc_move_cost);
     }
 
     private void* get_fnptr(uint address) {
@@ -30,15 +32,77 @@ public unsafe class SphereGridReimplModule : FhModule {
         }
     }
 
-    public void init_moving(int chr_id, short node_idx) {
-        lpamng->move_next_knot_node_idx = lpamng->party_infos[chr_id].current_node_idx;
+    public int h_calc_move_cost(short target_node, int running_total_cost) {
+        int target_cost   = running_total_cost + *move_prev_link_cost;
+        int existing_cost = lpamng->nodes[target_node].move_cost;
+
+        if (target_cost > *slv_available_for_move // More expensive than we can spend
+            || (existing_cost != -1 && target_cost >= existing_cost) // More expensive than a previous option
+        ) {
+            return 1;
+        }
+
+        lpamng->nodes[target_node].move_cost = (byte)target_cost;
+
+        for (int i = 0; i < 5; i++) {
+            SphereGridLink* link = (SphereGridLink*)lpamng->nodes[target_node].link_ptrs[i];
+            if (link == null) {
+                return 0;
+            }
+
+            if (link->flags.can_move_through || link->flags.connected) {
+                continue;
+            }
+
+            *move_prev_link_cost = (link->activated_by & *move_ply_mask) != 0 ? 1 : 4;
+
+            short other_node_idx =
+                link->node_a_idx != target_node
+                    ? link->node_a_idx
+                    : link->node_b_idx;
+
+            link->flags.can_move_through = true;
+            link->flags.flag2 = true;
+
+            if (h_calc_move_cost(other_node_idx, target_cost) != 0)
+                link->flags.flag2 = false;
+            else
+                link->flags.can_move_through = false;
+        }
+
+        return 0;
+    }
+
+    public void h_calc_move_costs(short target_node, short slv, byte ply_id) {
+        // Reset everything first
+        for (int node_idx = 0; node_idx < lpamng->node_count; node_idx++) {
+            if (lpamng->nodes[node_idx].node_type != NodeType.NULL) {
+                lpamng->nodes[node_idx].move_cost = -1;
+            }
+        }
+
+        for (int link_idx = 0; link_idx < lpamng->link_count; link_idx++) {
+            lpamng->links[link_idx].flags &= ~(SphereGridLinkProperties)0b1111;
+        }
+
+        FhXCall.AbmapFlagConnectedLinks.fnptr!(SphereGridLinkProperties.CONNECTED);
+
+        *slv_available_for_move = slv << 2;
+        *move_ply_mask = 1 << (ply_id & 0x1F);
+        *move_prev_link_cost = 0;
+
+        h_calc_move_cost(target_node, 0);
+    }
+
+    public void init_moving(int ply_id, short node_idx) {
+        lpamng->move_next_knot_node_idx = lpamng->party_infos[ply_id].current_node_idx;
         lpamng->move_start_node_idx = lpamng->move_next_knot_node_idx;
         lpamng->move_target_node_idx = node_idx;
 
         lpamng->moving_progress = 1f;
         lpamng->moving_speed    = 0f;
 
-        lpamng->moving_ply_id = (byte)chr_id;
+        lpamng->moving_ply_id = (byte)ply_id;
 
         if (lpamng->fn_ctrl_backup == null) {
             lpamng->fn_ctrl_backup = lpamng->fn_ctrl;
@@ -49,30 +113,31 @@ public unsafe class SphereGridReimplModule : FhModule {
     public void h_state_choosing_move_target() {
         FhXCall.FUN_00a58ff0.fnptr!(get_fnptr(0x645000));
 
-        if (lpamng->__0x115CD == 0 && lpamng->fn_ctrl_backup == null) {
-            lpamng->slv_queued = (lpamng->nodes[lpamng->selected_node_idx].move_cost + 3) >> 2;
+        if (lpamng->__0x115CD != 0 || lpamng->fn_ctrl_backup != null) return;
 
-            // Confirm button
-            if (lpamng->abmap_input[1].get_bit(5)) {
-                limit_all_link_flags((SphereGridLinkProperties)0b11111000);
+        lpamng->slv_queued = (lpamng->nodes[lpamng->selected_node_idx].move_cost + 3) >> 2;
 
-                lpamng->fn_ctrl = get_fnptr(0x648230);
-                lpamng->fn_help = null;
-                lpamng->__0x115C3 = 0;
-                init_moving(lpamng->current_ply_id, lpamng->selected_node_idx);
-            }
+        // Confirm button
+        if (lpamng->abmap_input[1].get_bit(5)) {
+            limit_all_link_flags((SphereGridLinkProperties)0b11111000);
 
-            // Cancel button
-            if (lpamng->abmap_input[1].get_bit(6)) {
-                limit_all_link_flags((SphereGridLinkProperties)0b11110000);
-                FhCall.SndSepPlaySimple.fnptr!(SoundId.UI_CANCEL);
+            lpamng->fn_ctrl = get_fnptr(0x648230);
+            lpamng->fn_help = null;
+            lpamng->__0x115C3 = 0;
+            init_moving(lpamng->current_ply_id, lpamng->selected_node_idx);
+            return;
+        }
 
-                lpamng->__0x115C3 = 0;
-                lpamng->slv_queued = 0;
+        // Cancel button
+        if (lpamng->abmap_input[1].get_bit(6)) {
+            limit_all_link_flags((SphereGridLinkProperties)0b11110000);
+            FhCall.SndSepPlaySimple.fnptr!(SoundId.UI_CANCEL);
 
-                FhXCall.FUN_00a59950.fnptr!();
-                FhXCall.FUN_00a596d0.fnptr!(7);
-            }
+            lpamng->__0x115C3 = 0;
+            lpamng->slv_queued = 0;
+
+            FhXCall.FUN_00a59950.fnptr!();
+            FhXCall.FUN_00a596d0.fnptr!(7);
         }
     }
 

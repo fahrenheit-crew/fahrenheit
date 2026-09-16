@@ -37,15 +37,27 @@ public unsafe struct SphereGridCluster {
 [Flags]
 public enum SphereGridLinkProperties : byte {
     NONE           = 0,
+    CAN_MOVE_THROUGH         = 1 << 0,
     CONNECTED      = 1 << 1,
+    FLAG_2         = 1 << 2,
     JUST_ACTIVATED = 1 << 3,
 }
 
 public static partial class FhEnumExt {
     extension(SphereGridLinkProperties flags) {
+        public bool can_move_through {
+            get { return flags.HasFlag(SphereGridLinkProperties.CAN_MOVE_THROUGH); }
+            set { if (value) flags |= (SphereGridLinkProperties.CAN_MOVE_THROUGH); else flags &= ~(SphereGridLinkProperties.CAN_MOVE_THROUGH); }
+        }
+
         public bool connected {
             get { return flags.HasFlag(SphereGridLinkProperties.CONNECTED); }
             set { if (value) flags |= (SphereGridLinkProperties.CONNECTED); else flags &= ~(SphereGridLinkProperties.CONNECTED); }
+        }
+
+        public bool flag2 {
+            get { return flags.HasFlag(SphereGridLinkProperties.FLAG_2); }
+            set { if (value) flags |= (SphereGridLinkProperties.FLAG_2); else flags &= ~(SphereGridLinkProperties.FLAG_2); }
         }
 
         public bool just_activated {
@@ -139,7 +151,7 @@ public unsafe struct SphereGridNode {
     [FieldOffset(0xC)]  public  LinkPtrArray             link_ptrs;
     [FieldOffset(0x21)] public  byte                     activated_by;
     [FieldOffset(0x22)] public  SphereGridNodeProperties properties;
-    [FieldOffset(0x24)] public  byte                     move_cost; // Only nonzero when moving
+    [FieldOffset(0x24)] public  short                    move_cost; // Only nonzero when moving
 
     [FieldOffset(0x26)] public  ushort                   __0x26;
 

@@ -7711,9 +7711,6 @@ public static unsafe partial class FhCall {
     public unsafe delegate void d_FUN_00a474d0(uint node_idx, ushort slv, byte chr_id);
     public static FhMethodHandle<d_FUN_00a474d0> FUN_00a474d0 => new( new FhMethodLocation("FFX.exe", 0x6474D0) );
 
-    // Symbol skipped (deemed uninterpretable):
-    // unknown undefined +AbmapCalcNodeMoveCosts() at 00a47560
-
     // Original after pruning:
     // unknown undefined FUN_00a47630() at 00a47630
 
@@ -8396,9 +8393,6 @@ public static unsafe partial class FhCall {
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public unsafe delegate void d_FUN_00a58db0();
     public static FhMethodHandle<d_FUN_00a58db0> FUN_00a58db0 => new( new FhMethodLocation("FFX.exe", 0x658DB0) );
-
-    // Symbol skipped (deemed uninterpretable):
-    // __stdcall void +AbmapFlagConnectedLinks(SphereGridLinkProperties param_1) at 00a58df0
 
     // Symbol skipped (deemed uninterpretable):
     // unknown undefined +AbmapTryChangePlayer() at 00a58ec0

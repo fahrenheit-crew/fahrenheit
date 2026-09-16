@@ -51,11 +51,14 @@ BOOL stage1_eh_suppress() {
 
     SetUnhandledExceptionFilter(NULL);
 
-    // We don't care about the original SEH filter in the slightest, so we don't keep it.
-    void* fnptr_eh_original = NULL;
-
-    if (MH_CreateHookApi(L"kernel32.dll", "SetUnhandledExceptionFilter", &stage1_eh_set_filter, &fnptr_eh_original) != MH_OK ||
-        MH_EnableHook   (&SetUnhandledExceptionFilter)                                                              != MH_OK
+    /* [fkelava 16/09/26 18:29]
+     * We don't care about the original SEH filter in the slightest, so we don't keep it.
+     * This is safe to do because MinHook checks that ppOriginal is not NULL before assigning it.
+     *
+     * https://github.com/TsudaKageyu/minhook/blob/8af6b4acae5a9388fd742b56fa79ece89d96f823/src/hook.c#L633
+     */
+    if (MH_CreateHookApi(L"kernel32.dll", "SetUnhandledExceptionFilter", &stage1_eh_set_filter, NULL) != MH_OK ||
+        MH_EnableHook   (&SetUnhandledExceptionFilter)                                                != MH_OK
     ) {
         fwprintf_s(stderr, L"Failed to suppress SEH filter install for %s.\n", exe_name);
         return FALSE;

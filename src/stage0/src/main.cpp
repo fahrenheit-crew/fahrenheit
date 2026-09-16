@@ -24,7 +24,7 @@ void stage0_dbg_loop(); // Forward declaration of debugger loop function.
 
 int wmain(
     int      argc,
-    wchar_t* argv[ ]
+    wchar_t* argv[]
 ) {
     if (argc < 2) {
         fwprintf_s(stderr, L"Invalid call. You must specify an executable to launch.\n");
@@ -32,7 +32,7 @@ int wmain(
         return 1;
     }
 
-    LPCSTR              path_dll = "fhstage1.dll";
+    LPCSTR              stage1_path = "fhstage1.dll";
     PROCESS_INFORMATION pi;
     STARTUPINFO         si = { 0 };
 
@@ -79,9 +79,11 @@ int wmain(
     }
 
     // Patch IAT of suspended process to inject Stage 1 DLL at position 1.
-    if (!DetourUpdateProcessWithDll(pi.hProcess, &path_dll, 1)) {
-        TerminateProcess(pi.hProcess, ~0u);
-        return FALSE;
+    if (!DetourUpdateProcessWithDll(pi.hProcess, &stage1_path, 1)) {
+        fwprintf_s(stderr, L"Failed to inject Stage 1 into the target.\n");
+        TerminateProcess(pi.hProcess, 1U);
+
+        return 1;
     }
 
     fwprintf_s(stdout, L"Stage 0 Loader complete. Moving to Stage 1.\n");
@@ -92,15 +94,15 @@ int wmain(
         ResumeThread       (pi.hThread);
         WaitForSingleObject(pi.hProcess, INFINITE);
     }
-    else { stage0_dbg_loop(); }
+    else {
+        stage0_dbg_loop();
+    }
 
     DWORD exit_code;
     BOOL  result = GetExitCodeProcess(pi.hProcess, &exit_code);
 
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
-
-    fwprintf_s(stdout, L"\n");
 
     if (exit_code != 0) {
         fwprintf_s(stdout, L"Process exited with code 0x%X.\n", exit_code);

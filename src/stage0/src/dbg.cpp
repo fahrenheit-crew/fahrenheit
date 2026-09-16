@@ -99,7 +99,7 @@ static void stage0_dbg_symbolicate(
 static void stage0_dbg_print_context(
     CONTEXT* ptr_context
 ) {
-    fwprintf_s(stdout, L"\n----\n");
+    fwprintf_s(stdout, L"---- EXCEPTION CONTEXT ----\n");
 
     fwprintf_s(
         stdout,
@@ -122,7 +122,7 @@ static void stage0_dbg_print_context(
 
     fwprintf_s(
         stdout,
-        L" cs=%08X  ds=%08X  es=%08X  fs=%08X  gs=%08X ss=%08X efl=%08X\n",
+        L" cs=    %04hX  ds=    %04hX  es=    %04hX  fs=    %04hX  gs=    %04hX ss=    %04hX efl=%04hX\n",
         ptr_context->SegCs,
         ptr_context->SegDs,
         ptr_context->SegEs,
@@ -132,7 +132,7 @@ static void stage0_dbg_print_context(
         ptr_context->EFlags
     );
 
-    fwprintf_s(stdout, L"----\n\n");
+    fwprintf_s(stdout, L"\n");
 }
 
 static void stage0_dbg_stack_walk(
@@ -140,13 +140,6 @@ static void stage0_dbg_stack_walk(
     HANDLE   h_thread,
     CONTEXT* ptr_context
 ) {
-    /* [fkelava 13/09/26 13:49]
-     * https://learn.microsoft.com/en-us/windows/win32/api/dbghelp/nf-dbghelp-stackwalk64
-     * > This context may be modified, so do not pass a context record that should not be modified.
-     *
-     * We _first_ dump core precisely so the context can be freely modified by the stack walker.
-     */
-
     STACKFRAME64 stack_frame = { 0 };
     stack_frame.AddrPC   .Offset = ptr_context->Eip;
     stack_frame.AddrPC   .Mode   = AddrModeFlat;
@@ -154,6 +147,8 @@ static void stage0_dbg_stack_walk(
     stack_frame.AddrFrame.Mode   = AddrModeFlat;
     stack_frame.AddrStack.Offset = ptr_context->Esp;
     stack_frame.AddrStack.Mode   = AddrModeFlat;
+
+    fwprintf_s(stdout, L"---- STACK TRACE ----\n");
 
     while (true) {
         BOOL rv = StackWalk64(
@@ -176,6 +171,8 @@ static void stage0_dbg_stack_walk(
 
         stage0_dbg_symbolicate(h_process, stack_frame);
     }
+
+    fwprintf_s(stdout, L"\n");
 }
 
 // Filters objects from a core dump being created.
@@ -294,10 +291,13 @@ static void stage0_dbg_create_dump(
         nullptr,
         &info_dump_callback
     )) {
-        fwprintf_s(stderr, L"Failed to capture core dump.\n");
+        fwprintf_s(stderr, L"Failed to dump core.\n");
+    }
+    else {
+        fwprintf_s(stdout, L"Core dumped to %s.\n", crash_dump_path);
     }
 
-    fwprintf_s(stdout, L"Core dump written to %s.\n", crash_dump_path);
+    fwprintf_s(stdout, L"\n");
     CloseHandle(dump_handle);
 }
 
@@ -342,6 +342,12 @@ static DWORD stage0_dbg_exception(
             &faulting_thread_context
         );
 
+        /* [fkelava 13/09/26 13:49]
+         * https://learn.microsoft.com/en-us/windows/win32/api/dbghelp/nf-dbghelp-stackwalk64
+         * > This context may be modified, so do not pass a context record that should not be modified.
+         *
+         * The stack walk will modify the context, so we must do that last.
+         */
         stage0_dbg_create_dump(
             h_process,
             id_process,
@@ -494,6 +500,7 @@ static BOOL stage0_dbg_process_module(
     fwprintf_s(stdout, L"Module loaded: %s\n", module_path);
 #endif
     /* [fkelava 13/09/26 02:03]
+     * https://learn.microsoft.com/en-us/windows/win32/debug/debugging-events:
      * > The debugger should close the handle to the DLL while processing LOAD_DLL_DEBUG_EVENT.
      *
      * We deviate from the guidelines. Since we pass the handle to SymLoadModuleExW
@@ -523,7 +530,7 @@ static BOOL stage0_dbg_init() {
     if (PathCchRemoveFileSpec(path_dir_base, MAX_PATH) != S_OK ||
         PathCchRemoveFileSpec(path_dir_base, MAX_PATH) != S_OK
     ) {
-        fwprintf_s(stderr, L"[!] PathCchRemoveFileSpec() failed.\n");
+        fwprintf_s(stderr, L"[!] PathCchRemoveFileSpec() failed for path %s.\n", path_dir_base);
         return FALSE;
     }
 
@@ -550,7 +557,7 @@ static BOOL stage0_dbg_init() {
 void stage0_dbg_loop() {
     BOOL init_failed = FALSE;
     if (!stage0_dbg_init()) {
-        fwprintf_s(stderr, L"Failed to create cache and crash directories. Aborting.\n");
+        fwprintf_s(stderr, L"Failed to create debugger directories. Aborting.\n");
         init_failed = TRUE;
     }
 

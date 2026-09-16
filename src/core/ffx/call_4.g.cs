@@ -19573,13 +19573,6 @@ public static unsafe partial class FhCall {
     public static FhMethodHandle<d_pppAlloc> pppAlloc => new( new FhMethodLocation("FFX.exe", 0x32C4C0) );
 
     // Original after pruning:
-    // unknown undefined pppCreateHeap() at 0072c570
-
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public unsafe delegate void d_pppCreateHeap();
-    public static FhMethodHandle<d_pppCreateHeap> pppCreateHeap => new( new FhMethodLocation("FFX.exe", 0x32C570) );
-
-    // Original after pruning:
     // unknown undefined FUN_0072c650() at 0072c650
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]

@@ -8363,13 +8363,6 @@ public static unsafe partial class FhCall {
     public static FhMethodHandle<d_FUN_00a57f80> FUN_00a57f80 => new( new FhMethodLocation("FFX.exe", 0x657F80) );
 
     // Original after pruning:
-    // __stdcall undefined FUN_00a58080(undefined4 chr_id) at 00a58080
-
-    [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-    public unsafe delegate void d_FUN_00a58080(uint chr_id);
-    public static FhMethodHandle<d_FUN_00a58080> FUN_00a58080 => new( new FhMethodLocation("FFX.exe", 0x658080) );
-
-    // Original after pruning:
     // unknown undefined FUN_00a581f0() at 00a581f0
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -8623,13 +8616,6 @@ public static unsafe partial class FhCall {
     public static FhMethodHandle<d_FUN_00a5a8e0> FUN_00a5a8e0 => new( new FhMethodLocation("FFX.exe", 0x65A8E0) );
 
     // Original after pruning:
-    // unknown undefined FUN_00a5a990() at 00a5a990
-
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public unsafe delegate void d_FUN_00a5a990();
-    public static FhMethodHandle<d_FUN_00a5a990> FUN_00a5a990 => new( new FhMethodLocation("FFX.exe", 0x65A990) );
-
-    // Original after pruning:
     // unknown undefined FUN_00a5aa30() at 00a5aa30
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -8747,13 +8733,6 @@ public static unsafe partial class FhCall {
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
     public unsafe delegate void d_FUN_00a5b980(int chr_idx, int node_idx, uint param_3);
     public static FhMethodHandle<d_FUN_00a5b980> FUN_00a5b980 => new( new FhMethodLocation("FFX.exe", 0x65B980) );
-
-    // Original after pruning:
-    // __cdecl void FUN_00a5bad0(int param_1, int param_2, float x, float y, undefined4 param_5, undefined4 param_6, undefined4 param_7, undefined4 param_8, float param_9, float param_10, float param_11) at 00a5bad0
-
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public unsafe delegate void d_FUN_00a5bad0(int param_1, int param_2, float x, float y, uint param_5, uint param_6, uint param_7, uint param_8, float param_9, float param_10, float param_11);
-    public static FhMethodHandle<d_FUN_00a5bad0> FUN_00a5bad0 => new( new FhMethodLocation("FFX.exe", 0x65BAD0) );
 
     // Original after pruning:
     // unknown undefined FUN_00a5bb70() at 00a5bb70

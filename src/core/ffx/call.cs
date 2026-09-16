@@ -102,6 +102,11 @@ public static partial class FhCall {
         => new( new FhMethodLocation("FFX.exe", 0x328F30) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public unsafe delegate void d_pppCreateHeap(void* arg1, void* arg2, int arg3);
+    public static FhMethodHandle<d_pppCreateHeap> pppCreateHeap
+        => new( new FhMethodLocation("FFX.exe", 0x32C570) );
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate uint d__pppRunPartFp(uint ptr_par, byte flags);
     public static FhMethodHandle<d__pppRunPartFp> _pppRunPartFp
         => new( new FhMethodLocation("FFX.exe", 0x3123D0) );
@@ -1522,7 +1527,7 @@ public static partial class FhCall {
         => new( new FhMethodLocation("FFX.exe", 0x6458A0) );
 
 
-    // Sphere Grid state machine functions, unofficial names
+    // Sphere Grid state machine functions, unofficial naming
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void d_abmap_ctrl();
 
@@ -1554,6 +1559,12 @@ public static partial class FhCall {
         => new( new FhMethodLocation("FFX.exe", 0x659e80) );
 
 
+    // Unofficial naming
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public unsafe delegate void d_AbmapPositionPlyTag(int ply_id);
+    public static FhMethodHandle<d_AbmapPositionPlyTag> AbmapPositionPlyTag
+        => new( new FhMethodLocation("FFX.exe", 0x658080) );
+
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public unsafe delegate void d_FUN_00a58ff0(void* function);
     public static FhMethodHandle<d_FUN_00a58ff0> FUN_00a58ff0
@@ -1563,6 +1574,25 @@ public static partial class FhCall {
     public delegate void d_FUN_00a596d0(int menu_idx);
     public static FhMethodHandle<d_FUN_00a596d0> FUN_00a596d0
         => new( new FhMethodLocation("FFX.exe", 0x6596D0) );
+
+    // Original after pruning:
+    // unknown undefined FUN_00a5a990() at 00a5a990
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void d_FUN_00a5a990(int ply_id);
+    public static FhMethodHandle<d_FUN_00a5a990> FUN_00a5a990
+        => new( new FhMethodLocation("FFX.exe", 0x65A990) );
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public unsafe delegate void d_FUN_00a5bad0(
+        void* param_1,
+        int param_2,
+        float x, float y,
+        uint param_5, uint param_6, uint param_7, uint param_8,
+        float param_9, float param_10, float param_11
+    );
+    public static FhMethodHandle<d_FUN_00a5bad0> FUN_00a5bad0
+        => new( new FhMethodLocation("FFX.exe", 0x65BAD0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void d_FUN_00a48910(uint chr_id, int node_idx);

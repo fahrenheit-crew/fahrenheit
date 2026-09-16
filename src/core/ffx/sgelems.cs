@@ -34,14 +34,37 @@ public unsafe struct SphereGridCluster {
     public readonly Vector2 size => Globals.SphereGrid.lpamng->cluster_sizes[type].xy;
 }
 
+[Flags]
+public enum SphereGridLinkProperties : byte {
+    NONE           = 0,
+    CONNECTED      = 1 << 1,
+    JUST_ACTIVATED = 1 << 3,
+}
+
+public static partial class FhEnumExt {
+    extension(SphereGridLinkProperties flags) {
+        public bool connected {
+            get { return flags.HasFlag(SphereGridLinkProperties.CONNECTED); }
+            set { if (value) flags |= (SphereGridLinkProperties.CONNECTED); else flags &= ~(SphereGridLinkProperties.CONNECTED); }
+        }
+
+        public bool just_activated {
+            get { return flags.HasFlag(SphereGridLinkProperties.JUST_ACTIVATED); }
+            set { if (value) flags |= (SphereGridLinkProperties.JUST_ACTIVATED); else flags &= ~(SphereGridLinkProperties.JUST_ACTIVATED); }
+        }
+    }
+}
+
 [StructLayout(LayoutKind.Explicit, Pack = 1, Size = 0x14)]
 public unsafe struct SphereGridLink {
     [FieldOffset(0x0)]  public short node_a_idx;
     [FieldOffset(0x2)]  public short node_b_idx;
     [FieldOffset(0x4)]  public short anchor_idx;
+
     [FieldOffset(0xC)]  public byte  activated_by;
     [FieldOffset(0xD)]  public byte  point_count;
-    [FieldOffset(0xE)]  public byte  __0xE;
+
+    [FieldOffset(0xE)]  public SphereGridLinkProperties flags;
 
     [FieldOffset(0x10)] public SphereGridLinkPoint* points;
 

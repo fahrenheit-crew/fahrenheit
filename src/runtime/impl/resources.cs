@@ -3,7 +3,7 @@
 // This file is part of Fahrenheit, © 2023-2026 The Fahrenheit contributors.
 // It is licensed to you under the GNU Lesser General Public License, version 3.0 or later. See COPYING, COPYING.LESSER.
 
-namespace Fahrenheit.Runtime;
+namespace Fahrenheit.Runtime.Impl;
 
 /// <summary>Loads textures and other resources at runtime.</summary>
 /// <remarks>In your module, access this functionality through <see cref="FhApi.Resources"/>.</remarks>

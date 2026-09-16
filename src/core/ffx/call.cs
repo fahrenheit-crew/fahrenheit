@@ -1521,15 +1521,48 @@ public static partial class FhCall {
     public static FhMethodHandle<d_abmap_get_panel> abmap_get_panel
         => new( new FhMethodLocation("FFX.exe", 0x6458A0) );
 
-    // Sphere-grid state-machine entry points
+
+    // Sphere Grid state machine functions, unofficial names
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void d_abmap_ctrl();
+
+    public static FhMethodHandle<d_abmap_ctrl> AbmapState_ChoosingMoveTarget
+        => new( new FhMethodLocation("FFX.exe", 0x644ef0) );
+
+    public static FhMethodHandle<d_abmap_ctrl> AbmapState_Idle
+        => new( new FhMethodLocation("FFX.exe", 0x645010) );
+
+    public static FhMethodHandle<d_abmap_ctrl> AbmapState_ChoosingActivationTarget
+        => new( new FhMethodLocation("FFX.exe", 0x6452d0) );
+
     public static FhMethodHandle<d_abmap_ctrl> AbmapState_ChangingNode
         => new( new FhMethodLocation("FFX.exe", 0x647D50) );
+
     public static FhMethodHandle<d_abmap_ctrl> AbmapState_Warping
         => new( new FhMethodLocation("FFX.exe", 0x647F00) );
+
+    public static FhMethodHandle<d_abmap_ctrl> AbmapState_AwaitingMoveConfirm
+        => new( new FhMethodLocation("FFX.exe", 0x648230) );
+
+    public static FhMethodHandle<d_abmap_ctrl> AbmapState_ActivatingNode
+        => new( new FhMethodLocation("FFX.exe", 0x648280) );
+
     public static FhMethodHandle<d_abmap_ctrl> AbmapState_MovingToTarget
         => new( new FhMethodLocation("FFX.exe", 0x659990) );
+
+    public static FhMethodHandle<d_abmap_ctrl> AbmapState_HomeOnNode
+        => new( new FhMethodLocation("FFX.exe", 0x659e80) );
+
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public unsafe delegate void d_FUN_00a58ff0(void* function);
+    public static FhMethodHandle<d_FUN_00a58ff0> FUN_00a58ff0
+        => new( new FhMethodLocation("FFX.exe", 0x658FF0) );
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void d_FUN_00a596d0(int menu_idx);
+    public static FhMethodHandle<d_FUN_00a596d0> FUN_00a596d0
+        => new( new FhMethodLocation("FFX.exe", 0x6596D0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void d_FUN_00a48910(uint chr_id, int node_idx);

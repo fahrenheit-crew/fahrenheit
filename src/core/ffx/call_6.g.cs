@@ -8413,10 +8413,6 @@ public static unsafe partial class FhCall {
     // Original after pruning:
     // unknown undefined FUN_00a58ff0() at 00a58ff0
 
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public unsafe delegate void d_FUN_00a58ff0();
-    public static FhMethodHandle<d_FUN_00a58ff0> FUN_00a58ff0 => new( new FhMethodLocation("FFX.exe", 0x658FF0) );
-
     // Original after pruning:
     // unknown undefined FUN_00a592d0() at 00a592d0
 
@@ -8493,13 +8489,6 @@ public static unsafe partial class FhCall {
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public unsafe delegate void d_FUN_00a59680();
     public static FhMethodHandle<d_FUN_00a59680> FUN_00a59680 => new( new FhMethodLocation("FFX.exe", 0x659680) );
-
-    // Original after pruning:
-    // unknown undefined FUN_00a596d0() at 00a596d0
-
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public unsafe delegate void d_FUN_00a596d0();
-    public static FhMethodHandle<d_FUN_00a596d0> FUN_00a596d0 => new( new FhMethodLocation("FFX.exe", 0x6596D0) );
 
     // Original after pruning:
     // __stdcall void FUN_00a59710(undefined* param_1, ExcelElement_sphere** sphere) at 00a59710

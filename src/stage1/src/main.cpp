@@ -76,10 +76,11 @@ static BOOL stage1_load_hostfxr(
 
 // Runs before the program's own entrypoint, setting up Fahrenheit.
 static int stage1_main(void) {
-#if _DEBUG
-    fwprintf_s(stdout, L"Stage 1 debugging is ready. \n");
-    int i = _getch();
-#endif
+    /* [fkelava 16/09/26 17:07]
+     * Sometimes Visual Studio is obstinate and won't honor breakpoints in Stage 1.
+     *
+     * If that happens on your system, block here and attach with WinDbg.
+     */
 
     // STEP 5:
     // If necessary, suppress the game's SEH filters, so Stage 0

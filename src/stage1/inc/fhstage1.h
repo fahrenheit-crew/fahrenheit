@@ -15,7 +15,6 @@
 #include <windows.h>
 #include <strsafe.h>
 #include <PathCch.h>
-#include <conio.h>
 
 // .NET hosting
 #include <nethost.h>

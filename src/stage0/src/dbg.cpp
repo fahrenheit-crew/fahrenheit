@@ -17,8 +17,8 @@
 
 #include "fhstage0.h"
 
-wchar_t path_dir_cache[MAX_PATH] = { 0 };
-wchar_t path_dir_crash[MAX_PATH] = { 0 };
+wchar_t path_dir_cache[MAX_PATH] = { 0 }; // The full path to the 'cache' directory, used to store symbols.
+wchar_t path_dir_crash[MAX_PATH] = { 0 }; // The full path to the 'crash' directory, used to store core dumps.
 
 // Attempts to obtain and display a symbol for a given stack frame.
 static void stage0_dbg_symbolicate(
@@ -54,6 +54,11 @@ static void stage0_dbg_symbolicate(
     wchar_t pdb_path [1024] = { 0 };
     wchar_t frame_str[1024] = { 0 };
 
+    /* [fkelava 16/09/26 18:53]
+     * https://learn.microsoft.com/en-us/windows/win32/api/dbghelp/ns-dbghelp-symsrv_index_info
+     * Older PDBs have a DWORD signature. Newer ones have a GUID. We must be prepared for either case.
+     */
+
     GUID guid_0  = { 0 };
     bool use_sig = (memcmp(&symsrv_info.guid, &guid_0, sizeof(guid_0)) == 0);
 
@@ -63,6 +68,16 @@ static void stage0_dbg_symbolicate(
     DWORD flags = use_sig
         ? SSRVOPT_DWORDPTR
         : SSRVOPT_GUIDPTR;
+
+    /* [fkelava 16/09/26 18:53]
+     * https://learn.microsoft.com/en-us/windows/win32/api/dbghelp/nf-dbghelp-symfindfileinpathw#remarks
+     * > If DbgHelp is looking for a `.pdb` file, the `id` parameter specifies the
+     * > PDB signature as found in the codeview debug directory of the original image.
+     * > Parameter two specifies the PDB age. Parameter three is unused and set to zero.
+     *
+     * This function will trigger download of symbols from the MS server if possible.
+     * The symbols are stored in the 'cache' directory for reuse.
+     */
 
     if (!SymFindFileInPathW(
         h_process,
@@ -78,6 +93,12 @@ static void stage0_dbg_symbolicate(
     )) {
         fwprintf_s(stderr, L"SymFindFileInPathW() failed with code 0x%X.\n", GetLastError());
     }
+
+    /* [fkelava 16/09/26 18:57]
+     * This struct is not documented anywhere.
+     * It is a SYMBOL_INFOW whose symbol name buffer is of size MAX_SYM_NAME, for ease of use.
+     * https://learn.microsoft.com/en-us/windows/win32/api/dbghelp/ns-dbghelp-symbol_infow
+     */
 
     SYMBOL_INFO_PACKAGEW sym = { 0 };
     sym.si.SizeOfStruct = sizeof(SYMBOL_INFOW);

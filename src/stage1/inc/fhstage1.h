@@ -9,11 +9,13 @@
 #define WIN32_LEAN_AND_MEAN // Exclude rarely-used stuff from Windows headers
 
 // STL
-#include <iostream>
+#include <cstdlib>
 
 // Win32
 #include <windows.h>
+#include <strsafe.h>
 #include <PathCch.h>
+#include <conio.h>
 
 // .NET hosting
 #include <nethost.h>

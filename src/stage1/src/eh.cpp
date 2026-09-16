@@ -17,23 +17,36 @@ static LPTOP_LEVEL_EXCEPTION_FILTER WINAPI stage1_eh_set_filter(LPTOP_LEVEL_EXCE
     return NULL;
 }
 
-BOOL stage1_eh_suppress(LPBYTE ptr_main_module) {
-    char_t exe_full_name_buf[MAX_PATH];
-    auto size = ::GetModuleFileNameW(NULL, exe_full_name_buf, sizeof(exe_full_name_buf) / sizeof(char_t));
+BOOL stage1_eh_suppress() {
+    wchar_t exe_path[MAX_PATH] = { 0 };
+    wchar_t exe_name[MAX_PATH] = { 0 };
 
-    std::basic_string<char_t> exe_full_name       = exe_full_name_buf;
-    size_t                    exe_name_dirsep_pos = exe_full_name.find_last_of(L'\\') + 1;
+    DWORD size_exe_full_name = GetModuleFileNameW(
+        NULL,
+        exe_path,
+        sizeof(exe_path) / sizeof(wchar_t)
+    );
 
-    if (exe_name_dirsep_pos == std::basic_string<char_t>::npos) {
-        std::wcerr << "The path to the target binary is invalid." << std::endl;
+    if (size_exe_full_name == 0) {
+        fwprintf_s(stderr, L"[!] GetModuleFileNameW failed with error code 0x%X.\n", GetLastError());
         return FALSE;
     }
 
-    std::basic_string<char_t> exe_name = exe_full_name.substr(exe_name_dirsep_pos, exe_full_name.length());
+    wchar_t* ptr_dirsep = wcsrchr(exe_path, L'\\');
+
+    if (ptr_dirsep == NULL) {
+        fwprintf_s(stderr, L"The path to the target binary is invalid.\n");
+        return FALSE;
+    }
+
+    if (FAILED(StringCchCopyW(exe_name, MAX_PATH, ptr_dirsep))) {
+        fwprintf_s(stderr, L"[!] StringCchCopyW failed.\n");
+        return FALSE;
+    }
 
     // This can be generalized for other games in the future.
-    if (exe_name.compare(L"FFX.exe")   != 0
-    &&  exe_name.compare(L"FFX-2.exe") != 0)
+    if (wcscmp(exe_name, L"FFX.exe")   != 0
+    &&  wcscmp(exe_name, L"FFX-2.exe") != 0)
         return TRUE;
 
     SetUnhandledExceptionFilter(NULL);
@@ -41,12 +54,13 @@ BOOL stage1_eh_suppress(LPBYTE ptr_main_module) {
     // We don't care about the original SEH filter in the slightest, so we don't keep it.
     void* fnptr_eh_original = NULL;
 
-    if (MH_CreateHookApi(L"kernel32.dll", "SetUnhandledExceptionFilter", &stage1_eh_set_filter, &fnptr_eh_original) != MH_OK
-    ||  MH_EnableHook   (&SetUnhandledExceptionFilter)                                                              != MH_OK) {
-        std::wcerr << "Failed to suppress SEH filter install for " << exe_name << std::endl;
+    if (MH_CreateHookApi(L"kernel32.dll", "SetUnhandledExceptionFilter", &stage1_eh_set_filter, &fnptr_eh_original) != MH_OK ||
+        MH_EnableHook   (&SetUnhandledExceptionFilter)                                                              != MH_OK
+    ) {
+        fwprintf_s(stderr, L"Failed to suppress SEH filter install for %s.\n", exe_name);
         return FALSE;
     }
 
-    std::wcout << "Suppressed SEH filter install for " << exe_name << std::endl;
+    fwprintf_s(stdout, L"Suppressed SEH filter install for %s.\n", exe_name);
     return TRUE;
 }

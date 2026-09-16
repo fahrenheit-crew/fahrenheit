@@ -50,10 +50,11 @@ static void stage0_dbg_symbolicate(
         return;
     }
 
-    wchar_t pdb_path[1024] = { 0 };
+    wchar_t pdb_path [1024] = { 0 };
+    wchar_t frame_str[1024] = { 0 };
 
-    GUID zero    = { 0 };
-    bool use_sig = (memcmp(&symsrv_info.guid, &zero, sizeof(zero)) == 0);
+    GUID guid_0  = { 0 };
+    bool use_sig = (memcmp(&symsrv_info.guid, &guid_0, sizeof(guid_0)) == 0);
 
     PVOID id    = use_sig
         ? (PVOID) &symsrv_info.sig
@@ -92,7 +93,8 @@ static void stage0_dbg_symbolicate(
         return;
     }
 
-    std::wcout << module.ModuleName << "!" << sym.si.Name << "+" << std::hex << sym_displacement << std::endl;
+    swprintf_s(frame_str, L"%s!%s+%X", module.ModuleName, sym.si.Name, sym_displacement);
+    std::wcout << frame_str << std::endl;
 }
 
 static void stage0_dbg_stack_walk(

@@ -81,11 +81,11 @@
         <ClCompile>
             <WarningLevel>Level3</WarningLevel>
             <FunctionLevelLinking>true</FunctionLevelLinking>
-            <IntrinsicFunctions>true</IntrinsicFunctions>
             <SDLCheck>true</SDLCheck>
             <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
             <ConformanceMode>true</ConformanceMode>
             <AdditionalIncludeDirectories>inc</AdditionalIncludeDirectories>
+            <Optimization>Disabled</Optimization>
         </ClCompile>
         <Link>
             <SubSystem>Console</SubSystem>
@@ -106,11 +106,11 @@
     <ItemGroup>
         <Image Include="inc\fh_arrow_256.ico" />
     </ItemGroup>
-	<ItemGroup>
-        <Content Include="$(WindowsSdkDir)\Debuggers\x86\dbghelp.dll" >
+    <ItemGroup>
+        <Content Include="$(WindowsSdkDir)\Debuggers\x86\dbghelp.dll">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
-		<Content Include="$(WindowsSdkDir)\Debuggers\x86\symsrv.dll" >
+        <Content Include="$(WindowsSdkDir)\Debuggers\x86\symsrv.dll">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
     </ItemGroup>

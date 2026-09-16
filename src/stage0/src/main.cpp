@@ -27,8 +27,8 @@ int wmain(
     wchar_t* argv[ ]
 ) {
     if (argc < 2) {
-        std::wcerr << "Invalid call. You must specify an executable to launch.\n";
-        std::wcerr << "Usage: fhstage0.exe {EXECUTABLE_TO_LAUNCH} {ARGS}\n";
+        fwprintf_s(stderr, L"Invalid call. You must specify an executable to launch.\n");
+        fwprintf_s(stderr, L"Usage: fhstage0.exe {EXECUTABLE_TO_LAUNCH} {ARGS}\n");
         return 1;
     }
 
@@ -38,15 +38,19 @@ int wmain(
 
     si.cb = sizeof(si);
 
-    // Set up args as the game expects them to be.
-    std::wstring args;
+    wchar_t args[1024] = { 0 };
 
+    // Set up args as the game expects them to be.
     for (int i = 1; i < argc; i++) {
-        args.append(argv[i]);
-        args.append(L" ");
+        if (FAILED(StringCchCatW(args, 1024, argv[i])) ||
+            FAILED(StringCchCatW(args, 1024, L" "))
+        ) {
+            fwprintf_s(stderr, L"[!] StringCchCatW() failed\n");
+            return 1;
+        }
     }
 
-    bool  external_debug = wcsstr(args.c_str(), L"--debug") != NULL;
+    bool  external_debug = wcsstr(args, L"--debug") != NULL;
     DWORD creation_flags = external_debug
         ? CREATE_SUSPENDED
         : DEBUG_ONLY_THIS_PROCESS; // A debugged process is implicitly suspended until debug events are handled/pumped.
@@ -64,13 +68,13 @@ int wmain(
         &si,
         &pi
     )) {
-        std::wcerr << "Failed to create target process.\n";
+        fwprintf_s(stderr, L"Failed to create target process.\n");
         return 1;
     }
 
     // Pause for external debugger attach if `--debug` arg is passed.
     if (external_debug) {
-        std::wcout << "You can now attach a debugger; press any key to attempt launch.\n";
+        fwprintf_s(stdout, L"You can now attach a debugger; press any key to attempt launch.\n");
         int i = _getch();
     }
 
@@ -80,7 +84,7 @@ int wmain(
         return FALSE;
     }
 
-    std::wcout << "Stage 0 Loader complete. Moving to Stage 1.\n";
+    fwprintf_s(stdout, L"Stage 0 Loader complete. Moving to Stage 1.\n");
 
     // Either wait for the process to exit if an external debugger is connected,
     // or begin pumping debug events with the Stage 0 stub debugger.
@@ -96,14 +100,14 @@ int wmain(
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
 
-    std::wcout << std::endl;
+    fwprintf_s(stdout, L"\n");
 
     if (exit_code != 0) {
-        std::wcout << "Process exited with code " << std::hex << exit_code << std::endl;
-        std::wcout << "If reporting an issue, please include any core dump (*.dmp) you see in the game directory.\n";
+        fwprintf_s(stdout, L"Process exited with code 0x%X.\n", exit_code);
+        fwprintf_s(stdout, L"If reporting an issue, please include any core dump (*.dmp) you see in the game directory.\n");
     }
     else {
-        std::wcout << "Process ended by user.\n";
+        fwprintf_s(stdout, L"Process ended by user.\n");
     }
 
     return exit_code;

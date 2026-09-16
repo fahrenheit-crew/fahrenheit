@@ -34,7 +34,7 @@ static void stage0_dbg_symbolicate(
         frame_addr,
         &module
     )) {
-        std::wcerr << "SymGetModuleInfoW64() failed with code 0x" << std::hex << GetLastError() << std::endl;
+        fwprintf_s(stderr, L"SymGetModuleInfoW64() failed with code 0x%X.\n", GetLastError());
         return;
     }
 
@@ -46,7 +46,7 @@ static void stage0_dbg_symbolicate(
         &symsrv_info,
         0
     )) {
-        std::wcerr << "SymSrvGetFileIndexInfoW() failed with code 0x" << std::hex << GetLastError() << std::endl;
+        fwprintf_s(stderr, L"SymSrvGetFileIndexInfoW() failed with code 0x%X.\n", GetLastError());
         return;
     }
 
@@ -75,7 +75,7 @@ static void stage0_dbg_symbolicate(
         NULL,
         NULL
     )) {
-        std::wcerr << "SymFindFileInPathW() failed with code 0x" << std::hex << GetLastError() << std::endl;
+        fwprintf_s(stderr, L"SymFindFileInPathW() failed with code 0x%X.\n", GetLastError());
     }
 
     SYMBOL_INFO_PACKAGEW sym = { 0 };
@@ -89,12 +89,50 @@ static void stage0_dbg_symbolicate(
         &sym_displacement,
         &sym.si
     )) {
-        std::wcerr << "SymFromAddrW() failed with code 0x" << std::hex << GetLastError() << std::endl;
+        fwprintf_s(stderr, L"SymFromAddrW() failed with code 0x%X.\n", GetLastError());
         return;
     }
 
-    swprintf_s(frame_str, L"%s!%s+%llX", module.ModuleName, sym.si.Name, sym_displacement);
-    std::wcout << frame_str << std::endl;
+    fwprintf_s(stdout, L"%s!%s+%llX\n", module.ModuleName, sym.si.Name, sym_displacement);
+}
+
+static void stage0_dbg_print_context(
+    CONTEXT* ptr_context
+) {
+    fwprintf_s(stdout, L"\n----\n");
+
+    fwprintf_s(
+        stdout,
+        L"eax=%08X ebx=%08X ecx=%08X edx=%08X\n",
+        ptr_context->Eax,
+        ptr_context->Ebx,
+        ptr_context->Ecx,
+        ptr_context->Edx
+    );
+
+    fwprintf_s(
+        stdout,
+        L"esi=%08X edi=%08X ebp=%08X eip=%08X esp=%08X\n",
+        ptr_context->Esi,
+        ptr_context->Edi,
+        ptr_context->Ebp,
+        ptr_context->Eip,
+        ptr_context->Esp
+    );
+
+    fwprintf_s(
+        stdout,
+        L" cs=%08X  ds=%08X  es=%08X  fs=%08X  gs=%08X ss=%08X efl=%08X\n",
+        ptr_context->SegCs,
+        ptr_context->SegDs,
+        ptr_context->SegEs,
+        ptr_context->SegFs,
+        ptr_context->SegGs,
+        ptr_context->SegSs,
+        ptr_context->EFlags
+    );
+
+    fwprintf_s(stdout, L"----\n\n");
 }
 
 static void stage0_dbg_stack_walk(
@@ -164,8 +202,32 @@ static void stage0_dbg_create_dump(
     CONTEXT*          ptr_context,         // A pointer to the context of the faulting thread.
     EXCEPTION_RECORD* ptr_exception_record // A pointer to the record of the exception bringing the process down.
 ) {
+    wchar_t crash_dump_name[128     ] = { 0 };
+    wchar_t crash_dump_path[MAX_PATH] = { 0 };
+
+    SYSTEMTIME time = { 0 };
+    GetSystemTime(&time);
+
+    swprintf_s(
+        crash_dump_name,
+        L"\\%02hu%02hu%02hu_%02hu%02hu%02hu.dmp",
+        time.wDay,
+        time.wMonth,
+        time.wYear,
+        time.wHour,
+        time.wMinute,
+        time.wSecond
+    );
+
+    if (FAILED(StringCchCatW(crash_dump_path, MAX_PATH, path_dir_crash)) ||
+        FAILED(StringCchCatW(crash_dump_path, MAX_PATH, crash_dump_name))
+    ) {
+        fwprintf_s(stderr, L"[!] StringCchCatW() failed.\n");
+        return;
+    }
+
     HANDLE dump_handle = CreateFileW(
-        L"crash_dump.dmp",
+        crash_dump_path,
         GENERIC_READ | GENERIC_WRITE,
         0,
         nullptr,
@@ -174,7 +236,7 @@ static void stage0_dbg_create_dump(
         nullptr);
 
     if (dump_handle == NULL || dump_handle == INVALID_HANDLE_VALUE) {
-        std::wcerr << "Failed to open a file to write the core dump to." << std::endl;
+        fwprintf_s(stderr, L"Failed to open a file to write the core dump to.\n");
         return;
     }
 
@@ -221,7 +283,7 @@ static void stage0_dbg_create_dump(
     info_dump_callback.CallbackRoutine = (MINIDUMP_CALLBACK_ROUTINE)stage0_dbg_filter_dump;
     info_dump_callback.CallbackParam   = nullptr;
 
-    std::wcerr << "Dumping process core. Please wait." << std::endl;
+    fwprintf_s(stderr, L"Dumping process core. Please wait.\n");
 
     if (!MiniDumpWriteDump(
         h_process,
@@ -232,9 +294,10 @@ static void stage0_dbg_create_dump(
         nullptr,
         &info_dump_callback
     )) {
-        std::wcerr << "Failed to capture core dump." << std::endl;
+        fwprintf_s(stderr, L"Failed to capture core dump.\n");
     }
 
+    fwprintf_s(stdout, L"Core dump written to %s.\n", crash_dump_path);
     CloseHandle(dump_handle);
 }
 
@@ -266,14 +329,18 @@ static DWORD stage0_dbg_exception(
         );
 
         if (faulting_thread_handle == nullptr || faulting_thread_handle == INVALID_HANDLE_VALUE) {
-            std::wcerr << "Failed to open the faulting thread for context capture." << std::endl;
+            fwprintf_s(stderr, L"Failed to open the faulting thread for context capture.\n");
             return DBG_EXCEPTION_NOT_HANDLED;
         }
 
         if (!GetThreadContext(faulting_thread_handle, &faulting_thread_context)) {
-            std::wcerr << "Failed to capture the faulting thread's context." << std::endl;
+            fwprintf_s(stderr, L"Failed to capture the faulting thread's context.\n");
             return DBG_EXCEPTION_NOT_HANDLED;
         }
+
+        stage0_dbg_print_context(
+            &faulting_thread_context
+        );
 
         stage0_dbg_create_dump(
             h_process,
@@ -309,7 +376,7 @@ static BOOL stage0_dbg_get_module_size(
 
         MEMORY_BASIC_INFORMATION mem_info;
         if (VirtualQueryEx(h_process, ptr_current, &mem_info, sizeof(mem_info)) == 0) {
-            std::wcerr << "[!] VirtualQueryEx() failed" << std::endl;
+            fwprintf_s(stderr, L"[!] VirtualQueryEx() failed.\n");
             return FALSE;
         }
 
@@ -330,7 +397,7 @@ static BOOL stage0_dbg_process_module(
     DWORD& error_code       // [out] The error code to terminate the process with on failure.
 ) {
     if (h_module == nullptr || h_module == INVALID_HANDLE_VALUE) {
-        std::wcerr << "Invalid DLL handle in LOAD_DLL_DEBUG_EVENT." << std::endl;
+        fwprintf_s(stderr, L"Invalid DLL handle in LOAD_DLL_DEBUG_EVENT.\n");
         error_code = ERROR_INVALID_HANDLE;
 
         return FALSE;
@@ -353,14 +420,14 @@ static BOOL stage0_dbg_process_module(
     );
 
     if (sz_module_path == 0) {
-        std::wcerr << "[!] GetFinalPathNameByHandleW() failed" << std::endl;
+        fwprintf_s(stderr, L"[!] GetFinalPathNameByHandleW() failed.\n");
         error_code = GetLastError();
 
         return FALSE;
     }
 
     if (sz_module_path > MAX_PATH) {
-        std::wcerr << "[!] GetFinalPathNameByHandleW() - path length exceeded MAX_PATH" << std::endl;
+        fwprintf_s(stderr, L"[!] GetFinalPathNameByHandleW() - path length exceeded MAX_PATH.\n");
         error_code = ERROR_BUFFER_OVERFLOW;
 
         return FALSE;
@@ -377,7 +444,7 @@ static BOOL stage0_dbg_process_module(
         ptr_module_base,
         module_size
     )) {
-        std::wcerr << "Failed to get the size of module being loaded." << std::endl;
+        fwprintf_s(stderr, L"Failed to get the size of module being loaded.\n");
         error_code = GetLastError();
 
         return FALSE;
@@ -396,7 +463,7 @@ static BOOL stage0_dbg_process_module(
 
     DWORD error_symload = GetLastError();
     if (module_base_addr == 0 && error_symload != ERROR_SUCCESS) {
-        std::wcerr << "[!] SymLoadModuleExW() failed" << std::endl;
+        fwprintf_s(stderr, L"[!] SymLoadModuleExW() failed.\n");
         error_code = error_symload;
 
         return FALSE;
@@ -417,14 +484,14 @@ static BOOL stage0_dbg_process_module(
         module_base_addr,
         &module_info
     )) {
-        std::wcerr << "[!] SymGetModuleInfo64() failed" << std::endl;
+        fwprintf_s(stderr, L"[!] SymGetModuleInfo64() failed.\n");
         error_code = GetLastError();
 
         return FALSE;
     }
 
 #if _DEBUG
-    std::wcout << "Module loaded: " << module_path << std::endl;
+    fwprintf_s(stdout, L"Module loaded: %s\n", module_path);
 #endif
     /* [fkelava 13/09/26 02:03]
      * > The debugger should close the handle to the DLL while processing LOAD_DLL_DEBUG_EVENT.
@@ -446,7 +513,7 @@ static BOOL stage0_dbg_init() {
     );
 
     if (path_base_size == 0) {
-        std::wcerr << "[!] GetModuleFileNameW() failed, error code: " << GetLastError() << std::endl;
+        fwprintf_s(stderr, L"[!] GetModuleFileNameW() failed with code 0x%X.\n", GetLastError());
         return FALSE;
     }
 
@@ -454,8 +521,9 @@ static BOOL stage0_dbg_init() {
      * We have to remove the last path element twice to get from /bin/fhstage0.exe to the base directory.
      */
     if (PathCchRemoveFileSpec(path_dir_base, MAX_PATH) != S_OK ||
-        PathCchRemoveFileSpec(path_dir_base, MAX_PATH) != S_OK) {
-        std::wcerr << "[!] PathCchRemoveFileSpec() failed" << std::endl;
+        PathCchRemoveFileSpec(path_dir_base, MAX_PATH) != S_OK
+    ) {
+        fwprintf_s(stderr, L"[!] PathCchRemoveFileSpec() failed.\n");
         return FALSE;
     }
 
@@ -464,14 +532,14 @@ static BOOL stage0_dbg_init() {
         FAILED(StringCchCatW(path_dir_crash, MAX_PATH, path_dir_base)) ||
         FAILED(StringCchCatW(path_dir_crash, MAX_PATH, L"\\crash"))
     ) {
-        std::wcerr << "[!] StringCchCatW() failed" << std::endl;
+        fwprintf_s(stderr, L"[!] StringCchCatW() failed.\n");
         return FALSE;
     }
 
     if ((!CreateDirectoryW(path_dir_cache, NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
         (!CreateDirectoryW(path_dir_crash, NULL) && GetLastError() != ERROR_ALREADY_EXISTS)
     ) {
-        std::wcerr << "[!] CreateDirectoryW() failed, code: " << GetLastError() << std::endl;
+        fwprintf_s(stderr, L"[!] CreateDirectoryW() failed with code 0x%X.\n", GetLastError());
         return FALSE;
     }
 
@@ -482,7 +550,7 @@ static BOOL stage0_dbg_init() {
 void stage0_dbg_loop() {
     BOOL init_failed = FALSE;
     if (!stage0_dbg_init()) {
-        std::wcerr << "Failed to create cache and crash directories. Aborting." << std::endl;
+        fwprintf_s(stderr, L"Failed to create cache and crash directories. Aborting.\n");
         init_failed = TRUE;
     }
 
@@ -527,7 +595,7 @@ void stage0_dbg_loop() {
               | SYMOPT_FAIL_CRITICAL_ERRORS); // Fail silently, without prompting.
 
             if (!SymInitializeW(h_process, sym_search_path, FALSE)) {
-                std::wcerr << "[!] SymInitializeW failed" << std::endl;
+                fwprintf_s(stderr, L"[!] SymInitializeW() failed\n");
                 TerminateProcess(h_process, GetLastError());
 
                 return;

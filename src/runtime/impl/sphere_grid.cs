@@ -82,7 +82,7 @@ public unsafe class SphereGridReimplModule : FhModule {
         }
 
         for (int link_idx = 0; link_idx < lpamng->link_count; link_idx++) {
-            lpamng->links[link_idx].flags &= ~(SphereGridLinkProperties)0b1111;
+            lpamng->links[link_idx].flags = SphereGridLinkProperties.NONE;
         }
 
         FhXCall.AbmapFlagConnectedLinks.fnptr!(SphereGridLinkProperties.CONNECTED);

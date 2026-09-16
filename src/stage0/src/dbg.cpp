@@ -93,7 +93,7 @@ static void stage0_dbg_symbolicate(
         return;
     }
 
-    swprintf_s(frame_str, L"%s!%s+%X", module.ModuleName, sym.si.Name, sym_displacement);
+    swprintf_s(frame_str, L"%s!%s+%llX", module.ModuleName, sym.si.Name, sym_displacement);
     std::wcout << frame_str << std::endl;
 }
 

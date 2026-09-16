@@ -20,9 +20,10 @@
 wchar_t path_dir_cache[MAX_PATH] = { 0 };
 wchar_t path_dir_crash[MAX_PATH] = { 0 };
 
+// Attempts to obtain and display a symbol for a given stack frame.
 static void stage0_dbg_symbolicate(
-    HANDLE       h_process,
-    STACKFRAME64 stack_frame
+    HANDLE       h_process,  // A handle to the process the stack frame belongs to.
+    STACKFRAME64 stack_frame // The stack frame to symbolicate.
 ) {
     DWORD64 frame_addr = stack_frame.AddrPC.Offset;
 
@@ -96,8 +97,9 @@ static void stage0_dbg_symbolicate(
     fwprintf_s(stdout, L"%s!%s+%llX\n", module.ModuleName, sym.si.Name, sym_displacement);
 }
 
+// Prints the register state at the time an exception was caught.
 static void stage0_dbg_print_context(
-    CONTEXT* ptr_context
+    CONTEXT* ptr_context // A pointer to the faulting thread's context.
 ) {
     fwprintf_s(stdout, L"---- EXCEPTION CONTEXT ----\n");
 
@@ -135,10 +137,12 @@ static void stage0_dbg_print_context(
     fwprintf_s(stdout, L"\n");
 }
 
+// Walks the faulting thread's stack, displaying a stack trace.
+// If available, symbols are automatically obtained and utilized.
 static void stage0_dbg_stack_walk(
-    HANDLE   h_process,
-    HANDLE   h_thread,
-    CONTEXT* ptr_context
+    HANDLE   h_process,  // A handle to the process the fault occurred in.
+    HANDLE   h_thread,   // A handle to the faulting thread.
+    CONTEXT* ptr_context // A pointer to the faulting thread's context.
 ) {
     STACKFRAME64 stack_frame = { 0 };
     stack_frame.AddrPC   .Offset = ptr_context->Eip;
@@ -177,9 +181,9 @@ static void stage0_dbg_stack_walk(
 
 // Filters objects from a core dump being created.
 static BOOL CALLBACK stage0_dbg_filter_dump(
-          PVOID                     ptr_callback_param,
-    const PMINIDUMP_CALLBACK_INPUT  ptr_callback_input,
-          PMINIDUMP_CALLBACK_OUTPUT ptr_callback_output
+          PVOID                     ptr_callback_param, // Always null. We pass no argument to this callback.
+    const PMINIDUMP_CALLBACK_INPUT  ptr_callback_input, // A pointer to a structure containing supplementary information for the callback.
+          PMINIDUMP_CALLBACK_OUTPUT ptr_callback_output // A pointer to a structure containing extended return information from the callback.
 ) {
     if (!ptr_callback_input || !ptr_callback_output) return FALSE;
 
@@ -368,8 +372,11 @@ static DWORD stage0_dbg_exception(
     return DBG_CONTINUE;
 }
 
+/* [fkelava 16/09/26 18:44]
+ * Original: https://github.com/jrfonseca/drmingw/blob/6824862b34b288524ed6e92806479bb3ec6fab07/src/common/debugger.cpp#L251-L268
+ */
+
 // Determines the size of a loaded/mapped-in module.
-// Original: https://github.com/jrfonseca/drmingw/blob/6824862b34b288524ed6e92806479bb3ec6fab07/src/common/debugger.cpp#L251-L268
 static BOOL stage0_dbg_get_module_size(
     HANDLE h_process,       //       A handle to the process the module is being loaded into.
     LPVOID ptr_module_base, //       The base address of the target module.

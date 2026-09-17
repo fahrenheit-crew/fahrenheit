@@ -7771,9 +7771,6 @@ public static unsafe partial class FhCall {
     // Symbol skipped (deemed uninterpretable):
     // __stdcall undefined +AbmapTransitionToHoming(int node_idx, undefined4 move_speed) at 00a48d20
 
-    // Symbol skipped (deemed uninterpretable):
-    // __stdcall undefined +AbmapInitHoming(undefined4 node_idx, float move_speed) at 00a48d70
-
     // Original after pruning:
     // __stdcall undefined FUN_00a48e40(undefined4 param_1, float param_2) at 00a48e40
 

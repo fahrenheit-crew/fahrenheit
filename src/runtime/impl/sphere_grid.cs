@@ -18,7 +18,8 @@ public unsafe class SphereGridReimplModule : FhModule {
         return FhXCall.AbmapState_ChoosingMoveTarget.hook(this, h_state_choosing_move_target)
             && FhXCall.AbmapState_Warping.hook(this, h_state_warping)
             && FhXCall.AbmapCalcMoveCosts.hook(this, h_calc_move_costs)
-            && FhXCall.AbmapCalcMoveCost.hook(this, h_calc_move_cost);
+            && FhXCall.AbmapCalcMoveCost.hook(this, h_calc_move_cost)
+            && FhXCall.FUN_00a5b7b0.hook(this, h_init_choose_move_target);
     }
 
     private void* get_fnptr(uint address) {
@@ -94,6 +95,46 @@ public unsafe class SphereGridReimplModule : FhModule {
         h_calc_move_cost(target_node, 0);
     }
 
+    public void h_init_choose_move_target() {
+        short start_idx = lpamng->party_infos[lpamng->current_ply_id].current_node_idx;
+        short slv       = Globals.save_data->ply_saves[lpamng->current_ply_id].slv_available;
+
+        lpamng->fn_ctrl = get_fnptr(0x644EF0);
+        lpamng->fn_help = get_fnptr(0x645440);
+
+        h_calc_move_costs(start_idx, slv, lpamng->current_ply_id);
+
+        for (int node_idx = 0; node_idx < lpamng->node_count; node_idx++) {
+            SphereGridNode* node = &lpamng->nodes[node_idx];
+            if (node->node_type == NodeType.NULL || node->move_cost < 0)
+                continue;
+
+            bool can_target = node->move_cost <= (slv << 2);
+            const SphereGridNodeProperties MASK =
+                SphereGridNodeProperties.CAN_TARGET
+              | SphereGridNodeProperties.HIGHLIGHTED;
+
+            if (can_target)
+                node->properties |=  MASK;
+            else
+                node->properties &= ~MASK;
+        }
+
+        lpamng->__0x116A0 = 0;
+        lpamng->__0x1169C = 0;
+
+        lpamng->slv_queued = 0;
+
+        FhXCall.AbmapInitHoming.fnptr!(start_idx, 0.25f);
+
+        if (lpamng->fn_ctrl_backup == null) {
+            lpamng->fn_ctrl_backup = lpamng->fn_ctrl;
+            lpamng->fn_ctrl = get_fnptr(0x659E80);
+        }
+
+        lpamng->__0x115C3 = 1;
+    }
+
     public void init_moving(int ply_id, short node_idx) {
         lpamng->move_next_knot_node_idx = lpamng->party_infos[ply_id].current_node_idx;
         lpamng->move_start_node_idx = lpamng->move_next_knot_node_idx;
@@ -142,6 +183,11 @@ public unsafe class SphereGridReimplModule : FhModule {
     }
 
     public void h_state_warping() {
+        // Warping happens in three stages:
+        //   1. Disappear
+        //   2. Move to the target node
+        //   3. Reappear
+
         byte stage = lpamng->__0x1164C;
 
         switch (stage) {

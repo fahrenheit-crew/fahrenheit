@@ -468,8 +468,8 @@ static BOOL stage0_dbg_process_module(
     }
 
     /* [fkelava 13/09/26 16:43]
-     * When deferred symbols are in use, the correct DLL size must be passed.
-     * See https://groups.google.com/forum/#!topic/comp.os.ms-windows.programmer.win32/ulkwYhM3020
+     * https://groups.google.com/forum/#!topic/comp.os.ms-windows.programmer.win32/ulkwYhM3020
+     * > When deferred symbols are in use, the correct DLL size must be passed.
      */
 
     DWORD module_size;
@@ -541,7 +541,7 @@ static BOOL stage0_dbg_process_module(
 static BOOL stage0_dbg_init() {
     wchar_t path_dir_base[MAX_PATH] = { 0 };
 
-    DWORD path_base_size = ::GetModuleFileNameW(
+    DWORD path_base_size = GetModuleFileNameW(
         NULL,
         path_dir_base,
         sizeof(path_dir_base) / sizeof(wchar_t)

@@ -146,8 +146,15 @@ int wmain(
     wchar_t* argv[]
 ) {
     if (argc < 2) {
-        fwprintf_s(stderr, L"Invalid call. You must specify an executable to launch.\n");
-        fwprintf_s(stderr, L"Usage: fhstage0.exe {TARGET} {ARGS_STAGE0} -- {ARGS_TARGET}\n");
+        fwprintf_s(stdout, L"Invalid call. You must specify an executable to launch.\n");
+        fwprintf_s(stdout, L"\n");
+        fwprintf_s(stdout, L"Usage:\n");
+        fwprintf_s(stdout, L"    fhstage0.exe [target] [options] -- [target_options]\n");
+        fwprintf_s(stdout, L"\n");
+        fwprintf_s(stdout, L"Options:\n");
+        fwprintf_s(stdout, L"    --debug | Allows for an external debugger to be attached to the target.\n");
+        fwprintf_s(stdout, L"\n");
+
         return 1;
     }
 
@@ -267,7 +274,7 @@ int wmain(
 
     if (exit_code != 0) {
         fwprintf_s(stdout, L"Process exited with code 0x%X.\n", exit_code);
-        fwprintf_s(stdout, L"If reporting an issue, include the core dump (*.dmp) mentioned above in the output.\n");
+        fwprintf_s(stdout, L"If reporting an issue, please include the core dump (*.dmp) from the location mentioned above.\n");
     }
     else {
         fwprintf_s(stdout, L"Process ended by user.\n");

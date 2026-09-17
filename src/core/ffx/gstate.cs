@@ -5,6 +5,7 @@
 
 using Fahrenheit.Atel;
 using Fahrenheit.FFX.Battle;
+using Fahrenheit.FFX.SphereGrid;
 
 namespace Fahrenheit.FFX;
 

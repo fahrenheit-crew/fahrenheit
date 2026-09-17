@@ -13,6 +13,7 @@
 using Fahrenheit.Atel;
 using Fahrenheit.FFX.Battle;
 using Fahrenheit.FFX.Ids;
+using Fahrenheit.FFX.SphereGrid;
 
 namespace Fahrenheit.FFX;
 

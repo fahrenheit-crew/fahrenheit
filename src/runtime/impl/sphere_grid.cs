@@ -5,6 +5,7 @@
 
 using Fahrenheit.FFX;
 using Fahrenheit.FFX.Ids;
+using Fahrenheit.FFX.SphereGrid;
 
 using FhXCall = Fahrenheit.FFX.FhCall;
 

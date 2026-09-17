@@ -426,11 +426,11 @@ static BOOL stage0_dbg_get_module_size(
 // Loads a module's symbols.
 static BOOL stage0_dbg_process_module(
     HANDLE h_process,       //       The handle of the process the module is being loaded into.
-    HANDLE h_module,        //       The handle to the module being loaded.
+    HANDLE h_module_file,   //       The handle to the file of the module being loaded.
     LPVOID ptr_module_base, //       A pointer to the base address of the module itself.
     DWORD& error_code       // [out] The error code to terminate the process with on failure.
 ) {
-    if (h_module == nullptr || h_module == INVALID_HANDLE_VALUE) {
+    if (h_module_file == nullptr || h_module_file == INVALID_HANDLE_VALUE) {
         fwprintf_s(stderr, L"Invalid DLL handle in LOAD_DLL_DEBUG_EVENT.\n");
         error_code = ERROR_INVALID_HANDLE;
 
@@ -447,7 +447,7 @@ static BOOL stage0_dbg_process_module(
     wchar_t module_path[MAX_PATH] = { 0 };
 
     DWORD sz_module_path = GetFinalPathNameByHandleW(
-        h_module,
+        h_module_file,
         module_path,
         sizeof(module_path) / sizeof(wchar_t),
         FILE_NAME_OPENED
@@ -486,7 +486,7 @@ static BOOL stage0_dbg_process_module(
 
     DWORD64 module_base_addr = SymLoadModuleExW(
         h_process,
-        h_module,
+        h_module_file,
         module_path,
         NULL,
         (DWORD64) ptr_module_base,

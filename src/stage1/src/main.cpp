@@ -20,7 +20,6 @@ using main_fn = int(*)(void);
 main_fn g_fnptr_main_original = nullptr; // A function pointer to the game's original entrypoint.
 main_fn g_fnptr_main_target   = nullptr; // A function pointer to our modified Stage 1 entrypoint.
 
-wchar_t g_path_target[MAX_PATH]; // The path to the binary we're being loaded into.
 wchar_t g_path_fh_dir[MAX_PATH]; // The path to the `fahrenheit/bin` directory we were started in.
 
 hostfxr_initialize_for_runtime_config_fn g_fnptr_hostfxr_init;
@@ -221,7 +220,9 @@ static int stage1_main(void) {
  * This is required because certain other tools expect the game's working directory to be
  * unmodified when they load into the process, which occurs immediately after Stage 1 exits `DllMain`.
  */
-static BOOL stage1_init() {
+static BOOL stage1_init(
+    HMODULE h_self
+) {
     // STEP 2:
     // Attach to the Stage0 console and forward stdout/stderr to it.
     if (!AttachConsole(ATTACH_PARENT_PROCESS)) {
@@ -230,44 +231,26 @@ static BOOL stage1_init() {
     }
 
     if (freopen_s(&g_stdout, "CONOUT$", "w", stdout) != 0 ||
-        freopen_s(&g_stderr, "CONOUT$", "w", stderr) != 0) {
+        freopen_s(&g_stderr, "CONOUT$", "w", stderr) != 0
+    ) {
         fwprintf_s(stderr, L"Failed to redirect standard input, output and error to Stage0 console.\n");
         exit(EXIT_FAILURE);
     }
 
-    auto path_target_size = ::GetModuleFileNameW(
-        NULL,
-        g_path_target,
-        sizeof(g_path_target) / sizeof(wchar_t)
+    DWORD path_fh_dir_size = GetModuleFileNameW(
+        h_self,
+        g_path_fh_dir,
+        sizeof(g_path_fh_dir) / sizeof(wchar_t)
     );
 
-    auto path_cwd_size = ::GetCurrentDirectoryW(
-        sizeof(g_path_fh_dir) / sizeof(wchar_t),
-        g_path_fh_dir
-    );
-
-    if (path_target_size == 0) {
-        fwprintf_s(stderr, L"GetModuleFileName() failed.\n");
+    if (path_fh_dir_size == 0) {
+        fwprintf_s(stderr, L"[!] GetModuleFileNameW() failed.\n");
         return FALSE;
     }
 
-    if (path_cwd_size == 0) {
-        fwprintf_s(stderr, L"GetCurrentDirectory() failed.\n");
-        return FALSE;
-    }
-
-    fwprintf_s(stdout, L"Stage 1 Loader executing for: %s\n", g_path_target);
-
-    HRESULT hr = PathCchRemoveFileSpec(g_path_target, MAX_PATH);
+    HRESULT hr = PathCchRemoveFileSpec(g_path_fh_dir, MAX_PATH);
     if (hr != S_OK) {
-        fwprintf_s(stderr, L"PathCchRemoveFileSpec() failed for path %s, error code: %X\n", g_path_target, hr);
-        return FALSE;
-    }
-
-    // STEP 3:
-    // Change the working directory to the targeted executable's location.
-    if (!SetCurrentDirectoryW(g_path_target)) {
-        fwprintf_s(stderr, L"Failed to switch to the game's working directory. (%s)\n", g_path_target);
+        fwprintf_s(stderr, L"PathCchRemoveFileSpec() failed for path %s, error code: %X\n", g_path_fh_dir, hr);
         return FALSE;
     }
 
@@ -295,7 +278,7 @@ static BOOL stage1_init() {
 }
 
 BOOL APIENTRY DllMain(
-    HMODULE hdll,
+    HMODULE h_self,
     DWORD   reason,
     LPVOID  ptr_reserved
 ) {
@@ -306,7 +289,7 @@ BOOL APIENTRY DllMain(
             if (!DetourRestoreAfterWith())
                 return FALSE;
 
-            if (!stage1_init())
+            if (!stage1_init(h_self))
                 return FALSE;
         }
         case DLL_THREAD_ATTACH:

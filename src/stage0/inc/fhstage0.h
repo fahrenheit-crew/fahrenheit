@@ -16,3 +16,9 @@
 
 // IAT patching
 #include <detours/detours.h>
+
+#ifdef _DEBUG
+#define MINHOOK_DLL "minhook.x32d.dll"
+#else
+#define MINHOOK_DLL "minhook.x32.dll"
+#endif

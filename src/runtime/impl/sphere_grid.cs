@@ -13,13 +13,13 @@ using static Fahrenheit.FFX.Globals.SphereGrid;
 namespace Fahrenheit.Runtime.Impl;
 
 [FhLoad(FhGameId.FFX)]
-public unsafe class SphereGridReimplModule : FhModule {
+public unsafe class SphereGridModule : FhModule {
     public override bool init(FhModContext mod_context, FileStream global_state_file) {
         return FhXCall.AbmapState_ChoosingMoveTarget.hook(this, h_state_choosing_move_target)
             && FhXCall.AbmapState_Warping.hook(this, h_state_warping)
             && FhXCall.AbmapCalcMoveCosts.hook(this, h_calc_move_costs)
             && FhXCall.AbmapCalcMoveCost.hook(this, h_calc_move_cost)
-            && FhXCall.FUN_00a5b7b0.hook(this, h_init_choose_move_target);
+            && FhXCall.AbmapInitChoosingMoveTarget.hook(this, h_init_choose_move_target);
     }
 
     private void* get_fnptr(uint address) {

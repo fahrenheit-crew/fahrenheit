@@ -1590,6 +1590,11 @@ public static partial class FhCall {
     public static FhMethodHandle<d_AbmapInitHoming> AbmapInitHoming
         => new( new FhMethodLocation("FFX.exe", 0x648d70) );
 
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public unsafe delegate void d_AbmapInitChoosingMoveTarget();
+    public static FhMethodHandle<d_AbmapInitChoosingMoveTarget> AbmapInitChoosingMoveTarget
+        => new( new FhMethodLocation("FFX.exe", 0x65B7B0) );
+
     // Symbol skipped (deemed uninterpretable):
     // __stdcall void +AbmapFlagConnectedLinks(SphereGridLinkProperties param_1) at 00a58df0
 

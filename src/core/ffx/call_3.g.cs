@@ -36869,13 +36869,6 @@ public static unsafe partial class FhCall {
     public static FhMethodHandle<d_FUN_00639130> FUN_00639130 => new( new FhMethodLocation("FFX.exe", 0x239130) );
 
     // Original after pruning:
-    // unknown undefined FUN_00639140() at 00639140
-
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public unsafe delegate void d_FUN_00639140();
-    public static FhMethodHandle<d_FUN_00639140> FUN_00639140 => new( new FhMethodLocation("FFX.exe", 0x239140) );
-
-    // Original after pruning:
     // unknown undefined graphicAbmapDestory() at 00639160
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -38622,13 +38615,6 @@ public static unsafe partial class FhCall {
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public unsafe delegate void d_FUN_00643160();
     public static FhMethodHandle<d_FUN_00643160> FUN_00643160 => new( new FhMethodLocation("FFX.exe", 0x243160) );
-
-    // Original after pruning:
-    // unknown undefined graphicSetFlipVsnc() at 00643290
-
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public unsafe delegate void d_graphicSetFlipVsnc();
-    public static FhMethodHandle<d_graphicSetFlipVsnc> graphicSetFlipVsnc => new( new FhMethodLocation("FFX.exe", 0x243290) );
 
     // Original after pruning:
     // unknown undefined graphicSetFocusZ() at 006432a0

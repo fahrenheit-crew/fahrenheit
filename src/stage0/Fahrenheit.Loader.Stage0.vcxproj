@@ -85,7 +85,6 @@
             <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
             <ConformanceMode>true</ConformanceMode>
             <AdditionalIncludeDirectories>inc</AdditionalIncludeDirectories>
-            <Optimization>Disabled</Optimization>
         </ClCompile>
         <Link>
             <SubSystem>Console</SubSystem>

@@ -37,10 +37,10 @@ using EflIndex = Dictionary<string, string>;
 [SupportedOSPlatform("windows6.1")]
 public unsafe sealed class FhFileLoaderModule : FhModule {
 
-    private static ReadOnlySpan<byte> _stream_prefix      => "/"u8;
+    private static ReadOnlySpan<byte> _stream_prefix      => "/\0"u8;
     private static ReadOnlySpan<byte> _vbf_secondary_path => FhGlobal.game_id is FhGameId.FFX 
-        ? @"data\FFX2_Data.vbf"u8
-        : @"data\FFX_Data.vbf"u8;
+        ? "data\\FFX2_Data.vbf\0"u8
+        : "data\\FFX_Data.vbf\0"u8;
 
     /* [fkelava 21/08/26 02:12]
      * BigFileStream and BigFileHandle (and PStreamFile) will store pointers
@@ -265,24 +265,26 @@ public unsafe sealed class FhFileLoaderModule : FhModule {
 
     [UnmanagedCallConv(CallConvs = [ typeof(CallConvThiscall) ] )]
     private PCluster* h_pcluster_ld(uint ptr_this, byte* ptr_name) {
-        ReadOnlySpan<byte> buf_path            = new(ptr_name, 0x100);
-        Span        <byte> buf_path_normalized = stackalloc byte [ 0x100 ];
+        ReadOnlySpan<byte> path            = new(ptr_name, 0x100);
+                Span<byte> path_normalized = stackalloc byte [ 0x100 ];
 
-        normalize_path(buf_path, buf_path_normalized);
+        path_normalized.Clear();
+        normalize_path(path, path_normalized);
 
-        fixed (byte* ptr_path_normalized = buf_path_normalized) {
+        fixed (byte* ptr_path_normalized = path_normalized) {
             return FhCall.ClusterManager_loadPCluster.chain_from(h_pcluster_ld).fnptr!(ptr_this, ptr_path_normalized);
         }
     }
 
     [UnmanagedCallConv(CallConvs = [ typeof(CallConvThiscall) ] )]
     private PCluster* h_pcluster_get(uint ptr_this, byte* ptr_name) {
-        ReadOnlySpan<byte> buf_path            = new(ptr_name, 0x100);
-        Span        <byte> buf_path_normalized = stackalloc byte [ 0x100 ];
+        ReadOnlySpan<byte> path            = new(ptr_name, 0x100);
+                Span<byte> path_normalized = stackalloc byte [ 0x100 ];
 
-        normalize_path(buf_path, buf_path_normalized);
+        path_normalized.Clear();
+        normalize_path(path, path_normalized);
 
-        fixed (byte* ptr_path_normalized = buf_path_normalized) {
+        fixed (byte* ptr_path_normalized = path_normalized) {
             return FhCall.ClusterManager_getPClusterByName.chain_from(h_pcluster_get).fnptr!(ptr_this, ptr_path_normalized);
         }
     }
@@ -314,12 +316,13 @@ public unsafe sealed class FhFileLoaderModule : FhModule {
 
     [UnmanagedCallConv(CallConvs = [ typeof(CallConvThiscall) ] )]
     private PStreamFile* h_fopen(PStreamFile* ptr_this, byte* ptr_path, bool read_only, uint p3, uint p4, bool p5) {
-        ReadOnlySpan<byte> buf_path            = new(ptr_path, 0x100);
-                Span<byte> buf_path_normalized = stackalloc byte [ 0x100 ];
+        ReadOnlySpan<byte> path            = new(ptr_path, 0x100);
+                Span<byte> path_normalized = stackalloc byte [ 0x100 ];
 
-        normalize_path(buf_path, buf_path_normalized);
+        path_normalized.Clear();
+        normalize_path(path, path_normalized);
 
-        fixed (byte* ptr_path_normalized = buf_path_normalized) {
+        fixed (byte* ptr_path_normalized = path_normalized) {
             string path_str = new string((sbyte*)ptr_path_normalized).ToUpperInvariant();
 
             if (!_index.TryGetValue(path_str, out string? path_modded)) {

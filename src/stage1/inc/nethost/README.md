@@ -16,8 +16,8 @@ in which they suppress building the `.vcxproj` normally and drive the build from
 "Relatively complicated" is, put charitably, an understatement. We must co-opt the separate .NET project,
 but use it merely to copy the headers and libraries from your local .NET SDK install to the right places. See `src/stage1/Fahrenheit.Stage1.Deps.csproj`.
 
-[!WARNING]
+> [!WARNING]
 > Do not commit the copied-over headers or libraries to this repository.
 
-See generally https://github.com/dotnet/samples/blob/86ff8487361a6f32549d9c9ab8b14dde55c643cf/core/hosting/readme.md,
-https://github.com/dotnet/samples/blob/86ff8487361a6f32549d9c9ab8b14dde55c643cf/core/hosting/src/NativeHost/NativeHost.csproj.
+See generally the [.NET NativeHost sample](https://github.com/dotnet/samples/blob/86ff8487361a6f32549d9c9ab8b14dde55c643cf/core/hosting/readme.md) 
+and its [project file](https://github.com/dotnet/samples/blob/86ff8487361a6f32549d9c9ab8b14dde55c643cf/core/hosting/src/NativeHost/NativeHost.csproj).

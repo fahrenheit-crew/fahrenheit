@@ -734,6 +734,8 @@ public static class FhEncoding {
            FhEncodingFlags    flags = default
     ) {
         Span<byte> dest = stackalloc byte[64];
+        dest.Clear();
+
         return encode(src, dest, lang, game, flags | FhEncodingFlags.IGNORE_DEST_BUFFER);
     }
 
@@ -858,6 +860,8 @@ public static class FhEncoding {
            FhEncodingFlags    flags = default
     ) {
         Span<byte> dest = stackalloc byte[64];
+        dest.Clear();
+
         return decode(src, dest, lang, game, flags | FhEncodingFlags.IGNORE_DEST_BUFFER);
     }
 

@@ -35,12 +35,33 @@ static HRESULT stage0_main_process_args(
 ) {
     /* [fkelava 17/09/26 15:29]
      * Stage 0 args are separated from ones to be passed through to the target with a '--'.
+     *
+     * We can't know whether the user passed a relative or absolute path to the target binary.
+     * Methods from this point on expect an absolute path, so we normalize it here.
      */
+    wchar_t target_rel_or_abs[MAX_PATH] = { 0 };
 
-    HRESULT hr = StringCchCopyW(target, MAX_PATH, argv[1]);
+    HRESULT hr = StringCchCopyW(target_rel_or_abs, MAX_PATH, argv[1]);
     if (hr != S_OK) {
         fwprintf_s(stderr, L"[!] StringCchCopyW(%s) failed\n", argv[1]);
         return hr;
+    }
+
+    DWORD rc = GetFullPathNameW(
+        target_rel_or_abs,
+        MAX_PATH,
+        target,
+        NULL
+    );
+
+    if (rc == 0) {
+        fwprintf_s(stderr, L"[!] GetFullPathNameW() failed, code 0x%X.\n", GetLastError());
+        return E_FAIL;
+    }
+
+    if (rc > MAX_PATH) {
+        fwprintf_s(stderr, L"[!] GetFullPathNameW() failed - buffer was too small. (%u > %u)\n", rc, MAX_PATH);
+        return E_FAIL;
     }
 
     wchar_t* dest = args_self;
@@ -90,9 +111,7 @@ static HRESULT stage0_main_dir_target() {
  */
 
 // Gets the directory `fhstage0` was started in. This will be used to locate dependencies.
-static HRESULT stage0_main_dir_self(
-    DWORD& error_code // [out] The exact error code, if the method failed.
-) {
+static HRESULT stage0_main_dir_self() {
     size_t sz_self = sizeof(dir_self) / sizeof(char);
 
     DWORD rc = GetCurrentDirectoryA(
@@ -101,16 +120,12 @@ static HRESULT stage0_main_dir_self(
     );
 
     if (rc == 0) {
-        fwprintf_s(stderr, L"[!] GetCurrentDirectoryA() failed.\n");
-        error_code = GetLastError();
-
+        fwprintf_s(stderr, L"[!] GetCurrentDirectoryA() failed with code 0x%X.\n", GetLastError());
         return E_FAIL;
     }
 
     if (rc > sz_self) {
         fwprintf_s(stderr, L"[!] GetCurrentDirectoryA() failed - buffer was too small. (%u > %u)\n", rc, sz_self);
-        error_code = GetLastError();
-
         return E_FAIL;
     }
 
@@ -158,7 +173,9 @@ int wmain(
         return 1;
     }
 
-    HRESULT hr = stage0_main_process_args(argc, argv);
+    HRESULT hr;
+
+    hr = stage0_main_process_args(argc, argv);
     if (hr != S_OK)
         return hr;
 
@@ -166,10 +183,9 @@ int wmain(
     if (hr != S_OK)
         return hr;
 
-    DWORD error_self_dir;
-    hr = stage0_main_dir_self(error_self_dir);
+    hr = stage0_main_dir_self();
     if (hr != S_OK)
-        return error_self_dir;
+        return hr;
 
     bool  external_debug = wcsstr(args_self, L"--debug") != NULL;
     DWORD creation_flags = external_debug

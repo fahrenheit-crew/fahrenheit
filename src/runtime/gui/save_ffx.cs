@@ -3,6 +3,8 @@
 // This file is part of Fahrenheit, © 2023-2026 The Fahrenheit contributors.
 // It is licensed to you under the GNU Lesser General Public License, version 3.0 or later. See COPYING, COPYING.LESSER.
 
+using Fahrenheit.FFX.Ids;
+
 namespace Fahrenheit.Runtime.Gui;
 
 /*
@@ -50,6 +52,10 @@ public sealed class FhSaveUiX : FhSaveUi {
 
     private readonly float      _fade_length = FhUtil.select(0.5f, 0.35f, 0.0f);
     private readonly FadeHelper _fade;
+
+    private readonly Fahrenheit.Gui.Timer _audio_fade_helper = new(30f);
+
+    private bool _audio_fade_helper_restart = true;
 
     private readonly List<string> _set_list = [ ];
 
@@ -125,6 +131,8 @@ public sealed class FhSaveUiX : FhSaveUi {
 
         if (!try_load_textures()) return;
 
+        _audio_fade_helper_restart = true;
+
         handle_input();
 
         ui_background();
@@ -142,6 +150,10 @@ public sealed class FhSaveUiX : FhSaveUi {
         ui_scrollbar();
 
         ui_fade();
+
+        if (_audio_fade_helper_restart) {
+            _audio_fade_helper.restart();
+        }
     }
 
     private void fade_out(Action action) {
@@ -151,6 +163,10 @@ public sealed class FhSaveUiX : FhSaveUi {
             _fade_length * _fade.progress,
             action
         );
+    }
+
+    private float get_move_volume() {
+        return 0.5f + (1f - _audio_fade_helper.progress) * 0.5f;
     }
 
     private bool handle_input_list() {
@@ -163,17 +179,31 @@ public sealed class FhSaveUiX : FhSaveUi {
             if (FhApi.Gui.is_any_pressed(FhApi.Gui.keys_up)
              && _current_scrollable.hovered == 0
             ) {
+                FhApi.Audio.play_sound(SoundId.UI_ACTION);
                 _focus = UiFocus.ACTIVE_SET;
                 return true;
             }
         }
 
-        _current_scrollable.handle_input();
+        int old_hovered = _current_scrollable.hovered;
+
+        bool scrollable_input_held = _current_scrollable.handle_input();
+
+        if (_current_scrollable.hovered != old_hovered) {
+            FhApi.Audio.play_sound(SoundId.UI_ACTION, volume: get_move_volume());
+            _audio_fade_helper.tick(1f);
+        }
+
+        if (scrollable_input_held) {
+            _audio_fade_helper_restart = false;
+        }
 
         if (FhApi.Gui.is_any_pressed(FhApi.Gui.keys_confirm)) {
             int hovered = _current_scrollable.hovered;
 
             if (_mode == UiMode.SAVE_LIST) {
+                FhApi.Audio.play_sound(SoundId.UI_ACTION);
+
                 if (is_saving && hovered == 0) {
                     fade_out(() => FhApi.Saves.save(0));
                 }
@@ -186,6 +216,8 @@ public sealed class FhSaveUiX : FhSaveUi {
             }
 
             if (_mode == UiMode.SET_SWAP) {
+                FhApi.Audio.play_sound(SoundId.PAGE_TURN);
+
                 string hovered_set = _set_list[hovered];
                 switch_set(hovered_set);
 
@@ -198,6 +230,8 @@ public sealed class FhSaveUiX : FhSaveUi {
 
     private bool handle_input_active_set() {
         if (_mode == UiMode.SAVE_LIST && FhApi.Gui.is_any_pressed(FhApi.Gui.keys_down) && _current_scrollable.max > 0) {
+            FhApi.Audio.play_sound(SoundId.UI_ACTION);
+
             _focus = UiFocus.LIST;
             _current_scrollable.hovered = _current_scrollable.current;
 
@@ -205,6 +239,7 @@ public sealed class FhSaveUiX : FhSaveUi {
         }
 
         if (FhApi.Gui.is_any_pressed(FhApi.Gui.keys_confirm)) {
+            FhApi.Audio.play_sound(SoundId.PAGE_TURN);
             change_mode(UiMode.SET_SWAP);
             return true;
         }
@@ -219,6 +254,8 @@ public sealed class FhSaveUiX : FhSaveUi {
         if (_focus == UiFocus.ACTIVE_SET && handle_input_active_set()) return;
 
         if (FhApi.Gui.is_any_pressed(FhApi.Gui.keys_cancel)) {
+            FhApi.Audio.play_sound(SoundId.UI_CANCEL);
+
             if (_mode == UiMode.SET_SWAP)
                 change_mode(UiMode.SAVE_LIST);
             else
@@ -587,7 +624,8 @@ public sealed class FhSaveUiX : FhSaveUi {
 
         UV bg_suv = bg_screen.as_uv();
 
-        if (mouse_hovered(bg_screen)) {
+        if (mouse_hovered(bg_screen) && _focus != UiFocus.ACTIVE_SET) {
+            FhApi.Audio.play_sound(SoundId.UI_ACTION);
             _focus = UiFocus.ACTIVE_SET;
         }
 
@@ -622,6 +660,7 @@ public sealed class FhSaveUiX : FhSaveUi {
 
         // Input handling
         if (mouse_clicked(bg_screen)) {
+            FhApi.Audio.play_sound(SoundId.PAGE_TURN);
             change_mode(UiMode.SET_SWAP);
         }
     }
@@ -670,6 +709,10 @@ public sealed class FhSaveUiX : FhSaveUi {
         float font_size = 36f * font_scale;
 
         if (mouse_hovered(button_scaled)) {
+            if (_focus != UiFocus.LIST || _scrollable_sets.hovered != set_idx) {
+                FhApi.Audio.play_sound(SoundId.UI_ACTION);
+            }
+
             _focus = UiFocus.LIST;
             _scrollable_sets.hovered = set_idx;
         }
@@ -727,6 +770,7 @@ public sealed class FhSaveUiX : FhSaveUi {
         // Handle input
         if (mouse_clicked(button_scaled)) {
             io.WantCaptureMouse = true;
+            FhApi.Audio.play_sound(SoundId.PAGE_TURN);
             switch_set(name);
         }
     }
@@ -874,6 +918,10 @@ public sealed class FhSaveUiX : FhSaveUi {
 
         // We set the hovered state early to potentially use it later.
         if (mouse_hovered(save_rect.scale_to_aspect(aspect_helper))) {
+            if (_focus != UiFocus.LIST || _scrollable_saves.hovered != index) {
+                FhApi.Audio.play_sound(SoundId.UI_ACTION);
+            }
+
             _focus = UiFocus.LIST;
             _scrollable_saves.hovered = index;
         }
@@ -1078,6 +1126,7 @@ public sealed class FhSaveUiX : FhSaveUi {
 
         // Handle input
         if (mouse_clicked(save_rect.scale_to_aspect(aspect_helper))) {
+            FhApi.Audio.play_sound(SoundId.UI_ACTION);
             fade_out(() => execute(save.slot));
         }
     }
@@ -1099,6 +1148,10 @@ public sealed class FhSaveUiX : FhSaveUi {
         Vector2 save_border_size = new(4f);
 
         if (mouse_hovered(save_rect.scale_to_aspect(aspect_helper))) {
+            if (_focus != UiFocus.LIST || _scrollable_saves.hovered != 0) {
+                FhApi.Audio.play_sound(SoundId.UI_ACTION);
+            }
+
             _focus = UiFocus.LIST;
             _scrollable_saves.hovered = 0;
         }
@@ -1157,6 +1210,7 @@ public sealed class FhSaveUiX : FhSaveUi {
 
         // Handle input
         if (mouse_clicked(save_rect.scale_to_aspect(aspect_helper))) {
+            FhApi.Audio.play_sound(SoundId.UI_ACTION);
             fade_out(() => FhApi.Saves.save(0));
         }
     }
@@ -1286,11 +1340,23 @@ public sealed class FhSaveUiX : FhSaveUi {
         }
 
         if (mouse_clicked(triangle_top, repeat: true)) {
+            FhApi.Audio.play_sound(SoundId.UI_ACTION, volume: get_move_volume());
+            _audio_fade_helper.tick(1f);
+
             _current_scrollable.move_hover(-1);
         }
 
         if (mouse_clicked(triangle_bottom, repeat: true)) {
+            FhApi.Audio.play_sound(SoundId.UI_ACTION, volume: get_move_volume());
+            _audio_fade_helper.tick(1f);
+
             _current_scrollable.move_hover(1);
+        }
+
+        if ((mouse_hovered(triangle_top) || mouse_hovered(triangle_bottom))
+         && ImGui.IsMouseDown(ImGuiMouseButton.Left)
+           ) {
+            _audio_fade_helper_restart = false;
         }
     }
 

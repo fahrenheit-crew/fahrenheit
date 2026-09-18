@@ -6812,13 +6812,6 @@ public static unsafe partial class FhCall {
     public static FhMethodHandle<d_FUN_00886d80> FUN_00886d80 => new( new FhMethodLocation("FFX.exe", 0x486D80) );
 
     // Original after pruning:
-    // unknown undefined SndSepPlay() at 00886db0
-
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public unsafe delegate void d_SndSepPlay();
-    public static FhMethodHandle<d_SndSepPlay> SndSepPlay => new( new FhMethodLocation("FFX.exe", 0x486DB0) );
-
-    // Original after pruning:
     // unknown undefined SndSepStop() at 00886e10
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]

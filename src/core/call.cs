@@ -68,10 +68,10 @@ public static unsafe partial class FhCall {
     public delegate byte d_AtelPopMember();
     public static FhMethodHandle<d_AtelPopMember> AtelPopMember =>
         new( new FhMethodLocation(0x46DD40, 0x3287E0) );
-  
+
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public unsafe delegate void d_AtelJumpGameOver();
-    public static FhMethodHandle<d_AtelJumpGameOver> AtelJumpGameOver 
+    public static FhMethodHandle<d_AtelJumpGameOver> AtelJumpGameOver
         => new( new FhMethodLocation(0x46D9A0, 0x3283A0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -98,12 +98,12 @@ public static unsafe partial class FhCall {
 
     [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
     internal unsafe delegate PCluster* d_ClusterManager_getPClusterByName(uint ptr_this, byte* ptr_name);
-    internal static FhMethodHandle<d_ClusterManager_getPClusterByName> ClusterManager_getPClusterByName => 
+    internal static FhMethodHandle<d_ClusterManager_getPClusterByName> ClusterManager_getPClusterByName =>
         new( new FhMethodLocation(0x29B5F0, 0x09E2E0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal unsafe delegate BigFileStream* d_BigFileStream_get();
-    internal static FhMethodHandle<d_BigFileStream_get> BigFileStream_get => 
+    internal static FhMethodHandle<d_BigFileStream_get> BigFileStream_get =>
         new( new FhMethodLocation(0x21BF70, 0x542A40) );
 
     [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
@@ -113,7 +113,7 @@ public static unsafe partial class FhCall {
 
     [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
     internal unsafe delegate void d_BigFileStream_setStreamPrefix(BigFileStream* ptr_this, byte* ptr_stream_prefix);
-    internal static FhMethodHandle<d_BigFileStream_setStreamPrefix> BigFileStream_setStreamPrefix => 
+    internal static FhMethodHandle<d_BigFileStream_setStreamPrefix> BigFileStream_setStreamPrefix =>
         new( new FhMethodLocation(0x21C560, 0x543030) );
 
     [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
@@ -123,22 +123,22 @@ public static unsafe partial class FhCall {
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal unsafe delegate byte* d_Phyre_PSerialization_PStreamFile_GetStreamPrefix();
-    internal static FhMethodHandle<d_Phyre_PSerialization_PStreamFile_GetStreamPrefix> Phyre_PSerialization_PStreamFile_GetStreamPrefix => 
+    internal static FhMethodHandle<d_Phyre_PSerialization_PStreamFile_GetStreamPrefix> Phyre_PSerialization_PStreamFile_GetStreamPrefix =>
         new( new FhMethodLocation(0x207EF0, 0x490FB0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal unsafe delegate void d_Phyre_PSerialization_PStreamFile_SetStreamPrefix(byte* ptr_stream_prefix);
-    internal static FhMethodHandle<d_Phyre_PSerialization_PStreamFile_SetStreamPrefix> Phyre_PSerialization_PStreamFile_SetStreamPrefix => 
+    internal static FhMethodHandle<d_Phyre_PSerialization_PStreamFile_SetStreamPrefix> Phyre_PSerialization_PStreamFile_SetStreamPrefix =>
         new( new FhMethodLocation(0x207F00, 0x491090) );
 
     [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
     internal unsafe delegate VFile* d_BigFileStream_openFile(BigFileStream* ptr_this, byte* ptr_file_name);
-    internal static FhMethodHandle<d_BigFileStream_openFile> BigFileStream_openFile => 
+    internal static FhMethodHandle<d_BigFileStream_openFile> BigFileStream_openFile =>
         new( new FhMethodLocation(0x21C0D0, 0x542BA0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal unsafe delegate void d_fiosUnifyFilename(byte* src, byte* dest, int size);
-    internal static FhMethodHandle<d_fiosUnifyFilename> fiosUnifyFilename => 
+    internal static FhMethodHandle<d_fiosUnifyFilename> fiosUnifyFilename =>
         new( new FhMethodLocation(0x2799D0, 0x094E90) );
 
     // RT - Allocator fix
@@ -354,8 +354,8 @@ public static unsafe partial class FhCall {
     // RT - Game UI
 
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-    internal delegate void d_TODrawMessageWindow();
-    internal static FhMethodHandle<d_TODrawMessageWindow> TODrawMessageWindow
+    public delegate void d_TODrawMessageWindow();
+    public static FhMethodHandle<d_TODrawMessageWindow> TODrawMessageWindow
         => new( new FhMethodLocation(0x4ABCE0, 0x391D00) );
 
     // RT - ImGui
@@ -559,6 +559,16 @@ public static unsafe partial class FhCall {
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate float d_CT_RetFloat(AtelBasicWorker* work, int* storage, AtelStack* stack);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate int d_SndSepPlay(uint sound_id, uint pan, uint volume);
+    public static FhMethodHandle<d_SndSepPlay> SndSepPlay
+        => new( new FhMethodLocation(0x486DB0, 0x344720) );
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate int d_SndSepPlaySimple(uint sound_id);
+    public static FhMethodHandle<d_SndSepPlaySimple> SndSepPlaySimple
+        => new( new FhMethodLocation(0x486DE0, 0x344760) );
 
     // `printf` and similar methods for use by the debug mod
 

@@ -21,6 +21,7 @@ public static class FhApi {
     public static readonly FhLocalization Localization = new();
     public static readonly FhResources    Resources    = new();
     public static readonly FhGui          Gui          = new();
+    public static readonly FhAudio        Audio        = new();
     public static readonly FhInput        Input        = new();
     public static readonly FhEvents       Events       = new();
     public static readonly FhSaves        Saves        = new();

@@ -252,7 +252,9 @@ internal unsafe static class FhSavePal {
     /// </summary>
     internal static void pal_fill_template(Span<byte> template, int fill) {
         ReadOnlySpan<byte> marker  = [ 0x05, 0x30 ];
-        Span<byte>         scratch = stackalloc byte[8];
+                Span<byte> scratch = stackalloc byte[8];
+
+        scratch.Clear();
 
         int length = Encoding.UTF8.GetBytes($"{fill}", scratch);
         int target = template.IndexOf(marker);

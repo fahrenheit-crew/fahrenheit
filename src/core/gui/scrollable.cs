@@ -218,12 +218,11 @@ public class Scrollable {
 
     /// <summary>Handle scrollable input.</summary>
     /// <remarks>This method should be called at most once per ImGui frame whenever desired.</remarks>
-    public void handle_input() {
+    /// <returns>Whether Scrollable input was held, even if it was not used.</returns>
+    public bool handle_input() {
         // Various scrolling methods
-        bool hover_up   = FhApi.Gui.is_any_pressed(FhApi.Gui.keys_up  , true);
-        bool hover_down = FhApi.Gui.is_any_pressed(FhApi.Gui.keys_down, true);
-
-        float mouse_wheel = ImGui.GetIO().MouseWheel;
+        ImGuiKey[] up_keys   = FhApi.Gui.keys_up;
+        ImGuiKey[] down_keys = FhApi.Gui.keys_down;
 
         ImGuiKey[] pg_up_keys = [
             ImGuiKey.PageUp,
@@ -237,14 +236,30 @@ public class Scrollable {
             .. FhApi.Gui.keys_right,
         ];
 
+        ImGuiKey[] home_keys = [
+            ImGuiKey.Home,
+            ImGuiKey.GamepadL2,
+        ];
+
+        ImGuiKey[] end_keys = [
+            ImGuiKey.End,
+            ImGuiKey.GamepadR2,
+        ];
+
+        bool hover_up   = FhApi.Gui.is_any_pressed(up_keys,   true);
+        bool hover_down = FhApi.Gui.is_any_pressed(down_keys, true);
+        int  hover      = (hover_up ? 1 : 0) - (hover_down ? 1 : 0);
+
+        float mouse_wheel = ImGui.GetIO().MouseWheel;
+
         bool scroll_pg_up = FhApi.Gui.is_any_pressed(pg_up_keys);
         bool scroll_pg_dn = FhApi.Gui.is_any_pressed(pg_dn_keys);
 
         bool scroll_pg_up_held = FhApi.Gui.is_any_pressed(pg_up_keys, true);
         bool scroll_pg_dn_held = FhApi.Gui.is_any_pressed(pg_dn_keys, true);
 
-        bool scroll_to_start = FhApi.Gui.is_any_pressed([ ImGuiKey.Home, ImGuiKey.GamepadL2 ]);
-        bool scroll_to_end   = FhApi.Gui.is_any_pressed([ ImGuiKey.End , ImGuiKey.GamepadR2 ]);
+        bool scroll_to_start = FhApi.Gui.is_any_pressed(home_keys);
+        bool scroll_to_end   = FhApi.Gui.is_any_pressed(end_keys);
 
         ImGui.GetIO().WantCaptureKeyboard |=
              hover_up
@@ -254,11 +269,11 @@ public class Scrollable {
          ||  scroll_to_start
          ||  scroll_to_end;
 
-        if (hover_up) {
+        if (hover > 0) {
             move_hover(-1);
         }
 
-        if (hover_down) {
+        if (hover < 0) {
             move_hover(1);
         }
 
@@ -285,5 +300,16 @@ public class Scrollable {
         if (scroll_to_end) {
             scroll_end();
         }
+
+        return FhApi.Gui.is_any_down(
+            [
+                .. up_keys,
+                .. down_keys,
+                .. pg_up_keys,
+                .. pg_dn_keys,
+                .. home_keys,
+                .. end_keys,
+            ]
+        );
     }
 }

@@ -1206,11 +1206,6 @@ public static partial class FhCall {
         => new( new FhMethodLocation("FFX.exe", 0x4796E0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate void d_SndSepPlaySimple(uint arg1);
-    public static FhMethodHandle<d_SndSepPlaySimple> SndSepPlaySimple
-        => new( new FhMethodLocation("FFX.exe", 0x486DE0) );
-
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void d_TkMsImportantSet(uint arg1);
     public static FhMethodHandle<d_TkMsImportantSet> TkMsImportantSet
         => new( new FhMethodLocation("FFX.exe", 0x48E700) );
@@ -1554,6 +1549,6 @@ public static partial class FhCall {
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
     public delegate nint d_FMOD_EventSystem_load(nint arg1, nint file_path, nint arg3, nint bank);
     public static FhMethodHandle<d_FMOD_EventSystem_load> FMOD_EventSystem_load
-        => new( new FhMethodLocation("FFX.exe", 0x70C75C) );
+        => new( new FhMethodLocation("fmod_event.dll", "?load@EventSystem@FMOD@@QAG?AW4FMOD_RESULT@@PBDPAUFMOD_EVENT_LOADINFO@@PAPAVEventProject@2@@Z") );
 
 }

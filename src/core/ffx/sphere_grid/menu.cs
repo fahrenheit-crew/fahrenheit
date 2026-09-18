@@ -22,7 +22,9 @@ public enum SphereGridMenuId : int {
     ACTION_PROMPT     = 7,
     USE_ITEM          = 8,
 
-    QUIT_PROMPT       = 11,
+    MOVE_CONFIRM_PROMPT =  9,
+    QUIT_CONFIRM_PROMPT = 10,
+    YES_NO_PROMPT       = 11,
 }
 
 [StructLayout(LayoutKind.Explicit, Pack = 1, Size = 0xC)]
@@ -62,12 +64,12 @@ public unsafe struct SphereGridMenu {
 
     public short entry_count;
 
-    private short __0x20;
+    public short __0x20;
 
     public byte column_count;
     public bool is_visible;
 
-    private byte __0x24;
+    public byte __0x24;
 
     public bool render_cursor;
     public SphereGridMenuScrollDirection scroll_direction;
@@ -105,7 +107,9 @@ public unsafe struct SphereGridMenuList {
         public SphereGridMenu preview_prompt      => this[(int)SphereGridMenuId.PREVIEW_PROMPT];
         public SphereGridMenu action_prompt       => this[(int)SphereGridMenuId.ACTION_PROMPT];
         public SphereGridMenu use_item            => this[(int)SphereGridMenuId.USE_ITEM];
-        public SphereGridMenu quit_prompt         => this[(int)SphereGridMenuId.QUIT_PROMPT];
+        public SphereGridMenu move_confirm_prompt => this[(int)SphereGridMenuId.MOVE_CONFIRM_PROMPT];
+        public SphereGridMenu quit_confirm_prompt => this[(int)SphereGridMenuId.QUIT_CONFIRM_PROMPT];
+        public SphereGridMenu quit_prompt         => this[(int)SphereGridMenuId.YES_NO_PROMPT];
     }
 
     [FieldOffset(0x0)] public MenuList menus;

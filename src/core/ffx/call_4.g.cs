@@ -18908,13 +18908,6 @@ public static unsafe partial class FhCall {
     public static FhMethodHandle<d_pppDeletePObject> pppDeletePObject => new( new FhMethodLocation("FFX.exe", 0x3169D0) );
 
     // Original after pruning:
-    // unknown undefined pppInitEnv() at 00716ab0
-
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public unsafe delegate void d_pppInitEnv();
-    public static FhMethodHandle<d_pppInitEnv> pppInitEnv => new( new FhMethodLocation("FFX.exe", 0x316AB0) );
-
-    // Original after pruning:
     // unknown undefined FUN_00716ba0() at 00716ba0
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -31253,13 +31246,6 @@ public static unsafe partial class FhCall {
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public unsafe delegate void d_MsMenuGetHelp();
     public static FhMethodHandle<d_MsMenuGetHelp> MsMenuGetHelp => new( new FhMethodLocation("FFX.exe", 0x38FC00) );
-
-    // Original after pruning:
-    // __stdcall byte* MsMenuGetText(int param_1, uint param_2, uint param_3) at 0078fd40
-
-    [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-    public unsafe delegate byte* d_MsMenuGetText(int param_1, uint param_2, uint param_3);
-    public static FhMethodHandle<d_MsMenuGetText> MsMenuGetText => new( new FhMethodLocation("FFX.exe", 0x38FD40) );
 
     // Original after pruning:
     // unknown undefined FUN_0078fe50() at 0078fe50

@@ -21,7 +21,8 @@ public unsafe class SphereGridModule : FhModule {
             && FhXCall.AbmapState_Warping.hook(this, h_state_warping)
             && FhXCall.AbmapCalcMoveCosts.hook(this, h_calc_move_costs)
             && FhXCall.AbmapCalcMoveCost.hook(this, h_calc_move_cost)
-            && FhXCall.AbmapInitChoosingMoveTarget.hook(this, h_init_choose_move_target);
+            && FhXCall.AbmapInitChoosingMoveTarget.hook(this, h_init_choose_move_target)
+            && FhXCall.eiAbmStart.hook(this, h_open_sphere_grid);
     }
 
     private void* get_fnptr(uint address) {
@@ -346,5 +347,488 @@ public unsafe class SphereGridModule : FhModule {
             FhCall.SndSepPlaySimple.fnptr!(0x80000004);
             return;
         }
+    }
+
+    public void menu_add_entries(SphereGridMenu* menu, IEnumerable<(uint text, byte __0x4, int data)> entries) {
+        foreach ((uint text, byte __0x4, int data) entry in entries) {
+            int entry_idx = menu->entry_count;
+
+            if (entry_idx >= 0x40) {
+                throw new Exception("Attempted to add entry to a completely full SphereGridMenu.");
+            }
+
+            menu->entries[entry_idx].text  = (byte*)entry.text;
+            menu->entries[entry_idx].__0x4 = entry.__0x4;
+            menu->entries[entry_idx].data  = entry.data;
+
+            menu->entry_count += 1;
+            menu->is_full = menu->entry_count < (menu->column_count * menu->row_count);
+        }
+    }
+
+    public void init_menu(
+        SphereGridMenu* menu,
+        short x, short y,
+        short width, short height,
+        short __0x14, short __0x20,
+        byte col_count, short row_count,
+        void* fn__0x34, void* fn__0x38, void* fn_help,
+        bool is_visible = false, bool render_cursor = false
+    ) {
+        menu->target_x = menu->x = x;
+        menu->target_y = menu->y = y;
+
+        menu->target_width  = menu->width  = width;
+        menu->target_height = menu->height = height;
+
+        menu->target__0x14 = menu->__0x14 = __0x14;
+        menu->__0x20 = __0x20;
+        menu->__0x24 = 0;
+
+        menu->target_row_count = menu->row_count = row_count;
+        menu->column_count = col_count;
+
+        menu->is_visible = is_visible;
+
+        menu->scroll_direction = SphereGridMenuScrollDirection.NONE;
+
+        menu->scrolled_amount = 0;
+        menu->selected_idx    = 0;
+
+        menu->render_cursor = is_visible && render_cursor;
+
+        menu->entry_count = 0;
+        menu->is_full = false;
+
+        menu->fn__0x34 = fn__0x34;
+        menu->fn__0x38 = fn__0x38;
+        menu->fn_help  = fn_help;
+    }
+
+    public void init_menu_0() {
+        SphereGridMenu* menu = &menu_list->menus[0];
+
+        init_menu(
+            menu,
+            x: 48, y: 35, width: 416, height: 20,
+            __0x14: 26, __0x20: 15,
+            col_count: 1, row_count: 1,
+            fn__0x34: null,
+            fn__0x38: get_fnptr(0x64F930),
+            fn_help:  get_fnptr(0x6570A0),
+            is_visible: true
+        );
+    }
+
+    public void init_menu_action_prompt() {
+        SphereGridMenu* menu = &menu_list->menus[(int)SphereGridMenuId.ACTION_PROMPT];
+
+        init_menu(
+            menu,
+            x:  48,
+            y: 205,
+            width:  80,
+            height: 40,
+            __0x14: 5,
+            __0x20: (short)(is_cjk ? 18 : 10),
+            col_count: 1,
+            row_count: 2,
+            fn__0x34: null,
+            fn__0x38: get_fnptr(0x64F930),
+            fn_help:  get_fnptr(0x6570A0)
+        );
+
+        // Fill it in!
+        bool hira = Globals.save_data->config_hiragana;
+        byte* use_text  = FhXCall.MsMenuGetText.fnptr!(9, 30, hira);
+        byte* move_text = FhXCall.MsMenuGetText.fnptr!(9, 31, hira);
+
+        menu_add_entries(menu, [
+            ((uint)move_text, 0, 31),
+            ((uint)use_text , 0, 30),
+        ]);
+    }
+
+    public void init_menu_use_item() {
+        SphereGridMenu* menu = &menu_list->menus[(int)SphereGridMenuId.USE_ITEM];
+
+        init_menu(
+            menu,
+            x:  48,
+            y: 205,
+            width:  (short)(is_cjk ? 144 : 176),
+            height: 80,
+            __0x14: (short)(is_cjk ? 9 : 11),
+            __0x20: 8,
+            col_count: 1,
+            row_count: 4,
+            fn__0x34: null,
+            fn__0x38: get_fnptr(0x64F630),
+            fn_help:  get_fnptr(0x657040)
+        );
+
+        // Fill it in!
+        FhXCall.FUN_00a45fd0.fnptr!(8, 3);
+    }
+
+    public void init_menu_preview_prompt() {
+        SphereGridMenu* menu = &menu_list->menus[(int)SphereGridMenuId.PREVIEW_PROMPT];
+
+        init_menu(
+            menu,
+            x:  48,
+            y: 356,
+            width:  (short)(is_cjk ? 128 : 176),
+            height: 20,
+            __0x14: (short)(is_cjk ? 8 : 11),
+            __0x20: 20,
+            col_count: 1,
+            row_count: 1,
+            fn__0x34: null,
+            fn__0x38: get_fnptr(0x64F9E0),
+            fn_help:  null
+        );
+
+        // Fill it in!
+        bool  hira = Globals.save_data->config_hiragana;
+        byte* text = FhXCall.MsMenuGetText.fnptr!(9, 35, hira);
+
+        menu_add_entries(menu, [
+            ((uint)text, 0, 35),
+        ]);
+    }
+
+    public void init_menu_preview_stats() {
+        SphereGridMenu* menu = &menu_list->menus[(int)SphereGridMenuId.PREVIEW_STATS];
+
+        init_menu(
+            menu,
+            x: (short)(is_cjk ? 160 : 136),
+            y: 276,
+            width:  (short)(is_cjk ? 192 : 240),
+            height: 100,
+            __0x14: (short)(is_cjk ? 12 : 15),
+            __0x20: 32,
+            col_count: 2,
+            row_count: 5,
+            fn__0x34: null,
+            fn__0x38: get_fnptr(0x64FA30),
+            fn_help:  null
+        );
+
+        bool  hira = Globals.save_data->config_hiragana;
+        byte* text_hp  = FhXCall.MsMenuGetText.fnptr!(11, 0, hira);
+        byte* text_mp  = FhXCall.MsMenuGetText.fnptr!(11, 1, hira);
+        byte* text_str = FhXCall.MsMenuGetText.fnptr!(11, 7, hira);
+        byte* text_agi = FhXCall.MsMenuGetText.fnptr!(11, 11, hira);
+        byte* text_def = FhXCall.MsMenuGetText.fnptr!(11, 8, hira);
+        byte* text_lck = FhXCall.MsMenuGetText.fnptr!(11, 12, hira);
+        byte* text_mag = FhXCall.MsMenuGetText.fnptr!(11, 9, hira);
+        byte* text_eva = FhXCall.MsMenuGetText.fnptr!(11, 13, hira);
+        byte* text_mdf = FhXCall.MsMenuGetText.fnptr!(11, 10, hira);
+        byte* text_acc = FhXCall.MsMenuGetText.fnptr!(11, 14, hira);
+
+        menu_add_entries(menu, [
+            ((uint)text_hp , 0, 0),
+            ((uint)text_mp , 0, 1),
+            ((uint)text_str, 0, 2),
+            ((uint)text_agi, 0, 3),
+            ((uint)text_def, 0, 4),
+            ((uint)text_lck, 0, 5),
+            ((uint)text_mag, 0, 6),
+            ((uint)text_eva, 0, 7),
+            ((uint)text_mdf, 0, 8),
+            ((uint)text_acc, 0, 9),
+        ]);
+    }
+
+    public void init_menu_preview_skills() {
+        SphereGridMenu* menu = &menu_list->menus[(int)SphereGridMenuId.PREVIEW_SKILLS];
+
+        init_menu(
+            menu,
+            x: (short)(is_cjk ? 95 : 72),
+            y: 216,
+            width:  (short)(is_cjk ? 320 : 368),
+            height: 160,
+            __0x14: (short)(is_cjk ? 20 : 23),
+            __0x20: 32,
+            col_count: 3,
+            row_count: 8,
+            fn__0x34: null,
+            fn__0x38: get_fnptr(0x64F250),
+            fn_help:  null
+        );
+
+        FhXCall.FUN_00a459e0.fnptr!(3, 64);
+    }
+
+    public void init_menu_preview_special() {
+        SphereGridMenu* menu = &menu_list->menus[(int)SphereGridMenuId.PREVIEW_SPECIAL];
+
+        init_menu(
+            menu,
+            x: (short)(is_cjk ?  96 :  72),
+            y: (short)(is_cjk ? 256 : 216),
+            width:  (short)(is_cjk ? 320 : 368),
+            height: (short)(is_cjk ? 120 : 160),
+            __0x14: (short)(is_cjk ? 20 : 23),
+            __0x20: 32,
+            col_count:  (byte)(is_cjk ? 4 : 3),
+            row_count: (short)(is_cjk ? 6 : 8),
+            fn__0x34: null,
+            fn__0x38: get_fnptr(0x64F9A0),
+            fn_help:  null
+        );
+
+        // Fill it in!
+        FhXCall.FUN_00a459e0.fnptr!(2, 65);
+    }
+
+    public void init_menu_preview_white_magic() {
+        SphereGridMenu* menu = &menu_list->menus[(int)SphereGridMenuId.PREVIEW_WHT_MAGIC];
+
+        // (short)(is_cjk ?  : ),
+
+        init_menu(
+            menu,
+            x: (short)(is_cjk ? 96 : 64),
+            y: 256,
+            width:  (short)(is_cjk ? 320 : 384),
+            height: 120,
+            __0x14: (short)(is_cjk ? 20 : 24),
+            __0x20: 32,
+            col_count: 4,
+            row_count: 6,
+            fn__0x34: null,
+            fn__0x38: get_fnptr(0x64F250),
+            fn_help:  null
+        );
+
+        // Fill it in!
+        FhXCall.FUN_00a459e0.fnptr!(4, 69);
+    }
+
+    public void init_menu_preview_black_magic() {
+        SphereGridMenu* menu = &menu_list->menus[(int)SphereGridMenuId.PREVIEW_BLK_MAGIC];
+
+        init_menu(
+            menu,
+            x: (short)(is_cjk ? 96 : 64),
+            y: 276,
+            width:  (short)(is_cjk ? 320 : 384),
+            height: 100,
+            __0x14: (short)(is_cjk ? 20 : 24),
+            __0x20: 32,
+            col_count: 4,
+            row_count: 5,
+            fn__0x34: null,
+            fn__0x38: get_fnptr(0x64F250),
+            fn_help:  null
+        );
+
+        // Fill it in!
+        FhXCall.FUN_00a459e0.fnptr!(5, 68);
+    }
+
+    public void init_menu_move_confirm_prompt() {
+        SphereGridMenu* menu = &menu_list->menus[(int)SphereGridMenuId.MOVE_CONFIRM_PROMPT];
+
+        init_menu(
+            menu,
+            x:  48,
+            y: 205,
+            width:  (short)(is_cjk ? 96 : 144),
+            height: 20,
+            __0x14: (short)(is_cjk ? 6 : 9),
+            __0x20: 10,
+            col_count: 1,
+            row_count: 1,
+            fn__0x34: null,
+            fn__0x38: get_fnptr(0x64FB70),
+            fn_help:  null
+        );
+
+        // Fill it in!
+        bool  hira = Globals.save_data->config_hiragana;
+        byte* text = FhXCall.MsMenuGetText.fnptr!(9, 43, hira);
+
+        menu_add_entries(menu, [
+            ((uint)text, 0, 43),
+        ]);
+    }
+
+    public void init_menu_quit_confirm_prompt() {
+        SphereGridMenu* menu = &menu_list->menus[(int)SphereGridMenuId.QUIT_CONFIRM_PROMPT];
+
+        init_menu(
+            menu,
+            x:  48,
+            y: 205,
+            width:  (short)(is_cjk ? 112 : 144),
+            height: 20,
+            __0x14: (short)(is_cjk ? 7 : 9),
+            __0x20: 10,
+            col_count: 1,
+            row_count: 1,
+            fn__0x34: null,
+            fn__0x38: get_fnptr(0x64FB70),
+            fn_help:  null
+        );
+
+        // Fill it in!
+        bool  hira = Globals.save_data->config_hiragana;
+        byte* text = FhXCall.MsMenuGetText.fnptr!(9, 46, hira);
+
+        menu_add_entries(menu, [
+            ((uint)text, 0, 46),
+        ]);
+    }
+
+    public void init_menu_yes_no_prompt() {
+        SphereGridMenu* menu = &menu_list->menus[(int)SphereGridMenuId.YES_NO_PROMPT];
+
+        // (short)(is_cjk ?  : ),
+
+        init_menu(
+            menu,
+            x:  48,
+            y: 245,
+            width:  80,
+            height: 40,
+            __0x14: 5,
+            __0x20: 15,
+            col_count: 1,
+            row_count: 2,
+            fn__0x34: null,
+            fn__0x38: get_fnptr(0x64F930),
+            fn_help:  null
+        );
+
+        // Fill it in!
+        bool  hira = Globals.save_data->config_hiragana;
+        byte* text_yes = FhXCall.MsMenuGetText.fnptr!(9, 44, hira);
+        byte* text_no  = FhXCall.MsMenuGetText.fnptr!(9, 45, hira);
+
+        menu_add_entries(menu, [
+            ((uint)text_yes, 0, 44),
+            ((uint)text_no , 0, 45),
+        ]);
+    }
+
+    public void h_open_sphere_grid(){
+        is_open = false;
+        is_cjk  = FhGlobal.lang_id switch {
+            FhLangId.Japanese or
+            FhLangId.Korean   or
+            FhLangId.Chinese  or
+            FhLangId.Debug    => true,
+
+            _ => false,
+        };
+
+        FhXCall.InitLpamng.fnptr!(); // Sets the current_ply_id field!!
+        FhXCall.FUN_00a57620.fnptr!();
+
+        //TODO: Reimplement this when adding a custom sphere grid registry.
+        FhXCall.LoadAbmap.fnptr!();
+        FhXCall.FUN_00901100.fnptr!();
+
+        lpamng->available_indicators = 0;
+        for (int ply_id = 0; ply_id < 7; ply_id++) {
+            if (!Globals.save_data->ply_saves[ply_id].joined) continue;
+
+            lpamng->available_indicators |= (byte)(1 << ply_id);
+
+            //TODO: Reimplement this when adding a custom character registry.
+            FhXCall.FUN_00a57f80.fnptr!(ply_id, 0, 2f, 0x80404040, 0x80404040, 0x80808080);
+        }
+
+        //TODO: Reimplement this when adding a custom character registry.
+        FhXCall.LoadSaveAbmap.fnptr!();
+
+        for (int ply_id = 0; ply_id < 7; ply_id++) {
+            SphereGridPlyInfo* ply_info = &lpamng->party_infos[ply_id];
+
+            if (ply_info->pos_circle_radius <= 0f) continue;
+
+            SphereGridNode* current_node = &lpamng->nodes[ply_info->current_node_idx];
+
+            ply_info->pos = new Vector4(
+                current_node->x,
+                current_node->y,
+                0f,
+                1f
+            );
+
+            short width = lpamng->node_type_infos[current_node->node_type.normalize()].width;
+            ply_info->pos_circle_radius  = width / 2f + 3f;
+
+            FhXCall.AbmapPositionPlyTag.fnptr!(ply_id);
+        }
+
+        lpamng->__0x115C7 = 1;
+        lpamng->selected_node_idx = lpamng->party_infos[lpamng->current_ply_id].current_node_idx;
+        int selected_idx = lpamng->selected_node_idx;
+
+        lpamng->__0x112B8 = new Vector4(
+            lpamng->nodes[selected_idx].x,
+            lpamng->nodes[selected_idx].y,
+            0f,
+            1f
+        );
+
+        short selected_node_width = lpamng->node_type_infos[lpamng->nodes[selected_idx].node_type.normalize()].width;
+
+        lpamng->__0x11306 = 0;
+        lpamng->__0x112D8 = 0x80808080;
+        lpamng->__0x112DC = 0x80808080;
+        lpamng->current_halo_width = selected_node_width / 2f + 3f;
+        lpamng->__0x112E0 = 0x80FFFFFF;
+        lpamng->__0x112F8 = 2f;
+
+        lpamng->cam_desired_pos = lpamng->__0x112B8;
+
+        lpamng->link_points = FhUtil.ptr_at<LpAbilityMapEngine.SphereGridLinkPointArray>(0x1293160);
+        FhXCall.AbmapCalcLinkPoints.fnptr!();
+
+        FhXCall.FUN_00a57120.fnptr!();
+
+        //TODO: Reimplement this when adding a custom character registry.
+        FhXCall.FUN_00a5b030.fnptr!();
+
+        FhXCall.pppInitEnv.fnptr!(
+            FhUtil.ptr_at<int>(0x1686034),
+            FhUtil.ptr_at<int>(0x1F05800),
+            FhUtil.ptr_at<int>(0x12C1830),
+            0x7D000
+        );
+
+        // Initialize our menus!
+        init_menu_0();
+        init_menu_action_prompt();
+        init_menu_use_item();
+        init_menu_preview_prompt();
+        init_menu_preview_stats();
+        init_menu_preview_skills();
+        init_menu_preview_special();
+        init_menu_preview_white_magic();
+        init_menu_preview_black_magic();
+        init_menu_move_confirm_prompt();
+        init_menu_quit_confirm_prompt();
+        init_menu_yes_no_prompt();
+
+        FhXCall.FUN_00639140.fnptr!(lpamng->__0x116A4);
+        FhXCall.FUN_0063dff0.fnptr!();
+
+        FhXCall.graphicSetFlipVsnc.fnptr!(2);
+
+        void* alloc1 = NativeMemory.Alloc(0x200);
+        new Span<byte>(alloc1, 0x200).Fill(0xCD);
+        FhUtil.set_at<nint>(0x16860EC, (nint)alloc1);
+
+        void* alloc2 = NativeMemory.Alloc(0x200);
+        new Span<byte>(alloc2, 0x200).Fill(0xCD);
+        FhUtil.set_at<nint>(0x16860F0, (nint)alloc2);
     }
 }

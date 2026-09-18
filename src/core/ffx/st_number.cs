@@ -11,7 +11,7 @@ namespace Fahrenheit.FFX;
 [StructLayout(LayoutKind.Sequential)]
 public struct StNumber {
     /// <summary>
-    ///     Can either be a valid <see cref="Ids.PlySaveId"> or submenu ID.
+    ///     Can either be a valid <see cref="Ids.PlySaveId"/> or submenu ID.
     /// </summary>
     public byte   category;
     public byte   type;

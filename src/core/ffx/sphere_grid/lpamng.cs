@@ -68,6 +68,11 @@ public unsafe struct LpAbilityMapEngine {
         private SphereGridLink _data;
     }
 
+    [InlineArray(4096)]
+    public struct SphereGridLinkPointArray {
+        private SphereGridLinkPoint _data;
+    }
+
     [InlineArray(8)]
     public struct SphereGridClusterSizesArray {
         private Vec2s16 _data;
@@ -100,7 +105,7 @@ public unsafe struct LpAbilityMapEngine {
     [FieldOffset(0x112DC)] public uint      __0x112DC;
     [FieldOffset(0x112E0)] public uint      __0x112E0;
     [FieldOffset(0x112F4)] public float     current_halo_width;
-    [FieldOffset(0x112F8)] public uint      __0x112F8;
+    [FieldOffset(0x112F8)] public float     __0x112F8;
     [FieldOffset(0x112FC)] public short     selected_node_idx;
     [FieldOffset(0x11306)] public byte      __0x11306;
     [FieldOffset(0x11308)] public Vector4   cam_desired_pos;
@@ -185,7 +190,7 @@ public unsafe struct LpAbilityMapEngine {
 
     [FieldOffset(0x11666)] public ushort __0x11666;
 
-    [FieldOffset(0x11668)] public SphereGridLinkPoint* link_points;
+    [FieldOffset(0x11668)] public SphereGridLinkPointArray* link_points;
 
     [FieldOffset(0x1166C)] public InlineArray4<ushort> abmap_input;
 

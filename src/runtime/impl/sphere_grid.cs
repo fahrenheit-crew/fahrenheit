@@ -17,6 +17,7 @@ namespace Fahrenheit.Runtime.Impl;
 public unsafe class SphereGridModule : FhModule {
     public override bool init(FhModContext mod_context, FileStream global_state_file) {
         return FhXCall.AbmapState_ChoosingMoveTarget.hook(this, h_state_choosing_move_target)
+            && FhXCall.AbmapState_ChoosingActivationTarget.hook(this, h_state_choosing_activation_target)
             && FhXCall.AbmapState_Warping.hook(this, h_state_warping)
             && FhXCall.AbmapCalcMoveCosts.hook(this, h_calc_move_costs)
             && FhXCall.AbmapCalcMoveCost.hook(this, h_calc_move_cost)
@@ -33,6 +34,16 @@ public unsafe class SphereGridModule : FhModule {
             link->flags &= props;
         }
     }
+
+    public void limit_all_node_flags(SphereGridNodeProperties props) {
+        for (int node_idx = 0; node_idx < lpamng->node_count; node_idx++) {
+            SphereGridNode* node = &lpamng->nodes[node_idx];
+            if (node->node_type == NodeType.NULL) continue;
+
+            node->properties &= props;
+        }
+    }
+
 
     public int h_calc_move_cost(short target_node, int running_total_cost) {
         int target_cost   = running_total_cost + *move_prev_link_cost;
@@ -269,6 +280,71 @@ public unsafe class SphereGridModule : FhModule {
                 }
 
                 break;
+        }
+    }
+
+    public void h_state_choosing_activation_target() {
+        FhXCall.FUN_00a58ff0.fnptr!(get_fnptr(0x645000));
+
+        if (lpamng->__0x115CD != 0
+            || lpamng->fn_ctrl_backup != null
+            || menu_list->menus[8].fn__0x34 != null
+        ) {
+            return;
+        }
+
+        if (lpamng->abmap_input[1].get_bit(5)) {
+            SphereGridMenu* use_menu = &menu_list->menus[(int)SphereGridMenuId.USE_ITEM];
+
+            use_menu->is_visible = false;
+            FhXCall.FUN_00a59680.fnptr!(8);
+            FhXCall.AbmapResetToIdle.fnptr!();
+
+            FhXCall.AbmapTryUseItem.fnptr!(
+                lpamng->current_ply_id,
+                lpamng->selected_node_idx,
+                use_menu->entries[use_menu->selected_idx].data & 0xFFFF
+            );
+
+            use_menu->entry_count = 0;
+
+            FhXCall.FUN_00a45fd0.fnptr!(8, 3);
+
+            use_menu->selected_idx = short.Clamp(
+                use_menu->selected_idx,
+                0,
+                (short)(use_menu->entry_count - 1)
+            );
+
+            use_menu->scrolled_amount = short.Clamp(
+                use_menu->scrolled_amount,
+                0,
+                (short)(use_menu->entry_count - use_menu->row_count)
+            );
+
+            for (int node_idx = 0; node_idx < lpamng->node_count; node_idx++) {
+                SphereGridNode* node = &lpamng->nodes[node_idx];
+                if (node->node_type == NodeType.NULL) continue;
+
+                node->properties = SphereGridNodeProperties.NONE;
+            }
+
+            return;
+        }
+
+        if (lpamng->abmap_input[1].get_bit(6)) {
+            FhXCall.FUN_00a598a0.fnptr!();
+            FhXCall.FUN_00a596d0.fnptr!(8);
+
+            for (int node_idx = 0; node_idx < lpamng->node_count; node_idx++) {
+                SphereGridNode* node = &lpamng->nodes[node_idx];
+                if (node->node_type == NodeType.NULL) continue;
+
+                node->properties = SphereGridNodeProperties.NONE;
+            }
+
+            FhCall.SndSepPlaySimple.fnptr!(0x80000004);
+            return;
         }
     }
 }

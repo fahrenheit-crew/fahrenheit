@@ -1,0 +1,39 @@
+﻿<!-- fkelava 18/09/26 18:09
+This project's sole purpose is to to fetch the .NET hosting headers and libraries
+from your system-wide .NET SDK install using the SDK's MSBuild properties.
+
+Do not modify or unload it. See `src/stage1/inc/nethost/README.md`.
+-->
+
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <RuntimeIdentifier>win-x86</RuntimeIdentifier>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <IsPublishable>false</IsPublishable>
+        <IncludeBuildOutput>false</IncludeBuildOutput>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <None Remove="**/*" />
+    </ItemGroup>
+
+    <Target Name="__FhCopyNethost" Condition="$([MSBuild]::IsOsPlatform('Windows'))" BeforeTargets="Build">
+        <PropertyGroup>
+            <NetHostDir>$(NetCoreTargetingPackRoot)/Microsoft.NETCore.App.Host.$(RuntimeIdentifier)/$(BundledNETCoreAppPackageVersion)/runtimes/$(RuntimeIdentifier)/native</NetHostDir>
+            <NetHostInc>$(NetHostDir)/nethost.h;$(NetHostDir)/coreclr_delegates.h;$(NetHostDir)/hostfxr.h</NetHostInc>
+            <NetHostLib>$(NetHostDir)/nethost.lib</NetHostLib>
+            <NetHostDll>$(NetHostDir)/nethost.dll</NetHostDll>
+
+            <DestDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', 'inc', 'nethost'))</DestDir>
+        </PropertyGroup>
+
+        <MakeDir Directories="$(DestDir)" />
+
+        <Copy SourceFiles="$(NetHostInc)" DestinationFolder="$(DestDir)" />
+        <Copy SourceFiles="$(NetHostLib)" DestinationFolder="$(DestDir)" />
+        <Copy SourceFiles="$(NetHostDll)" DestinationFolder="$(_FhOutDirBin)" />
+    </Target>
+</Project>

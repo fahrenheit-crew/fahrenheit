@@ -7,10 +7,18 @@
 
 #define WIN32_LEAN_AND_MEAN // Exclude rarely-used stuff from Windows headers
 
-// Windows Header Files
+// Win32
 #include <windows.h>
-#include <iostream>
+#include <strsafe.h>
+#include <PathCch.h>
+#include <DbgHelp.h>
 #include <conio.h>
 
 // IAT patching
 #include <detours/detours.h>
+
+#ifdef _DEBUG
+#define MINHOOK_DLL "minhook.x32d.dll"
+#else
+#define MINHOOK_DLL "minhook.x32.dll"
+#endif

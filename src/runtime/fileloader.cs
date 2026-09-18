@@ -37,10 +37,10 @@ using EflIndex = Dictionary<string, string>;
 [SupportedOSPlatform("windows6.1")]
 public unsafe sealed class FhFileLoaderModule : FhModule {
 
-    private static ReadOnlySpan<byte> _stream_prefix      => "/"u8;
+    private static ReadOnlySpan<byte> _stream_prefix      => "/\0"u8;
     private static ReadOnlySpan<byte> _vbf_secondary_path => FhGlobal.game_id is FhGameId.FFX 
-        ? @"data\FFX2_Data.vbf"u8
-        : @"data\FFX_Data.vbf"u8;
+        ? "data\\FFX2_Data.vbf\0"u8
+        : "data\\FFX_Data.vbf\0"u8;
 
     /* [fkelava 21/08/26 02:12]
      * BigFileStream and BigFileHandle (and PStreamFile) will store pointers

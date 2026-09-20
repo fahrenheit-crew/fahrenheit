@@ -35890,13 +35890,6 @@ public static unsafe partial class FhCall {
     public static FhMethodHandle<d_MsEquipSaveWeapon> MsEquipSaveWeapon => new( new FhMethodLocation("FFX.exe", 0x3AB990) );
 
     // Original after pruning:
-    // unknown undefined FUN_007aba10() at 007aba10
-
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public unsafe delegate void d_FUN_007aba10();
-    public static FhMethodHandle<d_FUN_007aba10> FUN_007aba10 => new( new FhMethodLocation("FFX.exe", 0x3ABA10) );
-
-    // Original after pruning:
     // unknown undefined FUN_007abb90() at 007abb90
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]

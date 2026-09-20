@@ -1106,7 +1106,7 @@ public static partial class FhCall {
         => new( new FhMethodLocation("FFX.exe", 0x3A0160) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public unsafe delegate void d_MsWeaponName(ushort name_id, byte owner, [MarshalAs(UnmanagedType.Bool)] bool simplified, ushort* out_model_id);
+    public unsafe delegate void* d_MsWeaponName(ushort name_id, byte owner, [MarshalAs(UnmanagedType.Bool)] bool simplified, ushort* out_model_id);
     public static FhMethodHandle<d_MsWeaponName> MsWeaponName
         => new( new FhMethodLocation("FFX.exe", 0x3A0C70) );
 

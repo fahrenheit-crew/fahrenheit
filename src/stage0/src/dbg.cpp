@@ -65,10 +65,10 @@ public:
 
     // https://learn.microsoft.com/en-us/windows/win32/api/unknwn/nf-unknwn-iunknown-queryinterface(refiid_void)
     HRESULT __stdcall QueryInterface(REFIID riid, LPVOID* ppvObj) override {
-        if (ppvObj == NULL)
-            return E_INVALIDARG;
+        if (ppvObj == nullptr)
+            return E_POINTER;
 
-        *ppvObj = NULL;
+        *ppvObj = nullptr;
         if (riid != IID_IUnknown && riid != IID_ICLRDebuggingLibraryProvider)
             return E_NOINTERFACE;
 
@@ -142,10 +142,10 @@ public:
 
     // https://learn.microsoft.com/en-us/windows/win32/api/unknwn/nf-unknwn-iunknown-queryinterface(refiid_void)
     HRESULT __stdcall QueryInterface(REFIID riid, LPVOID* ppvObj) override {
-        if (ppvObj == NULL)
-            return E_INVALIDARG;
+        if (ppvObj == nullptr)
+            return E_POINTER;
 
-        *ppvObj = NULL;
+        *ppvObj = nullptr;
         if (riid != IID_IUnknown && riid != IID_ICorDebugDataTarget)
             return E_NOINTERFACE;
 
@@ -267,15 +267,15 @@ static HRESULT s0_dbg_stack_walk_managed(
     HANDLE h_process, // A handle to the process the fault occurred in.
     DWORD  id_thread  // The ID of the faulting thread in the process that encountered an exception.
 ) {
-    ICLRDebugging*      ptr_ICLRDebugging      = NULL;
-    ICorDebugProcess*   ptr_ICorDebugProcess   = NULL;
-    ICorDebugThread*    ptr_ICorDebugThread    = NULL;
-    ICorDebugThread3*   ptr_ICorDebugThread3   = NULL;
-    ICorDebugStackWalk* ptr_ICorDebugStackWalk = NULL;
-    ICorDebugFrame*     ptr_ICorDebugFrame     = NULL;
-    ICorDebugFunction*  ptr_ICorDebugFunction  = NULL;
-    ICorDebugModule*    ptr_ICorDebugModule    = NULL;
-    IMetaDataImport*    ptr_IMetaDataImport    = NULL;
+    ICLRDebugging*      ptr_ICLRDebugging      = nullptr;
+    ICorDebugProcess*   ptr_ICorDebugProcess   = nullptr;
+    ICorDebugThread*    ptr_ICorDebugThread    = nullptr;
+    ICorDebugThread3*   ptr_ICorDebugThread3   = nullptr;
+    ICorDebugStackWalk* ptr_ICorDebugStackWalk = nullptr;
+    ICorDebugFrame*     ptr_ICorDebugFrame     = nullptr;
+    ICorDebugFunction*  ptr_ICorDebugFunction  = nullptr;
+    ICorDebugModule*    ptr_ICorDebugModule    = nullptr;
+    IMetaDataImport*    ptr_IMetaDataImport    = nullptr;
 
     HRESULT hr = CLRCreateInstance(CLSID_CLRDebugging, IID_ICLRDebugging, (LPVOID*) &ptr_ICLRDebugging);
     if (hr != S_OK) {
@@ -378,7 +378,7 @@ static HRESULT s0_dbg_stack_walk_managed(
         );
 
         wchar_t* module_file_name = wcsrchr(module_name, L'\\');
-        if (module_file_name == NULL || PathCchRemoveExtension(module_file_name, MAX_PATH) != S_OK) {
+        if (module_file_name == nullptr || PathCchRemoveExtension(module_file_name, MAX_PATH) != S_OK) {
             fwprintf_s(stderr, L"[!] Failed to get file name from full module path.\n");
             break;
         }
@@ -541,15 +541,15 @@ static S0_FRAME_TYPE s0_dbg_process_frame(
          */
         if (!SymFindFileInPathW(
             h_process,
-            NULL,
+            nullptr,
             symsrv_info.pdbfile,
             id,
             symsrv_info.age,
             0,
             flags,
             pdb_path,
-            NULL,
-            NULL
+            nullptr,
+            nullptr
         )) {
             fwprintf_s(stderr, L"SymFindFileInPathW() failed with code 0x%X for module %s.\n", GetLastError(), module.ImageName);
         }
@@ -754,7 +754,7 @@ static void s0_dbg_create_dump(
         FILE_ATTRIBUTE_NORMAL,
         nullptr);
 
-    if (dump_handle == NULL || dump_handle == INVALID_HANDLE_VALUE) {
+    if (dump_handle == nullptr || dump_handle == INVALID_HANDLE_VALUE) {
         fwprintf_s(stderr, L"Failed to open a file to write the core dump to.\n");
         return;
     }
@@ -804,8 +804,8 @@ static void s0_dbg_create_dump(
         dump_handle,
         dump_type,
         &info_dump_exception,
-        NULL,
-        NULL
+        nullptr,
+        nullptr
     )) {
         fwprintf_s(stderr, L"Failed to dump core.\n");
     }
@@ -955,7 +955,7 @@ static BOOL s0_dbg_process_module(
      * A bit of a hack. To engage CLR debugging later, we need to track
      * a few .NET DLLs, starting from `coreclr.dll`.
      */
-    if (wcsstr(module_path, L"coreclr.dll") != NULL) {
+    if (wcsstr(module_path, L"coreclr.dll") != nullptr) {
         if (!s0_dbg_clr_init(ptr_module_base, module_path)) {
             fwprintf_s(stderr, L"Failed to prepare for CLR debugging.\n");
             return FALSE;
@@ -974,10 +974,10 @@ static BOOL s0_dbg_process_module(
         h_process,
         h_module_file,
         module_path,
-        NULL,
+        nullptr,
         (DWORD64) ptr_module_base,
         module_size,
-        NULL,
+        nullptr,
         0
     );
 

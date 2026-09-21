@@ -47,7 +47,7 @@ static HRESULT s0_main_process_args(
         return hr;
     }
 
-    DWORD rc = GetFullPathNameW(target_rel_or_abs, MAX_PATH, target, NULL);
+    DWORD rc = GetFullPathNameW(target_rel_or_abs, MAX_PATH, target, nullptr);
     if (rc == 0) {
         fwprintf_s(stderr, L"[!] GetFullPathNameW() failed with code 0x%X.\n", GetLastError());
         return E_FAIL;
@@ -152,7 +152,7 @@ static BOOL s0_main_init() {
     wchar_t path_dir_base[MAX_PATH] = { 0 };
 
     DWORD path_base_size = GetModuleFileNameW(
-        NULL,
+        nullptr,
         path_dir_base,
         sizeof(path_dir_base) / sizeof(wchar_t)
     );
@@ -181,8 +181,8 @@ static BOOL s0_main_init() {
         return FALSE;
     }
 
-    if ((!CreateDirectoryW(g_path_dir_cache, NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
-        (!CreateDirectoryW(g_path_dir_crash, NULL) && GetLastError() != ERROR_ALREADY_EXISTS)
+    if ((!CreateDirectoryW(g_path_dir_cache, nullptr) && GetLastError() != ERROR_ALREADY_EXISTS) ||
+        (!CreateDirectoryW(g_path_dir_crash, nullptr) && GetLastError() != ERROR_ALREADY_EXISTS)
     ) {
         fwprintf_s(stderr, L"[!] CreateDirectoryW() failed with code 0x%X.\n", GetLastError());
         return FALSE;
@@ -250,7 +250,7 @@ int __cdecl wmain(
     if (hr != S_OK)
         return hr;
 
-    bool  external_debug = wcsstr(args_self, L"--debug") != NULL;
+    bool  external_debug = wcsstr(args_self, L"--debug") != nullptr;
     DWORD creation_flags = external_debug
         ? CREATE_SUSPENDED
         : DEBUG_ONLY_THIS_PROCESS; // A debugged process is implicitly suspended until debug events are handled/pumped.
@@ -264,11 +264,11 @@ int __cdecl wmain(
     if (!CreateProcessW(
         target,
         args_target,
-        NULL,
-        NULL,
+        nullptr,
+        nullptr,
         FALSE,
         creation_flags,
-        NULL,
+        nullptr,
         dir_target,
         &si,
         &pi

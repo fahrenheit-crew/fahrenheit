@@ -26,30 +26,43 @@ public static partial class FhEnumExt {
     }
 }
 
-[StructLayout(LayoutKind.Explicit, Pack = 1, Size = 0x28)]
+[StructLayout(LayoutKind.Sequential, Pack = 4, Size = 0x28)]
 public unsafe struct SphereGridNode {
     [InlineArray(5)]
     public struct LinkPtrArray {
         private uint _ptr;
     }
 
-    [FieldOffset(0x0)]  public  short                    x;
-    [FieldOffset(0x2)]  public  short                    y;
-    [FieldOffset(0x6)]  private short                    _node_type;
-    [FieldOffset(0xC)]  public  LinkPtrArray             link_ptrs;
-    [FieldOffset(0x21)] public  byte                     activated_by;
-    [FieldOffset(0x22)] public  SphereGridNodeProperties properties;
-    [FieldOffset(0x24)] public  short                    move_cost; // Only nonzero when moving
+    public short x;
+    public short y;
 
-    [FieldOffset(0x26)] public  ushort                   __0x26;
+    private short __0x4;
+
+    private short _node_type;
+
+    private short __0x8;
+    private short __0xA;
+
+    public LinkPtrArray link_ptrs;
+
+    private byte __0x20;
+
+    public byte activated_by;
+
+    public SphereGridNodeProperties flags;
+
+    public short move_cost; // Only nonzero when moving
+
+    public ushort __0x26;
 
     public NodeType node_type {
         get => _node_type == -1 ? NodeType.NULL : (NodeType)_node_type;
         set => _node_type = (short)value;
     }
+
     public SphereGridNodeTypeUiInfo type_info => Globals.SphereGrid.lpamng->node_type_infos[node_type.normalize()];
 
-    public Vector2 pos => new(x, y);
+    public Vector2 pos  => new(x, y);
     public Vector2 size => type_info.size;
 
     public SphereGridLink* get_link(int idx) {
@@ -74,7 +87,11 @@ public unsafe struct SphereGridNode {
     /// <returns>A HashSet of the neighbouring nodes.</returns>
     public HashSet<short> get_neighbour_indices(short? self_idx) {
         if (self_idx is null && Globals.SphereGrid.lpamng->get_node_idx(this, out short? node_idx)) {
-            self_idx ??= node_idx;
+            self_idx = node_idx;
+        }
+
+        if (self_idx is null) {
+            throw new ArgumentException("`get_neighbour_indices()` was called with `null` and the node index was not found in lpamng.");
         }
 
         HashSet<short> set = [];

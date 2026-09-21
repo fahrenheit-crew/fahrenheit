@@ -5,19 +5,26 @@
 
 namespace Fahrenheit.FFX.SphereGrid;
 
-[StructLayout(LayoutKind.Explicit, Pack = 1, Size = 0x30)]
+[StructLayout(LayoutKind.Sequential, Pack = 1, Size = 0x30)]
 public unsafe struct SphereGridNodeTypeUiInfo {
     [InlineArray(7)]
-    public struct Vec2s16Array {
+    public struct OffsetList {
         private Vec2s16 _data;
     }
 
-    [FieldOffset(0x0C)] public short        width;
-    [FieldOffset(0x0E)] public short        height;
+    // Animations
+    public void* sphe_shp;
+    public void* sphe_us_shp;
+    public void* idou;
 
-    [FieldOffset(0x10)] public float        __0x10;
-    [FieldOffset(0x14)] public Vec2s16Array pos; // activation indicator offset per character
-    public Vector2 size => new Vector2(width, height) * new Vector2(Globals.SphereGrid.lpamng->current_zoom);
+    public short width;
+    public short height;
+
+    public float __0x10;
+
+    public OffsetList indicator_offsets;
+
+    public Vector2 size => new(width, height);
 }
 
 public enum NodeType : byte {
@@ -173,42 +180,36 @@ public enum NodeType : byte {
 
 public static partial class FhEnumExt {
     extension(NodeType node_type) {
-        public bool is_lock_node() {
-            return node_type is NodeType.LOCK_1
-                             or NodeType.LOCK_2
-                             or NodeType.LOCK_3
-                             or NodeType.LOCK_4;
-        }
+        public bool is_lock_node => node_type
+            is NodeType.LOCK_1
+            or NodeType.LOCK_2
+            or NodeType.LOCK_3
+            or NodeType.LOCK_4;
 
-        public bool is_attribute_node() {
-            return node_type is >= NodeType.STRENGTH_1 and <= NodeType.MP_10;
-        }
+        public bool is_attribute_node => node_type
+            is  >= NodeType.STRENGTH_1
+            and <= NodeType.MP_10;
 
-        public bool is_skill_node() {
-            return node_type is >= NodeType.DELAY_ATTACK and <= NodeType.QUICK_HIT
-                             or >= NodeType.FULL_BREAK   and <= NodeType.NAB_GIL;
-        }
+        public bool is_skill_node => node_type
+            is >= NodeType.DELAY_ATTACK and <= NodeType.QUICK_HIT
+            or >= NodeType.FULL_BREAK   and <= NodeType.NAB_GIL;
 
-        public bool is_special_node() {
-            return node_type is >= NodeType.STEAL and <= NodeType.BRIBE
-                             or NodeType.PILFER_GIL
-                             or NodeType.QUICK_POCKETS;
-        }
+        public bool is_special_node => node_type
+            is >= NodeType.STEAL and <= NodeType.BRIBE
+            or    NodeType.PILFER_GIL
+            or    NodeType.QUICK_POCKETS;
 
-        public bool is_white_magic() {
-            return node_type is >= NodeType.CURE and <= NodeType.AUTO_LIFE;
-        }
+        public bool is_white_magic => node_type
+            is >= NodeType.CURE and <= NodeType.AUTO_LIFE;
 
-        public bool is_black_magic() {
-            return node_type is >= NodeType.BLIZZARD and <= NodeType.ULTIMA;
-        }
+        public bool is_black_magic => node_type
+            is >= NodeType.BLIZZARD and <= NodeType.ULTIMA;
 
-        public bool is_ability_node() {
-            return node_type.is_skill_node()
-                || node_type.is_special_node()
-                || node_type.is_white_magic()
-                || node_type.is_black_magic();
-        }
+        public bool is_ability_node =>
+            node_type.is_skill_node
+            || node_type.is_special_node
+            || node_type.is_white_magic
+            || node_type.is_black_magic;
 
         public int normalize() {
             if (node_type == NodeType.NULL) return -1;

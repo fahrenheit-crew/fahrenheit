@@ -7,11 +7,11 @@ namespace Fahrenheit.FFX.SphereGrid;
 
 [Flags]
 public enum SphereGridLinkProperties : byte {
-    NONE           = 0,
-    CAN_MOVE_THROUGH         = 1 << 0,
-    CONNECTED      = 1 << 1,
-    FLAG_2         = 1 << 2,
-    JUST_ACTIVATED = 1 << 3,
+    NONE             = 0,
+    CAN_MOVE_THROUGH = 1 << 0,
+    CONNECTED        = 1 << 1,
+    FLAG_2           = 1 << 2,
+    JUST_ACTIVATED   = 1 << 3,
 }
 
 public static partial class FhEnumExt {
@@ -40,34 +40,28 @@ public static partial class FhEnumExt {
 
 [StructLayout(LayoutKind.Sequential)]
 public struct SphereGridLinkPoint {
-    public float x;
-    public float y;
-    public float offset_x1;
-    public float offset_y2;
-    public float offset_x2;
-    public float offset_y1;
-
-    //TODO: Document why this uses `Unsafe`.
-    public Vector2 pos {
-        get => Unsafe.As<float, Vector2>(ref x);
-        set => Unsafe.As<float, Vector2>(ref x) = value;
-    }
-    public Vector2 offset_1 => new(offset_x1, offset_y1);
-    public Vector2 offset_2 => new(offset_x2, offset_y2);
+    public Vector2 pos;
+    public Vector2 offset_1;
+    public Vector2 offset_2;
 }
 
-[StructLayout(LayoutKind.Explicit, Pack = 1, Size = 0x14)]
+[StructLayout(LayoutKind.Sequential, Pack = 4, Size = 0x14)]
 public unsafe struct SphereGridLink {
-    [FieldOffset(0x0)]  public short node_a_idx;
-    [FieldOffset(0x2)]  public short node_b_idx;
-    [FieldOffset(0x4)]  public short anchor_idx;
+    public short node_a_idx;
+    public short node_b_idx;
+    public short anchor_idx;
 
-    [FieldOffset(0xC)]  public byte  activated_by;
-    [FieldOffset(0xD)]  public byte  point_count;
+    private short __0x6;
 
-    [FieldOffset(0xE)]  public SphereGridLinkProperties flags;
+    public short __0x8;
+    public short __0xA;
 
-    [FieldOffset(0x10)] public SphereGridLinkPoint* points;
+    public byte activated_by;
+    public byte point_count;
+
+    public SphereGridLinkProperties flags;
+
+    public SphereGridLinkPoint* points;
 
     public readonly SphereGridNode node_a => Globals.SphereGrid.lpamng->nodes[node_a_idx];
     public readonly SphereGridNode node_b => Globals.SphereGrid.lpamng->nodes[node_b_idx];

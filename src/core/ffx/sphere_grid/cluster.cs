@@ -17,11 +17,12 @@ public static class SphereGridClusterType {
     public const short BIG_ALT    = BIG    + 4;
 }
 
-[StructLayout(LayoutKind.Explicit, Pack = 1, Size = 0x10)]
+[StructLayout(LayoutKind.Sequential, Pack = 1, Size = 0x10)]
 public unsafe struct SphereGridCluster {
-    [FieldOffset(0x0)] public short x;
-    [FieldOffset(0x2)] public short y;
-    [FieldOffset(0x6)] public short type;
+    public  short x;
+    public  short y;
+    private short __0x4;
+    public  short type;
 
     public Vector2 pos {
         get => new(x, y);

@@ -41,7 +41,7 @@ public unsafe class SphereGridModule : FhModule {
             SphereGridNode* node = &lpamng->nodes[node_idx];
             if (node->node_type == NodeType.NULL) continue;
 
-            node->properties &= props;
+            node->flags &= props;
         }
     }
 
@@ -128,9 +128,9 @@ public unsafe class SphereGridModule : FhModule {
               | SphereGridNodeProperties.HIGHLIGHTED;
 
             if (can_target)
-                node->properties |=  MASK;
+                node->flags |=  MASK;
             else
-                node->properties &= ~MASK;
+                node->flags &= ~MASK;
         }
 
         lpamng->__0x116A0 = 0;
@@ -327,7 +327,7 @@ public unsafe class SphereGridModule : FhModule {
                 SphereGridNode* node = &lpamng->nodes[node_idx];
                 if (node->node_type == NodeType.NULL) continue;
 
-                node->properties = SphereGridNodeProperties.NONE;
+                node->flags = SphereGridNodeProperties.NONE;
             }
 
             return;
@@ -341,7 +341,7 @@ public unsafe class SphereGridModule : FhModule {
                 SphereGridNode* node = &lpamng->nodes[node_idx];
                 if (node->node_type == NodeType.NULL) continue;
 
-                node->properties = SphereGridNodeProperties.NONE;
+                node->flags = SphereGridNodeProperties.NONE;
             }
 
             FhCall.SndSepPlaySimple.fnptr!(0x80000004);
@@ -516,6 +516,7 @@ public unsafe class SphereGridModule : FhModule {
             fn_help:  null
         );
 
+        // Fill it in!
         bool  hira = Globals.save_data->config_hiragana;
         byte* text_hp  = FhXCall.MsMenuGetText.fnptr!(11, 0, hira);
         byte* text_mp  = FhXCall.MsMenuGetText.fnptr!(11, 1, hira);
@@ -560,6 +561,7 @@ public unsafe class SphereGridModule : FhModule {
             fn_help:  null
         );
 
+        // Fill it in!
         FhXCall.FUN_00a459e0.fnptr!(3, 64);
     }
 
@@ -688,8 +690,6 @@ public unsafe class SphereGridModule : FhModule {
     public void init_menu_yes_no_prompt() {
         SphereGridMenu* menu = &menu_list->menus[(int)SphereGridMenuId.YES_NO_PROMPT];
 
-        // (short)(is_cjk ?  : ),
-
         init_menu(
             menu,
             x:  48,
@@ -716,7 +716,7 @@ public unsafe class SphereGridModule : FhModule {
         ]);
     }
 
-    public void h_open_sphere_grid(){
+    public void h_open_sphere_grid() {
         is_open = false;
         is_cjk  = FhGlobal.lang_id switch {
             FhLangId.Japanese or

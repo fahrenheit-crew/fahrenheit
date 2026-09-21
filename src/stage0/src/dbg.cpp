@@ -265,7 +265,7 @@ static BOOL stage0_dbg_clr_init(
     return TRUE;
 }
 
-static HRESULT stage0_dbg_clr_symbolicate(
+static HRESULT stage0_dbg_stack_walk_clr(
     HANDLE h_process, // A handle to the process the fault occurred in.
     DWORD  id_thread  // The ID of the faulting thread in the process that encountered an exception.
 ) {
@@ -441,7 +441,7 @@ static HRESULT stage0_dbg_clr_symbolicate(
 }
 
 // Attempts to obtain and display a symbol for a given stack frame.
-static void stage0_dbg_symbolicate(
+static void stage0_dbg_symbol_native(
     HANDLE       h_process,  // A handle to the process the stack frame belongs to.
     STACKFRAME64 stack_frame // The stack frame to symbolicate.
 ) {
@@ -470,7 +470,6 @@ static void stage0_dbg_symbolicate(
      * https://learn.microsoft.com/en-us/windows/win32/api/dbghelp/ns-dbghelp-symsrv_index_info
      * Older PDBs have a DWORD signature. Newer ones have a GUID. We must be prepared for either case.
      */
-
     GUID guid_0  = { 0 };
     bool use_sig = (memcmp(&symsrv_info.guid, &guid_0, sizeof(guid_0)) == 0);
 
@@ -490,7 +489,6 @@ static void stage0_dbg_symbolicate(
      * This function will trigger download of symbols from the MS server if possible.
      * The symbols are stored in the 'cache' directory for reuse.
      */
-
     if (!SymFindFileInPathW(
         h_process,
         NULL,
@@ -511,7 +509,6 @@ static void stage0_dbg_symbolicate(
      * It is a SYMBOL_INFOW whose symbol name buffer is of size MAX_SYM_NAME, for ease of use.
      * https://learn.microsoft.com/en-us/windows/win32/api/dbghelp/ns-dbghelp-symbol_infow
      */
-
     SYMBOL_INFO_PACKAGEW sym = { 0 };
     sym.si.SizeOfStruct = sizeof(SYMBOL_INFOW);
     sym.si.MaxNameLen   = MAX_SYM_NAME;
@@ -567,7 +564,7 @@ static void stage0_dbg_print_context(
 
 // Walks the faulting thread's stack, displaying a stack trace.
 // If available, symbols are automatically obtained and utilized.
-static void stage0_dbg_stack_walk(
+static void stage0_dbg_stack_walk_native(
     HANDLE   h_process,  // A handle to the process the fault occurred in.
     HANDLE   h_thread,   // A handle to the faulting thread.
     CONTEXT* ptr_context // A pointer to the faulting thread's context.
@@ -601,26 +598,10 @@ static void stage0_dbg_stack_walk(
         if (stack_frame.AddrPC.Offset == 0)
             break;
 
-        stage0_dbg_symbolicate(h_process, stack_frame);
+        stage0_dbg_symbol_native(h_process, stack_frame);
     }
 
     fwprintf_s(stdout, L"\n");
-}
-
-// Filters objects from a core dump being created.
-static BOOL CALLBACK stage0_dbg_filter_dump(
-          PVOID                     ptr_callback_param, // Always null. We pass no argument to this callback.
-    const PMINIDUMP_CALLBACK_INPUT  ptr_callback_input, // A pointer to a structure containing supplementary information for the callback.
-          PMINIDUMP_CALLBACK_OUTPUT ptr_callback_output // A pointer to a structure containing extended return information from the callback.
-) {
-    if (!ptr_callback_input || !ptr_callback_output) return FALSE;
-
-    switch (ptr_callback_input->CallbackType) {
-        case CancelCallback:
-            return FALSE;
-    }
-
-    return TRUE;
 }
 
 // Writes a core dump to disk.
@@ -680,7 +661,7 @@ static void stage0_dbg_create_dump(
 
     /* [fkelava 11/06/26 21:24]
      * MiniDumpWriteDump expects, in MINIDUMP_EXCEPTION_INFORMATION, a PEXCEPTION_POINTERS
-     * (a CONTEXT and EXCEPTION_RECORD). But a debugger, in EXCEPTION_DEBUG_INFO, only gets the latter.
+     * (a CONTEXT and EXCEPTION_RECORD). EXCEPTION_DEBUG_INFO only gets the latter.
      *
      * GetThreadContext solves that, but there's a catch. MINIDUMP_EXCEPTION_INFORMATION has a ClientPointers field:
      * > Determines where to get the memory regions pointed to by the ExceptionPointers member.
@@ -698,7 +679,6 @@ static void stage0_dbg_create_dump(
      * - https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-exception_pointers
      * - https://learn.microsoft.com/en-us/windows/win32/api/minidumpapiset/ns-minidumpapiset-minidump_exception_information
      */
-
     EXCEPTION_POINTERS exception_pointers = { 0 };
     exception_pointers.ContextRecord   = ptr_context;
     exception_pointers.ExceptionRecord = ptr_exception_record;
@@ -708,10 +688,6 @@ static void stage0_dbg_create_dump(
     info_dump_exception.ExceptionPointers = &exception_pointers;
     info_dump_exception.ClientPointers    = FALSE;
 
-    MINIDUMP_CALLBACK_INFORMATION info_dump_callback = { 0 };
-    info_dump_callback.CallbackRoutine = (MINIDUMP_CALLBACK_ROUTINE)stage0_dbg_filter_dump;
-    info_dump_callback.CallbackParam   = nullptr;
-
     fwprintf_s(stderr, L"Dumping process core. Please wait.\n");
 
     if (!MiniDumpWriteDump(
@@ -720,8 +696,8 @@ static void stage0_dbg_create_dump(
         dump_handle,
         dump_type,
         &info_dump_exception,
-        nullptr,
-        &info_dump_callback
+        NULL,
+        NULL
     )) {
         fwprintf_s(stderr, L"Failed to dump core.\n");
     }
@@ -782,12 +758,12 @@ static DWORD stage0_dbg_exception(
             &ptr_info_exception->ExceptionRecord
         );
 
-        stage0_dbg_clr_symbolicate(
+        stage0_dbg_stack_walk_clr(
             h_process,
             id_thread
         );
 
-        stage0_dbg_stack_walk(
+        stage0_dbg_stack_walk_native(
             h_process,
             faulting_thread_handle,
             &faulting_thread_context
@@ -930,65 +906,14 @@ static BOOL stage0_dbg_process_module(
     return TRUE;
 }
 
-// Prepares the directories the debugger requires to operate.
-static BOOL stage0_dbg_init() {
-    wchar_t path_dir_base[MAX_PATH] = { 0 };
-
-    DWORD path_base_size = GetModuleFileNameW(
-        NULL,
-        path_dir_base,
-        sizeof(path_dir_base) / sizeof(wchar_t)
-    );
-
-    if (path_base_size == 0) {
-        fwprintf_s(stderr, L"[!] GetModuleFileNameW() failed with code 0x%X.\n", GetLastError());
-        return FALSE;
-    }
-
-    /* [fkelava 15/09/26 14:54]
-     * We have to remove the last path element twice to get from /bin/fhstage0.exe to the base directory.
-     */
-    if (PathCchRemoveFileSpec(path_dir_base, MAX_PATH) != S_OK ||
-        PathCchRemoveFileSpec(path_dir_base, MAX_PATH) != S_OK
-    ) {
-        fwprintf_s(stderr, L"[!] PathCchRemoveFileSpec() failed for path %s.\n", path_dir_base);
-        return FALSE;
-    }
-
-    if (FAILED(StringCchCatW(g_path_dir_cache, MAX_PATH, path_dir_base)) ||
-        FAILED(StringCchCatW(g_path_dir_cache, MAX_PATH, L"\\cache"))    ||
-        FAILED(StringCchCatW(g_path_dir_crash, MAX_PATH, path_dir_base)) ||
-        FAILED(StringCchCatW(g_path_dir_crash, MAX_PATH, L"\\crash"))
-    ) {
-        fwprintf_s(stderr, L"[!] StringCchCatW() failed.\n");
-        return FALSE;
-    }
-
-    if ((!CreateDirectoryW(g_path_dir_cache, NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
-        (!CreateDirectoryW(g_path_dir_crash, NULL) && GetLastError() != ERROR_ALREADY_EXISTS)
-    ) {
-        fwprintf_s(stderr, L"[!] CreateDirectoryW() failed with code 0x%X.\n", GetLastError());
-        return FALSE;
-    }
-
-    return TRUE;
-}
-
 // The main loop of the debugger. Handles incoming debug events.
 void stage0_dbg_loop() {
-    BOOL init_failed = FALSE;
-    if (!stage0_dbg_init()) {
-        fwprintf_s(stderr, L"Failed to create debugger directories. Aborting.\n");
-        init_failed = TRUE;
-    }
-
     /* [fkelava 13/09/26 02:39]
      * See https://learn.microsoft.com/en-us/windows/win32/debug/debugging-events,
      * https://learn.microsoft.com/en-us/windows/win32/debug/writing-the-debugger-s-main-loop.
      *
      * The relevant passages are given in comments.
      */
-
     HANDLE h_process  = { 0 };
     DWORD  error_code = ERROR_SUCCESS;
 
@@ -1004,11 +929,6 @@ void stage0_dbg_loop() {
 
         if (event_code == CREATE_PROCESS_DEBUG_EVENT) {
             h_process = event.u.CreateProcessInfo.hProcess;
-
-            if (init_failed) {
-                TerminateProcess(h_process, 1);
-                return;
-            }
 
             wchar_t sym_search_path[1024] = { 0 };
             swprintf_s(
@@ -1062,7 +982,6 @@ void stage0_dbg_loop() {
          *
          * The relevant parts are simplified slightly from https://github.com/jrfonseca/drmingw.
          */
-
         if (event_code == LOAD_DLL_DEBUG_EVENT) {
             DWORD error_code;
             if (!stage0_dbg_process_module(h_process, event.u.LoadDll.hFile, event.u.LoadDll.lpBaseOfDll, error_code)) {
@@ -1085,7 +1004,6 @@ void stage0_dbg_loop() {
              * > The system closes the debugger's handle to the exiting process
              * > and all of the process's threads. The debugger should not close these handles.
              */
-
             ContinueDebugEvent(id_process, id_thread, continue_state);
             return;
         }

@@ -147,6 +147,74 @@ static HRESULT stage0_main_get_dependency_path(
     return hr;
 }
 
+// Prepares the directories Stage 0 requires to operate.
+static BOOL stage0_main_init() {
+    wchar_t path_dir_base[MAX_PATH] = { 0 };
+
+    DWORD path_base_size = GetModuleFileNameW(
+        NULL,
+        path_dir_base,
+        sizeof(path_dir_base) / sizeof(wchar_t)
+    );
+
+    if (path_base_size == 0) {
+        fwprintf_s(stderr, L"[!] GetModuleFileNameW() failed with code 0x%X.\n", GetLastError());
+        return FALSE;
+    }
+
+    /* [fkelava 15/09/26 14:54]
+     * We have to remove the last path element twice to get from /bin/fhstage0.exe to the base directory.
+     */
+    if (PathCchRemoveFileSpec(path_dir_base, MAX_PATH) != S_OK ||
+        PathCchRemoveFileSpec(path_dir_base, MAX_PATH) != S_OK
+    ) {
+        fwprintf_s(stderr, L"[!] PathCchRemoveFileSpec() failed for path %s.\n", path_dir_base);
+        return FALSE;
+    }
+
+    if (FAILED(StringCchCatW(g_path_dir_cache, MAX_PATH, path_dir_base)) ||
+        FAILED(StringCchCatW(g_path_dir_cache, MAX_PATH, L"\\cache"))    ||
+        FAILED(StringCchCatW(g_path_dir_crash, MAX_PATH, path_dir_base)) ||
+        FAILED(StringCchCatW(g_path_dir_crash, MAX_PATH, L"\\crash"))
+    ) {
+        fwprintf_s(stderr, L"[!] StringCchCatW() failed.\n");
+        return FALSE;
+    }
+
+    if ((!CreateDirectoryW(g_path_dir_cache, NULL) && GetLastError() != ERROR_ALREADY_EXISTS) ||
+        (!CreateDirectoryW(g_path_dir_crash, NULL) && GetLastError() != ERROR_ALREADY_EXISTS)
+    ) {
+        fwprintf_s(stderr, L"[!] CreateDirectoryW() failed with code 0x%X.\n", GetLastError());
+        return FALSE;
+    }
+
+    /* [fkelava 21/09/26 13:24]
+     * Instead of maintaining our own core dumping machinery,
+     * we can ask .NET to handle it for us.
+     *
+     * See generally https://github.com/dotnet/runtime/tree/35423f17d6ebe715711a907badda2a505633daf2/src/coreclr/debug/createdump.
+     */
+
+    //wchar_t dump_path[MAX_PATH] = { 0 };
+    //if (FAILED(StringCchCopyW(dump_path, MAX_PATH, g_path_dir_crash)) ||
+    //    FAILED(StringCchCatW (dump_path, MAX_PATH, L"\\%e.%p.%t.dmp"))
+    //) {
+    //    fwprintf_s(stderr, L"[!] Failed to prepare core dump path.\n");
+    //    return FALSE;
+    //}
+    //
+    //if (!SetEnvironmentVariableW(L"DOTNET_DbgEnableMiniDump",     L"1")      ||
+    //    !SetEnvironmentVariableW(L"DOTNET_DbgMiniDumpType",       L"2")      ||
+    //    !SetEnvironmentVariableW(L"DOTNET_DbgMiniDumpName",       dump_path) ||
+    //    !SetEnvironmentVariableW(L"DOTNET_CreateDumpDiagnostics", L"1")
+    //) {
+    //    fwprintf_s(stderr, L"[!] SetEnvironmentVariableW() failed with code 0x%X.\n", GetLastError());
+    //    return FALSE;
+    //}
+
+    return TRUE;
+}
+
 int __cdecl wmain(
     int      argc,
     wchar_t* argv[]
@@ -164,8 +232,12 @@ int __cdecl wmain(
         return 1;
     }
 
-    HRESULT hr;
+    if (!stage0_main_init()) {
+        fwprintf_s(stderr, L"Stage 1 failed to initialize.\n");
+        return 1;
+    }
 
+    HRESULT hr;
     hr = stage0_main_process_args(argc, argv);
     if (hr != S_OK)
         return hr;

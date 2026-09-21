@@ -34,3 +34,6 @@
 #else
 #define MINHOOK_DLL "minhook.x32.dll"
 #endif
+
+extern wchar_t g_path_dir_cache[MAX_PATH]; // The full path to the 'cache' directory, used to store symbols.
+extern wchar_t g_path_dir_crash[MAX_PATH]; // The full path to the 'crash' directory, used to store core dumps.

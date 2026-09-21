@@ -5,14 +5,26 @@
 
 #pragma once
 
+#pragma comment(lib, "pathcch.lib")
+#pragma comment(lib, "dbghelp.lib")
+#pragma comment(lib, "dbgshim.lib")
+#pragma comment(lib, "corguids.lib")
+
 #define WIN32_LEAN_AND_MEAN // Exclude rarely-used stuff from Windows headers
 
 // Win32
 #include <windows.h>
 #include <strsafe.h>
 #include <PathCch.h>
-#include <DbgHelp.h>
 #include <conio.h>
+
+// Win32 debugging
+#include <DbgHelp.h>
+
+// .NET debugging
+#include <cor.h>
+#include <cordebug.h>
+#include <dbgshim.h>
 
 // IAT patching
 #include <detours/detours.h>

@@ -156,7 +156,7 @@ static HRESULT stage0_main_get_dependency_path(
     return hr;
 }
 
-int wmain(
+int __cdecl wmain(
     int      argc,
     wchar_t* argv[]
 ) {

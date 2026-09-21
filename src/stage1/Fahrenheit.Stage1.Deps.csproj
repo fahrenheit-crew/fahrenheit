@@ -13,7 +13,6 @@ Do not modify or unload it. See `src/stage1/inc/nethost/README.md`.
 
     <PropertyGroup>
         <IsPublishable>false</IsPublishable>
-        <IncludeBuildOutput>false</IncludeBuildOutput>
     </PropertyGroup>
 
     <ItemGroup>

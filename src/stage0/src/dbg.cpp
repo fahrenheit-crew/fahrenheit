@@ -17,6 +17,12 @@
 
 #include "fhstage0.h"
 
+enum S0_FRAME_TYPE {
+    FRAME_UNKNOWN,
+    FRAME_NATIVE,
+    FRAME_MANAGED
+};
+
 wchar_t g_path_dir_cache[MAX_PATH] = { 0 }; // The full path to the 'cache' directory, used to store symbols.
 wchar_t g_path_dir_crash[MAX_PATH] = { 0 }; // The full path to the 'crash' directory, used to store core dumps.
 
@@ -25,7 +31,10 @@ wchar_t g_path_mscordbi    [MAX_PATH] = { 0 }; // The full path to the `mscordbi
 wchar_t g_path_mscordacwks [MAX_PATH] = { 0 }; // The full path to the `mscordacwks` module for the given CoreCLR.
 wchar_t g_path_mscordaccore[MAX_PATH] = { 0 }; // The full path to the `mscordaccore` module for the given CoreCLR.
 
-std::map<std::wstring, bool> g_map_checked_symbol; // Whether we performed symbol file lookup for a given module.
+std::map   <std::wstring, bool> g_map_checked_symbol; // Whether we performed symbol file lookup for a given module.
+std::vector<std::wstring>       g_frames_managed;     // A list of managed frame strings. Used to fill the gaps in the native stack walk.
+std::vector<std::wstring>       g_frames_native;      // A list of native frame strings.
+std::vector<S0_FRAME_TYPE>      g_frames_type;        // A list of frames, indicating the type of any given frame.
 
 LPVOID g_ptr_coreclr; // The pointer to `coreclr.dll` in memory.
 
@@ -254,7 +263,7 @@ static BOOL s0_dbg_clr_init(
     return TRUE;
 }
 
-static HRESULT s0_dbg_stack_walk_clr(
+static HRESULT s0_dbg_stack_walk_managed(
     HANDLE h_process, // A handle to the process the fault occurred in.
     DWORD  id_thread  // The ID of the faulting thread in the process that encountered an exception.
 ) {
@@ -348,13 +357,34 @@ static HRESULT s0_dbg_stack_walk_clr(
 
         hr = ptr_ICorDebugFrame->GetFunction(&ptr_ICorDebugFunction);
         if (hr != S_OK) {
-            fwprintf_s(stderr, L"[!] ICorDebugFrame::GetFunction failed with code 0x%X.\n", hr);
+            // TODO: https://github.com/dotnet/runtime/blob/b1e5bd9585e4463137ba03a63856461084e8d182/src/coreclr/debug/di/shimstackwalk.cpp
+            // to handle IL/native frames like P/Invoke stubs
             break;
         }
 
         hr = ptr_ICorDebugFunction->GetModule(&ptr_ICorDebugModule);
         if (hr != S_OK) {
             fwprintf_s(stderr, L"[!] ICorDebugFunction::GetModule failed with code 0x%X.\n", hr);
+            break;
+        }
+
+        wchar_t module_name[MAX_PATH] = { 0 };
+        ULONG32 module_name_sz;
+
+        hr = ptr_ICorDebugModule->GetName(
+            MAX_PATH,
+            &module_name_sz,
+            module_name
+        );
+
+        wchar_t* module_file_name = wcsrchr(module_name, L'\\');
+        if (module_file_name == NULL || PathCchRemoveExtension(module_file_name, MAX_PATH) != S_OK) {
+            fwprintf_s(stderr, L"[!] Failed to get file name from full module path.\n");
+            break;
+        }
+
+        if (hr != S_OK) {
+            fwprintf_s(stderr, L"[!] ICorDebugModule::GetName failed with code 0x%X.\n", hr);
             break;
         }
 
@@ -418,7 +448,18 @@ static HRESULT s0_dbg_stack_walk_clr(
             break;
         }
 
-        fwprintf_s(stdout, L"%s!%s\n", type_name, method_name);
+        wchar_t sym_managed[MAX_SYM_NAME] = { 0 };
+
+        swprintf_s(
+            sym_managed,
+            MAX_SYM_NAME,
+            L"%s!%s.%s\n",
+            module_file_name + 1,
+            type_name,
+            method_name
+        );
+
+        g_frames_managed.emplace_back(sym_managed);
 
         hr = ptr_ICorDebugStackWalk->Next();
         if (hr != S_OK)
@@ -429,8 +470,8 @@ static HRESULT s0_dbg_stack_walk_clr(
     return hr;
 }
 
-// Attempts to obtain and display a symbol for a given stack frame.
-static void s0_dbg_symbol_native(
+// Processes a stack frame, returning its type and preparing its symbol, if native.
+static S0_FRAME_TYPE s0_dbg_process_frame(
     HANDLE       h_process,  // A handle to the process the stack frame belongs to.
     STACKFRAME64 stack_frame // The stack frame to symbolicate.
 ) {
@@ -440,8 +481,19 @@ static void s0_dbg_symbol_native(
     module.SizeOfStruct = sizeof(IMAGEHLP_MODULEW64);
 
     if (!SymGetModuleInfoW64(h_process, frame_addr, &module)) {
-        fwprintf_s(stderr, L"SymGetModuleInfoW64() failed with code 0x%X.\n", GetLastError());
-        return;
+        /* [fkelava 21/09/26 16:08]
+         * We use a very primitive heuristic here. We assume that if a given IP
+         * can't be mapped to a module, it must be JITted code and therefore managed.
+         *
+         * We will therefore fill that frame out with data from the managed stack walk.
+         */
+        DWORD error = GetLastError();
+        if (error != ERROR_MOD_NOT_FOUND) {
+            fwprintf_s(stderr, L"SymGetModuleInfoW64() failed with code 0x%X.\n", error);
+            return FRAME_UNKNOWN;
+        }
+
+        return FRAME_MANAGED;
     }
 
     bool checked_symbols = true;
@@ -450,6 +502,7 @@ static void s0_dbg_symbol_native(
     }
     catch (const std::out_of_range& ex) {
         fwprintf_s(stderr, L"Unknown module %s in native symbol search.", module.ImageName);
+        return FRAME_UNKNOWN;
     }
 
     if (!checked_symbols) {
@@ -458,11 +511,10 @@ static void s0_dbg_symbol_native(
 
         if (!SymSrvGetFileIndexInfoW(module.LoadedImageName, &symsrv_info, 0)) {
             fwprintf_s(stderr, L"SymSrvGetFileIndexInfoW() failed with code 0x%X.\n", GetLastError());
-            return;
+            return FRAME_UNKNOWN;
         }
 
-        wchar_t pdb_path [1024] = { 0 };
-        wchar_t frame_str[1024] = { 0 };
+        wchar_t pdb_path[MAX_PATH + 1] = { 0 };
 
         /* [fkelava 16/09/26 18:53]
          * https://learn.microsoft.com/en-us/windows/win32/api/dbghelp/ns-dbghelp-symsrv_index_info
@@ -514,13 +566,30 @@ static void s0_dbg_symbol_native(
     sym.si.SizeOfStruct = sizeof(SYMBOL_INFOW);
     sym.si.MaxNameLen   = MAX_SYM_NAME;
 
+    wchar_t sym_native[MAX_SYM_NAME] = { 0 };
     DWORD64 sym_displacement = 0;
+
     if (!SymFromAddrW(h_process, frame_addr, &sym_displacement, &sym.si)) {
-        fwprintf_s(stderr, L"[!] SymFromAddrW() failed with code 0x%X.\n", GetLastError());
-        return;
+        /* [fkelava 21/09/26 14:53]
+         * We may not have the PDB or any other symbols for the target binary.
+         * In this case SymFromAddrW seems to return ERROR_INVALID_ADDRESS.
+         *
+         * But, e.g., FFX+193912 is suitable and useful, so we display that instead.
+         */
+        DWORD sym_error = GetLastError();
+        if (sym_error != ERROR_INVALID_ADDRESS) {
+            fwprintf_s(stderr, L"[!] SymFromAddrW() failed with code 0x%X.\n", GetLastError());
+            return FRAME_UNKNOWN;
+        }
+
+        swprintf_s(sym_native, MAX_SYM_NAME, L"%s+%llX\n", module.ModuleName, frame_addr - module.BaseOfImage);
+    }
+    else {
+        swprintf_s(sym_native, MAX_SYM_NAME, L"%s!%s+%llX\n", module.ModuleName, sym.si.Name, sym_displacement);
     }
 
-    fwprintf_s(stdout, L"%s!%s+%llX\n", module.ModuleName, sym.si.Name, sym_displacement);
+    g_frames_native.emplace_back(sym_native);
+    return FRAME_NATIVE;
 }
 
 // Prints the register state at the time an exception was caught.
@@ -563,6 +632,45 @@ static void s0_dbg_print_context(
     fwprintf_s(stdout, L"\n");
 }
 
+// Prints the stack trace with any available data we have.
+static void s0_dbg_print_stack_trace() {
+    fwprintf_s(stdout, L"---- STACK TRACE ----\n");
+
+    DWORD count_managed = 0;
+    DWORD count_native  = 0;
+    DWORD count_frames  = g_frames_type.size();
+
+    for (DWORD i = 0; i < count_frames; i++) {
+        std::wstring frame;
+
+        switch (g_frames_type[i]) {
+            case FRAME_UNKNOWN:
+                frame = L"Unknown frame.\n";
+                break;
+
+            case FRAME_MANAGED:
+                /* [fkelava 21/09/26 16:30]
+                 * We might not have data for all managed frames.
+                 * Currently, we don't handle things like forward and reverse P/Invoke stubs.
+                 */
+                frame = count_managed >= g_frames_managed.size()
+                    ? L"Unknown managed frame.\n"
+                    : g_frames_managed[count_managed++];
+                break;
+
+            case FRAME_NATIVE:
+                frame = count_native >= g_frames_native.size()
+                    ? L"Unknown native frame.\n"
+                    : g_frames_native[count_native++];
+                break;
+        }
+
+        fwrite(frame.c_str(), sizeof(wchar_t), frame.size(), stdout);
+    }
+
+    fwprintf_s(stdout, L"\n");
+}
+
 // Walks the faulting thread's stack, displaying a stack trace.
 // If available, symbols are automatically obtained and utilized.
 static void s0_dbg_stack_walk_native(
@@ -577,8 +685,6 @@ static void s0_dbg_stack_walk_native(
     stack_frame.AddrFrame.Mode   = AddrModeFlat;
     stack_frame.AddrStack.Offset = ptr_context->Esp;
     stack_frame.AddrStack.Mode   = AddrModeFlat;
-
-    fwprintf_s(stdout, L"---- STACK TRACE ----\n");
 
     while (true) {
         BOOL rv = StackWalk64(
@@ -599,10 +705,12 @@ static void s0_dbg_stack_walk_native(
         if (stack_frame.AddrPC.Offset == 0)
             break;
 
-        s0_dbg_symbol_native(h_process, stack_frame);
+        g_frames_type.emplace_back(
+            s0_dbg_process_frame(h_process, stack_frame)
+        );
     }
 
-    fwprintf_s(stdout, L"\n");
+    s0_dbg_print_stack_trace();
 }
 
 // Writes a core dump to disk.
@@ -758,7 +866,7 @@ static DWORD s0_dbg_exception(
             &ptr_info_exception->ExceptionRecord
         );
 
-        s0_dbg_stack_walk_clr(
+        s0_dbg_stack_walk_managed(
             h_process,
             id_thread
         );

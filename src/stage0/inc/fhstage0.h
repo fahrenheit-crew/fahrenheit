@@ -16,6 +16,7 @@
 #include <stdexcept>
 #include <string>
 #include <map>
+#include <vector>
 
 // Win32
 #include <windows.h>

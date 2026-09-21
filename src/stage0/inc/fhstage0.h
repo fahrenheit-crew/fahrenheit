@@ -12,6 +12,11 @@
 
 #define WIN32_LEAN_AND_MEAN // Exclude rarely-used stuff from Windows headers
 
+// STL
+#include <stdexcept>
+#include <string>
+#include <map>
+
 // Win32
 #include <windows.h>
 #include <strsafe.h>

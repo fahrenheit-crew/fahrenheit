@@ -25,6 +25,8 @@ wchar_t g_path_mscordbi    [MAX_PATH] = { 0 }; // The full path to the `mscordbi
 wchar_t g_path_mscordacwks [MAX_PATH] = { 0 }; // The full path to the `mscordacwks` module for the given CoreCLR.
 wchar_t g_path_mscordaccore[MAX_PATH] = { 0 }; // The full path to the `mscordaccore` module for the given CoreCLR.
 
+std::map<std::wstring, bool> g_map_checked_symbol; // Whether we performed symbol file lookup for a given module.
+
 LPVOID g_ptr_coreclr; // The pointer to `coreclr.dll` in memory.
 
 /* [fkelava 19/09/26 00:50]
@@ -38,7 +40,6 @@ LPVOID g_ptr_coreclr; // The pointer to `coreclr.dll` in memory.
  */
 
 // https://learn.microsoft.com/en-us/dotnet/framework/unmanaged-api/debugging/iclrdebugginglibraryprovider-interface
-// Our implementation of `ICLRDebuggingLibraryProvider`, which the CLR uses to retrieve essential debugging DLLs.
 class S0_ICLRDebuggingLibraryProvider : public ICLRDebuggingLibraryProvider {
     /* [fkelava 19/09/26 01:36]
      * https://learn.microsoft.com/en-us/windows/win32/api/unknwn/nf-unknwn-iunknown-addref
@@ -54,10 +55,7 @@ public:
     virtual ~S0_ICLRDebuggingLibraryProvider() = default;
 
     // https://learn.microsoft.com/en-us/windows/win32/api/unknwn/nf-unknwn-iunknown-queryinterface(refiid_void)
-    HRESULT __stdcall QueryInterface(
-        REFIID  riid,
-        LPVOID* ppvObj
-    ) override {
+    HRESULT __stdcall QueryInterface(REFIID riid, LPVOID* ppvObj) override {
         if (ppvObj == NULL)
             return E_INVALIDARG;
 
@@ -87,12 +85,11 @@ public:
     }
 
     // https://learn.microsoft.com/en-us/dotnet/framework/unmanaged-api/debugging/iclrdebugginglibraryprovider-providelibrary-method
-    // Allows CLR version-specific debugging libraries to be located and loaded on demand.
     HRESULT __stdcall ProvideLibrary(
-        const WCHAR*   pwszFileName,  // [in]  The name of the module being requested.
-              DWORD    dwTimestamp,   // [in]  The date time stamp stored in the PE file COFF header.
-              DWORD    dwSizeOfImage, // [in]  The SizeOfImage field stored in the PE file COFF optional header.
-              HMODULE* hModule        // [out] The handle to the requested module.
+        const WCHAR*   pwszFileName,
+              DWORD    dwTimestamp,
+              DWORD    dwSizeOfImage,
+              HMODULE* hModule
     ) {
         /* [fkelava 21/09/26 02:17]
          * This interface exists to supply the debugging engine the
@@ -122,16 +119,12 @@ public:
 };
 
 // https://learn.microsoft.com/en-us/dotnet/core/unmanaged-api/debugging/icordebug/icordebugdatatarget-interface
-// Our implementation of `ICorDebugDataTarget`, which the CLR uses for process access while debugging.
 class S0_ICorDebugDataTarget : public ICorDebugDataTarget {
-
     ULONG  _refs;
     HANDLE _h_process;
 
 public:
-    S0_ICorDebugDataTarget(
-        HANDLE h_process
-    ) {
+    S0_ICorDebugDataTarget(HANDLE h_process) {
         _refs      = 1;
         _h_process = h_process;
     }
@@ -139,10 +132,7 @@ public:
     virtual ~S0_ICorDebugDataTarget() = default;
 
     // https://learn.microsoft.com/en-us/windows/win32/api/unknwn/nf-unknwn-iunknown-queryinterface(refiid_void)
-    HRESULT __stdcall QueryInterface(
-        REFIID  riid,
-        LPVOID* ppvObj
-    ) override {
+    HRESULT __stdcall QueryInterface(REFIID riid, LPVOID* ppvObj) override {
         if (ppvObj == NULL)
             return E_INVALIDARG;
 
@@ -172,19 +162,17 @@ public:
     }
 
     // https://learn.microsoft.com/en-us/dotnet/core/unmanaged-api/debugging/icordebug/icordebugdatatarget-getplatform-method
-    HRESULT __stdcall GetPlatform(
-        CorDebugPlatform* pTargetPlatform // [out] A pointer to a CorDebugPlatformEnum enumeration that describes the target platform.
-    ) override {
+    HRESULT __stdcall GetPlatform(CorDebugPlatform* pTargetPlatform) override {
         *pTargetPlatform = CORDB_PLATFORM_WINDOWS_X86;
         return S_OK;
     }
 
     // https://learn.microsoft.com/en-us/dotnet/core/unmanaged-api/debugging/icordebug/icordebugdatatarget-readvirtual-method
     HRESULT __stdcall ReadVirtual(
-        CORDB_ADDRESS address,        // [in]  The start address of requested memory.
-        BYTE*         pBuffer,        // [out] The buffer where the memory will be stored.
-        ULONG32       bytesRequested, // [in]  The number of bytes to get from the target address.
-        ULONG32*      pBytesRead      // [out] The number of bytes actually read from the target address.
+        CORDB_ADDRESS address,
+        BYTE*         pBuffer,
+        ULONG32       bytesRequested,
+        ULONG32*      pBytesRead
     ) override {
         return ReadProcessMemory(_h_process, (LPCVOID) address, pBuffer, bytesRequested, (SIZE_T*) pBytesRead)
             ? S_OK
@@ -193,10 +181,10 @@ public:
 
     // https://learn.microsoft.com/en-us/dotnet/core/unmanaged-api/debugging/icordebug/icordebugdatatarget-getthreadcontext-method
     HRESULT __stdcall GetThreadContext(
-        DWORD   dwThreadID,   // [in]  The identifier of the thread whose context is to be retrieved.
-        ULONG32 contextFlags, // [in]  A bitwise combination of platform-dependent flags that indicate which portions of the context should be read.
-        ULONG32 contextSize,  // [in]  The size of pContext.
-        BYTE*   pContext      // [out] The buffer where the thread context will be stored.
+        DWORD   dwThreadID,
+        ULONG32 contextFlags,
+        ULONG32 contextSize,
+        BYTE*   pContext
     ) override {
         if (contextSize < sizeof(CONTEXT))
             return E_INVALIDARG;
@@ -221,19 +209,20 @@ public:
 
 };
 
-static BOOL stage0_dbg_clr_init(
+// Prepares the necessary DLL paths for CLR debugging.
+static BOOL s0_dbg_clr_init(
     LPVOID ptr_coreclr, // The pointer to the image base of the `coreclr.dll` for this session.
     LPWSTR path_coreclr // The full path to `coreclr.dll` for this session.
 ) {
     /* [fkelava 20/09/26 23:06]
-     * The CLR debugging function CreateVersionStringFromModule does not
-     * support the full \\?\ prefixed paths we use, so we strip it.
+     * If we were using the CLR debugging function CreateVersionStringFromModule,
+     * we would have to strip the \\?\ prefix from paths.
      */
     g_ptr_coreclr = ptr_coreclr;
 
-    HRESULT hr = StringCchCopyW(g_path_coreclr, MAX_PATH, &path_coreclr[4]);
+    HRESULT hr = StringCchCopyW(g_path_coreclr, MAX_PATH, path_coreclr);
     if (hr != S_OK) {
-        fwprintf_s(stderr, L"[!] StringCchCopyW(%s) failed with code 0x%X.\n", &path_coreclr[4], hr);
+        fwprintf_s(stderr, L"[!] StringCchCopyW(%s) failed with code 0x%X.\n", path_coreclr, hr);
         return FALSE;
     }
 
@@ -265,7 +254,7 @@ static BOOL stage0_dbg_clr_init(
     return TRUE;
 }
 
-static HRESULT stage0_dbg_stack_walk_clr(
+static HRESULT s0_dbg_stack_walk_clr(
     HANDLE h_process, // A handle to the process the fault occurred in.
     DWORD  id_thread  // The ID of the faulting thread in the process that encountered an exception.
 ) {
@@ -291,9 +280,9 @@ static HRESULT stage0_dbg_stack_walk_clr(
      * > latest CLR version this debugger supports, and set the revision
      * > number to 65535 to accommodate future in-place CLR servicing releases.
      *
-     * The major version is whichever .NET we're compiling against.
-     * Restricting by build is useless because the user may use a newer .NET
-     * than was available at the time their Fh was compiled.
+     * The major version is whichever .NET we compiled against.
+     * The user may run with a newer point release; our `dbgshim` should work
+     * anyway or at least fail safely, so we don't specify a build.
      */
     CLR_DEBUGGING_VERSION clr_ver_supported = { 0 };
     CLR_DEBUGGING_VERSION clr_ver_actual    = { 0 };
@@ -441,7 +430,7 @@ static HRESULT stage0_dbg_stack_walk_clr(
 }
 
 // Attempts to obtain and display a symbol for a given stack frame.
-static void stage0_dbg_symbol_native(
+static void s0_dbg_symbol_native(
     HANDLE       h_process,  // A handle to the process the stack frame belongs to.
     STACKFRAME64 stack_frame // The stack frame to symbolicate.
 ) {
@@ -455,53 +444,65 @@ static void stage0_dbg_symbol_native(
         return;
     }
 
-    SYMSRV_INDEX_INFOW symsrv_info = { 0 };
-    symsrv_info.sizeofstruct = sizeof(SYMSRV_INDEX_INFOW);
-
-    if (!SymSrvGetFileIndexInfoW(module.LoadedImageName, &symsrv_info, 0)) {
-        fwprintf_s(stderr, L"SymSrvGetFileIndexInfoW() failed with code 0x%X.\n", GetLastError());
-        return;
+    bool checked_symbols = true;
+    try {
+        checked_symbols = g_map_checked_symbol.at(module.ImageName);
+    }
+    catch (const std::out_of_range& ex) {
+        fwprintf_s(stderr, L"Unknown module %s in native symbol search.", module.ImageName);
     }
 
-    wchar_t pdb_path [1024] = { 0 };
-    wchar_t frame_str[1024] = { 0 };
+    if (!checked_symbols) {
+        SYMSRV_INDEX_INFOW symsrv_info = { 0 };
+        symsrv_info.sizeofstruct = sizeof(SYMSRV_INDEX_INFOW);
 
-    /* [fkelava 16/09/26 18:53]
-     * https://learn.microsoft.com/en-us/windows/win32/api/dbghelp/ns-dbghelp-symsrv_index_info
-     * Older PDBs have a DWORD signature. Newer ones have a GUID. We must be prepared for either case.
-     */
-    GUID guid_0  = { 0 };
-    bool use_sig = (memcmp(&symsrv_info.guid, &guid_0, sizeof(guid_0)) == 0);
+        if (!SymSrvGetFileIndexInfoW(module.LoadedImageName, &symsrv_info, 0)) {
+            fwprintf_s(stderr, L"SymSrvGetFileIndexInfoW() failed with code 0x%X.\n", GetLastError());
+            return;
+        }
 
-    PVOID id    = use_sig
-        ? (PVOID) &symsrv_info.sig
-        : (PVOID) &symsrv_info.guid;
-    DWORD flags = use_sig
-        ? SSRVOPT_DWORDPTR
-        : SSRVOPT_GUIDPTR;
+        wchar_t pdb_path [1024] = { 0 };
+        wchar_t frame_str[1024] = { 0 };
 
-    /* [fkelava 16/09/26 18:53]
-     * https://learn.microsoft.com/en-us/windows/win32/api/dbghelp/nf-dbghelp-symfindfileinpathw#remarks
-     * > If DbgHelp is looking for a `.pdb` file, the `id` parameter specifies the
-     * > PDB signature as found in the codeview debug directory of the original image.
-     * > Parameter two specifies the PDB age. Parameter three is unused and set to zero.
-     *
-     * This function will trigger download of symbols from the MS server if possible.
-     * The symbols are stored in the 'cache' directory for reuse.
-     */
-    if (!SymFindFileInPathW(
-        h_process,
-        NULL,
-        symsrv_info.pdbfile,
-        id,
-        symsrv_info.age,
-        0,
-        flags,
-        pdb_path,
-        NULL,
-        NULL
-    )) {
-        fwprintf_s(stderr, L"SymFindFileInPathW() failed with code 0x%X.\n", GetLastError());
+        /* [fkelava 16/09/26 18:53]
+         * https://learn.microsoft.com/en-us/windows/win32/api/dbghelp/ns-dbghelp-symsrv_index_info
+         * Older PDBs have a DWORD signature. Newer ones have a GUID. We must be prepared for either case.
+         */
+        GUID guid_0  = { 0 };
+        bool use_sig = (memcmp(&symsrv_info.guid, &guid_0, sizeof(guid_0)) == 0);
+
+        PVOID id    = use_sig
+            ? (PVOID) &symsrv_info.sig
+            : (PVOID) &symsrv_info.guid;
+        DWORD flags = use_sig
+            ? SSRVOPT_DWORDPTR
+            : SSRVOPT_GUIDPTR;
+
+        /* [fkelava 16/09/26 18:53]
+         * https://learn.microsoft.com/en-us/windows/win32/api/dbghelp/nf-dbghelp-symfindfileinpathw#remarks
+         * > If DbgHelp is looking for a `.pdb` file, the `id` parameter specifies the
+         * > PDB signature as found in the codeview debug directory of the original image.
+         * > Parameter two specifies the PDB age. Parameter three is unused and set to zero.
+         *
+         * This function will trigger download of symbols from the MS server if possible.
+         * The symbols are stored in the 'cache' directory for reuse.
+         */
+        if (!SymFindFileInPathW(
+            h_process,
+            NULL,
+            symsrv_info.pdbfile,
+            id,
+            symsrv_info.age,
+            0,
+            flags,
+            pdb_path,
+            NULL,
+            NULL
+        )) {
+            fwprintf_s(stderr, L"SymFindFileInPathW() failed with code 0x%X for module %s.\n", GetLastError(), module.ImageName);
+        }
+
+        g_map_checked_symbol[module.ImageName] = true;
     }
 
     /* [fkelava 16/09/26 18:57]
@@ -523,7 +524,7 @@ static void stage0_dbg_symbol_native(
 }
 
 // Prints the register state at the time an exception was caught.
-static void stage0_dbg_print_context(
+static void s0_dbg_print_context(
     CONTEXT* ptr_context // A pointer to the faulting thread's context.
 ) {
     fwprintf_s(stdout, L"---- EXCEPTION CONTEXT ----\n");
@@ -564,7 +565,7 @@ static void stage0_dbg_print_context(
 
 // Walks the faulting thread's stack, displaying a stack trace.
 // If available, symbols are automatically obtained and utilized.
-static void stage0_dbg_stack_walk_native(
+static void s0_dbg_stack_walk_native(
     HANDLE   h_process,  // A handle to the process the fault occurred in.
     HANDLE   h_thread,   // A handle to the faulting thread.
     CONTEXT* ptr_context // A pointer to the faulting thread's context.
@@ -598,14 +599,14 @@ static void stage0_dbg_stack_walk_native(
         if (stack_frame.AddrPC.Offset == 0)
             break;
 
-        stage0_dbg_symbol_native(h_process, stack_frame);
+        s0_dbg_symbol_native(h_process, stack_frame);
     }
 
     fwprintf_s(stdout, L"\n");
 }
 
 // Writes a core dump to disk.
-static void stage0_dbg_create_dump(
+static void s0_dbg_create_dump(
     HANDLE            h_process,           // The handle to the process being dumped.
     DWORD             id_process,          // The ID of the process being dumped.
     DWORD             id_thread,           // The ID of the faulting thread in the process being dumped.
@@ -709,7 +710,7 @@ static void stage0_dbg_create_dump(
 }
 
 // Handles exception events, returning whether to continue or treat the exception as unhandled.
-static DWORD stage0_dbg_exception(
+static DWORD s0_dbg_exception(
     HANDLE                h_process,         // The handle to the process that encountered an exception.
     DWORD                 id_process,        // The ID of the process that encountered an exception.
     DWORD                 id_thread,         // The ID of the faulting thread in the process that encountered an exception.
@@ -732,16 +733,16 @@ static DWORD stage0_dbg_exception(
         HANDLE faulting_thread_handle = OpenThread(THREAD_GET_CONTEXT, FALSE, id_thread);
 
         if (faulting_thread_handle == nullptr || faulting_thread_handle == INVALID_HANDLE_VALUE) {
-            fwprintf_s(stderr, L"Failed to open the faulting thread for context capture.\n");
+            fwprintf_s(stderr, L"[!] OpenThread failed for thread 0x%X with code 0x%X.\n", id_thread, GetLastError());
             return DBG_EXCEPTION_NOT_HANDLED;
         }
 
         if (!GetThreadContext(faulting_thread_handle, &faulting_thread_context)) {
-            fwprintf_s(stderr, L"Failed to capture the faulting thread's context.\n");
+            fwprintf_s(stderr, L"[!] GetThreadContext failed for thread 0x%X with code 0x%X.\n", id_thread, GetLastError());
             return DBG_EXCEPTION_NOT_HANDLED;
         }
 
-        stage0_dbg_print_context(&faulting_thread_context);
+        s0_dbg_print_context(&faulting_thread_context);
 
         /* [fkelava 13/09/26 13:49]
          * https://learn.microsoft.com/en-us/windows/win32/api/dbghelp/nf-dbghelp-stackwalk64
@@ -749,7 +750,7 @@ static DWORD stage0_dbg_exception(
          *
          * The stack walk will modify the context, so we must do that last.
          */
-        stage0_dbg_create_dump(
+        s0_dbg_create_dump(
             h_process,
             id_process,
             id_thread,
@@ -757,12 +758,12 @@ static DWORD stage0_dbg_exception(
             &ptr_info_exception->ExceptionRecord
         );
 
-        stage0_dbg_stack_walk_clr(
+        s0_dbg_stack_walk_clr(
             h_process,
             id_thread
         );
 
-        stage0_dbg_stack_walk_native(
+        s0_dbg_stack_walk_native(
             h_process,
             faulting_thread_handle,
             &faulting_thread_context
@@ -779,7 +780,7 @@ static DWORD stage0_dbg_exception(
  */
 
 // Determines the size of a loaded/mapped-in module.
-static BOOL stage0_dbg_get_module_size(
+static BOOL s0_dbg_get_module_size(
     HANDLE h_process,       //       A handle to the process the module is being loaded into.
     LPVOID ptr_module_base, //       The base address of the target module.
     DWORD& size             // [out] The size of the module, if the call succeeds.
@@ -805,7 +806,7 @@ static BOOL stage0_dbg_get_module_size(
 }
 
 // Loads a module's symbols.
-static BOOL stage0_dbg_process_module(
+static BOOL s0_dbg_process_module(
     HANDLE h_process,       //       The handle of the process the module is being loaded into.
     HANDLE h_module_file,   //       The handle to the file of the module being loaded.
     LPVOID ptr_module_base, //       A pointer to the base address of the module itself.
@@ -847,7 +848,7 @@ static BOOL stage0_dbg_process_module(
      * a few .NET DLLs, starting from `coreclr.dll`.
      */
     if (wcsstr(module_path, L"coreclr.dll") != NULL) {
-        if (!stage0_dbg_clr_init(ptr_module_base, module_path)) {
+        if (!s0_dbg_clr_init(ptr_module_base, module_path)) {
             fwprintf_s(stderr, L"Failed to prepare for CLR debugging.\n");
             return FALSE;
         }
@@ -858,7 +859,7 @@ static BOOL stage0_dbg_process_module(
      * > When deferred symbols are in use, the correct DLL size must be passed.
      */
     DWORD module_size;
-    if (!stage0_dbg_get_module_size(h_process, ptr_module_base, module_size))
+    if (!s0_dbg_get_module_size(h_process, ptr_module_base, module_size))
         return FALSE;
 
     DWORD64 module_base_addr = SymLoadModuleExW(
@@ -892,6 +893,8 @@ static BOOL stage0_dbg_process_module(
         return FALSE;
     }
 
+    g_map_checked_symbol.try_emplace(module_path, false);
+
 #if _DEBUG
     fwprintf_s(stdout, L"Module loaded: %s\n", module_path);
 #endif
@@ -906,7 +909,7 @@ static BOOL stage0_dbg_process_module(
 }
 
 // The main loop of the debugger. Handles incoming debug events.
-void stage0_dbg_loop() {
+void s0_dbg_loop() {
     /* [fkelava 13/09/26 02:39]
      * See https://learn.microsoft.com/en-us/windows/win32/debug/debugging-events,
      * https://learn.microsoft.com/en-us/windows/win32/debug/writing-the-debugger-s-main-loop.
@@ -948,7 +951,7 @@ void stage0_dbg_loop() {
                 return;
             }
 
-            if (!stage0_dbg_process_module(
+            if (!s0_dbg_process_module(
                 h_process,
                 event.u.CreateProcessInfo.hFile,
                 event.u.CreateProcessInfo.lpBaseOfImage,
@@ -983,7 +986,7 @@ void stage0_dbg_loop() {
          */
         if (event_code == LOAD_DLL_DEBUG_EVENT) {
             DWORD error_code;
-            if (!stage0_dbg_process_module(h_process, event.u.LoadDll.hFile, event.u.LoadDll.lpBaseOfDll, error_code)) {
+            if (!s0_dbg_process_module(h_process, event.u.LoadDll.hFile, event.u.LoadDll.lpBaseOfDll, error_code)) {
                 TerminateProcess(h_process, error_code);
                 return;
             }
@@ -1008,7 +1011,7 @@ void stage0_dbg_loop() {
         }
 
         if (event_code == EXCEPTION_DEBUG_EVENT) {
-            continue_state = stage0_dbg_exception(h_process, id_process, id_thread, &event.u.Exception);
+            continue_state = s0_dbg_exception(h_process, id_process, id_thread, &event.u.Exception);
         }
 
         ContinueDebugEvent(id_process, id_thread, continue_state);

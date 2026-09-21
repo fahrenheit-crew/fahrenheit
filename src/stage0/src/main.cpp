@@ -20,7 +20,7 @@
 
 #include "fhstage0.h"
 
-void stage0_dbg_loop(); // Forward declaration of debugger loop function.
+void s0_dbg_loop(); // Forward declaration of debugger loop function.
 
 wchar_t target     [MAX_PATH] = { 0 }; // The path to the target binary.
 wchar_t args_target[1024]     = { 0 }; // The command-line arguments to pass to the target.
@@ -29,7 +29,7 @@ wchar_t dir_target [MAX_PATH] = { 0 }; // The directory the target binary is in.
 char    dir_self   [MAX_PATH] = { 0 }; // The directory `fhstage0` is in.
 
 // Separates Stage0 args from those which will be passed through to the target.
-static HRESULT stage0_main_process_args(
+static HRESULT s0_main_process_args(
     int      argc,  // The number of arguments passed to the executable.
     wchar_t* argv[] // The arguments passed to the executable.
 ) {
@@ -105,7 +105,7 @@ static HRESULT stage0_main_dir_target() {
  */
 
 // Gets the directory `fhstage0` was started in. This will be used to locate dependencies.
-static HRESULT stage0_main_dir_self() {
+static HRESULT s0_main_dir_self() {
     size_t sz_self = sizeof(dir_self) / sizeof(char);
 
     DWORD rc = GetCurrentDirectoryA(sz_self, dir_self);
@@ -129,7 +129,7 @@ static HRESULT stage0_main_dir_self() {
 }
 
 // Given the name of a dependency DLL, obtains its full path.
-static HRESULT stage0_main_get_dependency_path(
+static HRESULT s0_main_get_dependency_path(
     LPSTR  dep_path, // A pointer to a buffer for the full path string.
     LPCSTR dep_name  // The file name of the DLL to obtain the full path of.
 ) {
@@ -148,7 +148,7 @@ static HRESULT stage0_main_get_dependency_path(
 }
 
 // Prepares the directories Stage 0 requires to operate.
-static BOOL stage0_main_init() {
+static BOOL s0_main_init() {
     wchar_t path_dir_base[MAX_PATH] = { 0 };
 
     DWORD path_base_size = GetModuleFileNameW(
@@ -190,7 +190,7 @@ static BOOL stage0_main_init() {
 
     /* [fkelava 21/09/26 13:24]
      * Instead of maintaining our own core dumping machinery,
-     * we can ask .NET to handle it for us.
+     * we can ask .NET to handle it for us... in theory. I haven't been able to get it working yet.
      *
      * See generally https://github.com/dotnet/runtime/tree/35423f17d6ebe715711a907badda2a505633daf2/src/coreclr/debug/createdump.
      */
@@ -232,13 +232,13 @@ int __cdecl wmain(
         return 1;
     }
 
-    if (!stage0_main_init()) {
+    if (!s0_main_init()) {
         fwprintf_s(stderr, L"Stage 1 failed to initialize.\n");
         return 1;
     }
 
     HRESULT hr;
-    hr = stage0_main_process_args(argc, argv);
+    hr = s0_main_process_args(argc, argv);
     if (hr != S_OK)
         return hr;
 
@@ -246,7 +246,7 @@ int __cdecl wmain(
     if (hr != S_OK)
         return hr;
 
-    hr = stage0_main_dir_self();
+    hr = s0_main_dir_self();
     if (hr != S_OK)
         return hr;
 
@@ -302,15 +302,15 @@ int __cdecl wmain(
     char path_nethost[MAX_PATH] = { 0 };
     char path_minhook[MAX_PATH] = { 0 };
 
-    hr = stage0_main_get_dependency_path(path_stage1, "fhstage1.dll");
+    hr = s0_main_get_dependency_path(path_stage1, "fhstage1.dll");
     if (hr != S_OK)
         return hr;
 
-    hr = stage0_main_get_dependency_path(path_nethost, "nethost.dll");
+    hr = s0_main_get_dependency_path(path_nethost, "nethost.dll");
     if (hr != S_OK)
         return hr;
 
-    hr = stage0_main_get_dependency_path(path_minhook, MINHOOK_DLL);
+    hr = s0_main_get_dependency_path(path_minhook, MINHOOK_DLL);
     if (hr != S_OK)
         return hr;
 
@@ -342,7 +342,7 @@ int __cdecl wmain(
         WaitForSingleObject(pi.hProcess, INFINITE);
     }
     else {
-        stage0_dbg_loop();
+        s0_dbg_loop();
     }
 
     DWORD exit_code;

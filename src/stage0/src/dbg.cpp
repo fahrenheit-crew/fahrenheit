@@ -359,7 +359,13 @@ static HRESULT s0_dbg_stack_walk_managed(
         if (hr != S_OK) {
             // TODO: https://github.com/dotnet/runtime/blob/b1e5bd9585e4463137ba03a63856461084e8d182/src/coreclr/debug/di/shimstackwalk.cpp
             // to handle IL/native frames like P/Invoke stubs
-            break;
+            g_frames_managed.emplace_back(L"Unknown managed frame.\n");
+
+            hr = ptr_ICorDebugStackWalk->Next();
+            if (hr != S_OK)
+                break;
+
+            continue;
         }
 
         hr = ptr_ICorDebugFunction->GetModule(&ptr_ICorDebugModule);
@@ -857,6 +863,10 @@ static DWORD s0_dbg_exception(
             &faulting_thread_context,
             &ptr_info_exception->ExceptionRecord
         );
+
+        g_frames_native .clear();
+        g_frames_managed.clear();
+        g_frames_type   .clear();
 
         s0_dbg_stack_walk_managed(
             h_process,

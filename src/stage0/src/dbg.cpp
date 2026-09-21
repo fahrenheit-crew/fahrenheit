@@ -652,7 +652,6 @@ static void stage0_dbg_create_dump(
 
     MINIDUMP_TYPE dump_type = (MINIDUMP_TYPE)(
         MiniDumpNormal
-      | MiniDumpWithDataSegs
       | MiniDumpWithHandleData
       | MiniDumpWithFullMemoryInfo
       | MiniDumpWithThreadInfo

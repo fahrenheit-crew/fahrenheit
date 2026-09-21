@@ -233,7 +233,7 @@ int __cdecl wmain(
     }
 
     if (!s0_main_init()) {
-        fwprintf_s(stderr, L"Stage 1 failed to initialize.\n");
+        fwprintf_s(stderr, L"Stage 0 failed to initialize.\n");
         return 1;
     }
 

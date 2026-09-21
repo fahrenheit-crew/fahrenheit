@@ -15,7 +15,7 @@
 // STL
 #include <stdexcept>
 #include <string>
-#include <map>
+#include <set>
 #include <vector>
 
 // Win32

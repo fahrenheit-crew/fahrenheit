@@ -31,10 +31,10 @@ wchar_t g_path_mscordbi    [MAX_PATH] = { 0 }; // The full path to the `mscordbi
 wchar_t g_path_mscordacwks [MAX_PATH] = { 0 }; // The full path to the `mscordacwks` module for the given CoreCLR.
 wchar_t g_path_mscordaccore[MAX_PATH] = { 0 }; // The full path to the `mscordaccore` module for the given CoreCLR.
 
-std::map   <std::wstring, bool> g_map_checked_symbol; // Whether we performed symbol file lookup for a given module.
-std::vector<std::wstring>       g_frames_managed;     // A list of managed frame strings. Used to fill the gaps in the native stack walk.
-std::vector<std::wstring>       g_frames_native;      // A list of native frame strings.
-std::vector<S0_FRAME_TYPE>      g_frames_type;        // A list of frames, indicating the type of any given frame.
+std::set   <std::wstring>  g_map_checked_symbol; // Whether we performed symbol file lookup for a given module.
+std::vector<std::wstring>  g_frames_managed;     // A list of managed frame strings. Used to fill the gaps in the native stack walk.
+std::vector<std::wstring>  g_frames_native;      // A list of native frame strings.
+std::vector<S0_FRAME_TYPE> g_frames_type;        // A list of frames, indicating the type of any given frame.
 
 LPVOID g_ptr_coreclr; // The pointer to `coreclr.dll` in memory.
 
@@ -466,7 +466,6 @@ static HRESULT s0_dbg_stack_walk_managed(
             break;
     }
 
-    fwprintf_s(stdout, L"\n");
     return hr;
 }
 
@@ -496,14 +495,7 @@ static S0_FRAME_TYPE s0_dbg_process_frame(
         return FRAME_MANAGED;
     }
 
-    bool checked_symbols = true;
-    try {
-        checked_symbols = g_map_checked_symbol.at(module.ImageName);
-    }
-    catch (const std::out_of_range& ex) {
-        fwprintf_s(stderr, L"Unknown module %s in native symbol search.", module.ImageName);
-        return FRAME_UNKNOWN;
-    }
+    bool checked_symbols = g_map_checked_symbol.contains(module.ImageName);
 
     if (!checked_symbols) {
         SYMSRV_INDEX_INFOW symsrv_info = { 0 };
@@ -554,7 +546,7 @@ static S0_FRAME_TYPE s0_dbg_process_frame(
             fwprintf_s(stderr, L"SymFindFileInPathW() failed with code 0x%X for module %s.\n", GetLastError(), module.ImageName);
         }
 
-        g_map_checked_symbol[module.ImageName] = true;
+        g_map_checked_symbol.emplace(module.ImageName);
     }
 
     /* [fkelava 16/09/26 18:57]
@@ -582,10 +574,10 @@ static S0_FRAME_TYPE s0_dbg_process_frame(
             return FRAME_UNKNOWN;
         }
 
-        swprintf_s(sym_native, MAX_SYM_NAME, L"%s+%llX\n", module.ModuleName, frame_addr - module.BaseOfImage);
+        swprintf_s(sym_native, MAX_SYM_NAME, L"%s+0x%llX\n", module.ModuleName, frame_addr - module.BaseOfImage);
     }
     else {
-        swprintf_s(sym_native, MAX_SYM_NAME, L"%s!%s+%llX\n", module.ModuleName, sym.si.Name, sym_displacement);
+        swprintf_s(sym_native, MAX_SYM_NAME, L"%s!%s+0x%llX\n", module.ModuleName, sym.si.Name, sym_displacement);
     }
 
     g_frames_native.emplace_back(sym_native);
@@ -1000,8 +992,6 @@ static BOOL s0_dbg_process_module(
         fwprintf_s(stderr, L"[!] SymGetModuleInfo64() failed with code 0x%X.\n", GetLastError());
         return FALSE;
     }
-
-    g_map_checked_symbol.try_emplace(module_path, false);
 
 #if _DEBUG
     fwprintf_s(stdout, L"Module loaded: %s\n", module_path);

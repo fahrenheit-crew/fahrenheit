@@ -263,6 +263,7 @@ static BOOL s0_dbg_clr_init(
     return TRUE;
 }
 
+// Performs a managed stack walk, gathering any available symbols.
 static HRESULT s0_dbg_stack_walk_managed(
     HANDLE h_process, // A handle to the process the fault occurred in.
     DWORD  id_thread  // The ID of the faulting thread in the process that encountered an exception.

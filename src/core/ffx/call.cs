@@ -571,7 +571,7 @@ public static partial class FhCall {
         => new ( new FhMethodLocation("FFX.exe", 0x4C1BA0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate void d_FUN_008c9c10(void* param_1, int start_idx, int amount);
+    public unsafe delegate void d_FUN_008c9c10(void* param_1, int start_idx, int amount);
     private static FhMethodHandle<d_FUN_008c9c10> FUN_008c9c10
         => new ( new FhMethodLocation("FFX.exe", 0x4C9C10) );
 

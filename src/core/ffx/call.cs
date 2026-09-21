@@ -571,18 +571,19 @@ public static partial class FhCall {
         => new ( new FhMethodLocation("FFX.exe", 0x4C1BA0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate void d_FUN_008c9c10(int param_1, int param_2, int param_3);
+    public delegate void d_FUN_008c9c10(void* param_1, int start_idx, int amount);
     private static FhMethodHandle<d_FUN_008c9c10> FUN_008c9c10
         => new ( new FhMethodLocation("FFX.exe", 0x4C9C10) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public unsafe delegate int d_FUN_008c9b90(byte* param_1, int param_2, int param_3, int param_4);
+    public unsafe delegate int d_FUN_008c9b90(byte* array, int value, int start_idx, int length);
     private static FhMethodHandle<d_FUN_008c9b90> FUN_008c9b90
         => new ( new FhMethodLocation("FFX.exe", 0x4C9B90) );
 
+    // Unofficial naming
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate int d_FUN_007aba10(uint param_1, uint param_2);
-    private static FhMethodHandle<d_FUN_007aba10> FUN_007aba10
+    public delegate int d_SwapSaveGear(int gear_a_idx, int gear_b_idx);
+    private static FhMethodHandle<d_SwapSaveGear> SwapSaveGear
         => new ( new FhMethodLocation("FFX.exe", 0x3ABA10) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -1106,7 +1107,7 @@ public static partial class FhCall {
         => new( new FhMethodLocation("FFX.exe", 0x3A0160) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public unsafe delegate void* d_MsWeaponName(ushort name_id, byte owner, [MarshalAs(UnmanagedType.Bool)] bool simplified, ushort* out_model_id);
+    public unsafe delegate byte* d_MsWeaponName(ushort name_id, byte owner, [MarshalAs(UnmanagedType.Bool)] bool simplified, ushort* out_model_id);
     public static FhMethodHandle<d_MsWeaponName> MsWeaponName
         => new( new FhMethodLocation("FFX.exe", 0x3A0C70) );
 

@@ -47,15 +47,9 @@ static HRESULT stage0_main_process_args(
         return hr;
     }
 
-    DWORD rc = GetFullPathNameW(
-        target_rel_or_abs,
-        MAX_PATH,
-        target,
-        NULL
-    );
-
+    DWORD rc = GetFullPathNameW(target_rel_or_abs, MAX_PATH, target, NULL);
     if (rc == 0) {
-        fwprintf_s(stderr, L"[!] GetFullPathNameW() failed, code 0x%X.\n", GetLastError());
+        fwprintf_s(stderr, L"[!] GetFullPathNameW() failed with code 0x%X.\n", GetLastError());
         return E_FAIL;
     }
 
@@ -114,10 +108,7 @@ static HRESULT stage0_main_dir_target() {
 static HRESULT stage0_main_dir_self() {
     size_t sz_self = sizeof(dir_self) / sizeof(char);
 
-    DWORD rc = GetCurrentDirectoryA(
-        sz_self,
-        dir_self
-    );
+    DWORD rc = GetCurrentDirectoryA(sz_self, dir_self);
 
     if (rc == 0) {
         fwprintf_s(stderr, L"[!] GetCurrentDirectoryA() failed with code 0x%X.\n", GetLastError());

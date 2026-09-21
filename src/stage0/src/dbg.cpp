@@ -54,7 +54,6 @@ public:
     virtual ~S0_ICLRDebuggingLibraryProvider() = default;
 
     // https://learn.microsoft.com/en-us/windows/win32/api/unknwn/nf-unknwn-iunknown-queryinterface(refiid_void)
-    // Queries a COM object for a pointer to one of its interfaces.
     HRESULT __stdcall QueryInterface(
         REFIID  riid,
         LPVOID* ppvObj
@@ -73,13 +72,11 @@ public:
     }
 
     // https://learn.microsoft.com/en-us/windows/win32/api/unknwn/nf-unknwn-iunknown-addref
-    // Increments the reference count for an interface pointer to a COM object.
     ULONG __stdcall AddRef() override {
         return InterlockedIncrement(&_refs);
     }
 
     // https://learn.microsoft.com/en-us/windows/win32/api/unknwn/nf-unknwn-iunknown-release
-    // Decrements the reference count for an interface on a COM object.
     ULONG __stdcall Release() override {
         ULONG remaining_refs = InterlockedDecrement(&_refs);
 
@@ -105,7 +102,6 @@ public:
          * But since we only "debug" live processes, we know the correct
          * DAC/DBI exists and is right next to `coreclr.dll`.
          */
-
         if (wcscmp(pwszFileName, L"mscordbi.dll") == 0) {
             *hModule = LoadLibraryW(g_path_mscordbi);
             return S_OK;
@@ -143,7 +139,6 @@ public:
     virtual ~S0_ICorDebugDataTarget() = default;
 
     // https://learn.microsoft.com/en-us/windows/win32/api/unknwn/nf-unknwn-iunknown-queryinterface(refiid_void)
-    // Queries a COM object for a pointer to one of its interfaces.
     HRESULT __stdcall QueryInterface(
         REFIID  riid,
         LPVOID* ppvObj
@@ -162,13 +157,11 @@ public:
     }
 
     // https://learn.microsoft.com/en-us/windows/win32/api/unknwn/nf-unknwn-iunknown-addref
-    // Increments the reference count for an interface pointer to a COM object.
     ULONG __stdcall AddRef() override {
         return InterlockedIncrement(&_refs);
     }
 
     // https://learn.microsoft.com/en-us/windows/win32/api/unknwn/nf-unknwn-iunknown-release
-    // Decrements the reference count for an interface on a COM object.
     ULONG __stdcall Release() override {
         ULONG remaining_refs = InterlockedDecrement(&_refs);
 
@@ -179,7 +172,6 @@ public:
     }
 
     // https://learn.microsoft.com/en-us/dotnet/core/unmanaged-api/debugging/icordebug/icordebugdatatarget-getplatform-method
-    // Provides information about the platform, including processor architecture and operating system, on which the target process is running.
     HRESULT __stdcall GetPlatform(
         CorDebugPlatform* pTargetPlatform // [out] A pointer to a CorDebugPlatformEnum enumeration that describes the target platform.
     ) override {
@@ -188,7 +180,6 @@ public:
     }
 
     // https://learn.microsoft.com/en-us/dotnet/core/unmanaged-api/debugging/icordebug/icordebugdatatarget-readvirtual-method
-    // Gets a block of contiguous memory starting at the specified address, and returns it in the supplied buffer.
     HRESULT __stdcall ReadVirtual(
         CORDB_ADDRESS address,        // [in]  The start address of requested memory.
         BYTE*         pBuffer,        // [out] The buffer where the memory will be stored.
@@ -201,7 +192,6 @@ public:
     }
 
     // https://learn.microsoft.com/en-us/dotnet/core/unmanaged-api/debugging/icordebug/icordebugdatatarget-getthreadcontext-method
-    // Returns the current thread context for the specified thread.
     HRESULT __stdcall GetThreadContext(
         DWORD   dwThreadID,   // [in]  The identifier of the thread whose context is to be retrieved.
         ULONG32 contextFlags, // [in]  A bitwise combination of platform-dependent flags that indicate which portions of the context should be read.
@@ -214,11 +204,7 @@ public:
         CONTEXT* ptr_context = (CONTEXT*) pContext;
         ptr_context->ContextFlags = contextFlags;
 
-        HANDLE h_thread = OpenThread(
-            THREAD_GET_CONTEXT,
-            FALSE,
-            dwThreadID
-        );
+        HANDLE h_thread = OpenThread(THREAD_GET_CONTEXT, FALSE, dwThreadID);
 
         if (h_thread == nullptr || h_thread == INVALID_HANDLE_VALUE) {
             fwprintf_s(stderr, L"[!] OpenThread failed for thread 0x%X.\n", dwThreadID);
@@ -239,12 +225,11 @@ static BOOL stage0_dbg_clr_init(
     LPVOID ptr_coreclr, // The pointer to the image base of the `coreclr.dll` for this session.
     LPWSTR path_coreclr // The full path to `coreclr.dll` for this session.
 ) {
-    g_ptr_coreclr = ptr_coreclr;
-
     /* [fkelava 20/09/26 23:06]
      * The CLR debugging function CreateVersionStringFromModule does not
      * support the full \\?\ prefixed paths we use, so we strip it.
      */
+    g_ptr_coreclr = ptr_coreclr;
 
     HRESULT hr = StringCchCopyW(g_path_coreclr, MAX_PATH, &path_coreclr[4]);
     if (hr != S_OK) {
@@ -266,22 +251,12 @@ static BOOL stage0_dbg_clr_init(
         return FALSE;
     }
 
-    if (FAILED(StringCchCatW(g_path_mscordbi, MAX_PATH, folder_coreclr)) ||
-        FAILED(StringCchCatW(g_path_mscordbi, MAX_PATH, L"\\mscordbi.dll"))
-    ) {
-        fwprintf_s(stderr, L"[!] StringCchCatW() failed.\n");
-        return FALSE;
-    }
-
-    if (FAILED(StringCchCatW(g_path_mscordaccore, MAX_PATH, folder_coreclr)) ||
-        FAILED(StringCchCatW(g_path_mscordaccore, MAX_PATH, L"\\mscordaccore.dll"))
-    ) {
-        fwprintf_s(stderr, L"[!] StringCchCatW() failed.\n");
-        return FALSE;
-    }
-
-    if (FAILED(StringCchCatW(g_path_mscordacwks, MAX_PATH, folder_coreclr)) ||
-        FAILED(StringCchCatW(g_path_mscordacwks, MAX_PATH, L"\\mscordacwks.dll"))
+    if (FAILED(StringCchCatW(g_path_mscordbi,     MAX_PATH, folder_coreclr))        ||
+        FAILED(StringCchCatW(g_path_mscordbi,     MAX_PATH, L"\\mscordbi.dll"))     ||
+        FAILED(StringCchCatW(g_path_mscordaccore, MAX_PATH, folder_coreclr))        ||
+        FAILED(StringCchCatW(g_path_mscordaccore, MAX_PATH, L"\\mscordaccore.dll")) ||
+        FAILED(StringCchCatW(g_path_mscordacwks,  MAX_PATH, folder_coreclr))        ||
+        FAILED(StringCchCatW(g_path_mscordacwks,  MAX_PATH, L"\\mscordacwks.dll"))
     ) {
         fwprintf_s(stderr, L"[!] StringCchCatW() failed.\n");
         return FALSE;
@@ -304,12 +279,7 @@ static HRESULT stage0_dbg_clr_symbolicate(
     ICorDebugModule*    ptr_ICorDebugModule    = NULL;
     IMetaDataImport*    ptr_IMetaDataImport    = NULL;
 
-    HRESULT hr = CLRCreateInstance(
-        CLSID_CLRDebugging,
-        IID_ICLRDebugging,
-        (LPVOID*) &ptr_ICLRDebugging
-    );
-
+    HRESULT hr = CLRCreateInstance(CLSID_CLRDebugging, IID_ICLRDebugging, (LPVOID*) &ptr_ICLRDebugging);
     if (hr != S_OK) {
         fwprintf_s(stderr, L"[!] CLRCreateInstance failed with code 0x%X.\n", hr);
         return hr;
@@ -325,16 +295,15 @@ static HRESULT stage0_dbg_clr_symbolicate(
      * Restricting by build is useless because the user may use a newer .NET
      * than was available at the time their Fh was compiled.
      */
-
     CLR_DEBUGGING_VERSION clr_ver_supported = { 0 };
+    CLR_DEBUGGING_VERSION clr_ver_actual    = { 0 };
+
+    clr_ver_actual   .wStructVersion = 0;
     clr_ver_supported.wStructVersion = 0;
     clr_ver_supported.wMajor         = 10;
     clr_ver_supported.wMinor         = 0;
     clr_ver_supported.wBuild         = 65535;
     clr_ver_supported.wRevision      = 65535;
-
-    CLR_DEBUGGING_VERSION clr_ver_actual = { 0 };
-    clr_ver_actual.wStructVersion = 0;
 
     CLR_DEBUGGING_PROCESS_FLAGS clr_dbg_flags;
 
@@ -357,37 +326,25 @@ static HRESULT stage0_dbg_clr_symbolicate(
         return hr;
     }
 
-    hr = ptr_ICorDebugProcess->GetThread(
-        id_thread,
-        &ptr_ICorDebugThread
-    );
-
+    hr = ptr_ICorDebugProcess->GetThread(id_thread, &ptr_ICorDebugThread);
     if (hr != S_OK) {
         fwprintf_s(stderr, L"[!] ICorDebugProcess::GetThread failed with code 0x%X.\n", hr);
         return hr;
     }
 
-    hr = ptr_ICorDebugThread->QueryInterface(
-        IID_ICorDebugThread3,
-        (LPVOID*) &ptr_ICorDebugThread3
-    );
-
+    hr = ptr_ICorDebugThread->QueryInterface(IID_ICorDebugThread3, (LPVOID*) &ptr_ICorDebugThread3);
     if (hr != S_OK) {
         fwprintf_s(stderr, L"[!] ICorDebugThread::QI(ICorDebugThread3) failed with code 0x%X.\n", hr);
         return hr;
     }
 
-    hr = ptr_ICorDebugThread3->CreateStackWalk(
-        &ptr_ICorDebugStackWalk
-    );
-
+    hr = ptr_ICorDebugThread3->CreateStackWalk(&ptr_ICorDebugStackWalk);
     if (hr != S_OK) {
         fwprintf_s(stderr, L"[!] ICorDebugThread3::CreateStackWalk failed with code 0x%X.\n", hr);
         return hr;
     }
 
     hr = ptr_ICorDebugStackWalk->Next();
-
     if (hr != S_OK)
         return hr;
 
@@ -395,38 +352,30 @@ static HRESULT stage0_dbg_clr_symbolicate(
 
     while (true) {
         hr = ptr_ICorDebugStackWalk->GetFrame(&ptr_ICorDebugFrame);
-
         if (hr != S_OK) {
             fwprintf_s(stderr, L"[!] ICorDebugStackWalk::GetFrame failed with code 0x%X.\n", hr);
             break;
         }
 
         hr = ptr_ICorDebugFrame->GetFunction(&ptr_ICorDebugFunction);
-
         if (hr != S_OK) {
             fwprintf_s(stderr, L"[!] ICorDebugFrame::GetFunction failed with code 0x%X.\n", hr);
             break;
         }
 
         hr = ptr_ICorDebugFunction->GetModule(&ptr_ICorDebugModule);
-
         if (hr != S_OK) {
             fwprintf_s(stderr, L"[!] ICorDebugFunction::GetModule failed with code 0x%X.\n", hr);
             break;
         }
 
         hr = ptr_ICorDebugFunction->GetToken(&method_token);
-
         if (hr != S_OK) {
             fwprintf_s(stderr, L"[!] ICorDebugFunction::GetToken failed with code 0x%X.\n", hr);
             break;
         }
 
-        hr = ptr_ICorDebugModule->GetMetaDataInterface(
-            IID_IMetaDataImport,
-            (IUnknown**) &ptr_IMetaDataImport
-        );
-
+        hr = ptr_ICorDebugModule->GetMetaDataInterface(IID_IMetaDataImport, (IUnknown**) &ptr_IMetaDataImport);
         if (hr != S_OK) {
             fwprintf_s(stderr, L"[!] ICorDebugModule::GetMetaDataInterface failed with code 0x%X.\n", hr);
             break;
@@ -483,7 +432,6 @@ static HRESULT stage0_dbg_clr_symbolicate(
         fwprintf_s(stdout, L"%s!%s\n", type_name, method_name);
 
         hr = ptr_ICorDebugStackWalk->Next();
-
         if (hr != S_OK)
             break;
     }
@@ -502,11 +450,7 @@ static void stage0_dbg_symbolicate(
     IMAGEHLP_MODULEW64 module = { 0 };
     module.SizeOfStruct = sizeof(IMAGEHLP_MODULEW64);
 
-    if (!SymGetModuleInfoW64(
-        h_process,
-        frame_addr,
-        &module
-    )) {
+    if (!SymGetModuleInfoW64(h_process, frame_addr, &module)) {
         fwprintf_s(stderr, L"SymGetModuleInfoW64() failed with code 0x%X.\n", GetLastError());
         return;
     }
@@ -514,11 +458,7 @@ static void stage0_dbg_symbolicate(
     SYMSRV_INDEX_INFOW symsrv_info = { 0 };
     symsrv_info.sizeofstruct = sizeof(SYMSRV_INDEX_INFOW);
 
-    if (!SymSrvGetFileIndexInfoW(
-        module.LoadedImageName,
-        &symsrv_info,
-        0
-    )) {
+    if (!SymSrvGetFileIndexInfoW(module.LoadedImageName, &symsrv_info, 0)) {
         fwprintf_s(stderr, L"SymSrvGetFileIndexInfoW() failed with code 0x%X.\n", GetLastError());
         return;
     }
@@ -577,13 +517,8 @@ static void stage0_dbg_symbolicate(
     sym.si.MaxNameLen   = MAX_SYM_NAME;
 
     DWORD64 sym_displacement = 0;
-    if (!SymFromAddrW(
-        h_process,
-        frame_addr,
-        &sym_displacement,
-        &sym.si
-    )) {
-        fwprintf_s(stderr, L"SymFromAddrW() failed with code 0x%X.\n", GetLastError());
+    if (!SymFromAddrW(h_process, frame_addr, &sym_displacement, &sym.si)) {
+        fwprintf_s(stderr, L"[!] SymFromAddrW() failed with code 0x%X.\n", GetLastError());
         return;
     }
 
@@ -819,11 +754,7 @@ static DWORD stage0_dbg_exception(
         CONTEXT faulting_thread_context = { 0 };
         faulting_thread_context.ContextFlags = CONTEXT_ALL;
 
-        HANDLE faulting_thread_handle = OpenThread(
-            THREAD_GET_CONTEXT,
-            FALSE,
-            id_thread
-        );
+        HANDLE faulting_thread_handle = OpenThread(THREAD_GET_CONTEXT, FALSE, id_thread);
 
         if (faulting_thread_handle == nullptr || faulting_thread_handle == INVALID_HANDLE_VALUE) {
             fwprintf_s(stderr, L"Failed to open the faulting thread for context capture.\n");
@@ -835,9 +766,7 @@ static DWORD stage0_dbg_exception(
             return DBG_EXCEPTION_NOT_HANDLED;
         }
 
-        stage0_dbg_print_context(
-            &faulting_thread_context
-        );
+        stage0_dbg_print_context(&faulting_thread_context);
 
         /* [fkelava 13/09/26 13:49]
          * https://learn.microsoft.com/en-us/windows/win32/api/dbghelp/nf-dbghelp-stackwalk64
@@ -887,7 +816,7 @@ static BOOL stage0_dbg_get_module_size(
 
         MEMORY_BASIC_INFORMATION mem_info;
         if (VirtualQueryEx(h_process, ptr_current, &mem_info, sizeof(mem_info)) == 0) {
-            fwprintf_s(stderr, L"[!] VirtualQueryEx() failed.\n");
+            fwprintf_s(stderr, L"[!] VirtualQueryEx() failed with code 0x%X.\n", GetLastError());
             return FALSE;
         }
 
@@ -908,9 +837,7 @@ static BOOL stage0_dbg_process_module(
     DWORD& error_code       // [out] The error code to terminate the process with on failure.
 ) {
     if (h_module_file == nullptr || h_module_file == INVALID_HANDLE_VALUE) {
-        fwprintf_s(stderr, L"Invalid DLL handle in LOAD_DLL_DEBUG_EVENT.\n");
-        error_code = ERROR_INVALID_HANDLE;
-
+        fwprintf_s(stderr, L"[!] LOAD_DLL_DEBUG_EVENT: Invalid DLL handle.\n");
         return FALSE;
     }
 
@@ -931,16 +858,12 @@ static BOOL stage0_dbg_process_module(
     );
 
     if (sz_module_path == 0) {
-        fwprintf_s(stderr, L"[!] GetFinalPathNameByHandleW() failed.\n");
-        error_code = GetLastError();
-
+        fwprintf_s(stderr, L"[!] GetFinalPathNameByHandleW() failed with code 0x%X.\n", GetLastError());
         return FALSE;
     }
 
     if (sz_module_path > MAX_PATH) {
         fwprintf_s(stderr, L"[!] GetFinalPathNameByHandleW() - path length exceeded MAX_PATH.\n");
-        error_code = ERROR_BUFFER_OVERFLOW;
-
         return FALSE;
     }
 
@@ -948,12 +871,8 @@ static BOOL stage0_dbg_process_module(
      * A bit of a hack. To engage CLR debugging later, we need to track
      * a few .NET DLLs, starting from `coreclr.dll`.
      */
-
     if (wcsstr(module_path, L"coreclr.dll") != NULL) {
-        if (!stage0_dbg_clr_init(
-            ptr_module_base,
-            module_path
-        )) {
+        if (!stage0_dbg_clr_init(ptr_module_base, module_path)) {
             fwprintf_s(stderr, L"Failed to prepare for CLR debugging.\n");
             return FALSE;
         }
@@ -963,18 +882,9 @@ static BOOL stage0_dbg_process_module(
      * https://groups.google.com/forum/#!topic/comp.os.ms-windows.programmer.win32/ulkwYhM3020
      * > When deferred symbols are in use, the correct DLL size must be passed.
      */
-
     DWORD module_size;
-    if (!stage0_dbg_get_module_size(
-        h_process,
-        ptr_module_base,
-        module_size
-    )) {
-        fwprintf_s(stderr, L"Failed to get the size of module being loaded.\n");
-        error_code = GetLastError();
-
+    if (!stage0_dbg_get_module_size(h_process, ptr_module_base, module_size))
         return FALSE;
-    }
 
     DWORD64 module_base_addr = SymLoadModuleExW(
         h_process,
@@ -989,9 +899,7 @@ static BOOL stage0_dbg_process_module(
 
     DWORD error_symload = GetLastError();
     if (module_base_addr == 0 && error_symload != ERROR_SUCCESS) {
-        fwprintf_s(stderr, L"[!] SymLoadModuleExW() failed.\n");
-        error_code = error_symload;
-
+        fwprintf_s(stderr, L"[!] SymLoadModuleExW() failed with code 0x%X.\n", error_symload);
         return FALSE;
     }
 
@@ -1004,15 +912,8 @@ static BOOL stage0_dbg_process_module(
      * > symbols are not loaded until a reference is made to a symbol in the module.
      * > Therefore, you should always call SymGetModuleInfo64 after calling SymLoadModuleEx.
      */
-
-    if (!SymGetModuleInfo64(
-        h_process,
-        module_base_addr,
-        &module_info
-    )) {
-        fwprintf_s(stderr, L"[!] SymGetModuleInfo64() failed.\n");
-        error_code = GetLastError();
-
+    if (!SymGetModuleInfo64(h_process, module_base_addr, &module_info)) {
+        fwprintf_s(stderr, L"[!] SymGetModuleInfo64() failed with code 0x%X.\n", GetLastError());
         return FALSE;
     }
 
@@ -1164,12 +1065,7 @@ void stage0_dbg_loop() {
 
         if (event_code == LOAD_DLL_DEBUG_EVENT) {
             DWORD error_code;
-            if (!stage0_dbg_process_module(
-                h_process,
-                event.u.LoadDll.hFile,
-                event.u.LoadDll.lpBaseOfDll,
-                error_code
-            )) {
+            if (!stage0_dbg_process_module(h_process, event.u.LoadDll.hFile, event.u.LoadDll.lpBaseOfDll, error_code)) {
                 TerminateProcess(h_process, error_code);
                 return;
             }

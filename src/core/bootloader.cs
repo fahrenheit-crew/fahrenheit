@@ -145,7 +145,7 @@ internal sealed class FhLoader {
     private readonly Dictionary<string, FhLoadContext> _load_contexts = [];
 
     internal FhLoader() {
-        // The core library is loaded into ALC.Default. This ensures it does not 'leak' into plugins' load contexts, causing type identity mismatches.
+        // The core library is loaded into ALC.Default. This ensures it does not 'leak' into mods' load contexts, causing type identity mismatches.
         string path_self = Path.Join(FhEnvironment.Finder.Binaries.FullName, "fh.dll");
 
         FhInternal.Log.LogDirect($"----");

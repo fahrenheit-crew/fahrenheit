@@ -13,11 +13,11 @@
 
 #include "fhstage1.h"
 
-static LPTOP_LEVEL_EXCEPTION_FILTER WINAPI stage1_eh_set_filter(LPTOP_LEVEL_EXCEPTION_FILTER fnptr_exception_filter) {
+static LPTOP_LEVEL_EXCEPTION_FILTER WINAPI s1_eh_set_filter(LPTOP_LEVEL_EXCEPTION_FILTER fnptr_exception_filter) {
     return NULL;
 }
 
-BOOL stage1_eh_suppress() {
+BOOL s1_eh_suppress() {
     wchar_t exe_path[MAX_PATH] = { 0 };
     wchar_t exe_name[MAX_PATH] = { 0 };
 
@@ -57,7 +57,7 @@ BOOL stage1_eh_suppress() {
      *
      * https://github.com/TsudaKageyu/minhook/blob/8af6b4acae5a9388fd742b56fa79ece89d96f823/src/hook.c#L633
      */
-    if (MH_CreateHookApi(L"kernel32.dll", "SetUnhandledExceptionFilter", &stage1_eh_set_filter, NULL) != MH_OK ||
+    if (MH_CreateHookApi(L"kernel32.dll", "SetUnhandledExceptionFilter", &s1_eh_set_filter, NULL) != MH_OK ||
         MH_EnableHook   (&SetUnhandledExceptionFilter)                                                != MH_OK
     ) {
         fwprintf_s(stderr, L"Failed to suppress SEH filter install for %s.\n", exe_name);

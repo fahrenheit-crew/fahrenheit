@@ -9,4 +9,4 @@ In order, it:
 	- This process is performed using MS Detours' [``DetourCreateProcessWithDll``](https://github.com/microsoft/detours/wiki/DetourCreateProcessWithDll).
 - Captures standard I/O from the game.
 - Waits for the game process to crash or exit, capturing its exit code.
-    - If the game process crashed, it prints exception information, creates a core dump, and displays an approximate stack trace.
+    - If the game process crashed, it prints exception information, creates a core dump, and displays a stack trace.

@@ -30,11 +30,11 @@ hostfxr_close_fn                         g_fnptr_hostfxr_close;
 FILE* g_stdout;
 FILE* g_stderr;
 
-BOOL stage1_eh_suppress(); // Forward declaration of EH suppressor function
+BOOL s1_eh_suppress(); // Forward declaration of EH suppressor function
 
 // Uses the `nethost` library to discover the location of the .NET hosting library,
 // `hostfxr`, and obtains the necessary function pointers from it.
-static BOOL stage1_load_hostfxr(
+static BOOL s1_load_hostfxr(
     DWORD& error_code // [out] The error code, if the method returns FALSE.
 ) {
     wchar_t path_hostfxr_buf[MAX_PATH];
@@ -74,7 +74,7 @@ static BOOL stage1_load_hostfxr(
 }
 
 // Runs before the program's own entrypoint, setting up Fahrenheit.
-static int stage1_main(void) {
+static int s1_main(void) {
     /* [fkelava 16/09/26 17:07]
      * Sometimes Visual Studio is obstinate and won't honor breakpoints in Stage 1.
      *
@@ -83,7 +83,7 @@ static int stage1_main(void) {
 
     // If necessary, suppress the game's SEH filters, so Stage 0
     // takes over exception handling and core dumping.
-    if (!stage1_eh_suppress()) {
+    if (!s1_eh_suppress()) {
         fwprintf_s(stderr, L"Failed to suppress SEH filter.\n");
         return 1;
     }
@@ -106,7 +106,7 @@ static int stage1_main(void) {
 
     // Load HostFxr. This library will locate the .NET runtime for us.
     DWORD load_hostfxr_rc = 0;
-    if (!stage1_load_hostfxr(load_hostfxr_rc)) {
+    if (!s1_load_hostfxr(load_hostfxr_rc)) {
         fwprintf_s(stderr, L"Fahrenheit failed to load the .NET Runtime. Ensure it is installed as per the setup guide.\n");
         return load_hostfxr_rc;
     }
@@ -203,7 +203,7 @@ static int stage1_main(void) {
 
 
 // Records the directory we started from and hooks the target's entrypoint.
-static BOOL stage1_init(
+static BOOL s1_init(
     HMODULE h_self
 ) {
     // Attach to the Stage 0 console and forward stdout/stderr to it.
@@ -251,7 +251,7 @@ static BOOL stage1_init(
     g_fnptr_main_target = reinterpret_cast<main_fn>(ptr_target_base + ptr_nt_headers->OptionalHeader.AddressOfEntryPoint);
 
     if (MH_Initialize() != MH_OK
-    ||  MH_CreateHook(g_fnptr_main_target, &stage1_main, reinterpret_cast<void**>(&g_fnptr_main_original)) != MH_OK
+    ||  MH_CreateHook(g_fnptr_main_target, &s1_main, reinterpret_cast<void**>(&g_fnptr_main_original)) != MH_OK
     ||  MH_EnableHook(g_fnptr_main_target) != MH_OK)
         return FALSE;
 
@@ -269,7 +269,7 @@ BOOL APIENTRY DllMain(
             if (!DetourRestoreAfterWith())
                 return FALSE;
 
-            if (!stage1_init(h_self))
+            if (!s1_init(h_self))
                 return FALSE;
         }
         case DLL_THREAD_ATTACH:

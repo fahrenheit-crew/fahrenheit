@@ -18,6 +18,10 @@ Do not modify or unload it. See `src/stage0/inc/dbgshim/README.md`, `src/stage1/
     </ItemGroup>
 
     <Target Name="__FhCopyDbgshim" Condition="$([MSBuild]::IsOsPlatform('Windows'))" BeforeTargets="Build">
+        <!--
+        The below should be $(PkgMicrosoft_Diagnostics_DbgShim_$(RuntimeIdentifier)), but nested property expansion
+        does not exist in MSBuild. Therefore, we make do and need to remember to fix this manually if we ever switch bitness here.
+        -->
         <PropertyGroup>
             <DbgShimDll>$(PkgMicrosoft_Diagnostics_DbgShim_win-x86)/runtimes/$(RuntimeIdentifier)/native/dbgshim.dll</DbgShimDll>
         </PropertyGroup>

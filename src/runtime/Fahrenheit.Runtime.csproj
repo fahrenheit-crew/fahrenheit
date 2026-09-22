@@ -35,14 +35,6 @@
         <None Include="$(SolutionDir).editorconfig" Link=".editorconfig" />
     </ItemGroup>
 
-    <!--
-    This is required for Stage0, but it can't include NuGet packages.
-    We would put it in `Stage1.Deps`, but that won't work either because it has no build output.
-    -->
-    <ItemGroup>
-        <PackageReference Include="Microsoft.Diagnostics.DbgShim.$(RuntimeIdentifier)" Version="10.0.745401" />
-    </ItemGroup>
-
     <!-- PROJECT REFERENCES -->
     <ItemGroup>
         <ProjectReference Include="..\core\Fahrenheit.csproj">

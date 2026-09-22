@@ -1,23 +1,29 @@
 ﻿<!-- fkelava 18/09/26 18:09
-This project's sole purpose is to to fetch the .NET hosting headers and libraries
+This is a special project whose sole purpose is to fetch assets for .NET debugging and hosting
 from your system-wide .NET SDK install using the SDK's MSBuild properties.
 
-Do not modify or unload it. See `src/stage1/inc/nethost/README.md`.
+Do not modify or unload it. See `src/stage0/inc/dbgshim/README.md`, `src/stage1/inc/nethost/README.md`.
 -->
 
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
         <RuntimeIdentifier>win-x86</RuntimeIdentifier>
-    </PropertyGroup>
-
-    <PropertyGroup>
+	    <EnableDefaultItems>false</EnableDefaultItems>
         <IsPublishable>false</IsPublishable>
     </PropertyGroup>
 
     <ItemGroup>
-        <None Remove="**/*" />
+        <PackageReference Include="Microsoft.Diagnostics.DbgShim.$(RuntimeIdentifier)" Version="10.0.745401" GeneratePathProperty="true" />
     </ItemGroup>
+
+    <Target Name="__FhCopyDbgshim" Condition="$([MSBuild]::IsOsPlatform('Windows'))" BeforeTargets="Build">
+        <PropertyGroup>
+            <DbgShimDll>$(PkgMicrosoft_Diagnostics_DbgShim_win-x86)/runtimes/$(RuntimeIdentifier)/native/dbgshim.dll</DbgShimDll>
+        </PropertyGroup>
+
+        <Copy SourceFiles="$(DbgShimDll)" DestinationFolder="$(_FhOutDirBin)" />
+    </Target>
 
     <Target Name="__FhCopyNethost" Condition="$([MSBuild]::IsOsPlatform('Windows'))" BeforeTargets="Build">
         <PropertyGroup>
@@ -26,7 +32,7 @@ Do not modify or unload it. See `src/stage1/inc/nethost/README.md`.
             <NetHostLib>$(NetHostDir)/nethost.lib</NetHostLib>
             <NetHostDll>$(NetHostDir)/nethost.dll</NetHostDll>
 
-            <DestDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', 'inc', 'nethost'))</DestDir>
+            <DestDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', 'stage1', 'inc', 'nethost'))</DestDir>
         </PropertyGroup>
 
         <MakeDir Directories="$(DestDir)" />

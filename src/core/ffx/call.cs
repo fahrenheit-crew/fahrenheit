@@ -567,23 +567,23 @@ public static partial class FhCall {
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate int d_FUN_008c1ba0();
-    private static FhMethodHandle<d_FUN_008c1ba0> FUN_008c1ba0
+    public static FhMethodHandle<d_FUN_008c1ba0> FUN_008c1ba0
         => new ( new FhMethodLocation("FFX.exe", 0x4C1BA0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public unsafe delegate void d_FUN_008c9c10(void* param_1, int start_idx, int amount);
-    private static FhMethodHandle<d_FUN_008c9c10> FUN_008c9c10
+    public static FhMethodHandle<d_FUN_008c9c10> FUN_008c9c10
         => new ( new FhMethodLocation("FFX.exe", 0x4C9C10) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public unsafe delegate int d_FUN_008c9b90(byte* array, int value, int start_idx, int length);
-    private static FhMethodHandle<d_FUN_008c9b90> FUN_008c9b90
+    public static FhMethodHandle<d_FUN_008c9b90> FUN_008c9b90
         => new ( new FhMethodLocation("FFX.exe", 0x4C9B90) );
 
     // Unofficial naming
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate int d_SwapSaveGear(int gear_a_idx, int gear_b_idx);
-    private static FhMethodHandle<d_SwapSaveGear> SwapSaveGear
+    public static FhMethodHandle<d_SwapSaveGear> SwapSaveGear
         => new ( new FhMethodLocation("FFX.exe", 0x3ABA10) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -651,22 +651,22 @@ public static partial class FhCall {
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void d_FUN_008c94b0();
-    private static FhMethodHandle<d_FUN_008c94b0> FUN_008c94b0
+    public static FhMethodHandle<d_FUN_008c94b0> FUN_008c94b0
         => new ( new FhMethodLocation("FFX.exe", 0x4C94B0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void d_FUN_008c9bc0();
-    private static FhMethodHandle<d_FUN_008c9bc0> FUN_008c9bc0
+    public static FhMethodHandle<d_FUN_008c9bc0> FUN_008c9bc0
         => new ( new FhMethodLocation("FFX.exe", 0x4C9BC0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate int d_FUN_008c9f80();
-    private static FhMethodHandle<d_FUN_008c9f80> FUN_008c9f80
+    public static FhMethodHandle<d_FUN_008c9f80> FUN_008c9f80
         => new ( new FhMethodLocation("FFX.exe", 0x4C9F80) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate int d_FUN_008ca180();
-    private static FhMethodHandle<d_FUN_008ca180> FUN_008ca180
+    public static FhMethodHandle<d_FUN_008ca180> FUN_008ca180
         => new ( new FhMethodLocation("FFX.exe", 0x4CA180) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]

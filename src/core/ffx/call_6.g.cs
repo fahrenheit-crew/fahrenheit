@@ -8131,9 +8131,6 @@ public static unsafe partial class FhCall {
     public unsafe delegate void d_FUN_00a56330();
     public static FhMethodHandle<d_FUN_00a56330> FUN_00a56330 => new( new FhMethodLocation("FFX.exe", 0x656330) );
 
-    // Symbol skipped (deemed uninterpretable):
-    // __stdcall undefined +AbmapUpdateMovingChrPos(SphereGridChrInfo* chr_info, Vector4* prev_node_pos, Vector4* next_node_pos, Vector4* anchor_pos, undefined4 progress) at 00a563b0
-
     // Original after pruning:
     // unknown undefined FUN_00a56690() at 00a56690
 
@@ -8210,9 +8207,6 @@ public static unsafe partial class FhCall {
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public unsafe delegate void d_FUN_00a56dd0();
     public static FhMethodHandle<d_FUN_00a56dd0> FUN_00a56dd0 => new( new FhMethodLocation("FFX.exe", 0x656DD0) );
-
-    // Symbol skipped (deemed uninterpretable):
-    // __stdcall undefined +AbmapFindNextConnectingNode(undefined2 node_idx_a, undefined2 target_node_idx, SphereGridLink** out_link) at 00a56e00
 
     // Original after pruning:
     // unknown undefined FUN_00a56ed0() at 00a56ed0

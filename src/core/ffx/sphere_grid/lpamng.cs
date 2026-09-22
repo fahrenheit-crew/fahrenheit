@@ -6,9 +6,9 @@
 namespace Fahrenheit.FFX.SphereGrid;
 
 public enum SphereGridTilt : byte {
-    FLAT,
-    SLIGHT_TILT,
-    FAR_TILT,
+    NONE,
+    SLIGHT,
+    HEAVY,
 }
 
 public enum SphereGridZoom : byte {
@@ -19,23 +19,23 @@ public enum SphereGridZoom : byte {
 }
 
 public static class SphereGridZoomExt {
-    public static float get_zoom(this SphereGridZoom zoom_level) {
-        return zoom_level switch {
+    extension(SphereGridZoom zoom_level) {
+        public float zoom => zoom_level switch {
             SphereGridZoom.VERY_FAR => 0.125f,
             SphereGridZoom.FAR     => 0.25f,
             SphereGridZoom.MEDIUM  => 0.5f,
             SphereGridZoom.CLOSE   => 1.0f,
             _                      => 0.5f,
         };
-    }
 
-    public static SphereGridZoom get_closest(float zoom, bool allow_very_far = false) {
-        return zoom switch {
-             <= 0.1875f => allow_very_far ? SphereGridZoom.VERY_FAR : SphereGridZoom.FAR,
-             <= 0.375f  => SphereGridZoom.FAR,
-             <= 0.75f   => SphereGridZoom.MEDIUM,
-            _           => SphereGridZoom.CLOSE,
-        };
+        public static SphereGridZoom get_closest(float zoom, bool allow_very_far = false) {
+            return zoom switch {
+                <= 0.1875f => allow_very_far ? SphereGridZoom.VERY_FAR : SphereGridZoom.FAR,
+                <= 0.375f  => SphereGridZoom.FAR,
+                <= 0.75f   => SphereGridZoom.MEDIUM,
+                _          => SphereGridZoom.CLOSE,
+            };
+        }
     }
 }
 
@@ -153,7 +153,7 @@ public unsafe struct LpAbilityMapEngine {
     [FieldOffset(0x115E8)] public float  fade_dark_inv_alpha;
     [FieldOffset(0x115F4)] public float  halo_alpha;
 
-    [FieldOffset(0x115F8)] public SphereGridLink* next_move_link;
+    [FieldOffset(0x115F8)] public SphereGridLink* move_next_link;
 
     [FieldOffset(0x115FC)] public float x_min;
     [FieldOffset(0x11600)] public float y_min;
@@ -166,17 +166,17 @@ public unsafe struct LpAbilityMapEngine {
 
     [FieldOffset(0x1161C)] public int slv_queued;
 
-    [FieldOffset(0x11620)] public float moving_progress; // per link/knot
-    [FieldOffset(0x11624)] public float moving_speed;
-    [FieldOffset(0x11628)] public float moving_halo_start_width;
-    [FieldOffset(0x1162C)] public float moving_halo_target_width;
+    [FieldOffset(0x11620)] public float move_progress; // per link/knot
+    [FieldOffset(0x11624)] public float move_speed;
+    [FieldOffset(0x11628)] public float move_halo_start_radius;
+    [FieldOffset(0x1162C)] public float move_halo_target_radius;
 
     [FieldOffset(0x11630)] public short move_start_node_idx;
-    [FieldOffset(0x11632)] public short move_next_knot_node_idx;
+    [FieldOffset(0x11632)] public short move_next_knot_idx;
     [FieldOffset(0x11634)] public short move_target_node_idx;
     [FieldOffset(0x11636)] public short move_next_link_anchor_idx;
 
-    [FieldOffset(0x11638)] public byte    moving_ply_id;
+    [FieldOffset(0x11638)] public byte    move_ply_id;
     [FieldOffset(0x1163C)] public Vector4 move_prev_node_pos;
 
     [FieldOffset(0x1164C)] public byte   __0x1164C;

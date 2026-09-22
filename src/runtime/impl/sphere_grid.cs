@@ -17,6 +17,7 @@ namespace Fahrenheit.Runtime.Impl;
 public unsafe class SphereGridModule : FhModule {
     public override bool init(FhModContext mod_context, FileStream global_state_file) {
         return FhXCall.AbmapState_ChoosingMoveTarget.hook(this, h_state_choosing_move_target)
+            && FhXCall.AbmapState_MovingToTarget.hook(this, h_state_moving)
             && FhXCall.AbmapState_ChoosingActivationTarget.hook(this, h_state_choosing_activation_target)
             && FhXCall.AbmapState_Warping.hook(this, h_state_warping)
             && FhXCall.AbmapCalcMoveCosts.hook(this, h_calc_move_costs)
@@ -149,14 +150,14 @@ public unsafe class SphereGridModule : FhModule {
     }
 
     public void init_moving(int ply_id, short node_idx) {
-        lpamng->move_next_knot_node_idx = lpamng->party_infos[ply_id].current_node_idx;
-        lpamng->move_start_node_idx = lpamng->move_next_knot_node_idx;
+        lpamng->move_next_knot_idx = lpamng->party_infos[ply_id].current_node_idx;
+        lpamng->move_start_node_idx = lpamng->move_next_knot_idx;
         lpamng->move_target_node_idx = node_idx;
 
-        lpamng->moving_progress = 1f;
-        lpamng->moving_speed    = 0f;
+        lpamng->move_progress = 1f;
+        lpamng->move_speed    = 0f;
 
-        lpamng->moving_ply_id = (byte)ply_id;
+        lpamng->move_ply_id = (byte)ply_id;
 
         if (lpamng->fn_ctrl_backup == null) {
             lpamng->fn_ctrl_backup = lpamng->fn_ctrl;
@@ -212,7 +213,7 @@ public unsafe class SphereGridModule : FhModule {
                 lpamng->__0x115C6 = byte.Min(lpamng->__0x115C6, 0x80);
 
                 if (FhUtil.get_at<short>(0x168607E) == 0) {
-                    lpamng->party_infos[lpamng->moving_ply_id].pos_circle_radius = 0f;
+                    lpamng->party_infos[lpamng->move_ply_id].pos_circle_radius = 0f;
                     lpamng->__0x1164C = 1;
                     lpamng->__0x115C6 = 0;
                 }
@@ -224,8 +225,8 @@ public unsafe class SphereGridModule : FhModule {
 
                 Vector4 target_pos = new(target_node.x, target_node.y, 0f, 1f);
 
-                lpamng->moving_progress += 1f/12f;
-                if (1f <= lpamng->moving_progress){
+                lpamng->move_progress += 1f/12f;
+                if (1f <= lpamng->move_progress){
                     lpamng->__0x1164C = 2;
                     lpamng->__0x1164D = 0;
 
@@ -247,11 +248,11 @@ public unsafe class SphereGridModule : FhModule {
                         0.5f, 0.5f, 0.5f
                     );
 
-                    lpamng->party_infos[lpamng->moving_ply_id].current_node_idx
+                    lpamng->party_infos[lpamng->move_ply_id].current_node_idx
                         = lpamng->move_target_node_idx;
 
-                    FhXCall.FUN_00a5a990.fnptr!(lpamng->moving_ply_id);
-                    FhXCall.AbmapPositionPlyTag.fnptr!(lpamng->moving_ply_id);
+                    FhXCall.FUN_00a5a990.fnptr!(lpamng->move_ply_id);
+                    FhXCall.AbmapPositionPlyTag.fnptr!(lpamng->move_ply_id);
 
                     lpamng->__0x115C7 = 1;
 
@@ -259,7 +260,7 @@ public unsafe class SphereGridModule : FhModule {
                     break;
                 }
 
-                lpamng->cam_desired_pos = Vector4.Lerp(lpamng->move_prev_node_pos, target_pos, lpamng->moving_progress);
+                lpamng->cam_desired_pos = Vector4.Lerp(lpamng->move_prev_node_pos, target_pos, lpamng->move_progress);
 
                 break;
 
@@ -830,5 +831,118 @@ public unsafe class SphereGridModule : FhModule {
         void* alloc2 = NativeMemory.Alloc(0x200);
         new Span<byte>(alloc2, 0x200).Fill(0xCD);
         FhUtil.set_at<nint>(0x16860F0, (nint)alloc2);
+    }
+
+    public void h_state_moving() {
+        lpamng->move_progress += lpamng->move_speed;
+        float move_t = lpamng->move_progress;
+
+        SphereGridPlyInfo* ply_info = &lpamng->party_infos[lpamng->move_ply_id];
+
+        if (lpamng->should_update == 0) {
+            lpamng->should_update = 1;
+        }
+
+        SphereGridNode* next_node = &lpamng->nodes[lpamng->move_next_knot_idx];
+        Vector4 next_node_pos = new(next_node->x, next_node->y, 0f, 1f);
+
+        while (move_t >= 1f) {
+            lpamng->move_next_link = null;
+
+            if (lpamng->move_next_knot_idx == lpamng->move_target_node_idx) {
+                ply_info->pos = next_node_pos;
+                lpamng->__0x115C7 = 1;
+                lpamng->fn_ctrl = lpamng->fn_ctrl_backup;
+                lpamng->fn_ctrl_backup = null;
+                return;
+            }
+
+            SphereGridLink* next_link = null;
+            lpamng->move_next_knot_idx = FhXCall.AbmapFindNextConnectingNode.fnptr!(
+                lpamng->move_next_knot_idx,
+                lpamng->move_target_node_idx,
+                &next_link
+            );
+
+            if (lpamng->move_next_knot_idx == -1) {
+                ply_info->pos = next_node_pos;
+                lpamng->__0x115C7 = 1;
+                lpamng->fn_ctrl = lpamng->fn_ctrl_backup;
+                lpamng->fn_ctrl_backup = null;
+                return;
+            }
+
+            lpamng->move_next_link_anchor_idx = next_link->anchor_idx;
+
+            if (!next_link->activated_by.get_bit(lpamng->move_ply_id)) {
+                next_link->activated_by.set_bit(lpamng->move_ply_id, true);
+                next_link->flags.just_activated = true;
+                lpamng->move_next_link = next_link;
+            }
+
+            ply_info->current_node_idx = lpamng->move_next_knot_idx;
+            lpamng->move_prev_node_pos = ply_info->pos;
+
+            next_node_pos.X = lpamng->nodes[lpamng->move_next_knot_idx].x;
+            next_node_pos.Y = lpamng->nodes[lpamng->move_next_knot_idx].y;
+
+            Vector4 Vector4_00c8f820 = lpamng->move_prev_node_pos;
+            Vector4 Vector4_00c8f830 = (next_node_pos - Vector4_00c8f820) with { W = next_node_pos.W };
+
+            // FhXCall.restoreVf00Register();
+
+            float move_length = Vector4_00c8f830.Length();
+            FhUtil.set_at<float>(0x88F788, move_length);
+            float new_move_speed = move_length <= 0f ? 0.53333336f : 8f / move_length;
+
+            lpamng->move_speed = new_move_speed;
+            lpamng->move_progress -= 1f;
+
+            float next_node_radius =
+                lpamng->node_type_infos[lpamng->nodes[ply_info->current_node_idx].node_type.normalize()].width / 2f;
+
+            lpamng->move_halo_start_radius  = ply_info->pos_circle_radius;
+            lpamng->move_halo_target_radius = next_node_radius + 3f;
+
+            next_node_pos.X = lpamng->nodes[lpamng->move_next_knot_idx].x;
+            next_node_pos.Y = lpamng->nodes[lpamng->move_next_knot_idx].y;
+
+            move_t = lpamng->move_progress;
+
+            // Vanilla breaks here. This causes undesirable consequences
+            // when move_t is still >= 1, so we continue instead.
+        }
+
+        next_node_pos.Z = 0f;
+        next_node_pos.W = 1f;
+
+        short next_anchor_idx = lpamng->move_next_link_anchor_idx;
+
+        if (next_anchor_idx == -1) {
+            // Straight link!
+            Vector4 pos_lerp = Vector4.Lerp(lpamng->move_prev_node_pos, next_node_pos, lpamng->move_progress);
+            ply_info->pos.X = pos_lerp.X;
+            ply_info->pos.Y = pos_lerp.Y;
+        }
+        else {
+            // Curved link!
+            Vector4 anchor_pos = lpamng->nodes[next_anchor_idx].pos.AsVector4Unsafe() with { Z = 0f, W = 1f };
+            FhXCall.AbmapUpdateMovingPlyPos.fnptr!(
+                ply_info,
+                &lpamng->move_prev_node_pos,
+                &next_node_pos,
+                &anchor_pos,
+                lpamng->move_progress
+            );
+        }
+
+        ply_info->pos_circle_radius = float.Lerp(
+            lpamng->move_halo_start_radius,
+            lpamng->move_halo_target_radius,
+            lpamng->move_progress
+        );
+
+        lpamng->__0x115C7 = 1;
+        FhXCall.FUN_00a5b030.fnptr!();
     }
 }

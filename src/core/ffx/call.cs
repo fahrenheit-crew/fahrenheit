@@ -1648,6 +1648,24 @@ public static partial class FhCall {
 
     // Unofficial naming
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public unsafe delegate short d_AbmapFindNextConnectingNode(short current_node_idx, short target_node_idx, SphereGridLink** out_link);
+    public static FhMethodHandle<d_AbmapFindNextConnectingNode> AbmapFindNextConnectingNode
+        => new( new FhMethodLocation("FFX.exe", 0x656E00) );
+
+    // Unofficial naming
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public unsafe delegate void d_AbmapUpdateMovingPlyPos(
+        SphereGridPlyInfo* ply_info,
+        Vector4* prev_node_pos,
+        Vector4* next_node_pos,
+        Vector4* anchor_pos,
+        float progress
+    );
+    public static FhMethodHandle<d_AbmapUpdateMovingPlyPos> AbmapUpdateMovingPlyPos
+        => new( new FhMethodLocation("FFX.exe", 0x6563B0) );
+
+    // Unofficial naming
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void d_InitLpamng();
     public static FhMethodHandle<d_InitLpamng> InitLpamng
         => new( new FhMethodLocation("FFX.exe", 0x6572E0) );

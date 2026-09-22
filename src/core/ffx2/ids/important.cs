@@ -64,11 +64,11 @@ public static class KeyItemId {
     public const T_X2KeyItemId SYNDICATE_UNIFORM_M      = 0x7034;
     public const T_X2KeyItemId SYNDICATE_UNIFORM_L      = 0x7035;
     public const T_X2KeyItemId LETTER_OF_INTRODUCTION   = 0x7036;
-    public const T_X2KeyItemId HOW_TO_REPAIR_WITH_SOUL  = 0x7037;
-    public const T_X2KeyItemId THE_SPIRIT_OF_RECYCLING  = 0x7038;
-    public const T_X2KeyItemId THE_ABCS_OF_REPAIR       = 0x7039;
-    public const T_X2KeyItemId REPAIRING_FOR_DUMMIES    = 0x703A;
-    public const T_X2KeyItemId EVERYMANS_REPAIR_MANUAL  = 0x703B;
+    public const T_X2KeyItemId REPAIR_WITH_SOUL         = 0x7037;
+    public const T_X2KeyItemId REPAIR_RECYCLING         = 0x7038;
+    public const T_X2KeyItemId REPAIR_ABCS              = 0x7039;
+    public const T_X2KeyItemId REPAIR_FOR_DUMMIES       = 0x703A;
+    public const T_X2KeyItemId REPAIR_MANUAL            = 0x703B;
     public const T_X2KeyItemId BESAID_KEY               = 0x703C;
     public const T_X2KeyItemId DESERT_KEY               = 0x703D;
     public const T_X2KeyItemId TWILIGHT_RAIN            = 0x703E;

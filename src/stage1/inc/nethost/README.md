@@ -14,7 +14,7 @@ As a workaround for this, the official .NET samples have devised a (in their own
 in which they suppress building the `.vcxproj` normally and drive the build from a .NET project target.
 
 "Relatively complicated" is, put charitably, an understatement. We must co-opt the separate .NET project,
-but use it merely to copy the headers and libraries from your local .NET SDK install to the right places. See `src/stage1/Fahrenheit.Stage1.Deps.csproj`.
+but use it merely to copy the headers and libraries from your local .NET SDK install to the right places. See `src/Fahrenheit.NativeDeps.csproj`.
 
 > [!WARNING]
 > Do not commit the copied-over headers or libraries to this repository.

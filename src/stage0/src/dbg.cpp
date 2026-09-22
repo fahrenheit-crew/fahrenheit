@@ -573,7 +573,7 @@ static S0_FRAME_TYPE s0_dbg_process_frame(
          * We may not have the PDB or any other symbols for the target binary.
          * In this case SymFromAddrW seems to return ERROR_INVALID_ADDRESS.
          *
-         * But, e.g., FFX+193912 is suitable and useful, so we display that instead.
+         * But, e.g., FFX+0x193912 is suitable and useful, so we display that instead.
          */
         DWORD sym_error = GetLastError();
         if (sym_error != ERROR_INVALID_ADDRESS) {
@@ -770,7 +770,7 @@ static void s0_dbg_create_dump(
      * MiniDumpWriteDump expects, in MINIDUMP_EXCEPTION_INFORMATION, a PEXCEPTION_POINTERS
      * (a CONTEXT and EXCEPTION_RECORD). EXCEPTION_DEBUG_INFO only gets the latter.
      *
-     * GetThreadContext solves that, but there's a catch. MINIDUMP_EXCEPTION_INFORMATION has a ClientPointers field:
+     * GetThreadContext solves that, but there's a catch. MINIDUMP_EXCEPTION_INFORMATION has a ClientPointers field that:
      * > Determines where to get the memory regions pointed to by the ExceptionPointers member.
      * > Set to TRUE if the memory resides in the process being debugged {...} Otherwise, set to FALSE {...}
      *

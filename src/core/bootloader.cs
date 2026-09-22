@@ -145,11 +145,11 @@ internal sealed class FhLoader {
     private readonly Dictionary<string, FhLoadContext> _load_contexts = [];
 
     internal FhLoader() {
-        // Loading the core library into ALC.Default ensures it does not 'leak' into plugins' load contexts, causing type identity mismatches.
-        Assembly self = AssemblyLoadContext.Default.LoadFromAssemblyPath(Path.Join(FhEnvironment.Finder.Binaries.FullName, "fh.dll"));
+        // The core library is loaded into ALC.Default. This ensures it does not 'leak' into mods' load contexts, causing type identity mismatches.
+        string path_self = Path.Join(FhEnvironment.Finder.Binaries.FullName, "fh.dll");
 
         FhInternal.Log.LogDirect($"----");
-        FhInternal.Log.LogDirect($"Fahrenheit {FileVersionInfo.GetVersionInfo(self.Location).ProductVersion}");
+        FhInternal.Log.LogDirect($"Fahrenheit {FileVersionInfo.GetVersionInfo(path_self).ProductVersion}");
         FhInternal.Log.LogDirect($"OS: {RuntimeInformation.OSDescription} {RuntimeInformation.OSArchitecture}, target: {RuntimeInformation.RuntimeIdentifier}");
         FhInternal.Log.LogDirect($"----");
     }

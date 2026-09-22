@@ -443,6 +443,10 @@ scripts/**/*
 !scripts/**/*.rsp
 !scripts/**/*.ps1
 
+# Exclude .NET hosting copies from the .NET SDK.
+src/stage1/inc/nethost/**/*
+!src/stage1/inc/nethost/README.md
+
 # Do not exclude STEP response files.
 !src/step/data/*.rsp
 

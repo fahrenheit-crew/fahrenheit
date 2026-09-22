@@ -16,19 +16,20 @@
     <File Path="THIRD-PARTY-NOTICES" />
   </Folder>
   <Project Path="src/atelier/Fahrenheit.Tools.Atelier.csproj" />
+  <Project Path="src/core/Fahrenheit.csproj" />
   <Project Path="src/dedit/Fahrenheit.Tools.DEdit.csproj" />
   <Project Path="src/eedit/Fahrenheit.Tools.EEdit.csproj" />
-  <Project Path="src/core/Fahrenheit.csproj" />
   <Project Path="src/modmgr/Fahrenheit.Tools.ModManager.csproj" />
   <Project Path="src/runtime/Fahrenheit.Runtime.csproj" />
   <Project Path="src/sdk/Fahrenheit.Sdk.csproj" />
-  <Project Path="src/stage0/Fahrenheit.Loader.Stage0.vcxproj" Id="287d8ee5-e211-4cd5-923c-3e82ad4be07d">
+  <Project Path="src/Fahrenheit.NativeDeps.csproj" />
+  <Project Path="src/stage0/Fahrenheit.Stage0.vcxproj" Id="287d8ee5-e211-4cd5-923c-3e82ad4be07d">
+    <BuildDependency Project="src/Fahrenheit.NativeDeps.csproj" />
     <Platform Solution="*|Any CPU" Project="Win32" />
-    <Platform Solution="*|ARM64" Project="x64" />
   </Project>
-  <Project Path="src/stage1/Fahrenheit.Loader.Stage1.vcxproj" Id="650214fc-8a0d-4430-a5de-73d05b2982ab">
+  <Project Path="src/stage1/Fahrenheit.Stage1.vcxproj" Id="650214fc-8a0d-4430-a5de-73d05b2982ab">
+    <BuildDependency Project="src/Fahrenheit.NativeDeps.csproj" />
     <Platform Solution="*|Any CPU" Project="Win32" />
-    <Platform Solution="*|ARM64" Project="x64" />
   </Project>
   <Project Path="src/step/Fahrenheit.Tools.STEP.csproj" />
   <Project Path="test/Fahrenheit.Tests.csproj" />

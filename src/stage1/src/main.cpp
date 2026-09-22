@@ -81,7 +81,6 @@ static int stage1_main(void) {
      * If that happens on your system, block here and attach with WinDbg.
      */
 
-    // STEP 5:
     // If necessary, suppress the game's SEH filters, so Stage 0
     // takes over exception handling and core dumping.
     if (!stage1_eh_suppress()) {
@@ -89,7 +88,6 @@ static int stage1_main(void) {
         return 1;
     }
 
-    // STEP 6:
     // Declare the name, type, and location of the bootstrap method to invoke.
     wchar_t path_fh_runtimeconfig[MAX_PATH] = { 0 };
     wchar_t path_fh_dll          [MAX_PATH] = { 0 };
@@ -106,7 +104,6 @@ static int stage1_main(void) {
     const wchar_t* fh_init_type   = L"Fahrenheit.FhEnvironment, fh";
     const wchar_t* fh_init_method = L"boot";
 
-    // STEP 7:
     // Load HostFxr. This library will locate the .NET runtime for us.
     DWORD load_hostfxr_rc = 0;
     if (!stage1_load_hostfxr(load_hostfxr_rc)) {
@@ -114,7 +111,6 @@ static int stage1_main(void) {
         return load_hostfxr_rc;
     }
 
-    // STEP 8:
     // Initialize and start the .NET runtime.
     void*          ptr_hostfxr_load_assembly        = nullptr;
     void*          ptr_hostfxr_get_function_pointer = nullptr;
@@ -129,7 +125,6 @@ static int stage1_main(void) {
         return rc;
     }
 
-    // STEP 9:
     // Set up AppContext.BaseDirectory so we can use it to find runtime dependencies.
     rc = g_fnptr_hostfxr_set_runtime_property(
         cxt,
@@ -142,7 +137,6 @@ static int stage1_main(void) {
         return rc;
     }
 
-    // STEP 10:
     // Get function pointers to HostFxr's `load_assembly()` and `get_function_pointer()`.
     rc = g_fnptr_hostfxr_get_delegate(
         cxt,
@@ -171,7 +165,6 @@ static int stage1_main(void) {
     load_assembly_fn        fnptr_hostfxr_load_assembly        = (load_assembly_fn)       ptr_hostfxr_load_assembly;
     get_function_pointer_fn fnptr_hostfxr_get_function_pointer = (get_function_pointer_fn)ptr_hostfxr_get_function_pointer;
 
-    // STEP 11:
     // Load managed assembly and get function pointer to bootstrap function.
     fh_init fnptr_fh_init = nullptr;
 
@@ -200,41 +193,30 @@ static int stage1_main(void) {
         return rc;
     }
 
-    // STEP 12:
     // Boot Fahrenheit by invoking the boot function in `fh.dll`.
-
-    // TRANSITION: NATIVE -> MANAGED
     fnptr_fh_init();
-    // TRANSITION: MANAGED -> NATIVE
 
-    // STEP 13:
-    // Let the game run. Enjoy!
+    // Finally, invoke the original program entrypoint.
     fwprintf_s(stdout, L"Stage 1 Loader complete. The game is now executing.\n");
     return g_fnptr_main_original();
 }
 
-/* [fkelava 21/08/26 14:09]
- * Records the name of the module we're being loaded into and the directory we started from,
- * switches the current working directory to the target's, and hooks its entrypoint.
- *
- * This is required because certain other tools expect the game's working directory to be
- * unmodified when they load into the process, which occurs immediately after Stage 1 exits `DllMain`.
- */
+
+// Records the directory we started from and hooks the target's entrypoint.
 static BOOL stage1_init(
     HMODULE h_self
 ) {
-    // STEP 2:
-    // Attach to the Stage0 console and forward stdout/stderr to it.
+    // Attach to the Stage 0 console and forward stdout/stderr to it.
     if (!AttachConsole(ATTACH_PARENT_PROCESS)) {
-        fwprintf_s(stderr, L"Failed to attach to the Stage0 console.\n");
-        exit(GetLastError());
+        fwprintf_s(stderr, L"Failed to attach to the Stage 0 console with code 0x%X.\n", GetLastError());
+        return FALSE;
     }
 
     if (freopen_s(&g_stdout, "CONOUT$", "w", stdout) != 0 ||
         freopen_s(&g_stderr, "CONOUT$", "w", stderr) != 0
     ) {
-        fwprintf_s(stderr, L"Failed to redirect standard input, output and error to Stage0 console.\n");
-        exit(EXIT_FAILURE);
+        fwprintf_s(stderr, L"Failed to redirect standard output and error to Stage 0 console.\n");
+        return FALSE;
     }
 
     DWORD path_fh_dir_size = GetModuleFileNameW(
@@ -254,7 +236,6 @@ static BOOL stage1_init(
         return FALSE;
     }
 
-    // STEP 4:
     // Override the program entrypoint. We need to run Fahrenheit initialization first.
     HMODULE h_target        = GetModuleHandleW(nullptr);
     LPBYTE  ptr_target_base = reinterpret_cast<LPBYTE>(h_target);
@@ -284,8 +265,7 @@ BOOL APIENTRY DllMain(
 ) {
     switch (reason) {
         case DLL_PROCESS_ATTACH: {
-            // STEP 1:
-            // Return the IAT to its original self.
+            // Now that we're in, restore the original IAT.
             if (!DetourRestoreAfterWith())
                 return FALSE;
 

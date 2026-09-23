@@ -4888,4 +4888,17 @@ internal class F {
     public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C05D_RetInt
         => new( new FhMethodLocation("FFX.exe", 0x4783F0) );
 
+    //
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_D000_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x6445F0) );
+
+    //
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_Init> CT_XXXX_Init
+        => new( new FhMethodLocation("FFX.exe", 0x477690) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_Exec> CT_XXXX_Exec
+        => new( new FhMethodLocation("FFX.exe", 0x4776A0) );
+
 }

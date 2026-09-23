@@ -4604,5 +4604,288 @@ internal class F {
     public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_B00F_RetInt
         => new( new FhMethodLocation("FFX.exe", 0x36EDE0) );
 
+    //
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C000_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x4783A0) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C001_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478410) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C002_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478460) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C003_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478490) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C004_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x4784F0) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C005_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478530) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C006_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478560) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C007_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478580) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C008_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478310) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C009_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x4785B0) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C00B_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478610) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C00C_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x4785D0) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C00D_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478650) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C00E_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478680) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C00F_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x4786D0) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C010_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x4786F0) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C011_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478710) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C012_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478720) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C013_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478730) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C014_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478740) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C015_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478750) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C016_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x4787E0) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C017_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478800) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C018_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478820) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C019_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x4784D0) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C01A_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478860) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C01B_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x4788A0) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C01C_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x4788E0) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C01D_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478920) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C01E_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478960) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C01F_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x4789A0) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C020_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478A40) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C021_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478A60) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C022_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478A80) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C023_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478AC0) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_Init> CT_C024_Init
+        => new( new FhMethodLocation("FFX.exe", 0x478B90) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_Exec> CT_C024_Exec
+        => new( new FhMethodLocation("FFX.exe", 0x478BE0) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C025_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478BF0) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C026_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478C60) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C027_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478CA0) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C028_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478CE0) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C029_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478D10) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C02A_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478D90) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C02B_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478DD0) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C02C_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478DE0) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C02D_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x4789E0) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C02E_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478A10) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C02F_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478E00) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C030_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478E50) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C031_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x4784B0) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C032_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478E70) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C033_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478E90) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C034_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478EA0) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C035_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478ED0) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C036_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478EF0) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C037_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478F20) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C038_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478F60) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C039_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478FC0) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C03A_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478FF0) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C03B_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x479030) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C03C_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x479040) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C03D_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x479050) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C03E_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x479090) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C03F_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x4790B0) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C040_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x4790D0) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C041_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x4790E0) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C042_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x479100) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C043_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x479110) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C044_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x479120) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C045_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x479140) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C046_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x479160) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetFloat> CT_C047_RetFloat
+        => new( new FhMethodLocation("FFX.exe", 0x479180) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetFloat> CT_C048_RetFloat
+        => new( new FhMethodLocation("FFX.exe", 0x479200) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C049_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x4791A0) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C04A_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x479240) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C04B_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x4791C0) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C04C_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x479280) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C04D_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x4791E0) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C04E_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x4792C0) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C04F_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x479300) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C050_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x479310) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C051_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x479330) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C052_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x479360) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C053_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x479370) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C054_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478130) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C055_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478150) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C056_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x4781B0) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C057_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478170) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C058_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478200) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C059_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478220) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C05A_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478270) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C05B_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x4782B0) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C05C_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x478340) );
+
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C05D_RetInt
+        => new( new FhMethodLocation("FFX.exe", 0x4783F0) );
 
 }

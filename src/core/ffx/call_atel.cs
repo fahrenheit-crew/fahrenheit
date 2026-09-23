@@ -5,7 +5,10 @@
 
 namespace Fahrenheit.FFX;
 
-internal class F {
+/// <summary>
+///     An accessor for game function calls exclusive to FF X.
+/// </summary>
+public static partial class FhCall {
 
     public static FhMethodHandle<Fahrenheit.FhCall.d_CT_Init> CT_0000_Init
         => new( new FhMethodLocation("FFX.exe", 0x45C3E0) );

@@ -10,6 +10,8 @@ namespace Fahrenheit.FFX;
 /// </summary>
 public static partial class FhCall {
 
+    // Common (0000h-0267h)
+
     public static FhMethodHandle<Fahrenheit.FhCall.d_CT_Init> CT_0000_Init
         => new( new FhMethodLocation("FFX.exe", 0x45C3E0) );
 
@@ -2008,7 +2010,7 @@ public static partial class FhCall {
     public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_0267_RetInt
         => new( new FhMethodLocation("FFX.exe", 0x45A4C0) );
 
-    //
+    // Math (1000h-101Dh)
 
     public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_1000_RetInt
         => new( new FhMethodLocation("FFX.exe", 0x477940) );
@@ -2100,7 +2102,7 @@ public static partial class FhCall {
     public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_101D_RetInt
         => new( new FhMethodLocation("FFX.exe", 0x478090) );
 
-    //
+    // SgEvent (4000h-404h)
 
     public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_4000_RetInt
         => new( new FhMethodLocation("FFX.exe", 0x677D20) );
@@ -2321,7 +2323,7 @@ public static partial class FhCall {
     public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_4046_RetInt
         => new( new FhMethodLocation("FFX.exe", 0x677D00) );
 
-    //
+    // ChEvent (5000h-5090h)
 
     public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_5000_RetInt
         => new( new FhMethodLocation("FFX.exe", 0x678770) );
@@ -2803,7 +2805,7 @@ public static partial class FhCall {
     public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_5090_RetInt
         => new( new FhMethodLocation("FFX.exe", 0x67A8D0) );
 
-    //
+    // Camera (6000h-6089h)
 
     public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_6000_RetInt
         => new( new FhMethodLocation("FFX.exe", 0x3B8E20) );
@@ -3228,7 +3230,7 @@ public static partial class FhCall {
     public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_6089_RetInt
         => new( new FhMethodLocation("FFX.exe", 0x3B95B0) );
 
-    //
+    // Battle (7000h-7127h)
 
     public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_7000_RetInt
         => new( new FhMethodLocation("FFX.exe", 0x3A8640) );
@@ -4175,7 +4177,7 @@ public static partial class FhCall {
     public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_7127_RetInt
         => new( new FhMethodLocation("FFX.exe", 0x3A5260) );
 
-    //
+    // MapFunc (8000h-806Bh)
 
     public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_8000_RetInt
         => new( new FhMethodLocation("FFX.exe", 0x51C530) );
@@ -4510,12 +4512,12 @@ public static partial class FhCall {
     public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_806B_RetInt
         => new( new FhMethodLocation("FFX.exe", 0x51AFC0) );
 
-    //
+    // MnFunc (9000h)
 
     public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_9000_RetInt
         => new( new FhMethodLocation("FFX.exe", 0x507E60) );
 
-    //
+    // MovieFunc (B000h-B00Fh)
 
     public static FhMethodHandle<Fahrenheit.FhCall.d_CT_Init> CT_B000_Init
         => new( new FhMethodLocation("FFX.exe", 0x36EA20) );
@@ -4607,7 +4609,7 @@ public static partial class FhCall {
     public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_B00F_RetInt
         => new( new FhMethodLocation("FFX.exe", 0x36EDE0) );
 
-    //
+    // Debug (C000h-C05Dh)
 
     public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C000_RetInt
         => new( new FhMethodLocation("FFX.exe", 0x4783A0) );
@@ -4891,12 +4893,12 @@ public static partial class FhCall {
     public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_C05D_RetInt
         => new( new FhMethodLocation("FFX.exe", 0x4783F0) );
 
-    //
+    // AbilityMap (D000h)
 
     public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_D000_RetInt
         => new( new FhMethodLocation("FFX.exe", 0x6445F0) );
 
-    //
+    // Default (????h)
 
     public static FhMethodHandle<Fahrenheit.FhCall.d_CT_Init> CT_XXXX_Init
         => new( new FhMethodLocation("FFX.exe", 0x477690) );

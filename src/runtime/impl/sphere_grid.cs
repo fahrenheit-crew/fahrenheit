@@ -110,26 +110,26 @@ public unsafe class SphereGridModule : FhModule {
     }
 
     public void h_init_choose_move_target() {
-        short start_idx = lpamng->party_infos[lpamng->current_ply_id].current_node_idx;
-        short slv       = Globals.save_data->ply_saves[lpamng->current_ply_id].slv_available;
-
         lpamng->fn_ctrl = get_fnptr(0x644EF0);
         lpamng->fn_help = get_fnptr(0x645440);
+
+        short start_idx = lpamng->party_infos[lpamng->current_ply_id].current_node_idx;
+        short slv       = Globals.save_data->ply_saves[lpamng->current_ply_id].slv_available;
 
         h_calc_move_costs(start_idx, slv, lpamng->current_ply_id);
 
         for (int node_idx = 0; node_idx < lpamng->node_count; node_idx++) {
             SphereGridNode* node = &lpamng->nodes[node_idx];
-            if (node->node_type == NodeType.NULL || node->move_cost < 0)
+            if (node->node_type == NodeType.NULL)
                 continue;
 
-            bool can_target = node->move_cost <= (slv << 2);
+            bool can_target = node->move_cost >= 0 && node->move_cost <= (slv << 2);
             const SphereGridNodeProperties MASK =
                 SphereGridNodeProperties.CAN_TARGET
               | SphereGridNodeProperties.HIGHLIGHTED;
 
             if (can_target)
-                node->flags |=  MASK;
+                node->flags |= MASK;
             else
                 node->flags &= ~MASK;
         }

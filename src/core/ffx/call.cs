@@ -13,6 +13,7 @@
 using Fahrenheit.Atel;
 using Fahrenheit.FFX.Battle;
 using Fahrenheit.FFX.Ids;
+using Fahrenheit.FFX.SphereGrid;
 
 namespace Fahrenheit.FFX;
 
@@ -36,6 +37,11 @@ public static partial class FhCall {
     public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_504C_RetInt
         => new( new FhMethodLocation("FFX.exe", 0x6786A0) );
 
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public unsafe delegate void d_graphicSetFlipVsnc(int interval);
+    public static FhMethodHandle<d_graphicSetFlipVsnc> graphicSetFlipVsnc
+        => new( new FhMethodLocation("FFX.exe", 0x243290) );
+
     [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
     public unsafe delegate void d_PhyreScene_doDeleteMeshInstances(uint ptr_this);
     public static FhMethodHandle<d_PhyreScene_doDeleteMeshInstances> PhyreScene_doDeleteMeshInstances
@@ -45,6 +51,11 @@ public static partial class FhCall {
     public unsafe delegate void d_DynGeoMemManager_clearDynGeoMemory(uint ptr_this);
     public static FhMethodHandle<d_DynGeoMemManager_clearDynGeoMemory> DynGeoMemManager_clearDynGeoMemory
         => new( new FhMethodLocation("FFX.exe", 0x2DE830) );
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public unsafe delegate void d_pppInitEnv(void* arg1, void* arg2, void* arg3, int arg4);
+    public static FhMethodHandle<d_pppInitEnv> pppInitEnv
+        => new( new FhMethodLocation("FFX.exe", 0x316AB0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void d_JobSchedule_pppPart_fillBuffer_Kick(uint param_1);
@@ -65,6 +76,11 @@ public static partial class FhCall {
     public unsafe delegate void d_ClassVFXRenderDataTable_ClearVFXDrawData(ClassVFXRenderDataTable* ptr_this);
     public static FhMethodHandle<d_ClassVFXRenderDataTable_ClearVFXDrawData> ClassVFXRenderDataTable_ClearVFXDrawData
         => new( new FhMethodLocation("FFX.exe", 0x29F3F0) );
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public unsafe delegate void d_FUN_00639140(uint arg1);
+    public static FhMethodHandle<d_FUN_00639140> FUN_00639140
+        => new( new FhMethodLocation("FFX.exe", 0x239140) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public unsafe delegate void d_graphicDynGeoMemManagerSwapBuffer(uint param_1);
@@ -102,6 +118,11 @@ public static partial class FhCall {
         => new( new FhMethodLocation("FFX.exe", 0x328F30) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public unsafe delegate void d_pppCreateHeap(void* arg1, void* arg2, int arg3);
+    public static FhMethodHandle<d_pppCreateHeap> pppCreateHeap
+        => new( new FhMethodLocation("FFX.exe", 0x32C570) );
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate uint d__pppRunPartFp(uint ptr_par, byte flags);
     public static FhMethodHandle<d__pppRunPartFp> _pppRunPartFp
         => new( new FhMethodLocation("FFX.exe", 0x3123D0) );
@@ -125,6 +146,11 @@ public static partial class FhCall {
     public delegate void d_MsEffectStart();
     public static FhMethodHandle<d_MsEffectStart> MsEffectStart
         => new( new FhMethodLocation("FFX.exe", 0x388540) );
+
+    [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+    public unsafe delegate byte* d_MsMenuGetText(int menu_text_id, int text_idx, [MarshalAs(UnmanagedType.Bool)] bool is_hira);
+    public static FhMethodHandle<d_MsMenuGetText> MsMenuGetText
+        => new( new FhMethodLocation("FFX.exe", 0x38FD40) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void d_op_ot_draw();
@@ -1562,15 +1588,179 @@ public static partial class FhCall {
     public static FhMethodHandle<d_abmap_get_panel> abmap_get_panel
         => new( new FhMethodLocation("FFX.exe", 0x6458A0) );
 
-    // Sphere-grid state-machine entry points
+
+    // Sphere Grid state machine functions, unofficial naming
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void d_abmap_ctrl();
+
+    public static FhMethodHandle<d_abmap_ctrl> AbmapState_ChoosingMoveTarget
+        => new( new FhMethodLocation("FFX.exe", 0x644ef0) );
+
+    /// <remarks>Original name: <c>abmCalcSiraberu</c></remarks>
+    public static FhMethodHandle<d_abmap_ctrl> AbmapState_Idle
+        => new( new FhMethodLocation("FFX.exe", 0x645010) );
+
+    public static FhMethodHandle<d_abmap_ctrl> AbmapState_ChoosingActivationTarget
+        => new( new FhMethodLocation("FFX.exe", 0x6452d0) );
+
     public static FhMethodHandle<d_abmap_ctrl> AbmapState_ChangingNode
         => new( new FhMethodLocation("FFX.exe", 0x647D50) );
+
     public static FhMethodHandle<d_abmap_ctrl> AbmapState_Warping
         => new( new FhMethodLocation("FFX.exe", 0x647F00) );
+
+    public static FhMethodHandle<d_abmap_ctrl> AbmapState_AwaitingMoveConfirm
+        => new( new FhMethodLocation("FFX.exe", 0x648230) );
+
+    public static FhMethodHandle<d_abmap_ctrl> AbmapState_ActivatingNode
+        => new( new FhMethodLocation("FFX.exe", 0x648280) );
+
     public static FhMethodHandle<d_abmap_ctrl> AbmapState_MovingToTarget
         => new( new FhMethodLocation("FFX.exe", 0x659990) );
+
+    public static FhMethodHandle<d_abmap_ctrl> AbmapState_HomeOnNode
+        => new( new FhMethodLocation("FFX.exe", 0x659e80) );
+
+
+    // Unofficial naming
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public unsafe delegate void d_AbmapPositionPlyTag(int ply_id);
+    public static FhMethodHandle<d_AbmapPositionPlyTag> AbmapPositionPlyTag
+        => new( new FhMethodLocation("FFX.exe", 0x658080) );
+
+    // Unofficial naming
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void d_AbmapFlagConnectedLinks(SphereGridLinkProperties with_flags);
+    public static FhMethodHandle<d_AbmapFlagConnectedLinks> AbmapFlagConnectedLinks
+        => new( new FhMethodLocation("FFX.exe", 0x658DF0) );
+
+    // Unofficial naming
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void d_AbmapCalcMoveCosts(short target_node, short slv, byte ply_id);
+    public static FhMethodHandle<d_AbmapCalcMoveCosts> AbmapCalcMoveCosts
+        => new( new FhMethodLocation("FFX.exe", 0x6474D0) );
+
+    // Unofficial naming
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate int d_AbmapCalcMoveCost(short target_node, int arg2);
+    public static FhMethodHandle<d_AbmapCalcMoveCost> AbmapCalcMoveCost
+        => new( new FhMethodLocation("FFX.exe", 0x647560) );
+
+    // Unofficial naming
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public unsafe delegate short d_AbmapFindNextConnectingNode(short current_node_idx, short target_node_idx, SphereGridLink** out_link);
+    public static FhMethodHandle<d_AbmapFindNextConnectingNode> AbmapFindNextConnectingNode
+        => new( new FhMethodLocation("FFX.exe", 0x656E00) );
+
+    // Unofficial naming
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public unsafe delegate void d_AbmapUpdateMovingPlyPos(
+        SphereGridPlyInfo* ply_info,
+        Vector4* prev_node_pos,
+        Vector4* next_node_pos,
+        Vector4* anchor_pos,
+        float progress
+    );
+    public static FhMethodHandle<d_AbmapUpdateMovingPlyPos> AbmapUpdateMovingPlyPos
+        => new( new FhMethodLocation("FFX.exe", 0x6563B0) );
+
+    // Unofficial naming
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void d_InitLpamng();
+    public static FhMethodHandle<d_InitLpamng> InitLpamng
+        => new( new FhMethodLocation("FFX.exe", 0x6572E0) );
+
+    // Unofficial naming
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void d_LoadAbmap();
+    public static FhMethodHandle<d_LoadAbmap> LoadAbmap
+        => new( new FhMethodLocation("FFX.exe", 0x645570) );
+
+    // Unofficial naming
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void d_LoadSaveAbmap();
+    public static FhMethodHandle<d_LoadSaveAbmap> LoadSaveAbmap
+        => new( new FhMethodLocation("FFX.exe", 0x649590) );
+
+    // Unofficial naming
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public unsafe delegate void d_AbmapCalcLinkPoints();
+    public static FhMethodHandle<d_AbmapCalcLinkPoints> AbmapCalcLinkPoints
+        => new( new FhMethodLocation("FFX.exe", 0x65A800) );
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public unsafe delegate void d_FUN_00a57f80(int ply_id, int current_node_idx, float param_3, uint param_4, uint param_5, uint param_6);
+    public static FhMethodHandle<d_FUN_00a57f80> FUN_00a57f80
+        => new( new FhMethodLocation("FFX.exe", 0x657F80) );
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public unsafe delegate void d_FUN_00a459e0(int menu_id, int arg2);
+    public static FhMethodHandle<d_FUN_00a459e0> FUN_00a459e0
+        => new( new FhMethodLocation("FFX.exe", 0x6459E0) );
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void d_AbmapInitHoming(int node_idx, float move_speed);
+    public static FhMethodHandle<d_AbmapInitHoming> AbmapInitHoming
+        => new( new FhMethodLocation("FFX.exe", 0x648d70) );
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public unsafe delegate void d_AbmapInitChoosingMoveTarget();
+    public static FhMethodHandle<d_AbmapInitChoosingMoveTarget> AbmapInitChoosingMoveTarget
+        => new( new FhMethodLocation("FFX.exe", 0x65B7B0) );
+
+    // Symbol skipped (deemed uninterpretable):
+    // __stdcall void +AbmapFlagConnectedLinks(SphereGridLinkProperties param_1) at 00a58df0
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public unsafe delegate void d_FUN_00a58ff0(void* function);
+    public static FhMethodHandle<d_FUN_00a58ff0> FUN_00a58ff0
+        => new( new FhMethodLocation("FFX.exe", 0x658FF0) );
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public unsafe delegate void d_FUN_00a59680(int menu_idx);
+    public static FhMethodHandle<d_FUN_00a59680> FUN_00a59680
+        => new( new FhMethodLocation("FFX.exe", 0x659680) );
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void d_FUN_00a596d0(int menu_idx);
+    public static FhMethodHandle<d_FUN_00a596d0> FUN_00a596d0
+        => new( new FhMethodLocation("FFX.exe", 0x6596D0) );
+
+    // Original after pruning:
+    // unknown undefined FUN_00a5a990() at 00a5a990
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void d_FUN_00a5a990(int ply_id);
+    public static FhMethodHandle<d_FUN_00a5a990> FUN_00a5a990
+        => new( new FhMethodLocation("FFX.exe", 0x65A990) );
+
+    // Unofficial naming
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public unsafe delegate void d_AbmapResetToIdle();
+    public static FhMethodHandle<d_AbmapResetToIdle> AbmapResetToIdle
+        => new( new FhMethodLocation("FFX.exe", 0x65B930) );
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public unsafe delegate void d_FUN_00a5bad0(
+        void* param_1,
+        int param_2,
+        float x, float y,
+        uint param_5, uint param_6, uint param_7, uint param_8,
+        float param_9, float param_10, float param_11
+    );
+    public static FhMethodHandle<d_FUN_00a5bad0> FUN_00a5bad0
+        => new( new FhMethodLocation("FFX.exe", 0x65BAD0) );
+
+    // Unofficial naming
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void d_AbmapTryUseItem(int ply_id, int node_idx, int item_id);
+    public static FhMethodHandle<d_AbmapTryUseItem> AbmapTryUseItem
+        => new( new FhMethodLocation("FFX.exe", 0x65BCA0) );
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public unsafe delegate void d_FUN_00a45fd0(int menu_idx, int arg2);
+    public static FhMethodHandle<d_FUN_00a45fd0> FUN_00a45fd0
+        => new( new FhMethodLocation("FFX.exe", 0x645FD0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void d_FUN_00a48910(uint chr_id, int node_idx);
@@ -1586,6 +1776,11 @@ public static partial class FhCall {
     public delegate void d_FUN_00a56160(int arg1, int arg2, int arg3);
     public static FhMethodHandle<d_FUN_00a56160> FUN_00a56160
         => new( new FhMethodLocation("FFX.exe", 0x656160) );
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public unsafe delegate void d_FUN_00a598a0();
+    public static FhMethodHandle<d_FUN_00a598a0> FUN_00a598a0
+        => new( new FhMethodLocation("FFX.exe", 0x6598A0) );
 
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
     public delegate nint d_FMOD_EventSystem_load(nint arg1, nint file_path, nint arg3, nint bank);

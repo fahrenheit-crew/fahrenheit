@@ -21,21 +21,6 @@ namespace Fahrenheit.FFX;
 /// </summary>
 public static partial class FhCall {
 
-    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_Init> CT_0000_Init
-        => new( new FhMethodLocation("FFX.exe", 0x45C3E0) );
-
-    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_0001_RetInt
-        => new( new FhMethodLocation("FFX.exe", 0x45CE70) );
-
-    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_Init> CT_5010_Init
-        => new( new FhMethodLocation("FFX.exe", 0x679820) );
-
-    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_5021_RetInt
-        => new( new FhMethodLocation("FFX.exe", 0x679510) );
-
-    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_504C_RetInt
-        => new( new FhMethodLocation("FFX.exe", 0x6786A0) );
-
     [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
     public unsafe delegate void d_PhyreScene_doDeleteMeshInstances(uint ptr_this);
     public static FhMethodHandle<d_PhyreScene_doDeleteMeshInstances> PhyreScene_doDeleteMeshInstances

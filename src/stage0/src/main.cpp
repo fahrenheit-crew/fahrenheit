@@ -250,7 +250,9 @@ int __cdecl wmain(
     if (hr != S_OK)
         return hr;
 
-    bool  external_debug = wcsstr(args_self, L"--debug") != nullptr;
+    bool external_debug  = wcsstr(args_self, L"--external-debugger") != nullptr;
+    bool wait_for_attach = wcsstr(args_self, L"--wait-for-attach")   != nullptr;
+
     DWORD creation_flags = external_debug
         ? CREATE_SUSPENDED
         : DEBUG_ONLY_THIS_PROCESS; // A debugged process is implicitly suspended until debug events are handled/pumped.
@@ -278,8 +280,8 @@ int __cdecl wmain(
     }
 
     // Pause for external debugger attach if `--debug` arg is passed.
-    if (external_debug) {
-        fwprintf_s(stdout, L"You can now attach a debugger; press any key to attempt launch.\n");
+    if (wait_for_attach) {
+        fwprintf_s(stdout, L"You can now attach a debugger; press any key to continue.\n");
         int i = _getch();
     }
 

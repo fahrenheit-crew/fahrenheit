@@ -3,8 +3,6 @@
 // This file is part of Fahrenheit, © 2023-2026 The Fahrenheit contributors.
 // It is licensed to you under the GNU Lesser General Public License, version 3.0 or later. See COPYING, COPYING.LESSER.
 
-using Fahrenheit.FFX;
-
 namespace Fahrenheit.FFX2;
 
 /// <summary>
@@ -41,8 +39,13 @@ public struct StatGrowthGeneric {
     public byte quadratic_div_b;
 }
 
+/// <remarks>  
+///     The meaning of the fields is contextual. `ability` can be a command or auto-ability.  
+///     `requirement` can be the index of a Garment Grid gate, a minimum AP requirement,  
+///     or a level requirement for creatures.  
+/// </remarks>  
 [StructLayout(LayoutKind.Sequential, Size = 0x4)]
-public struct JobAbility {
+public struct Ability {
     public ushort requirement;
     public ushort ability;
 }
@@ -74,41 +77,39 @@ public struct JobWeapons {
 
 [StructLayout(LayoutKind.Explicit, Size = 0x38)]
 public struct JobCreatureData {
-    [FieldOffset(0x00)] public ExcelTextOffset help_text;
-    [FieldOffset(0x04)] public ushort          ability_prerequisite;
-    [FieldOffset(0x06)] public T_X2CommandId   ability;
-    [FieldOffset(0x08)] public ushort          auto_ability_prerequisite;
-    [FieldOffset(0x0A)] public ushort          auto_ability;
+    [FieldOffset(0x00)] public ExcelTextOffset       help;
+    [FieldOffset(0x04)] public InlineArray2<Ability> abilities;
 
     [FieldOffset(0x1C)] public StatChanges stat_changes;
+    
+    [FieldOffset(0x28)] public FeedStatChanges level_growth; // Which stat increases on Level Up
 }
 
-[StructLayout(LayoutKind.Explicit, Size = 0xE4)]
+[StructLayout(LayoutKind.Sequential)]
 public struct Job {
-    [FieldOffset(0x00)] public ExcelTextOffset name_offset;
-    [FieldOffset(0x04)] public ExcelTextOffset help_offset;
-    [FieldOffset(0x08)] public byte            user;
-    [FieldOffset(0x0A)] public byte            dressphere_menu_ordering;
-    [FieldOffset(0x0B)] public byte            icon;
-    [FieldOffset(0x0C)] public T_X2CommandId   berserk_action;
+    public ExcelTextOffset name;
+    public ExcelTextOffset help;
+    public byte            user;
+    public byte            data;
+    public byte            index;
+    public byte            icon;
+    public T_X2CommandId   berserk_action;
 
-    [FieldOffset(0x0E)] public StatGrowthHp growth_hp;
-    [FieldOffset(0x11)] public StatGrowthMp growth_mp;
+    public StatGrowthHp growth_hp;
+    public StatGrowthMp growth_mp;
 
-    [FieldOffset(0x14)] public StatGrowthGeneric growth_strength;
-    [FieldOffset(0x19)] public StatGrowthGeneric growth_defense;
-    [FieldOffset(0x1E)] public StatGrowthGeneric growth_magic;
-    [FieldOffset(0x23)] public StatGrowthGeneric growth_magic_defense;
-    [FieldOffset(0x28)] public StatGrowthGeneric growth_agility;
-    [FieldOffset(0x2D)] public StatGrowthGeneric growth_evasion;
-    [FieldOffset(0x32)] public StatGrowthGeneric growth_accuracy;
-    [FieldOffset(0x37)] public StatGrowthGeneric growth_luck;
+    public StatGrowthGeneric growth_strength;
+    public StatGrowthGeneric growth_defense;
+    public StatGrowthGeneric growth_magic;
+    public StatGrowthGeneric growth_magic_defense;
+    public StatGrowthGeneric growth_agility;
+    public StatGrowthGeneric growth_evasion;
+    public StatGrowthGeneric growth_accuracy;
+    public StatGrowthGeneric growth_luck;
 
-    [FieldOffset(0x3c)] public InlineArray16<JobAbility> dressphere_abilities;
+    public InlineArray16<Ability> abilities;
 
-    [FieldOffset(0x7c)] public JobWeapons yuna_weapon_data;
-    [FieldOffset(0x8c)] public JobWeapons rikku_weapon_data;
-    [FieldOffset(0x9c)] public JobWeapons paine_weapon_data;
+    public InlineArray3<JobWeapons> weapon_data;
 
-    [FieldOffset(0xAC)] public JobCreatureData creature_data;
+    public JobCreatureData creature_data;
 }

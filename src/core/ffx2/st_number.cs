@@ -8,14 +8,9 @@
 
 namespace Fahrenheit.FFX2;
 
-public partial struct StNumber
-{
-    [NativeTypeName("unsigned char")]
-    public byte category;
-
-    [NativeTypeName("unsigned char")]
-    public byte type;
-
-    [NativeTypeName("unsigned short")]
-    public ushort command_name;
+[StructLayout(LayoutKind.Sequential)]
+public struct StNumber {
+    public byte   category;
+    public byte   type;
+    public ushort command_id;
 }

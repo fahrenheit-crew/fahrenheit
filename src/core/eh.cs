@@ -6,9 +6,6 @@
 namespace Fahrenheit;
 
 /* [fkelava 11/06/26 23:02]
- * Before an exception tears the process down, we want to log it and
- * dump core to disk, since the game won't always do so. It turns out this is difficult.
- *
  * .NET has two 'unhandled exception handlers' - AppDomain.UnhandledException
  * and ExceptionHandling.SetUnhandledExceptionHandler (.NET 10+). They have different semantics.
  *
@@ -21,14 +18,11 @@ namespace Fahrenheit;
  * Exception on application non-main thread     X      -      -
  * Task exception (unobserved)                  X      -      -
  * ---
- * We therefore install a first-chance filter and the 'newer' ExceptionHandling API.
+ * We install the 'newer' ExceptionHandling API.
  *
- * The 'dump core to disk' part can't be implemented in C# at all because we need
- * it to be active during Fahrenheit's early initialization as well; it's done in Stage1 instead.
- *
- * But- fatal errors (AV/EEE) are not interceptible at all, and will pre-empt
- * even our native exception handler as the runtime tears the process down immediately.
- * To work around that, we have to wait for https://github.com/dotnet/runtime/issues/101560.
+ * Stage 0 acts as an underlying crash handler, and it will process
+ * any unhandled exceptions or fatal errors (AV/EEE). This can be simplified
+ * down the line with https://github.com/dotnet/runtime/issues/101560.
  */
 
 /// <summary>
@@ -39,29 +33,11 @@ internal static class FhExceptionHandler {
     private static readonly FhLogger _eh_log = new("error.log");
 
     /* [fkelava 14/06/26 14:23]
-     * The try-catch blocks have a dual purpose.
-     *
-     * First, https://learn.microsoft.com/en-us/dotnet/api/system.appdomain.firstchanceexception?view=net-10.0#remarks:
-     * > You must handle all exceptions that occur in the event handler
-     * > for the FirstChanceException event. Otherwise, FirstChanceException is raised recursively.
-     *
-     * Second, there is one edge case in which these will throw; a failure in initializing `FhEnvironment.Finder`,
+     * There is one edge case in which thIS will throw; a failure in initializing `FhEnvironment.Finder`,
      * because `FhLogger` relies on it. But initializing it is the first act Fahrenheit does _after_ installing EH,
      * so the window in which that can happen is vanishingly brief (and Finder itself will only fail if we can't
      * R/W to our own directory...)
      */
-
-    /// <summary>
-    ///     Runs in response to <see cref="AppDomain.FirstChanceException"/>.
-    /// </summary>
-    internal static void eh_first_chance(object? sender, FirstChanceExceptionEventArgs e) {
-        try {
-            _eh_log.LogDirect($"First-chance exception at: {TimeProvider.System.GetUtcNow():u}");
-            _eh_log.LogDirect(e.Exception.ToString());
-            _eh_log.LogDirect("================================");
-        }
-        catch { }
-    }
 
     /// <summary>
     ///     Installed through <see cref="ExceptionHandling.SetUnhandledExceptionHandler(Func{Exception, bool})"/>.

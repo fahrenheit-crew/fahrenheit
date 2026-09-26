@@ -3,7 +3,6 @@
 // This file is part of Fahrenheit, © 2023-2026 The Fahrenheit contributors.
 // It is licensed to you under the GNU Lesser General Public License, version 3.0 or later. See COPYING, COPYING.LESSER.
 
-
 namespace Fahrenheit;
 
 /// <summary>
@@ -28,8 +27,6 @@ internal static class FhEnvironment {
          */
         ExceptionHandling.SetUnhandledExceptionHandler(FhExceptionHandler.eh_unhandled);
         // ExceptionHandling.SetFatalErrorHandler(FhExceptionHandler.eh_fatal); // Uncomment when added in .NET 11/12.
-
-        AppDomain.CurrentDomain.FirstChanceException += FhExceptionHandler.eh_first_chance;
 
         Finder            = new();
         BaseAddr          = NativeLibrary.GetMainProgramHandle();
@@ -156,7 +153,7 @@ internal sealed class FhLoader {
 
     /// <summary>Retrieves an already loaded <see cref="Assembly"/> for a given <see cref="AssemblyName"/>, if one exists.</summary>
     /// <remarks>
-    ///     Only one copy of a given Fahrenheit (core or mod) DLL may be loaded 
+    ///     Only one copy of a given Fahrenheit (core or mod) DLL may be loaded
     ///     in a given session, and is shared among all of its users.
     /// </remarks>
     internal Assembly? get_shared_assembly(AssemblyName assembly_name) {

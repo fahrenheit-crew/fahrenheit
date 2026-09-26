@@ -250,8 +250,8 @@ int __cdecl wmain(
     if (hr != S_OK)
         return hr;
 
-    bool external_debug  = wcsstr(args_self, L"--external-debugger") != nullptr;
-    bool wait_for_attach = wcsstr(args_self, L"--wait-for-attach")   != nullptr;
+    bool external_debug  = wcsstr(args_self, L"--extdbg") != nullptr;
+    bool wait_for_attach = wcsstr(args_self, L"--wait")   != nullptr;
 
     DWORD creation_flags = external_debug
         ? CREATE_SUSPENDED
@@ -279,7 +279,7 @@ int __cdecl wmain(
         return 1;
     }
 
-    // Pause for external debugger attach if `--debug` arg is passed.
+    // Pause for external debugger attach if `--wait` arg is passed.
     if (wait_for_attach) {
         fwprintf_s(stdout, L"You can now attach a debugger; press any key to continue.\n");
         int i = _getch();

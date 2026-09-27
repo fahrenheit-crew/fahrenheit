@@ -9,7 +9,7 @@
 namespace Fahrenheit.FFX2;
 
 /// <remarks> 
-///     Determines what "type" the Auto Ability is.
+///     Describes any additional behaviors the auto-ability can possess.
 /// </remarks>
 [Flags]
 public enum AAbilityFlags : uint {
@@ -31,7 +31,7 @@ public struct AutoAbility {
 
     private byte reserve2;
 
-    public AAbilityFlags special_data;
+    public AAbilityFlags flags;
 
     public ElementFlags elem_strike;
     public ElementFlags elem_absorb;
@@ -52,7 +52,7 @@ public struct AutoAbility {
 
     public StatusDurationMap2 status_time;
 
-    public AutoAbilityEffectsMap auto_ability_effects;
+    public AutoAbilityEffectsMap effects;
 
     public byte icon;
 

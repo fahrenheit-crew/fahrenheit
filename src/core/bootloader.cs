@@ -6,10 +6,32 @@
 
 namespace Fahrenheit;
 
+/* [fkelava 28/09/26 21:16]
+ * To maintain system invariants or permit simplifications in some cases
+ * where the system is not correct by construction, we throw as early as practical.
+ *
+ * An example: we want events to be handled in load order, so we enforce their
+ * registration in a module's init(), which executes in load order.
+ */
+
+/// <summary>
+///     Represents the current phase of Fahrenheit's execution.
+///     Used to internally enforce certain system invariants.
+/// </summary>
+internal enum FhExecState {
+    NULL    = 0,
+    CTOR    = 1, // Module constructors are running.
+    PREINIT = 2, // Module constructors have finished executing. The mod list is now locked, but initializers have not yet run.
+    INIT    = 3, // Module initializers are running.
+    EXEC    = 4  // Module initializers have finished running. The game is executing.
+}
+
 /// <summary>
 ///     Contains Fahrenheit boot logic and basic internal runtime constants.
 /// </summary>
 internal static class FhEnvironment {
+
+    private static FhExecState _exec_state;
 
     internal static readonly FhFinder     Finder;
     internal static readonly nint         BaseAddr;
@@ -52,6 +74,25 @@ internal static class FhEnvironment {
 
         // post-init - may require later editing
         FhInternal.Methods.commit();
+    }
+
+    /// <summary>
+    ///     Gets Fahrenheit's current execution state.
+    /// </summary>
+    internal static FhExecState get_execution_state() {
+        return Interlocked.CompareExchange(ref _exec_state, FhExecState.NULL, FhExecState.NULL);
+    }
+
+    /// <summary>
+    ///     Sets Fahrenheit's current execution state.
+    /// </summary>
+    /// <remarks>The state change must be an advance one state forward. If not so, this method throws.</remarks>
+    internal static void set_execution_state(FhExecState state) {
+        FhExecState previous = Interlocked.Exchange(ref _exec_state, state);
+
+        if (state != (previous + 1)) {
+            throw new Exception($"Invalid execution state change ({previous} to {state}). The only valid state change was to {previous + 1}.");
+        }
     }
 
     /// <summary>

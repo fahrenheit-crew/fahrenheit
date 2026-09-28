@@ -23,7 +23,9 @@ public abstract class FhSettingProvider<T> where T : FhModule {
     internal abstract IEnumerable<FhSetting> get();
 }
 
-/// <summary>Internal setting-related utilities and constants.</summary>
+/// <summary>
+///     Carries out setting-related operations.
+/// </summary>
 internal sealed class FhSettings {
 
     private readonly Dictionary<Type, FhSettingsCategory> _settings = [];
@@ -36,7 +38,7 @@ internal sealed class FhSettings {
         Type module_type = typeof(T);
 
         if (_settings.TryGetValue(module_type, out _))
-            throw new Exception($"Only one class may derive from {nameof(FhSettingProvider<T>)} for module {module_type}.");
+            throw new Exception($"Only one {nameof(FhSettingProvider<T>)} can be registered for module {module_type}.");
 
         _settings[module_type] = new(module_type.FullName!, [ .. provider.get() ]);
     }
@@ -93,13 +95,19 @@ internal sealed class FhSettings {
 ///     A persistent, configurable value associated with a given module, with a unique <paramref name="id"/>.
 /// </summary>
 public abstract class FhSetting(string id) {
+    internal string id = id;
 
-    internal const float TOOLTIP_SIZE = 40;
-    internal const float NAME_WIDTH   = 300;
+    /// <summary>
+    ///     The setting's display name.
+    /// </summary>
+    /// <remarks>This must be provided in localization data with ID <c>{setting_id}.name</c>.</remarks>
+    public string name => FhApi.Localization.localize($"{id}.name");
 
-    internal string id   =  id;
-    public   string name => FhApi.Localization.localize($"{id}.name");
-    public   string desc => FhApi.Localization.localize($"{id}.desc");
+    /// <summary>
+    ///     The setting's description.
+    /// </summary>
+    /// <remarks>This must be provided in localization data with ID <c>{setting_id}.desc</c>.</remarks>
+    public string desc => FhApi.Localization.localize($"{id}.desc");
 
     /// <summary>
     ///     Writes out the setting's value to disk through the provided <paramref name="writer"/>.
@@ -111,6 +119,9 @@ public abstract class FhSetting(string id) {
     /// </summary>
     internal abstract void load(Utf8JsonReader reader);
 
+    /// <summary>
+    ///     Displays the setting.
+    /// </summary>
     internal abstract void render();
 
     public virtual void render_name() {
@@ -121,7 +132,7 @@ public abstract class FhSetting(string id) {
     protected static void render_tooltip(string tooltip) {
         if (!ImGui.BeginItemTooltip()) return;
 
-        ImGui.PushTextWrapPos(ImGui.GetFontSize() * TOOLTIP_SIZE);
+        ImGui.PushTextWrapPos(ImGui.GetFontSize() * 40);
         ImGui.TextUnformatted(tooltip);
         ImGui.PopTextWrapPos ();
         ImGui.EndTooltip     ();
@@ -133,9 +144,9 @@ public abstract class FhSetting(string id) {
 ///     associated with a given module, with a unique <paramref name="id"/>.
 /// </summary>
 public abstract class FhSetting<T>(string id, T defval) : FhSetting(id) where T : notnull {
-    protected T    _default  = defval;
-    protected T    _value    = defval;
-    protected bool _disabled = false;
+    protected readonly T    _default  = defval;
+    protected          T    _value    = defval;
+    protected          bool _disabled = false;
 
     public           T    get()        => _value;
     internal virtual void set(T value) => _value = value;
@@ -189,7 +200,6 @@ public sealed class FhSettingsCategory : FhSetting {
         }
     }
 
-    /// <inheritdoc cref="FhSetting.save" />
     internal override void save(Utf8JsonWriter writer) {
         writer.WriteBoolean($"{id}.collapsed", collapsed);
         foreach (FhSetting setting in settings) {
@@ -197,7 +207,6 @@ public sealed class FhSettingsCategory : FhSetting {
         }
     }
 
-    /// <inheritdoc cref="FhSetting.load" />
     internal override void load(Utf8JsonReader reader) {
         Utf8JsonReader copy = reader;
         if (copy.try_find_key_and_deserialize($"{id}.collapsed", out bool is_collapsed)) {
@@ -225,7 +234,7 @@ public sealed class FhSettingsCategory : FhSetting {
 
         foreach (FhSetting setting in settings) {
             setting.render_name();
-            ImGui.SameLine(FhSetting.NAME_WIDTH);
+            ImGui.SameLine(300);
             setting.render();
         }
 
@@ -235,7 +244,11 @@ public sealed class FhSettingsCategory : FhSetting {
 
 /// <summary>A text input setting, with flags.</summary>
 /// <remarks>Callbacks are not currently supported.</remarks>
-public sealed class FhSettingText(string id, string def_value, ImGuiInputTextFlags flags = ImGuiInputTextFlags.None) : FhSetting<string>(id, def_value) {
+public sealed class FhSettingText(
+    string              id,
+    string              def_value,
+    ImGuiInputTextFlags flags = ImGuiInputTextFlags.None
+) : FhSetting<string>(id, def_value) {
     internal const int MAX_LENGTH = 1024;
 
     private readonly ImGuiInputTextFlags _flags = flags;
@@ -252,24 +265,18 @@ public sealed class FhSettingText(string id, string def_value, ImGuiInputTextFla
 /// <param name="max">The biggest accepted number. Defaults to 1.</param>
 /// <param name="step">The amount the arrows increase/decrease the value. Defaults to 1. Set to 0 to disable the arrows.</param>
 /// <typeparam name="T">The underlying numeric type for the value.</typeparam>
-public class FhSettingNumber<T>(string id, T def_value, T? min, T? max, T? step) : FhSetting<T>(id, def_value) where T : unmanaged, INumber<T> {
+public class FhSettingNumber<T>(
+    string id,
+    T      def_value,
+    T?     min,
+    T?     max,
+    T?     step
+) : FhSetting<T>(id, def_value) where T : unmanaged, INumber<T> {
+
     private readonly ImGuiDataType _type = get_data_type(def_value);
     private readonly T             _step = step ?? T.One;
     private readonly T             _min  = min  ?? T.Zero;
     private readonly T             _max  = max  ?? T.One;
-
-    internal override void set(T value) => _value = T.Clamp(value, _min, _max);
-
-    internal override void render() {
-        unsafe {
-            fixed (T* ptr_value = &_value)
-            fixed (T* ptr_step  = &_step) {
-                if (ImGui.InputScalar($"##setting.{id}", _type, ptr_value, ptr_step)) {
-                    set(_value);
-                }
-            }
-        }
-    }
 
     private static ImGuiDataType get_data_type(T value) {
         return value switch {
@@ -283,8 +290,23 @@ public class FhSettingNumber<T>(string id, T def_value, T? min, T? max, T? step)
             long   => ImGuiDataType.S64,
             float  => ImGuiDataType.Float,
             double => ImGuiDataType.Double,
-            _      => throw new NotImplementedException($"FhSettingNumber<T> expected a built-in number type, not {typeof(T).Name}"),
+            _      => throw new NotImplementedException($"{nameof(FhSettingNumber<T>)} expected a built-in number type, not {typeof(T).Name}"),
         };
+    }
+
+    internal override void set(T value) {
+        _value = T.Clamp(value, _min, _max);
+    }
+
+    internal override void render() {
+        unsafe {
+            fixed (T* ptr_value = &_value)
+            fixed (T* ptr_step  = &_step) {
+                if (ImGui.InputScalar($"##setting.{id}", _type, ptr_value, ptr_step)) {
+                    set(_value);
+                }
+            }
+        }
     }
 }
 

@@ -5,25 +5,23 @@
 
 namespace Fahrenheit.Runtime.Gui;
 
-[FhLoad(FhGameId.FFX | FhGameId.FFX2)]
+[FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
 public sealed class FhModConfigModule : FhModule {
-    private bool _no_settings_warning_pass_done;
-
     //private bool _dockbuilder_initialized = false;
-    internal bool is_open;
-    private int _selected_mod_idx;
+    private bool _open;
+    private int  _selected_mod_idx;
 
     public override bool init(FhModContext mod_context, FileStream global_state_file) {
         return true;
     }
 
     internal void open() {
-        is_open = true;
+        _open = true;
         //TODO: Prevent the game from playing the Zanarkand scene while the config menu is open
     }
 
     internal void close() {
-        is_open           = false;
+        _open             = false;
         _selected_mod_idx = 0;
 
         FhInternal.Settings.save_all();
@@ -32,11 +30,11 @@ public sealed class FhModConfigModule : FhModule {
     public override void render_imgui() {
         //TODO: Add a proper open/close button in the topright corner
         if (ImGui.IsKeyPressed(ImGuiKey.F7)) {
-            if (is_open) close();
-            else         open();
+            if (_open) close();
+            else       open();
         }
 
-        if (!is_open) return;
+        if (!_open) return;
 
         ImGuiViewportPtr viewport = ImGui.GetMainViewport();
 
@@ -59,20 +57,16 @@ public sealed class FhModConfigModule : FhModule {
             ImGui.SetNextWindowSize(new (viewport.WorkSize.X * 0.16f, viewport.WorkSize.Y));
 
             if (ImGui.Begin("ModTabs", ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoMove)) {
-                int mod_idx = 0;
-
+                int   mod_idx   = 0;
                 float tab_width = ImGui.GetContentRegionAvail().X;
+
                 foreach (FhModContext mod in FhApi.Mods.get_mods()) {
                     if (has_settings(mod)) {
-                        render_mod_tab(mod, mod_idx++, tab_width);
-                    } else {
-                        if (!_no_settings_warning_pass_done) {
-                            _logger.Warning($"Mod {mod.Manifest.Name} has no settings!");
-                        }
-                        mod_idx++;
+                        render_mod_tab(mod, mod_idx, tab_width);
                     }
+
+                    mod_idx++;
                 }
-                _no_settings_warning_pass_done = true;
             }
             ImGui.End();
 

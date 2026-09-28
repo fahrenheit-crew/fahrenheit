@@ -33,7 +33,7 @@ internal static class FhExceptionHandler {
     private static readonly FhLogger _eh_log = new("error.log");
 
     /* [fkelava 14/06/26 14:23]
-     * There is one edge case in which thIS will throw; a failure in initializing `FhEnvironment.Finder`,
+     * There is one edge case in which this will throw; a failure in initializing `FhEnvironment.Finder`,
      * because `FhLogger` relies on it. But initializing it is the first act Fahrenheit does _after_ installing EH,
      * so the window in which that can happen is vanishingly brief (and Finder itself will only fail if we can't
      * R/W to our own directory...)

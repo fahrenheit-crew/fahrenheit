@@ -88,16 +88,6 @@ public abstract class FhModule {
     }
 
     /// <summary>
-    ///     A collection of the mod's global settings; those whose values apply to all saves.
-    /// </summary>
-    public FhSettingsCategory? settings       { get; protected init; }
-
-    /// <summary>
-    ///     A collection of the mod's local settings; those whose values are isolated to the current save.
-    /// </summary>
-    public FhSettingsCategory? settings_local { get; protected init; }
-
-    /// <summary>
     ///     Your module should perform all Fahrenheit-related initialization here. When this is called, all mods are loaded, and:
     ///     <br/>
     ///     <br/> - you may call <see cref="FhModuleHandle{T}.try_get_context(out FhModuleContext?)"/> to obtain references to other modules;

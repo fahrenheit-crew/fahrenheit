@@ -5,41 +5,86 @@
 
 namespace Fahrenheit;
 
+/// <summary>
+///     Marks an object as being the setting provider for a given module.
+/// </summary>
+/// <remarks>
+///     Only one class may derive from this class for any given module.
+/// </remarks>
+public abstract class FhSettingProvider<T> where T : FhModule {
+    public FhSettingProvider() {
+        FhInternal.Settings.register<T>(this);
+    }
+
+    /// <summary>
+    ///     Returns the settings the module wishes to expose through
+    ///     the mod settings panel, in display order.
+    /// </summary>
+    internal abstract IEnumerable<FhSetting> get();
+}
+
 /// <summary>Internal setting-related utilities and constants.</summary>
 internal sealed class FhSettings {
 
-    internal const float TOOLTIP_SIZE = 40;
-    internal const float NAME_WIDTH   = 300;
+    private readonly Dictionary<Type, FhSettingsCategory> _settings = [];
+
+    /// <summary>
+    ///     Registers a given module's settings for display.
+    /// </summary>
+    /// <param name="provider">An instance of the class deriving from <see cref="FhSettingProvider{T}"/>.</param>
+    internal void register<T>(FhSettingProvider<T> provider) where T : FhModule {
+        Type module_type = typeof(T);
+
+        if (_settings.TryGetValue(module_type, out _))
+            throw new Exception($"Only one class may derive from {nameof(FhSettingProvider<T>)} for module {module_type}.");
+
+        _settings[module_type] = new(module_type.FullName!, [ .. provider.get() ]);
+    }
+
+    internal bool try_get(FhModule module, [NotNullWhen(true)] out FhSettingsCategory? settings) {
+        return _settings.TryGetValue(module.GetType(), out settings);
+    }
 
     /// <summary>Reads out all settings from disk.</summary>
-    public void load() {
-        foreach (FhModuleContext module_ctx in FhApi.Mods.get_modules()) {
+    internal void load_all() {
+        foreach (FhModuleContext context in FhApi.Mods.get_modules()) {
+            if (!_settings.TryGetValue(context.Module.GetType(), out FhSettingsCategory? settings))
+                continue;
+
             try {
-                Span<byte>     config = File.ReadAllBytes(module_ctx.Paths.GlobalConfigPath);
+                Span<byte>     config = File.ReadAllBytes(context.Paths.GlobalConfigPath);
                 Utf8JsonReader reader = new(config);
 
-                module_ctx.Module.load_settings(reader);
+                reader.enter_json_object();
+                settings.load(reader);
             }
             catch (FileNotFoundException) { }
         }
     }
 
     /// <summary>Persists all settings to disk.</summary>
-    public void save() {
+    internal void save_all() {
         JsonWriterOptions opts = new() {
             Indented   = true,
             IndentSize = 4
         };
 
-        foreach (FhModuleContext module_ctx in FhApi.Mods.get_modules()) {
+        foreach (FhModuleContext context in FhApi.Mods.get_modules()) {
+            if (!_settings.TryGetValue(context.Module.GetType(), out FhSettingsCategory? settings))
+                continue;
+
             using FileStream file = File.Open(
-                module_ctx.Paths.GlobalConfigPath,
+                context.Paths.GlobalConfigPath,
                 FileMode  .OpenOrCreate,
                 FileAccess.ReadWrite,
-                FileShare .None);
+                FileShare .None
+            );
+
             using Utf8JsonWriter writer = new Utf8JsonWriter(file, opts);
 
-            module_ctx.Module.save_settings(writer);
+            writer.WriteStartObject();
+            settings.save(writer);
+            writer.WriteEndObject();
         }
     }
 }
@@ -48,6 +93,9 @@ internal sealed class FhSettings {
 ///     A persistent, configurable value associated with a given module, with a unique <paramref name="id"/>.
 /// </summary>
 public abstract class FhSetting(string id) {
+
+    internal const float TOOLTIP_SIZE = 40;
+    internal const float NAME_WIDTH   = 300;
 
     internal string id   =  id;
     public   string name => FhApi.Localization.localize($"{id}.name");
@@ -73,7 +121,7 @@ public abstract class FhSetting(string id) {
     protected static void render_tooltip(string tooltip) {
         if (!ImGui.BeginItemTooltip()) return;
 
-        ImGui.PushTextWrapPos(ImGui.GetFontSize() * FhSettings.TOOLTIP_SIZE);
+        ImGui.PushTextWrapPos(ImGui.GetFontSize() * TOOLTIP_SIZE);
         ImGui.TextUnformatted(tooltip);
         ImGui.PopTextWrapPos ();
         ImGui.EndTooltip     ();
@@ -177,7 +225,7 @@ public sealed class FhSettingsCategory : FhSetting {
 
         foreach (FhSetting setting in settings) {
             setting.render_name();
-            ImGui.SameLine(FhSettings.NAME_WIDTH);
+            ImGui.SameLine(FhSetting.NAME_WIDTH);
             setting.render();
         }
 

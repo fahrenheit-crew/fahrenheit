@@ -151,17 +151,6 @@ public unsafe static class FhUtil {
         }
     }
 
-    internal static void load_settings(this FhModule module, Utf8JsonReader reader) {
-        reader.enter_json_object();
-        module.settings?.load(reader);
-    }
-
-    internal static void save_settings(this FhModule module, Utf8JsonWriter writer) {
-        writer.WriteStartObject();
-        module.settings?.save(writer);
-        writer.WriteEndObject();
-    }
-
     internal static void enter_json_object(this ref Utf8JsonReader reader) {
         while (reader.TokenType != JsonTokenType.StartObject) {
             reader.Read();

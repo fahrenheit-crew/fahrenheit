@@ -9,8 +9,8 @@ namespace Fahrenheit.Runtime.Gui;
  * The game's original save UI is implemented in ActionScript, in a Flash file rendered
  * using the Iggy library. The game interacts with it using a callback system.
  * This is inefficient, and execution time scales almost quadratically with the number of saves.
- * 
- * Since we allow multiple sets of saves, each of an unlimited size, the original UI becomes too slow. 
+ *
+ * Since we allow multiple sets of saves, each of an unlimited size, the original UI becomes too slow.
  * For that reason, and to permit its customization, we bypass it in favor of ImGui replacements.
  */
 
@@ -22,18 +22,18 @@ public sealed class FhSaveUiSelector : FhModule {
     private FhSaveUiX?  _ui_x;
     private FhSaveUiX2? _ui_x2;
 
-    private class FhSaveUiSettings {
+    private class FhSaveUiSettings : FhSettingProvider<FhSaveUiSelector> {
         //TODO: Change this to a Set-based dropdown once that's created.
         public readonly FhSettingText selected_ui = new("selected_ui", "");
+
+        internal override IEnumerable<FhSetting> get() {
+            return [ selected_ui ];
+        }
     }
 
     private readonly FhSaveUiSettings _settings = new();
 
-    public FhSaveUiSelector() {
-        settings = new FhSettingsCategory("fhsaveui", [
-            _settings.selected_ui,
-        ]);
-    }
+    public FhSaveUiSelector() { }
 
     private string get_default_ui_id() {
         return FhGlobal.game_id switch {

@@ -175,7 +175,16 @@ public ref struct FhMethodHandle<T> where T : Delegate {
     ///     By default, this includes all hooks.
     ///     To execute only part of the function's call chain, use <see cref="chain_from(T)"/>.
     /// </remarks>
-    public T? fnptr;
+    public T? fnptr {
+        get {
+            if (FhEnvironment.get_execution_state() != FhExecState.EXEC) {
+                throw new Exception("You cannot invoke game methods until all module initializers have completed.");
+            }
+
+            return field;
+        }
+        private set;
+    }
 
     public FhMethodHandle(FhMethodLocation location) {
         if (location.try_resolve(out _ptr_target)) {

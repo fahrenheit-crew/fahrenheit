@@ -3,7 +3,6 @@
 // This file is part of Fahrenheit, © 2023-2026 The Fahrenheit contributors.
 // It is licensed to you under the GNU Lesser General Public License, version 3.0 or later. See COPYING, COPYING.LESSER.
 
-
 namespace Fahrenheit;
 
 /* [fkelava 28/09/26 21:16]
@@ -18,12 +17,12 @@ namespace Fahrenheit;
 ///     Represents the current phase of Fahrenheit's execution.
 ///     Used to internally enforce certain system invariants.
 /// </summary>
-internal enum FhExecState {
-    NULL    = 0,
+internal enum FhExecState : uint {
+    BOOT    = 0, // The load order and manifest are being read. Loading has not yet commenced.
     CTOR    = 1, // Module constructors are running.
     PREINIT = 2, // Module constructors have finished executing. The mod list is now locked, but initializers have not yet run.
     INIT    = 3, // Module initializers are running.
-    EXEC    = 4  // Module initializers have finished running. The game is executing.
+    EXEC    = 4, // Module initializers have finished running. The game is executing.
 }
 
 /// <summary>
@@ -76,17 +75,22 @@ internal static class FhEnvironment {
         FhInternal.Methods.commit();
     }
 
+    /* [fkelava 28/09/26 23:12]
+     * https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/language-specification/variables#96-atomicity-of-variable-references
+     * `FhExecState` is an enum with underlying type `uint`, so reads are atomic, but RMW cycles like increment are not. Lock accordingly.
+     */
+
     /// <summary>
     ///     Gets Fahrenheit's current execution state.
     /// </summary>
     internal static FhExecState get_execution_state() {
-        return Interlocked.CompareExchange(ref _exec_state, FhExecState.NULL, FhExecState.NULL);
+        return _exec_state;
     }
 
     /// <summary>
     ///     Sets Fahrenheit's current execution state.
     /// </summary>
-    /// <remarks>The state change must be an advance one state forward. If not so, this method throws.</remarks>
+    /// <remarks>The state must only advance, one state at a time. Otherwise, this method throws.</remarks>
     internal static void set_execution_state(FhExecState state) {
         FhExecState previous = Interlocked.Exchange(ref _exec_state, state);
 
@@ -197,7 +201,7 @@ internal sealed class FhLoader {
 
     /// <summary>Retrieves an already loaded <see cref="Assembly"/> for a given <see cref="AssemblyName"/>, if one exists.</summary>
     /// <remarks>
-    ///     Only one copy of a given Fahrenheit (core or mod) DLL may be loaded 
+    ///     Only one copy of a given Fahrenheit (core or mod) DLL may be loaded
     ///     in a given session, and is shared among all of its users.
     /// </remarks>
     internal Assembly? get_shared_assembly(AssemblyName assembly_name) {

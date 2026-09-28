@@ -26,7 +26,7 @@ public class FhEvent<TArgs> where TArgs : allows ref struct {
     /// <param name="event_handler">The handler to subscribe to the event with.</param>
     public bool subscribe(FhEventHandler<TArgs> event_handler) {
         if (FhEnvironment.get_execution_state() != FhExecState.INIT) {
-            throw new Exception("You cannot register to events outside of a module's init() method.");
+            throw new Exception("You cannot subscribe to events outside of a module's init() method.");
         }
 
         return _handlers.Add(event_handler);

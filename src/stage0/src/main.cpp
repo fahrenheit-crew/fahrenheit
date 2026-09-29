@@ -63,6 +63,19 @@ static HRESULT s0_main_process_args(
     for (int i = 2; i < argc; i++) {
         if (wcscmp(argv[i], L"--") == 0) {
             dest = args_target;
+
+            hr = StringCchCopyW(dest, 1024, target);
+            if (hr != S_OK) {
+                fwprintf_s(stderr, L"[!] StringCchCopyW(%s) failed\n", target);
+                return hr;
+            }
+
+            hr = StringCchCatW(dest, 1024, L" ");
+            if (hr != S_OK) {
+                fwprintf_s(stderr, L"[!] StringCchCatW(%s, %s) failed\n", dest, argv[i]);
+                return hr;
+            }
+
             continue;
         }
 

@@ -19,6 +19,8 @@ public sealed class FhMods {
     private readonly ImmutableArray<FhModuleContext> _modules;
 
     internal FhMods() {
+        FhEnvironment.set_execution_state(FhExecState.CTOR);
+
         FhModContext[]        mods    = new FhModContext[FhEnvironment.Manifests.Length];
         List<FhModuleContext> modules = [];
 
@@ -37,12 +39,16 @@ public sealed class FhMods {
 
         _mods    = ImmutableArray.Create     (mods);
         _modules = ImmutableArray.CreateRange(modules);
+
+        FhEnvironment.set_execution_state(FhExecState.PREINIT);
     }
 
     /// <summary>
     ///     Invokes the initializer callback for all loaded modules.
     /// </summary>
     internal void initialize() {
+        FhEnvironment.set_execution_state(FhExecState.INIT);
+
         foreach (FhModContext mod_ctx in _mods) {
             foreach (FhModuleContext module_ctx in mod_ctx.Modules) {
                 FhModule   fm       = module_ctx.Module;
@@ -60,6 +66,8 @@ public sealed class FhMods {
                 FhInternal.Log.Info($"Initialized module {fm.ModuleType}.");
             }
         }
+
+        FhEnvironment.set_execution_state(FhExecState.EXEC);
     }
 
     /// <summary>

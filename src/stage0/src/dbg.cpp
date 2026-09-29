@@ -925,7 +925,7 @@ static BOOL s0_dbg_process_module(
 ) {
     if (h_module_file == nullptr || h_module_file == INVALID_HANDLE_VALUE) {
         fwprintf_s(stderr, L"[!] LOAD_DLL_DEBUG_EVENT: Invalid DLL handle.\n");
-        return FALSE;
+        return TRUE;
     }
 
     /* [fkelava 13/09/26 16:33]

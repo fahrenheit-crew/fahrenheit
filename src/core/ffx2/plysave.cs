@@ -25,8 +25,8 @@ public struct PlySaveCreatureData {
 public struct PlySave {
     public ExcelTextOffset name;
 
-    public uint bonus_hp;
-    public uint bonus_mp;
+    public int  bonus_hp;
+    public int  bonus_mp;
     public byte bonus_strength;
     public byte bonus_defense;
     public byte bonus_magic;
@@ -39,10 +39,10 @@ public struct PlySave {
     public uint total_exp;
     public uint exp;
 
-    public uint hp;
-    public uint mp;
-    public uint max_hp;
-    public uint max_mp;
+    public int hp;
+    public int mp;
+    public int max_hp;
+    public int max_mp;
 
     public byte ply_flags;
 

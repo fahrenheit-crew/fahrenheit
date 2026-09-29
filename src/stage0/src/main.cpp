@@ -64,15 +64,12 @@ static HRESULT s0_main_process_args(
         if (wcscmp(argv[i], L"--") == 0) {
             dest = args_target;
 
-            hr = StringCchCopyW(dest, 1024, target);
-            if (hr != S_OK) {
-                fwprintf_s(stderr, L"[!] StringCchCopyW(%s) failed\n", target);
-                return hr;
-            }
-
-            hr = StringCchCatW(dest, 1024, L" ");
-            if (hr != S_OK) {
-                fwprintf_s(stderr, L"[!] StringCchCatW(%s, %s) failed\n", dest, argv[i]);
+            if (FAILED(StringCchCatW (dest, 1024, L"\"" )) ||
+                FAILED(StringCchCopyW(dest, 1024, target)) ||
+                FAILED(StringCchCatW (dest, 1024, L"\"" )) ||
+                FAILED(StringCchCatW (dest, 1024, L" "  ))
+            ) {
+                fwprintf_s(stderr, L"[!] Failed to copy target process name.\n");
                 return hr;
             }
 

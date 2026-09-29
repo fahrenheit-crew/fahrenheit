@@ -273,7 +273,7 @@ int __cdecl wmain(
 
     // Create target process in suspended or debugged state.
     if (!CreateProcessW(
-        nullptr,
+        target,
         args_target,
         nullptr,
         nullptr,

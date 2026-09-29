@@ -12,7 +12,8 @@ internal abstract class FhStepGenerator(
     DirectoryInfo output_dir,
     RejectData    reject,
     RemapData     remap,
-    FhGameId      game) {
+    FhGameId      game
+) {
 
     /* [fkelava 30/07/26 03:03]
      * These structures are used for internal record-keeping.
@@ -230,7 +231,8 @@ internal sealed class FhGameSpecificGenerator(
     RemapData     remap,
     FhGameId      game,
     FuncData      funcs,
-    GlobalData    globals) : FhStepGenerator(output_dir, reject, remap, game) {
+    GlobalData    globals
+) : FhStepGenerator(output_dir, reject, remap, game) {
 
     private readonly FuncData   _funcs   = funcs;
     private readonly GlobalData _globals = globals;
@@ -390,7 +392,8 @@ internal sealed class FhCommonGenerator(
     RemapData     remap,
     FhGameId      game,
     FuncData      funcs,
-    CommonData    common) : FhStepGenerator(output_dir, reject, remap, game) {
+    CommonData    common
+) : FhStepGenerator(output_dir, reject, remap, game) {
 
     private readonly FuncData   _funcs  = funcs;
     private readonly CommonData _common = common;
@@ -416,7 +419,7 @@ internal sealed class FhCommonGenerator(
                  // Fused unannotated identical entry: {function.CallConv} {function.Signature}
                  // at (FFX.exe+{addr_label_src:X}, FFX-2.exe+{addr_label_dst:X})
 
-                 public static FhMethodHandle<Fahrenheit.FhCall.d_UnknownFn> {function.Name} => new( new FhMethodLocation(0x{common_data.SourceAddress:X}, 0x{common_data.DestAddress:X}) );
+                 public static FhMethodHandle<Fahrenheit.FhCall.d_UnknownFn> {fused_label} => new( new FhMethodLocation(0x{common_data.SourceAddress:X}, 0x{common_data.DestAddress:X}) );
 
              """);
             _line_count += 5;
@@ -449,6 +452,18 @@ internal sealed class FhCommonGenerator(
         foreach ((int addr, FhCommonFuncDecl common_data) in _common) {
             if (!_funcs.TryGetValue(addr, out FhFuncDecl func)) {
                 throw new Exception($"No funcdef for {addr:x} with common def");
+            }
+
+            if (!should_interpret(func)) {
+                int addr_label_src = addr_to_ghidra(common_data.SourceAddress);
+                int addr_label_dst = addr_to_ghidra(common_data.DestAddress);
+
+                _output.AppendLine($"    // Identical entry skipped (deemed uninterpretable):");
+                _output.AppendLine($"    // {func.CallConv} {func.Signature} at (FFX.exe+{addr_label_src:X}, FFX-2.exe+{addr_label_dst:X})");
+                _output.AppendLine();
+
+                _line_count += 3;
+                continue;
             }
 
             // We lex the function signature in the form {RETURN_TYPE} {NAME}({PARAMETER_TYPE} {PARAMETER_NAME} ... );

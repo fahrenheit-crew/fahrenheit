@@ -555,10 +555,10 @@ public static unsafe partial class FhCall {
     public delegate int d_CT_Exec(AtelBasicWorker* work, int* storage);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate int d_CT_RetInt(AtelBasicWorker* work, int* storage, AtelStack* stack);
+    public delegate int d_CT_RetI(AtelBasicWorker* work, int* storage, AtelStack* stack);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate float d_CT_RetFloat(AtelBasicWorker* work, int* storage, AtelStack* stack);
+    public delegate float d_CT_RetF(AtelBasicWorker* work, int* storage, AtelStack* stack);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate int d_SndSepPlay(uint sound_id, uint pan, uint volume);

@@ -70,7 +70,7 @@ public struct Monster {
 
     public ChrLoot loot;
 
-    public byte def_zantetsu;
+    public byte zantetsu_defense;
 
     private byte   reserve1;
     private ushort reserve2;

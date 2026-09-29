@@ -45,7 +45,7 @@ public struct StatGrowthGeneric {
 ///     or a level requirement for creatures.  
 /// </remarks>  
 [StructLayout(LayoutKind.Sequential, Size = 0x4)]
-public struct Ability {
+public struct UnlockableAbility {
     public ushort requirement;
     public ushort ability;
 }
@@ -91,7 +91,7 @@ public struct Job {
     public ExcelTextOffset help;
     public byte            user;
     public byte            data;
-    public byte            index;
+    public byte            ordering_idx;
     public byte            icon;
     public T_X2CommandId   berserk_action;
 
@@ -107,7 +107,7 @@ public struct Job {
     public StatGrowthGeneric growth_accuracy;
     public StatGrowthGeneric growth_luck;
 
-    public InlineArray16<Ability> abilities;
+    public InlineArray16<UnlockableAbility> abilities;
 
     public InlineArray3<JobWeapons> weapon_data;
 

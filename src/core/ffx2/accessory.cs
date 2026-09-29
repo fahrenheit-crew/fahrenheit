@@ -24,8 +24,8 @@ public struct FeedStatChanges {
 
 [StructLayout(LayoutKind.Explicit, Pack = 4, Size = 0x30)]
 public struct AccessoryCreatureData {
-    [FieldOffset(0x00)] public ExcelTextOffset       help;
-    [FieldOffset(0x04)] public InlineArray2<Ability> abilities;
+    [FieldOffset(0x00)] public ExcelTextOffset                 help;
+    [FieldOffset(0x04)] public InlineArray2<UnlockableAbility> abilities;
 
     [FieldOffset(0x1D)] public byte            feed_amount;
     [FieldOffset(0x1E)] public ushort          ability_to_learn;
@@ -41,13 +41,13 @@ public struct Accessory {
     public byte equip;
     public byte user;
     public byte icon;
-    public byte seq;
+    public byte ordering_idx;
 
     private byte reserve;
 
     public StatChanges stat_changes;
 
-    public InlineArray2<Ability> abilities;
+    public InlineArray2<UnlockableAbility> abilities;
 
     public uint price;
 

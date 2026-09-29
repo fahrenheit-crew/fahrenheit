@@ -20,6 +20,13 @@ namespace Fahrenheit;
 /// </summary>
 public static unsafe partial class FhCall {
 
+    /// <summary>
+    ///     This delegate is assigned to functions for which Fahrenheit
+    ///     has no meaningful information. This function requires manual attention.
+    /// </summary>
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void d_UnknownFn();
+
     // INTERNAL/RESTRICTED - BEGIN
 
     /* [fkelava 28/05/26 13:40]

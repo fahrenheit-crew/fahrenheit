@@ -48,6 +48,22 @@ internal abstract class FhStepGenerator(
     protected string        _path_output = "";
     protected StringBuilder _output      = new();
 
+    /* [fkelava 29/09/26 18:15]
+     * We special-case 'undefined unknown FN(void)`. Such a function has not has its parameters
+     * committed in Ghidra, and is thus likely unsafe to call. We assign them a Fahrenheit delegate,
+     * `Fahrenheit.FhCall.d_UnknownFn` to warn users that this function requires manual attention.
+     */
+
+    /// <summary>
+    ///     Determines whether a function is devoid of manual information,
+    ///     and should thus be assigned to a single "unknown function" delegate.
+    /// </summary>
+    protected static bool should_map_to_unknownfn(FhFuncDecl function, FhFuncSignatureData signature_data) {
+        return signature_data.Parameters.Count == 0
+            && signature_data.ReturnType       == "void"
+            && function.CallConv               == "unknown";
+    }
+
     /// <summary>
     ///     Determines whether a specific function declaration provided by Ghidra should be interpreted.
     /// </summary>
@@ -238,6 +254,18 @@ internal sealed class FhGameSpecificGenerator(
         if (_reject.Contains(function.Location))
             return;
 
+        if (should_map_to_unknownfn(function, signature_data)) {
+            _output.AppendLine($"""
+                 // Unannotated function:
+                 // {function.CallConv} {function.Signature} at {addr_label:x8}
+
+                 public static FhMethodHandle<Fahrenheit.FhCall.d_UnknownFn> {function.Name} => new( new FhMethodLocation("{module}", 0x{function.Location:X}) );
+
+             """);
+            _line_count += 5;
+            return;
+        }
+
         _output.AppendLine($"""
              // Original after pruning:
              // {function.CallConv} {function.Signature} at {addr_label:x8}
@@ -382,6 +410,18 @@ internal sealed class FhCommonGenerator(
 
         if (_reject.Contains(common_data.SourceAddress))
             return;
+
+        if (should_map_to_unknownfn(function, signature_data)) {
+            _output.AppendLine($"""
+                 // Fused unannotated identical entry: {function.CallConv} {function.Signature}
+                 // at (FFX.exe+{addr_label_src:X}, FFX-2.exe+{addr_label_dst:X})
+
+                 public static FhMethodHandle<Fahrenheit.FhCall.d_UnknownFn> {function.Name} => new( new FhMethodLocation(0x{common_data.SourceAddress:X}, 0x{common_data.DestAddress:X}) );
+
+             """);
+            _line_count += 5;
+            return;
+        }
 
         _output.AppendLine($"""
              // Fused identical entry: {function.CallConv} {function.Signature}

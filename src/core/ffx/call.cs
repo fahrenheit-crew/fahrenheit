@@ -576,10 +576,10 @@ public static partial class FhCall {
     public static FhMethodHandle<d_getScenerioFlag> getScenerioFlag
         => new ( new FhMethodLocation("FFX.exe", 0x387420) );
 
-    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_RetInt_0171_fillPartyMemberHp
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetI> CT_RetInt_0171_fillPartyMemberHp
         => new ( new FhMethodLocation("FFX.exe", 0x45C4F0) );
 
-    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_RetInt_0172_fillPartyMemberMp
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetI> CT_RetInt_0172_fillPartyMemberMp
         => new ( new FhMethodLocation("FFX.exe", 0x45C6B0) );
 
     // Unofficial naming

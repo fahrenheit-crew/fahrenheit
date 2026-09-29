@@ -10,9 +10,6 @@ namespace Fahrenheit.FFX.Ids;
 
 public static partial class SummonAnimationCycle
 {
-    [NativeTypeName("#define s019_catch_loop01_s 101")]
     public const int s019_catch_loop01_s = 101;
-
-    [NativeTypeName("#define s019_catch_act01_e 100")]
     public const int s019_catch_act01_e = 100;
 }

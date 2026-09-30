@@ -10,16 +10,9 @@ namespace Fahrenheit.FFX2;
 
 public partial struct PlyRom
 {
-    [NativeTypeName("unsigned int")]
     public uint help;
-
-    [NativeTypeName("unsigned char")]
     public byte data;
-
-    [NativeTypeName("unsigned char[2]")]
     public _level_up_e__FixedBuffer level_up;
-
-    [NativeTypeName("unsigned char")]
     public byte dummy;
 
     [InlineArray(2)]

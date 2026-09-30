@@ -10,10 +10,7 @@ namespace Fahrenheit.FFX2;
 
 public partial struct ItemShop
 {
-    [NativeTypeName("unsigned short")]
     public ushort shop_rate;
-
-    [NativeTypeName("unsigned short[16]")]
     public _shop_item_e__FixedBuffer shop_item;
 
     [InlineArray(16)]

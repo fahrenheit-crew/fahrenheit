@@ -22,21 +22,28 @@ public sealed partial class FhLocalization {
     private readonly static string[]                       _s_locale_ids;
     private readonly static Dictionary<string, LocaleData> _s_locales = [];
 
+    /* [fkelava 30/09/26 19:47]
+     * One of the rare differences between previous and later remaster
+     * versions is that Simplified Chinese (zh-Hans) support was later added.
+     *
+     * Steam only supports Traditional (zh-Hant) though.
+     */
+
     /// <summary>
     ///     Returns the ISO 639 language ID for the current game language.
     /// </summary>
     private string get_default_lang_id() {
         return FhGlobal.lang_id switch {
-            FhLangId.English  => "en",
-            FhLangId.French   => "fr",
-            FhLangId.Spanish  => "es",
-            FhLangId.German   => "de",
-            FhLangId.Italian  => "it",
-            FhLangId.Japanese => "ja",
-            FhLangId.Chinese  => "zh",
-            FhLangId.Korean   => "ko",
-            FhLangId.Debug    or
-            _                 => "en"
+            FhLangId.English  => "en-US",
+            FhLangId.French   => "fr-FR",
+            FhLangId.Spanish  => "es-ES",
+            FhLangId.German   => "de-DE",
+            FhLangId.Italian  => "it-IT",
+            FhLangId.Japanese or
+            FhLangId.Debug    => "ja-JP",
+            FhLangId.Chinese  => "zh-Hant",
+            FhLangId.Korean   => "ko-KR",
+            _                 => "en-US"
         };
     }
 

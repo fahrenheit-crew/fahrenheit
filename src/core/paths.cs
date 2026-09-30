@@ -9,9 +9,10 @@ namespace Fahrenheit;
 ///     Provides access to a module's essential files and directories.
 /// </summary>
 internal sealed record FhModulePaths(
-    string GlobalStatePath,
-    string GlobalConfigPath,
-    string LocalConfigPath);
+    string        GlobalStatePath,
+    string        GlobalConfigPath,
+    string        LocalConfigPath,
+    DirectoryInfo LangDir);
 
 /// <summary>
 ///     Provides access to a mod's essential files and directories.
@@ -60,6 +61,11 @@ internal sealed class FhFinder {
         Saves    = Directory.CreateDirectory(Path.Join(path_fh_base, _dirname_saves));
     }
 
+    private string _get_mod_dir_by_name(string mod_name) {
+        bool   is_runtime = mod_name.Equals("fhr", StringComparison.OrdinalIgnoreCase);
+        return is_runtime ? Binaries.FullName : Path.Join(Mods.FullName, mod_name);
+    }
+
     /// <summary>
     ///     Gets the full path of the game's INI setting file.
     /// </summary>
@@ -75,8 +81,7 @@ internal sealed class FhFinder {
     ///     Returns path information for the DLL belonging to mod <paramref name="mod_name"/>.
     /// </summary>
     public string get_for_dll(string mod_name) {
-        bool   is_runtime = mod_name.Equals("fhr", StringComparison.OrdinalIgnoreCase);
-        string mod_dir    = is_runtime ? Binaries.FullName : Path.Join(Mods.FullName, mod_name);
+        string mod_dir = _get_mod_dir_by_name(mod_name);
 
         return Path.Join(mod_dir, $"{mod_name}.dll");
     }
@@ -85,8 +90,7 @@ internal sealed class FhFinder {
     ///     Returns path information for mod <paramref name="mod_name"/>.
     /// </summary>
     public FhModPaths get_for_mod(string mod_name) {
-        bool   is_runtime = mod_name.Equals("fhr", StringComparison.OrdinalIgnoreCase);
-        string mod_dir    = is_runtime ? Binaries.FullName : Path.Join(Mods.FullName, mod_name);
+        string mod_dir = _get_mod_dir_by_name(mod_name);
 
         return new FhModPaths(
             ManifestPath: Path.Join(mod_dir, $"{mod_name}.manifest.json"),
@@ -101,6 +105,8 @@ internal sealed class FhFinder {
     ///     Returns path information for module <paramref name="module_name"/> of mod <paramref name="mod_name"/>.
     /// </summary>
     public FhModulePaths get_for_module(string mod_name, string module_name) {
+        string mod_dir = _get_mod_dir_by_name(mod_name);
+
         string dir_state_global  = Path.Join(State.FullName, "global", mod_name);
         string path_state_global = Path.Join(dir_state_global, module_name);
 
@@ -110,6 +116,8 @@ internal sealed class FhFinder {
         string dir_cfg_local  = Path.Join(Config.FullName, "local", "default", mod_name);
         string path_cfg_local = Path.Join(dir_cfg_local, $"{module_name}.json");
 
+        string path_dir_lang = Path.Join(mod_dir, _dirname_lang, module_name);
+
         Directory.CreateDirectory(dir_state_global);
         Directory.CreateDirectory(dir_cfg_global);
         Directory.CreateDirectory(dir_cfg_local);
@@ -117,7 +125,8 @@ internal sealed class FhFinder {
         return new FhModulePaths(
             GlobalStatePath:  path_state_global,
             GlobalConfigPath: path_cfg_global,
-            LocalConfigPath:  path_cfg_local
+            LocalConfigPath:  path_cfg_local,
+            LangDir:          Directory.CreateDirectory(path_dir_lang)
             );
     }
 }

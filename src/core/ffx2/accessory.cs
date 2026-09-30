@@ -24,7 +24,8 @@ public struct FeedStatChanges {
 
 [StructLayout(LayoutKind.Explicit, Pack = 4, Size = 0x30)]
 public struct AccessoryCreatureData {
-    [FieldOffset(0x00)] public ExcelTextOffset                 help;
+    [FieldOffset(0x00)] public ExcelTextOffset help;
+    
     [FieldOffset(0x04)] public InlineArray2<UnlockableAbility> abilities;
 
     [FieldOffset(0x1D)] public byte            feed_amount;

@@ -77,7 +77,8 @@ public struct JobWeapons {
 
 [StructLayout(LayoutKind.Explicit, Size = 0x38)]
 public struct JobCreatureData {
-    [FieldOffset(0x00)] public ExcelTextOffset                 help;
+    [FieldOffset(0x00)] public ExcelTextOffset help;
+    
     [FieldOffset(0x04)] public InlineArray2<UnlockableAbility> abilities;
 
     [FieldOffset(0x1C)] public StatChanges stat_changes;

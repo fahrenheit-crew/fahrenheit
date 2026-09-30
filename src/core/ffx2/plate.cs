@@ -15,7 +15,8 @@ public struct PlateMessages {
 
 [StructLayout(LayoutKind.Explicit, Pack = 4, Size = 0x38)]
 public struct PlateCreatureData {
-    [FieldOffset(0x00)] public ExcelTextOffset                 help;
+    [FieldOffset(0x00)] public ExcelTextOffset help;
+    
     [FieldOffset(0x04)] public InlineArray2<UnlockableAbility> abilities;
 
     [FieldOffset(0x2C)] public StatChanges stat_changes;

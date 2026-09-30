@@ -63,18 +63,27 @@ static HRESULT s0_main_process_args(
     for (int i = 2; i < argc; i++) {
         if (wcscmp(argv[i], L"--") == 0) {
             dest = args_target;
-            continue;
-        }
 
-        hr = StringCchCatW(dest, 1024, argv[i]);
-        if (hr != S_OK) {
-            fwprintf_s(stderr, L"[!] StringCchCatW(%s, %s) failed\n", dest, argv[i]);
-            return hr;
+            if (FAILED(StringCchCatW(dest, 1024, L"\"" )) ||
+                FAILED(StringCchCatW(dest, 1024, target)) ||
+                FAILED(StringCchCatW(dest, 1024, L"\"" ))
+            ) {
+                fwprintf_s(stderr, L"[!] Failed to copy target process name.\n");
+                return hr;
+            }
+
+            continue;
         }
 
         hr = StringCchCatW(dest, 1024, L" ");
         if (hr != S_OK) {
             fwprintf_s(stderr, L"[!] StringCchCatW(%s, %s) failed\n", dest, L" ");
+            return hr;
+        }
+
+        hr = StringCchCatW(dest, 1024, argv[i]);
+        if (hr != S_OK) {
+            fwprintf_s(stderr, L"[!] StringCchCatW(%s, %s) failed\n", dest, argv[i]);
             return hr;
         }
     }
@@ -250,7 +259,9 @@ int __cdecl wmain(
     if (hr != S_OK)
         return hr;
 
-    bool  external_debug = wcsstr(args_self, L"--debug") != nullptr;
+    bool external_debug  = wcsstr(args_self, L"--extdbg") != nullptr;
+    bool wait_for_attach = wcsstr(args_self, L"--wait")   != nullptr;
+
     DWORD creation_flags = external_debug
         ? CREATE_SUSPENDED
         : DEBUG_ONLY_THIS_PROCESS; // A debugged process is implicitly suspended until debug events are handled/pumped.
@@ -277,9 +288,9 @@ int __cdecl wmain(
         return 1;
     }
 
-    // Pause for external debugger attach if `--debug` arg is passed.
-    if (external_debug) {
-        fwprintf_s(stdout, L"You can now attach a debugger; press any key to attempt launch.\n");
+    // Pause for external debugger attach if `--wait` arg is passed.
+    if (wait_for_attach) {
+        fwprintf_s(stdout, L"You can now attach a debugger; press any key to continue.\n");
         int i = _getch();
     }
 

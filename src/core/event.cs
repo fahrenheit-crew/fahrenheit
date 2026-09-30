@@ -25,11 +25,11 @@ public class FhEvent<TArgs> where TArgs : allows ref struct {
     /// <summary>Subscribe to the event.</summary>
     /// <param name="event_handler">The handler to subscribe to the event with.</param>
     public bool subscribe(FhEventHandler<TArgs> event_handler) {
-        // if (initializing_mods) {
-        //     _logger.Warn("Tried to subscribe to event outside of mod initialization.")'
-        // }
+        if (FhEnvironment.get_execution_state() != FhExecState.INIT) {
+            throw new Exception("You cannot subscribe to events outside of a module's init() method.");
+        }
 
-        return /* initializing_mods && */ _handlers.Add(event_handler);
+        return _handlers.Add(event_handler);
     }
 
     /// <summary>Invoke the event.</summary>

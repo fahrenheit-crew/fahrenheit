@@ -12,7 +12,8 @@ internal abstract class FhStepGenerator(
     DirectoryInfo output_dir,
     RejectData    reject,
     RemapData     remap,
-    FhGameId      game) {
+    FhGameId      game
+) {
 
     /* [fkelava 30/07/26 03:03]
      * These structures are used for internal record-keeping.
@@ -47,6 +48,22 @@ internal abstract class FhStepGenerator(
     protected int           _line_count  = 0;
     protected string        _path_output = "";
     protected StringBuilder _output      = new();
+
+    /* [fkelava 29/09/26 18:15]
+     * We special-case 'undefined unknown FN(void)`. Such a function has not has its parameters
+     * committed in Ghidra, and is thus likely unsafe to call. We assign them a Fahrenheit delegate,
+     * `Fahrenheit.FhCall.d_UnknownFn` to warn users that this function requires manual attention.
+     */
+
+    /// <summary>
+    ///     Determines whether a function is devoid of manual information,
+    ///     and should thus be assigned to a single "unknown function" delegate.
+    /// </summary>
+    protected static bool should_map_to_unknownfn(FhFuncDecl function, FhFuncSignatureData signature_data) {
+        return signature_data.Parameters.Count == 0
+            && signature_data.ReturnType       == "void"
+            && function.CallConv               == "unknown";
+    }
 
     /// <summary>
     ///     Determines whether a specific function declaration provided by Ghidra should be interpreted.
@@ -214,7 +231,8 @@ internal sealed class FhGameSpecificGenerator(
     RemapData     remap,
     FhGameId      game,
     FuncData      funcs,
-    GlobalData    globals) : FhStepGenerator(output_dir, reject, remap, game) {
+    GlobalData    globals
+) : FhStepGenerator(output_dir, reject, remap, game) {
 
     private readonly FuncData   _funcs   = funcs;
     private readonly GlobalData _globals = globals;
@@ -235,8 +253,27 @@ internal sealed class FhGameSpecificGenerator(
             _               => throw new NotImplementedException($"invalid game id {_game} - cannot generate function"),
         };
 
-        if (_reject.Contains(function.Location))
+        bool is_rejected = _reject.Contains(function.Location);
+        bool is_unknown  = should_map_to_unknownfn(function, signature_data);
+
+        if (is_rejected && is_unknown) {
+            Console.WriteLine($"[!] Function at {module}+{addr_label:X8} on the reject list, but unknown in Ghidra.");
+        }
+
+        if (is_rejected)
             return;
+
+        if (is_unknown) {
+            _output.AppendLine($"""
+                 // Unannotated function:
+                 // {function.CallConv} {function.Signature} at {addr_label:x8}
+
+                 public static FhMethodHandle<Fahrenheit.FhCall.d_UnknownFn> {function.Name} => new( new FhMethodLocation("{module}", 0x{function.Location:X}) );
+
+             """);
+            _line_count += 5;
+            return;
+        }
 
         _output.AppendLine($"""
              // Original after pruning:
@@ -362,7 +399,8 @@ internal sealed class FhCommonGenerator(
     RemapData     remap,
     FhGameId      game,
     FuncData      funcs,
-    CommonData    common) : FhStepGenerator(output_dir, reject, remap, game) {
+    CommonData    common
+) : FhStepGenerator(output_dir, reject, remap, game) {
 
     private readonly FuncData   _funcs  = funcs;
     private readonly CommonData _common = common;
@@ -380,8 +418,27 @@ internal sealed class FhCommonGenerator(
 
         string fused_label = $"FUN_{addr_label_src:X8}_{addr_label_dst:X8}";
 
-        if (_reject.Contains(common_data.SourceAddress))
+        bool is_rejected = _reject.Contains(common_data.SourceAddress);
+        bool is_unknown  = should_map_to_unknownfn(function, signature_data);
+
+        if (is_rejected && is_unknown) {
+            Console.WriteLine($"[!] Function at (FFX.exe+{addr_label_src:X}, FFX-2.exe+{addr_label_dst:X}) on the reject list, but unknown in Ghidra.");
+        }
+
+        if (is_rejected)
             return;
+
+        if (is_unknown) {
+            _output.AppendLine($"""
+                 // Fused unannotated identical entry: {function.CallConv} {function.Signature}
+                 // at (FFX.exe+{addr_label_src:X}, FFX-2.exe+{addr_label_dst:X})
+
+                 public static FhMethodHandle<Fahrenheit.FhCall.d_UnknownFn> {fused_label} => new( new FhMethodLocation(0x{common_data.SourceAddress:X}, 0x{common_data.DestAddress:X}) );
+
+             """);
+            _line_count += 5;
+            return;
+        }
 
         _output.AppendLine($"""
              // Fused identical entry: {function.CallConv} {function.Signature}
@@ -409,6 +466,18 @@ internal sealed class FhCommonGenerator(
         foreach ((int addr, FhCommonFuncDecl common_data) in _common) {
             if (!_funcs.TryGetValue(addr, out FhFuncDecl func)) {
                 throw new Exception($"No funcdef for {addr:x} with common def");
+            }
+
+            if (!should_interpret(func)) {
+                int addr_label_src = addr_to_ghidra(common_data.SourceAddress);
+                int addr_label_dst = addr_to_ghidra(common_data.DestAddress);
+
+                _output.AppendLine($"    // Identical entry skipped (deemed uninterpretable):");
+                _output.AppendLine($"    // {func.CallConv} {func.Signature} at (FFX.exe+{addr_label_src:X}, FFX-2.exe+{addr_label_dst:X})");
+                _output.AppendLine();
+
+                _line_count += 3;
+                continue;
             }
 
             // We lex the function signature in the form {RETURN_TYPE} {NAME}({PARAMETER_TYPE} {PARAMETER_NAME} ... );

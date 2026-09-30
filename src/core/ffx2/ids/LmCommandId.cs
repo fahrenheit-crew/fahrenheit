@@ -11,657 +11,222 @@ namespace Fahrenheit.FFX2.Ids;
 
 public static partial class LmCommandId
 {
-    [NativeTypeName("#define lm_pcom_throw_item 0x03000")]
     public const int lm_pcom_throw_item = 0x03000;
-
-    [NativeTypeName("#define lm_pcom_atk_nude 0x03001")]
     public const int lm_pcom_atk_nude = 0x03001;
-
-    [NativeTypeName("#define lm_pcom_atk_gunner 0x03002")]
     public const int lm_pcom_atk_gunner = 0x03002;
-
-    [NativeTypeName("#define lm_pcom_atk_item_gunner 0x03003")]
     public const int lm_pcom_atk_item_gunner = 0x03003;
-
-    [NativeTypeName("#define lm_pcom_atk_mon_gunner 0x03004")]
     public const int lm_pcom_atk_mon_gunner = 0x03004;
-
-    [NativeTypeName("#define lm_pcom_atk_soldier 0x03005")]
     public const int lm_pcom_atk_soldier = 0x03005;
-
-    [NativeTypeName("#define lm_pcom_atk_samurai 0x03006")]
     public const int lm_pcom_atk_samurai = 0x03006;
-
-    [NativeTypeName("#define lm_pcom_atk_darkknight 0x03007")]
     public const int lm_pcom_atk_darkknight = 0x03007;
-
-    [NativeTypeName("#define lm_pcom_atk_berserker 0x03008")]
     public const int lm_pcom_atk_berserker = 0x03008;
-
-    [NativeTypeName("#define lm_pcom_atk_singer 0x03009")]
     public const int lm_pcom_atk_singer = 0x03009;
-
-    [NativeTypeName("#define lm_pcom_atk_black_wizard 0x0300a")]
     public const int lm_pcom_atk_black_wizard = 0x0300a;
-
-    [NativeTypeName("#define lm_pcom_atk_white_wizard 0x0300b")]
     public const int lm_pcom_atk_white_wizard = 0x0300b;
-
-    [NativeTypeName("#define lm_pcom_atk_thief 0x0300c")]
     public const int lm_pcom_atk_thief = 0x0300c;
-
-    [NativeTypeName("#define lm_pcom_atk_trainer 0x0300d")]
     public const int lm_pcom_atk_trainer = 0x0300d;
-
-    [NativeTypeName("#define lm_pcom_atk_gambler 0x0300e")]
     public const int lm_pcom_atk_gambler = 0x0300e;
-
-    [NativeTypeName("#define lm_pcom_atk_kigurumi 0x0300f")]
     public const int lm_pcom_atk_kigurumi = 0x0300f;
-
-    [NativeTypeName("#define lm_pcom_atk_psychicer 0x03010")]
     public const int lm_pcom_atk_psychicer = 0x03010;
-
-    [NativeTypeName("#define lm_pcom_atk_Leblanc 0x03011")]
     public const int lm_pcom_atk_Leblanc = 0x03011;
-
-    [NativeTypeName("#define lm_pcom_atk_matsuri 0x03012")]
     public const int lm_pcom_atk_matsuri = 0x03012;
-
-    [NativeTypeName("#define lm_pcom_quick_trigger 0x03013")]
     public const int lm_pcom_quick_trigger = 0x03013;
-
-    [NativeTypeName("#define lm_pcom_cross_shot 0x03014")]
     public const int lm_pcom_cross_shot = 0x03014;
-
-    [NativeTypeName("#define lm_pcom_through_shot 0x03015")]
     public const int lm_pcom_through_shot = 0x03015;
-
-    [NativeTypeName("#define lm_pcom_quarter_shot 0x03016")]
     public const int lm_pcom_quarter_shot = 0x03016;
-
-    [NativeTypeName("#define lm_pcom_item_shot 0x03017")]
     public const int lm_pcom_item_shot = 0x03017;
-
-    [NativeTypeName("#define lm_pcom_item_draw 0x03018")]
     public const int lm_pcom_item_draw = 0x03018;
-
-    [NativeTypeName("#define lm_pcom_item_explosion 0x03019")]
     public const int lm_pcom_item_explosion = 0x03019;
-
-    [NativeTypeName("#define lm_pcom_cure_item 0x0301a")]
     public const int lm_pcom_cure_item = 0x0301a;
-
-    [NativeTypeName("#define lm_pcom_mon_skill 0x0301b")]
     public const int lm_pcom_mon_skill = 0x0301b;
-
-    [NativeTypeName("#define lm_pcom_steal_mon_skill 0x0301c")]
     public const int lm_pcom_steal_mon_skill = 0x0301c;
-
-    [NativeTypeName("#define lm_pcom_anti_ground_mon 0x0301d")]
     public const int lm_pcom_anti_ground_mon = 0x0301d;
-
-    [NativeTypeName("#define lm_pcom_anti_air_mon 0x0301e")]
     public const int lm_pcom_anti_air_mon = 0x0301e;
-
-    [NativeTypeName("#define lm_pcom_delay_atk 0x0301f")]
     public const int lm_pcom_delay_atk = 0x0301f;
-
-    [NativeTypeName("#define lm_pcom_perfect_gard 0x03020")]
     public const int lm_pcom_perfect_gard = 0x03020;
-
-    [NativeTypeName("#define lm_pcom_2damage 0x03021")]
     public const int lm_pcom_2damage = 0x03021;
-
-    [NativeTypeName("#define lm_pcom_3damage 0x03022")]
     public const int lm_pcom_3damage = 0x03022;
-
-    [NativeTypeName("#define lm_pcom_zantetsu 0x03023")]
     public const int lm_pcom_zantetsu = 0x03023;
-
-    [NativeTypeName("#define lm_pcom_throw_gil 0x03024")]
     public const int lm_pcom_throw_gil = 0x03024;
-
-    [NativeTypeName("#define lm_pcom_3direct_atk 0x03025")]
     public const int lm_pcom_3direct_atk = 0x03025;
-
-    [NativeTypeName("#define lm_pcom_dying_atk 0x03026")]
     public const int lm_pcom_dying_atk = 0x03026;
-
-    [NativeTypeName("#define lm_pcom_3damege_hp 0x03027")]
     public const int lm_pcom_3damege_hp = 0x03027;
-
-    [NativeTypeName("#define lm_pcom_darkness_sky 0x03028")]
     public const int lm_pcom_darkness_sky = 0x03028;
-
-    [NativeTypeName("#define lm_pcom_bio 0x03029")]
     public const int lm_pcom_bio = 0x03029;
-
-    [NativeTypeName("#define lm_pcom_dead_count 0x0302a")]
     public const int lm_pcom_dead_count = 0x0302a;
-
-    [NativeTypeName("#define lm_pcom_silence_atk 0x0302b")]
     public const int lm_pcom_silence_atk = 0x0302b;
-
-    [NativeTypeName("#define lm_pcom_berserk 0x0302c")]
     public const int lm_pcom_berserk = 0x0302c;
-
-    [NativeTypeName("#define lm_pcom_push_atk 0x0302d")]
     public const int lm_pcom_push_atk = 0x0302d;
-
-    [NativeTypeName("#define lm_pcom_through_atk 0x0302e")]
     public const int lm_pcom_through_atk = 0x0302e;
-
-    [NativeTypeName("#define lm_pcom_8sleep 0x0302f")]
     public const int lm_pcom_8sleep = 0x0302f;
-
-    [NativeTypeName("#define lm_pcom_up_strength 0x03030")]
     public const int lm_pcom_up_strength = 0x03030;
-
-    [NativeTypeName("#define lm_pcom_up_magic 0x03031")]
     public const int lm_pcom_up_magic = 0x03031;
-
-    [NativeTypeName("#define lm_pcom_change_char 0x03032")]
     public const int lm_pcom_change_char = 0x03032;
-
-    [NativeTypeName("#define lm_pcom_ultima_y 0x03033")]
     public const int lm_pcom_ultima_y = 0x03033;
-
-    [NativeTypeName("#define lm_pcom_fire1 0x03034")]
     public const int lm_pcom_fire1 = 0x03034;
-
-    [NativeTypeName("#define lm_pcom_thunder1 0x03035")]
     public const int lm_pcom_thunder1 = 0x03035;
-
-    [NativeTypeName("#define lm_pcom_ice1 0x03036")]
     public const int lm_pcom_ice1 = 0x03036;
-
-    [NativeTypeName("#define lm_pcom_fire3 0x03037")]
     public const int lm_pcom_fire3 = 0x03037;
-
-    [NativeTypeName("#define lm_pcom_thunder3 0x03038")]
     public const int lm_pcom_thunder3 = 0x03038;
-
-    [NativeTypeName("#define lm_pcom_ice3 0x03039")]
     public const int lm_pcom_ice3 = 0x03039;
-
-    [NativeTypeName("#define lm_pcom_quake 0x0303a")]
     public const int lm_pcom_quake = 0x0303a;
-
-    [NativeTypeName("#define lm_pcom_holy 0x0303b")]
     public const int lm_pcom_holy = 0x0303b;
-
-    [NativeTypeName("#define lm_pcom_cure_hp1 0x0303c")]
     public const int lm_pcom_cure_hp1 = 0x0303c;
-
-    [NativeTypeName("#define lm_pcom_cure_hp2 0x0303d")]
     public const int lm_pcom_cure_hp2 = 0x0303d;
-
-    [NativeTypeName("#define lm_pcom_esuna 0x0303e")]
     public const int lm_pcom_esuna = 0x0303e;
-
-    [NativeTypeName("#define lm_pcom_collect_trap 0x0303f")]
     public const int lm_pcom_collect_trap = 0x0303f;
-
-    [NativeTypeName("#define lm_pcom_steal_item 0x03040")]
     public const int lm_pcom_steal_item = 0x03040;
-
-    [NativeTypeName("#define lm_pcom_steal_exp 0x03041")]
     public const int lm_pcom_steal_exp = 0x03041;
-
-    [NativeTypeName("#define lm_pcom_serch_trap 0x03042")]
     public const int lm_pcom_serch_trap = 0x03042;
-
-    [NativeTypeName("#define lm_pcom_dig 0x03043")]
     public const int lm_pcom_dig = 0x03043;
-
-    [NativeTypeName("#define lm_pcom_rob 0x03044")]
     public const int lm_pcom_rob = 0x03044;
-
-    [NativeTypeName("#define lm_pcom_carry_mon 0x03045")]
     public const int lm_pcom_carry_mon = 0x03045;
-
-    [NativeTypeName("#define lm_pcom_lure 0x03046")]
     public const int lm_pcom_lure = 0x03046;
-
-    [NativeTypeName("#define lm_pcom_longdist_shot 0x03047")]
     public const int lm_pcom_longdist_shot = 0x03047;
-
-    [NativeTypeName("#define lm_pcom_mass_atk_dog 0x03048")]
     public const int lm_pcom_mass_atk_dog = 0x03048;
-
-    [NativeTypeName("#define lm_pcom_mass_atk_monkey 0x03049")]
     public const int lm_pcom_mass_atk_monkey = 0x03049;
-
-    [NativeTypeName("#define lm_pcom_mass_atk_bird 0x0304a")]
     public const int lm_pcom_mass_atk_bird = 0x0304a;
-
-    [NativeTypeName("#define lm_pcom_slot 0x0304b")]
     public const int lm_pcom_slot = 0x0304b;
-
-    [NativeTypeName("#define lm_pcom_slot_777 0x0304c")]
     public const int lm_pcom_slot_777 = 0x0304c;
-
-    [NativeTypeName("#define lm_pcom_slot_cure 0x0304d")]
     public const int lm_pcom_slot_cure = 0x0304d;
-
-    [NativeTypeName("#define lm_pcom_slot_dmg 0x0304e")]
     public const int lm_pcom_slot_dmg = 0x0304e;
-
-    [NativeTypeName("#define lm_pcom_slot_trap 0x0304f")]
     public const int lm_pcom_slot_trap = 0x0304f;
-
-    [NativeTypeName("#define lm_pcom_slot_tub 0x03050")]
     public const int lm_pcom_slot_tub = 0x03050;
-
-    [NativeTypeName("#define lm_pcom_slot_oversoul 0x03051")]
     public const int lm_pcom_slot_oversoul = 0x03051;
-
-    [NativeTypeName("#define lm_pcom_2dice 0x03052")]
     public const int lm_pcom_2dice = 0x03052;
-
-    [NativeTypeName("#define lm_pcom_4dice 0x03053")]
     public const int lm_pcom_4dice = 0x03053;
-
-    [NativeTypeName("#define lm_pcom_mp_dice 0x03054")]
     public const int lm_pcom_mp_dice = 0x03054;
-
-    [NativeTypeName("#define lm_pcom_moogle_beam 0x03055")]
     public const int lm_pcom_moogle_beam = 0x03055;
-
-    [NativeTypeName("#define lm_pcom_pupu_platter 0x03056")]
     public const int lm_pcom_pupu_platter = 0x03056;
-
-    [NativeTypeName("#define lm_pcom_cactling_gun 0x03057")]
     public const int lm_pcom_cactling_gun = 0x03057;
-
-    [NativeTypeName("#define lm_pcom_random_badstatus 0x03058")]
     public const int lm_pcom_random_badstatus = 0x03058;
-
-    [NativeTypeName("#define lm_pcom_cross_push 0x03059")]
     public const int lm_pcom_cross_push = 0x03059;
-
-    [NativeTypeName("#define lm_pcom_petit_gravit 0x0305a")]
     public const int lm_pcom_petit_gravit = 0x0305a;
-
-    [NativeTypeName("#define lm_pcom_long_move 0x0305b")]
     public const int lm_pcom_long_move = 0x0305b;
-
-    [NativeTypeName("#define lm_pcom_psychobom 0x0305c")]
     public const int lm_pcom_psychobom = 0x0305c;
-
-    [NativeTypeName("#define lm_pcom_warp_mon 0x0305d")]
     public const int lm_pcom_warp_mon = 0x0305d;
-
-    [NativeTypeName("#define lm_pcom_call_item 0x0305e")]
     public const int lm_pcom_call_item = 0x0305e;
-
-    [NativeTypeName("#define lm_pcom_maturi01 0x0305f")]
     public const int lm_pcom_maturi01 = 0x0305f;
-
-    [NativeTypeName("#define lm_pcom_maturi02 0x03060")]
     public const int lm_pcom_maturi02 = 0x03060;
-
-    [NativeTypeName("#define lm_pcom_maturi03 0x03061")]
     public const int lm_pcom_maturi03 = 0x03061;
-
-    [NativeTypeName("#define lm_pcom_maturi04 0x03062")]
     public const int lm_pcom_maturi04 = 0x03062;
-
-    [NativeTypeName("#define lm_pcom_ene_seed_cannon 0x03063")]
     public const int lm_pcom_ene_seed_cannon = 0x03063;
-
-    [NativeTypeName("#define lm_pcom_ene_1000needle 0x03064")]
     public const int lm_pcom_ene_1000needle = 0x03064;
-
-    [NativeTypeName("#define lm_pcom_ene_badsmell_breath 0x03065")]
     public const int lm_pcom_ene_badsmell_breath = 0x03065;
-
-    [NativeTypeName("#define lm_pcom_ene_nucleus 0x03066")]
     public const int lm_pcom_ene_nucleus = 0x03066;
-
-    [NativeTypeName("#define lm_pcom_ene_sunshine 0x03067")]
     public const int lm_pcom_ene_sunshine = 0x03067;
-
-    [NativeTypeName("#define lm_pcom_ene_dead_count 0x03068")]
     public const int lm_pcom_ene_dead_count = 0x03068;
-
-    [NativeTypeName("#define lm_pcom_ene_white_wind 0x03069")]
     public const int lm_pcom_ene_white_wind = 0x03069;
-
-    [NativeTypeName("#define lm_pcom_ene_mighty_gard 0x0306a")]
     public const int lm_pcom_ene_mighty_gard = 0x0306a;
-
-    [NativeTypeName("#define lm_pcom_ene_simor 0x0306b")]
     public const int lm_pcom_ene_simor = 0x0306b;
-
-    [NativeTypeName("#define lm_pcom_use_item 0x0306c")]
     public const int lm_pcom_use_item = 0x0306c;
-
-    [NativeTypeName("#define lm_pcom_なげる 0x03000")]
     public const int lm_pcom_なげる = 0x03000;
-
-    [NativeTypeName("#define lm_pcom_たたかうすっぴん 0x03001")]
     public const int lm_pcom_たたかうすっぴん = 0x03001;
-
-    [NativeTypeName("#define lm_pcom_たたかうガンナー 0x03002")]
     public const int lm_pcom_たたかうガンナー = 0x03002;
-
-    [NativeTypeName("#define lm_pcom_たたかう魔銃士 0x03003")]
     public const int lm_pcom_たたかう魔銃士 = 0x03003;
-
-    [NativeTypeName("#define lm_pcom_たたかうアイテムシューター 0x03004")]
     public const int lm_pcom_たたかうアイテムシューター = 0x03004;
-
-    [NativeTypeName("#define lm_pcom_たたかう戦士 0x03005")]
     public const int lm_pcom_たたかう戦士 = 0x03005;
-
-    [NativeTypeName("#define lm_pcom_たたかうサムライ 0x03006")]
     public const int lm_pcom_たたかうサムライ = 0x03006;
-
-    [NativeTypeName("#define lm_pcom_たたかうダークナイト 0x03007")]
     public const int lm_pcom_たたかうダークナイト = 0x03007;
-
-    [NativeTypeName("#define lm_pcom_たたかうバーサーカー 0x03008")]
     public const int lm_pcom_たたかうバーサーカー = 0x03008;
-
-    [NativeTypeName("#define lm_pcom_たたかう歌姫 0x03009")]
     public const int lm_pcom_たたかう歌姫 = 0x03009;
-
-    [NativeTypeName("#define lm_pcom_たたかう黒魔導士 0x0300a")]
     public const int lm_pcom_たたかう黒魔導士 = 0x0300a;
-
-    [NativeTypeName("#define lm_pcom_たたかう白魔導士 0x0300b")]
     public const int lm_pcom_たたかう白魔導士 = 0x0300b;
-
-    [NativeTypeName("#define lm_pcom_たたかうシーフ 0x0300c")]
     public const int lm_pcom_たたかうシーフ = 0x0300c;
-
-    [NativeTypeName("#define lm_pcom_たたかう調教士 0x0300d")]
     public const int lm_pcom_たたかう調教士 = 0x0300d;
-
-    [NativeTypeName("#define lm_pcom_たたかうギャンブラー 0x0300e")]
     public const int lm_pcom_たたかうギャンブラー = 0x0300e;
-
-    [NativeTypeName("#define lm_pcom_たたかう着ぐるみ士 0x0300f")]
     public const int lm_pcom_たたかう着ぐるみ士 = 0x0300f;
-
-    [NativeTypeName("#define lm_pcom_たたかうサイキッカー 0x03010")]
     public const int lm_pcom_たたかうサイキッカー = 0x03010;
-
-    [NativeTypeName("#define lm_pcom_たたかうルブラン戦闘員 0x03011")]
     public const int lm_pcom_たたかうルブラン戦闘員 = 0x03011;
-
-    [NativeTypeName("#define lm_pcom_たたかう祭り士 0x03012")]
     public const int lm_pcom_たたかう祭り士 = 0x03012;
-
-    [NativeTypeName("#define lm_pcom_クイックトリガー 0x03013")]
     public const int lm_pcom_クイックトリガー = 0x03013;
-
-    [NativeTypeName("#define lm_pcom_十字撃ち 0x03014")]
     public const int lm_pcom_十字撃ち = 0x03014;
-
-    [NativeTypeName("#define lm_pcom_生物貫通弾 0x03015")]
     public const int lm_pcom_生物貫通弾 = 0x03015;
-
-    [NativeTypeName("#define lm_pcom_クォーターショット 0x03016")]
     public const int lm_pcom_クォーターショット = 0x03016;
-
-    [NativeTypeName("#define lm_pcom_攻撃力変換ショット 0x03017")]
     public const int lm_pcom_攻撃力変換ショット = 0x03017;
-
-    [NativeTypeName("#define lm_pcom_アイテムハンド 0x03018")]
     public const int lm_pcom_アイテムハンド = 0x03018;
-
-    [NativeTypeName("#define lm_pcom_落ちてるアイテム爆破 0x03019")]
     public const int lm_pcom_落ちてるアイテム爆破 = 0x03019;
-
-    [NativeTypeName("#define lm_pcom_アイテムの異常を解除 0x0301a")]
     public const int lm_pcom_アイテムの異常を解除 = 0x0301a;
-
-    [NativeTypeName("#define lm_pcom_敵の技を使う 0x0301b")]
     public const int lm_pcom_敵の技を使う = 0x0301b;
-
-    [NativeTypeName("#define lm_pcom_敵の技を奪う 0x0301c")]
     public const int lm_pcom_敵の技を奪う = 0x0301c;
-
-    [NativeTypeName("#define lm_pcom_対地上弾 0x0301d")]
     public const int lm_pcom_対地上弾 = 0x0301d;
-
-    [NativeTypeName("#define lm_pcom_対空中弾 0x0301e")]
     public const int lm_pcom_対空中弾 = 0x0301e;
-
-    [NativeTypeName("#define lm_pcom_ディレイアタック 0x0301f")]
     public const int lm_pcom_ディレイアタック = 0x0301f;
-
-    [NativeTypeName("#define lm_pcom_完全防御 0x03020")]
     public const int lm_pcom_完全防御 = 0x03020;
-
-    [NativeTypeName("#define lm_pcom_ハードブレイク１ 0x03021")]
     public const int lm_pcom_ハードブレイク１ = 0x03021;
-
-    [NativeTypeName("#define lm_pcom_ハードブレイク２ 0x03022")]
     public const int lm_pcom_ハードブレイク２ = 0x03022;
-
-    [NativeTypeName("#define lm_pcom_斬鉄剣 0x03023")]
     public const int lm_pcom_斬鉄剣 = 0x03023;
-
-    [NativeTypeName("#define lm_pcom_ギル投げ 0x03024")]
     public const int lm_pcom_ギル投げ = 0x03024;
-
-    [NativeTypeName("#define lm_pcom_前方３方向斬り 0x03025")]
     public const int lm_pcom_前方３方向斬り = 0x03025;
-
-    [NativeTypeName("#define lm_pcom_明鏡 0x03026")]
     public const int lm_pcom_明鏡 = 0x03026;
-
-    [NativeTypeName("#define lm_pcom_暗黒剣 0x03027")]
     public const int lm_pcom_暗黒剣 = 0x03027;
-
-    [NativeTypeName("#define lm_pcom_暗黒の空 0x03028")]
     public const int lm_pcom_暗黒の空 = 0x03028;
-
-    [NativeTypeName("#define lm_pcom_バイオ 0x03029")]
     public const int lm_pcom_バイオ = 0x03029;
-
-    [NativeTypeName("#define lm_pcom_死の宣告 0x0302a")]
     public const int lm_pcom_死の宣告 = 0x0302a;
-
-    [NativeTypeName("#define lm_pcom_もの忘れアタック 0x0302b")]
     public const int lm_pcom_もの忘れアタック = 0x0302b;
-
-    [NativeTypeName("#define lm_pcom_バーサク 0x0302c")]
     public const int lm_pcom_バーサク = 0x0302c;
-
-    [NativeTypeName("#define lm_pcom_ぶっ飛ばす 0x0302d")]
     public const int lm_pcom_ぶっ飛ばす = 0x0302d;
-
-    [NativeTypeName("#define lm_pcom_すり抜けアタック 0x0302e")]
     public const int lm_pcom_すり抜けアタック = 0x0302e;
-
-    [NativeTypeName("#define lm_pcom_周囲８方向睡眠 0x0302f")]
     public const int lm_pcom_周囲８方向睡眠 = 0x0302f;
-
-    [NativeTypeName("#define lm_pcom_物理攻撃力ＵＰ 0x03030")]
     public const int lm_pcom_物理攻撃力ＵＰ = 0x03030;
-
-    [NativeTypeName("#define lm_pcom_魔力ＵＰ 0x03031")]
     public const int lm_pcom_魔力ＵＰ = 0x03031;
-
-    [NativeTypeName("#define lm_pcom_交代 0x03032")]
     public const int lm_pcom_交代 = 0x03032;
-
-    [NativeTypeName("#define lm_pcom_アルテマ 0x03033")]
     public const int lm_pcom_アルテマ = 0x03033;
-
-    [NativeTypeName("#define lm_pcom_ファイア 0x03034")]
     public const int lm_pcom_ファイア = 0x03034;
-
-    [NativeTypeName("#define lm_pcom_サンダー 0x03035")]
     public const int lm_pcom_サンダー = 0x03035;
-
-    [NativeTypeName("#define lm_pcom_ブリザド 0x03036")]
     public const int lm_pcom_ブリザド = 0x03036;
-
-    [NativeTypeName("#define lm_pcom_ファイガ 0x03037")]
     public const int lm_pcom_ファイガ = 0x03037;
-
-    [NativeTypeName("#define lm_pcom_サンダガ 0x03038")]
     public const int lm_pcom_サンダガ = 0x03038;
-
-    [NativeTypeName("#define lm_pcom_ブリザガ 0x03039")]
     public const int lm_pcom_ブリザガ = 0x03039;
-
-    [NativeTypeName("#define lm_pcom_クエイク 0x0303a")]
     public const int lm_pcom_クエイク = 0x0303a;
-
-    [NativeTypeName("#define lm_pcom_ホーリー 0x0303b")]
     public const int lm_pcom_ホーリー = 0x0303b;
-
-    [NativeTypeName("#define lm_pcom_ケアル 0x0303c")]
     public const int lm_pcom_ケアル = 0x0303c;
-
-    [NativeTypeName("#define lm_pcom_ケアルガ 0x0303d")]
     public const int lm_pcom_ケアルガ = 0x0303d;
-
-    [NativeTypeName("#define lm_pcom_エスナ 0x0303e")]
     public const int lm_pcom_エスナ = 0x0303e;
-
-    [NativeTypeName("#define lm_pcom_罠回収 0x0303f")]
     public const int lm_pcom_罠回収 = 0x0303f;
-
-    [NativeTypeName("#define lm_pcom_アイテム盗む 0x03040")]
     public const int lm_pcom_アイテム盗む = 0x03040;
-
-    [NativeTypeName("#define lm_pcom_経験値盗む 0x03041")]
     public const int lm_pcom_経験値盗む = 0x03041;
-
-    [NativeTypeName("#define lm_pcom_罠発見 0x03042")]
     public const int lm_pcom_罠発見 = 0x03042;
-
-    [NativeTypeName("#define lm_pcom_穴掘り 0x03043")]
     public const int lm_pcom_穴掘り = 0x03043;
-
-    [NativeTypeName("#define lm_pcom_ぶんどる 0x03044")]
     public const int lm_pcom_ぶんどる = 0x03044;
-
-    [NativeTypeName("#define lm_pcom_運び去る 0x03045")]
     public const int lm_pcom_運び去る = 0x03045;
-
-    [NativeTypeName("#define lm_pcom_おびき寄せ 0x03046")]
     public const int lm_pcom_おびき寄せ = 0x03046;
-
-    [NativeTypeName("#define lm_pcom_無限射程攻撃 0x03047")]
     public const int lm_pcom_無限射程攻撃 = 0x03047;
-
-    [NativeTypeName("#define lm_pcom_集団攻撃＿犬 0x03048")]
     public const int lm_pcom_集団攻撃＿犬 = 0x03048;
-
-    [NativeTypeName("#define lm_pcom_集団攻撃＿猿 0x03049")]
     public const int lm_pcom_集団攻撃＿猿 = 0x03049;
-
-    [NativeTypeName("#define lm_pcom_集団攻撃＿鳥 0x0304a")]
     public const int lm_pcom_集団攻撃＿鳥 = 0x0304a;
-
-    [NativeTypeName("#define lm_pcom_スロット 0x0304b")]
     public const int lm_pcom_スロット = 0x0304b;
-
-    [NativeTypeName("#define lm_pcom_スロット７７７ 0x0304c")]
     public const int lm_pcom_スロット７７７ = 0x0304c;
-
-    [NativeTypeName("#define lm_pcom_スロット回復 0x0304d")]
     public const int lm_pcom_スロット回復 = 0x0304d;
-
-    [NativeTypeName("#define lm_pcom_スロットダメージ 0x0304e")]
     public const int lm_pcom_スロットダメージ = 0x0304e;
-
-    [NativeTypeName("#define lm_pcom_スロット罠 0x0304f")]
     public const int lm_pcom_スロット罠 = 0x0304f;
-
-    [NativeTypeName("#define lm_pcom_スロットたらい 0x03050")]
     public const int lm_pcom_スロットたらい = 0x03050;
-
-    [NativeTypeName("#define lm_pcom_スロットオーバーソウル 0x03051")]
     public const int lm_pcom_スロットオーバーソウル = 0x03051;
-
-    [NativeTypeName("#define lm_pcom_２ダイス 0x03052")]
     public const int lm_pcom_２ダイス = 0x03052;
-
-    [NativeTypeName("#define lm_pcom_４ダイス 0x03053")]
     public const int lm_pcom_４ダイス = 0x03053;
-
-    [NativeTypeName("#define lm_pcom_ＭＰダメージダイス 0x03054")]
     public const int lm_pcom_ＭＰダメージダイス = 0x03054;
-
-    [NativeTypeName("#define lm_pcom_モグビーム 0x03055")]
     public const int lm_pcom_モグビーム = 0x03055;
-
-    [NativeTypeName("#define lm_pcom_星から来た友人 0x03056")]
     public const int lm_pcom_星から来た友人 = 0x03056;
-
-    [NativeTypeName("#define lm_pcom_サボテンマシンガン 0x03057")]
     public const int lm_pcom_サボテンマシンガン = 0x03057;
-
-    [NativeTypeName("#define lm_pcom_ランダムステータス異常 0x03058")]
     public const int lm_pcom_ランダムステータス異常 = 0x03058;
-
-    [NativeTypeName("#define lm_pcom_水流し 0x03059")]
     public const int lm_pcom_水流し = 0x03059;
-
-    [NativeTypeName("#define lm_pcom_プチグラビデ 0x0305a")]
     public const int lm_pcom_プチグラビデ = 0x0305a;
-
-    [NativeTypeName("#define lm_pcom_直線移動 0x0305b")]
     public const int lm_pcom_直線移動 = 0x0305b;
-
-    [NativeTypeName("#define lm_pcom_サイコボム 0x0305c")]
     public const int lm_pcom_サイコボム = 0x0305c;
-
-    [NativeTypeName("#define lm_pcom_テレキネシス 0x0305d")]
     public const int lm_pcom_テレキネシス = 0x0305d;
-
-    [NativeTypeName("#define lm_pcom_アイテムを引き寄せ 0x0305e")]
     public const int lm_pcom_アイテムを引き寄せ = 0x0305e;
-
-    [NativeTypeName("#define lm_pcom_祭り士専用技 0x0305f")]
     public const int lm_pcom_祭り士専用技 = 0x0305f;
-
-    [NativeTypeName("#define lm_pcom_祭り士汎用技１ 0x03060")]
     public const int lm_pcom_祭り士汎用技１ = 0x03060;
-
-    [NativeTypeName("#define lm_pcom_祭り士汎用技２ 0x03061")]
     public const int lm_pcom_祭り士汎用技２ = 0x03061;
-
-    [NativeTypeName("#define lm_pcom_祭り士汎用技３ 0x03062")]
     public const int lm_pcom_祭り士汎用技３ = 0x03062;
-
-    [NativeTypeName("#define lm_pcom_タネ大砲 0x03063")]
     public const int lm_pcom_タネ大砲 = 0x03063;
-
-    [NativeTypeName("#define lm_pcom_針千本 0x03064")]
     public const int lm_pcom_針千本 = 0x03064;
-
-    [NativeTypeName("#define lm_pcom_くさい息 0x03065")]
     public const int lm_pcom_くさい息 = 0x03065;
-
-    [NativeTypeName("#define lm_pcom_ニュークリアキャノン 0x03066")]
     public const int lm_pcom_ニュークリアキャノン = 0x03066;
-
-    [NativeTypeName("#define lm_pcom_ストナーサンシャイン 0x03067")]
     public const int lm_pcom_ストナーサンシャイン = 0x03067;
-
-    [NativeTypeName("#define lm_pcom_死の宣告α 0x03068")]
     public const int lm_pcom_死の宣告α = 0x03068;
-
-    [NativeTypeName("#define lm_pcom_ホワイトウィンド 0x03069")]
     public const int lm_pcom_ホワイトウィンド = 0x03069;
-
-    [NativeTypeName("#define lm_pcom_マイティガード 0x0306a")]
     public const int lm_pcom_マイティガード = 0x0306a;
-
-    [NativeTypeName("#define lm_pcom_シーモア最強技 0x0306b")]
     public const int lm_pcom_シーモア最強技 = 0x0306b;
-
-    [NativeTypeName("#define lm_pcom_アイテム使う 0x0306c")]
     public const int lm_pcom_アイテム使う = 0x0306c;
 }

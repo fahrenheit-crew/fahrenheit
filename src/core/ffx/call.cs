@@ -15,27 +15,14 @@ using Fahrenheit.FFX.Battle;
 using Fahrenheit.FFX.Ids;
 using Fahrenheit.FFX.SphereGrid;
 
+// ReSharper disable InconsistentNaming
+
 namespace Fahrenheit.FFX;
 
 /// <summary>
 ///     An accessor for game function calls exclusive to FF X.
 /// </summary>
 public static partial class FhCall {
-
-    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_Init> CT_0000_Init
-        => new( new FhMethodLocation("FFX.exe", 0x45C3E0) );
-
-    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_0001_RetInt
-        => new( new FhMethodLocation("FFX.exe", 0x45CE70) );
-
-    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_Init> CT_5010_Init
-        => new( new FhMethodLocation("FFX.exe", 0x679820) );
-
-    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_5021_RetInt
-        => new( new FhMethodLocation("FFX.exe", 0x679510) );
-
-    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_504C_RetInt
-        => new( new FhMethodLocation("FFX.exe", 0x6786A0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public unsafe delegate void d_graphicSetFlipVsnc(int interval);
@@ -617,10 +604,10 @@ public static partial class FhCall {
     public static FhMethodHandle<d_getScenerioFlag> getScenerioFlag
         => new ( new FhMethodLocation("FFX.exe", 0x387420) );
 
-    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_RetInt_0171_fillPartyMemberHp
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetI> CT_RetInt_0171_fillPartyMemberHp
         => new ( new FhMethodLocation("FFX.exe", 0x45C4F0) );
 
-    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetInt> CT_RetInt_0172_fillPartyMemberMp
+    public static FhMethodHandle<Fahrenheit.FhCall.d_CT_RetI> CT_RetInt_0172_fillPartyMemberMp
         => new ( new FhMethodLocation("FFX.exe", 0x45C6B0) );
 
     // Unofficial naming

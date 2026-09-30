@@ -8,23 +8,13 @@
 
 namespace Fahrenheit.FFX2;
 
-public partial struct Important
-{
-    [NativeTypeName("unsigned int")]
-    public uint name;
+[StructLayout(LayoutKind.Sequential)]
+public struct KeyItem {
+    public ExcelTextOffset name;
+    public ExcelTextOffset help;
 
-    [NativeTypeName("unsigned int")]
-    public uint help;
-
-    [NativeTypeName("unsigned char")]
     public byte item_type;
-
-    [NativeTypeName("unsigned char")]
     public byte item_value;
-
-    [NativeTypeName("unsigned char")]
     public byte icon;
-
-    [NativeTypeName("unsigned char")]
     public byte number;
 }

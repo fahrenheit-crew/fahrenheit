@@ -10,10 +10,7 @@ namespace Fahrenheit.FFX2;
 
 public partial struct SaveTxt
 {
-    [NativeTypeName("unsigned int[2]")]
     public _command_e__FixedBuffer command;
-
-    [NativeTypeName("unsigned int[2]")]
     public _help_e__FixedBuffer help;
 
     [InlineArray(2)]

@@ -116,7 +116,7 @@ internal sealed class FhSettings {
     ///     Attempts to retrieve the settings of the given <paramref name="module"/>.
     /// </summary>
     internal bool try_get(FhModule module, [NotNullWhen(true)] out FhSettingsCategory? settings) {
-        settings = default;
+        settings = null;
         if (!_settings.TryGetValue(module.GetType(), out FhSettingData? sd) || sd.ref_active)
             return false;
 
@@ -128,7 +128,7 @@ internal sealed class FhSettings {
     ///     Transfers displaying the settings for <typeparamref name="T"/> to a <see cref="FhSettingReference{T}"/>.
     /// </summary>
     internal bool try_bind_reference<T>([NotNullWhen(true)] out FhSettingsCategory? settings) where T : FhModule {
-        settings = default;
+        settings = null;
         if (!_settings.TryGetValue(typeof(T), out FhSettingData? sd))
             return false;
 
@@ -158,9 +158,9 @@ internal sealed class FhSettings {
             IndentSize = 4
         };
 
-        foreach (FhSettingData data in _settings.Values) {
+        foreach (FhSettingData sd in _settings.Values) {
             using FileStream file = File.Open(
-                data.settings_path,
+                sd.settings_path,
                 FileMode  .OpenOrCreate,
                 FileAccess.ReadWrite,
                 FileShare .None
@@ -169,7 +169,7 @@ internal sealed class FhSettings {
             using Utf8JsonWriter writer = new Utf8JsonWriter(file, opts);
 
             writer.WriteStartObject();
-            data.settings.save(writer);
+            sd.settings.save(writer);
             writer.WriteEndObject();
 
             // Truncate the file.
@@ -183,7 +183,7 @@ internal sealed class FhSettings {
 /// </summary>
 /// <remarks>
 ///     Settings are automatically persisted to disk and exposed through the
-///     mod configuration panel when provided through an <see cref="FhSettingProvider{T}"/>.
+///     mod settings UI when provided through an <see cref="FhSettingProvider{T}"/>.
 /// </remarks>
 public abstract class FhSetting(string id) {
     internal string id = id;
@@ -235,7 +235,7 @@ public abstract class FhSetting(string id) {
 /// </summary>
 /// <remarks>
 ///     Settings are automatically persisted to disk and exposed through the
-///     mod configuration panel when provided through an <see cref="FhSettingProvider{T}"/>.
+///     mod settings UI when provided through an <see cref="FhSettingProvider{T}"/>.
 /// </remarks>
 public abstract class FhSetting<T>(string id, T defval) : FhSetting(id) where T : notnull {
     protected bool _disabled = false;

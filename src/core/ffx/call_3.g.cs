@@ -21403,11 +21403,6 @@ public static unsafe partial class FhCall {
     public static FhMethodHandle<Fahrenheit.FhCall.d_UnknownFn> pppDeletePObject => new( new FhMethodLocation("FFX.exe", 0x3169D0) );
 
     // Unannotated function:
-    // unknown undefined pppInitEnv() at 00716ab0
-
-    public static FhMethodHandle<Fahrenheit.FhCall.d_UnknownFn> pppInitEnv => new( new FhMethodLocation("FFX.exe", 0x316AB0) );
-
-    // Unannotated function:
     // unknown undefined FUN_00716ba0() at 00716ba0
 
     public static FhMethodHandle<Fahrenheit.FhCall.d_UnknownFn> FUN_00716ba0 => new( new FhMethodLocation("FFX.exe", 0x316BA0) );
@@ -21876,11 +21871,6 @@ public static unsafe partial class FhCall {
     // unknown undefined pppAlloc() at 0072c4c0
 
     public static FhMethodHandle<Fahrenheit.FhCall.d_UnknownFn> pppAlloc => new( new FhMethodLocation("FFX.exe", 0x32C4C0) );
-
-    // Unannotated function:
-    // unknown undefined pppCreateHeap() at 0072c570
-
-    public static FhMethodHandle<Fahrenheit.FhCall.d_UnknownFn> pppCreateHeap => new( new FhMethodLocation("FFX.exe", 0x32C570) );
 
     // Unannotated function:
     // unknown undefined FUN_0072c650() at 0072c650
@@ -30302,13 +30292,6 @@ public static unsafe partial class FhCall {
     // unknown undefined MsMenuGetHelp() at 0078fc00
 
     public static FhMethodHandle<Fahrenheit.FhCall.d_UnknownFn> MsMenuGetHelp => new( new FhMethodLocation("FFX.exe", 0x38FC00) );
-
-    // Original after pruning:
-    // __stdcall byte* MsMenuGetText(int param_1, uint param_2, uint param_3) at 0078fd40
-
-    [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-    public unsafe delegate byte* d_MsMenuGetText(int param_1, uint param_2, uint param_3);
-    public static FhMethodHandle<d_MsMenuGetText> MsMenuGetText => new( new FhMethodLocation("FFX.exe", 0x38FD40) );
 
     // Unannotated function:
     // unknown undefined FUN_0078fe50() at 0078fe50

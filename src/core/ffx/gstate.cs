@@ -5,6 +5,7 @@
 
 using Fahrenheit.Atel;
 using Fahrenheit.FFX.Battle;
+using Fahrenheit.FFX.SphereGrid;
 
 namespace Fahrenheit.FFX;
 
@@ -37,7 +38,20 @@ public unsafe static class Globals {
     }
 
     public static class SphereGrid {
-        public static bool* is_open => FhUtil.ptr_at<bool>(0x1685f70);
+        public static bool is_open {
+            get => FhUtil.get_at<int>(0x1685F70) != 0;
+            set => FhUtil.set_at<int>(0x1685F70, value ? 1 : 0);
+        }
+
+        public static bool is_cjk {
+            get => FhUtil.get_at<int>(0x1685F74) != 0;
+            set => FhUtil.set_at<int>(0x1685F74, value ? 1 : 0);
+        }
+
+        public static int*  slv_available_for_move => FhUtil.ptr_at<int>(0x16860FC);
+        public static int*  move_prev_link_cost => FhUtil.ptr_at<int>(0x1686100);
+        public static int*  move_ply_mask => FhUtil.ptr_at<int>(0x1686104);
+        public static SphereGridMenuList* menu_list => (SphereGridMenuList*)FhUtil.get_at<uint>(0x1686108);
         public static LpAbilityMapEngine* lpamng => (LpAbilityMapEngine*)FhUtil.get_at<nint>(0x1F05834);
     }
 

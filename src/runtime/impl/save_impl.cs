@@ -3,12 +3,12 @@
 // This file is part of Fahrenheit, © 2023-2026 The Fahrenheit contributors.
 // It is licensed to you under the GNU Lesser General Public License, version 3.0 or later. See COPYING, COPYING.LESSER.
 
-namespace Fahrenheit.Runtime;
+namespace Fahrenheit.Runtime.Impl;
 
 /* [fkelava 13/11/25 22:03]
  * The game's original save system is a basic manager operating a Iggy-based Flash UI.
- * It is fairly limiting. A global limit of 200 saves exist, which cannot be separated or logically organized. 
- * 
+ * It is fairly limiting. A global limit of 200 saves exist, which cannot be separated or logically organized.
+ *
  * In Fahrenheit, this creates several problems for us:
  * - We would like to let mods read and write to some local state at save/load time.
  * - We would like to offer the ability to have multiple sets of saves.

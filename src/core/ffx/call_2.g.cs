@@ -48311,11 +48311,6 @@ public static unsafe partial class FhCall {
     public static FhMethodHandle<Fahrenheit.FhCall.d_UnknownFn> FUN_00639130 => new( new FhMethodLocation("FFX.exe", 0x239130) );
 
     // Unannotated function:
-    // unknown undefined FUN_00639140() at 00639140
-
-    public static FhMethodHandle<Fahrenheit.FhCall.d_UnknownFn> FUN_00639140 => new( new FhMethodLocation("FFX.exe", 0x239140) );
-
-    // Unannotated function:
     // unknown undefined graphicAbmapDestory() at 00639160
 
     public static FhMethodHandle<Fahrenheit.FhCall.d_UnknownFn> graphicAbmapDestory => new( new FhMethodLocation("FFX.exe", 0x239160) );
@@ -49566,11 +49561,6 @@ public static unsafe partial class FhCall {
     // unknown undefined FUN_00643160() at 00643160
 
     public static FhMethodHandle<Fahrenheit.FhCall.d_UnknownFn> FUN_00643160 => new( new FhMethodLocation("FFX.exe", 0x243160) );
-
-    // Unannotated function:
-    // unknown undefined graphicSetFlipVsnc() at 00643290
-
-    public static FhMethodHandle<Fahrenheit.FhCall.d_UnknownFn> graphicSetFlipVsnc => new( new FhMethodLocation("FFX.exe", 0x243290) );
 
     // Unannotated function:
     // unknown undefined graphicSetFocusZ() at 006432a0

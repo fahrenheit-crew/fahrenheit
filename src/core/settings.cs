@@ -6,10 +6,25 @@
 namespace Fahrenheit;
 
 /// <summary>
-///     Marks an object as being the setting provider for a given module.
+///     Pairs a setting category with data
+///     to control its persistence and rendering.
+/// </summary>
+internal sealed record FhSettingData(
+    string             settings_path,
+    FhSettingsCategory settings
+) {
+    /// <summary>
+    ///     Marks that a <see cref="FhSettingReference{T}"/>
+    ///     has taken over displaying the associated setting category.
+    /// </summary>
+    internal bool ref_active = false;
+}
+
+/// <summary>
+///     Declares the settings provided by <typeparamref name="T"/>.
 /// </summary>
 /// <remarks>
-///     Only one class may derive from this class for any given module.
+///     Only one provider may exist for any given module. It must be instantiated in that module's constructor.
 /// </remarks>
 public abstract class FhSettingProvider<T> where T : FhModule {
     public FhSettingProvider() {
@@ -18,9 +33,40 @@ public abstract class FhSettingProvider<T> where T : FhModule {
 
     /// <summary>
     ///     Returns the settings the module wishes to expose through
-    ///     the mod settings panel, in display order.
+    ///     the mod settings UI, in display order.
     /// </summary>
     internal abstract IEnumerable<FhSetting> get();
+}
+
+/// <summary>
+///     A reference takes over setting display for <typeparamref name="T"/>.
+///     Its settings will be rendered in place of the reference.
+/// </summary>
+/// <remarks>
+///     This is used to present a unified settings panel for a number of disparate modules.
+///     Only one reference can target any given module.
+/// </remarks>
+public sealed class FhSettingReference<T> : FhSetting where T : FhModule {
+    private static readonly ConcurrentDictionary<Type, byte> _s_refs   = [];
+    private                 FhSettingsCategory?              _settings = null;
+
+    public FhSettingReference(string id) : base(id) {
+        Type module_type = typeof(T);
+
+        if (!_s_refs.TryAdd(module_type, 0)) {
+            throw new Exception($"Only one {nameof(FhSettingReference<T>)} can exist for module {module_type}.");
+        }
+    }
+
+    internal sealed override void save(Utf8JsonWriter writer) { }
+    internal sealed override void load(Utf8JsonReader reader) { }
+
+    internal sealed override void render() {
+        if (_settings == null && !FhInternal.Settings.try_bind_reference<T>(out _settings))
+            return;
+
+        _settings.render();
+    }
 }
 
 /// <summary>
@@ -28,37 +74,78 @@ public abstract class FhSettingProvider<T> where T : FhModule {
 /// </summary>
 internal sealed class FhSettings {
 
-    private readonly Dictionary<Type, FhSettingsCategory> _settings = [];
+    private readonly ConcurrentDictionary<Type, FhSettingData> _settings = [];
 
     /// <summary>
     ///     Registers a given module's settings for display.
     /// </summary>
-    /// <param name="provider">An instance of the class deriving from <see cref="FhSettingProvider{T}"/>.</param>
+    /// <param name="provider">The <see cref="FhSettingProvider{T}"/> for the module.</param>
     internal void register<T>(FhSettingProvider<T> provider) where T : FhModule {
-        Type module_type = typeof(T);
+        if (FhEnvironment.get_execution_state() != FhExecState.CTOR) {
+            throw new Exception($"{nameof(FhSettingProvider<T>)} may only be instantiated in a module constructor.");
+        }
 
-        if (_settings.TryGetValue(module_type, out _))
+        Type          module_type     = typeof(T);
+        FhSettingData module_settings = new(
+            settings_path: "", // We'll fill in the path in initialize(), when all module constructors have finished running.
+            settings:      new FhSettingsCategory(module_type.FullName!, [ .. provider.get() ])
+        );
+
+        if (!_settings.TryAdd(module_type, module_settings)) {
             throw new Exception($"Only one {nameof(FhSettingProvider<T>)} can be registered for module {module_type}.");
-
-        _settings[module_type] = new(module_type.FullName!, [ .. provider.get() ]);
+        }
     }
 
+    /// <summary>
+    ///     Prepares settings for persistence.
+    /// </summary>
+    internal void initialize() {
+        foreach (FhModuleContext module_context in FhApi.Mods.get_modules()) {
+            Type module_type = module_context.Module.GetType();
+
+            if (!_settings.TryGetValue(module_type, out FhSettingData? sd))
+                continue;
+
+            _settings[module_type] = sd with { settings_path = module_context.Paths.GlobalConfigPath };
+        }
+
+        load_all();
+    }
+
+    /// <summary>
+    ///     Attempts to retrieve the settings of the given <paramref name="module"/>.
+    /// </summary>
     internal bool try_get(FhModule module, [NotNullWhen(true)] out FhSettingsCategory? settings) {
-        return _settings.TryGetValue(module.GetType(), out settings);
+        settings = default;
+        if (!_settings.TryGetValue(module.GetType(), out FhSettingData? sd) || sd.ref_active)
+            return false;
+
+        settings = sd.settings;
+        return true;
+    }
+
+    /// <summary>
+    ///     Transfers displaying the settings for <typeparamref name="T"/> to a <see cref="FhSettingReference{T}"/>.
+    /// </summary>
+    internal bool try_bind_reference<T>([NotNullWhen(true)] out FhSettingsCategory? settings) where T : FhModule {
+        settings = default;
+        if (!_settings.TryGetValue(typeof(T), out FhSettingData? sd))
+            return false;
+
+        settings = sd.settings;
+        sd.ref_active = true;
+
+        return true;
     }
 
     /// <summary>Reads out all settings from disk.</summary>
     internal void load_all() {
-        foreach (FhModuleContext context in FhApi.Mods.get_modules()) {
-            if (!_settings.TryGetValue(context.Module.GetType(), out FhSettingsCategory? settings))
-                continue;
-
+        foreach (FhSettingData sd in _settings.Values) {
             try {
-                Span<byte>     config = File.ReadAllBytes(context.Paths.GlobalConfigPath);
-                Utf8JsonReader reader = new(config);
+                Utf8JsonReader reader = new(File.ReadAllBytes(sd.settings_path));
 
                 reader.enter_json_object();
-                settings.load(reader);
+                sd.settings.load(reader);
             }
             catch (FileNotFoundException) { }
         }
@@ -71,12 +158,9 @@ internal sealed class FhSettings {
             IndentSize = 4
         };
 
-        foreach (FhModuleContext context in FhApi.Mods.get_modules()) {
-            if (!_settings.TryGetValue(context.Module.GetType(), out FhSettingsCategory? settings))
-                continue;
-
+        foreach (FhSettingData data in _settings.Values) {
             using FileStream file = File.Open(
-                context.Paths.GlobalConfigPath,
+                data.settings_path,
                 FileMode  .OpenOrCreate,
                 FileAccess.ReadWrite,
                 FileShare .None
@@ -85,15 +169,22 @@ internal sealed class FhSettings {
             using Utf8JsonWriter writer = new Utf8JsonWriter(file, opts);
 
             writer.WriteStartObject();
-            settings.save(writer);
+            data.settings.save(writer);
             writer.WriteEndObject();
+
+            // Truncate the file.
+            file.SetLength(writer.BytesCommitted);
         }
     }
 }
 
 /// <summary>
-///     A persistent, configurable value associated with a given module, with a unique <paramref name="id"/>.
+///     A configurable value with a unique <paramref name="id"/>.
 /// </summary>
+/// <remarks>
+///     Settings are automatically persisted to disk and exposed through the
+///     mod configuration panel when provided through an <see cref="FhSettingProvider{T}"/>.
+/// </remarks>
 public abstract class FhSetting(string id) {
     internal string id = id;
 
@@ -140,13 +231,17 @@ public abstract class FhSetting(string id) {
 }
 
 /// <summary>
-///     A persistent, configurable value of type <typeparamref name="T"/>
-///     associated with a given module, with a unique <paramref name="id"/>.
+///     A configurable value of type <typeparamref name="T"/> with a unique <paramref name="id"/>.
 /// </summary>
+/// <remarks>
+///     Settings are automatically persisted to disk and exposed through the
+///     mod configuration panel when provided through an <see cref="FhSettingProvider{T}"/>.
+/// </remarks>
 public abstract class FhSetting<T>(string id, T defval) : FhSetting(id) where T : notnull {
-    protected readonly T    _default  = defval;
-    protected          T    _value    = defval;
-    protected          bool _disabled = false;
+    protected bool _disabled = false;
+
+    protected readonly T _default = defval;
+    protected          T _value   = defval;
 
     public           T    get()        => _value;
     internal virtual void set(T value) => _value = value;
@@ -249,12 +344,18 @@ public sealed class FhSettingText(
     string              def_value,
     ImGuiInputTextFlags flags = ImGuiInputTextFlags.None
 ) : FhSetting<string>(id, def_value) {
+
     internal const int MAX_LENGTH = 1024;
 
     private readonly ImGuiInputTextFlags _flags = flags;
 
     internal override void render() {
-        ImGui.InputText($"##setting.{id}", ref _value, MAX_LENGTH, _disabled ? _flags | ImGuiInputTextFlags.ReadOnly : _flags);
+        ImGui.InputText(
+            $"##setting.{id}",
+            ref _value,
+            MAX_LENGTH,
+            _disabled ? _flags | ImGuiInputTextFlags.ReadOnly : _flags
+        );
     }
 }
 
@@ -274,9 +375,10 @@ public class FhSettingNumber<T>(
 ) : FhSetting<T>(id, def_value) where T : unmanaged, INumber<T> {
 
     private readonly ImGuiDataType _type = get_data_type(def_value);
-    private readonly T             _step = step ?? T.One;
-    private readonly T             _min  = min  ?? T.Zero;
-    private readonly T             _max  = max  ?? T.One;
+
+    private readonly T _step = step ?? T.One;
+    private readonly T _min  = min  ?? T.Zero;
+    private readonly T _max  = max  ?? T.One;
 
     private static ImGuiDataType get_data_type(T value) {
         return value switch {

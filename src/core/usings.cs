@@ -1,6 +1,7 @@
 ﻿global using System;                           // primitives
 global using System.Buffers;                   // OperationStatus for Rune decoding, et al.
 global using System.Buffers.Binary;            // BinaryPrimitives, et al.
+global using System.Collections.Concurrent;    // ConcurrentDictionary<T>
 global using System.Collections.Generic;       // List<T>, Dictionary<T,U> and others
 global using System.Collections.Immutable;     // ImmutableArray<T>
 global using System.Diagnostics;               // [Conditional] et al.

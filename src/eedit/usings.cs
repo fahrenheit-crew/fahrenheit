@@ -37,3 +37,4 @@ global using NativeFileDialogCore;
 // Fahrenheit support libraries
 global using Fahrenheit;
 global using Fahrenheit.FFX;
+global using Fahrenheit.FFX.SphereGrid;

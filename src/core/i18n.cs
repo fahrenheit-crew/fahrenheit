@@ -23,6 +23,24 @@ public sealed partial class FhLocalization {
     private readonly static Dictionary<string, LocaleData> _s_locales = [];
 
     /// <summary>
+    ///     Returns the ISO 639 language ID for the current game language.
+    /// </summary>
+    private string get_default_lang_id() {
+        return FhGlobal.lang_id switch {
+            FhLangId.English  => "en",
+            FhLangId.French   => "fr",
+            FhLangId.Spanish  => "es",
+            FhLangId.German   => "de",
+            FhLangId.Italian  => "it",
+            FhLangId.Japanese => "ja",
+            FhLangId.Chinese  => "zh",
+            FhLangId.Korean   => "ko",
+            FhLangId.Debug    or
+            _                 => "en"
+        };
+    }
+
+    /// <summary>
     ///     Loads localization data for all mods.
     /// </summary>
     internal void initialize() {
@@ -99,11 +117,16 @@ public sealed partial class FhLocalization {
     ///     for the locale with ID <paramref name="lang_id"/>,
     ///     falling back to <paramref name="id"/> if unavailable.
     /// </summary>
-    public string localize(string id, FhModule? caller = null, string lang_id = "en-US") {
+    public string localize(
+        string    id,
+        FhModule? caller  = null,
+        string?   lang_id = null
+    ) {
         string composite_id = (caller == null)
             ? id
             : $"{caller.ModuleType}.{id}";
 
+        lang_id ??= get_default_lang_id();
         return _s_locales.TryGetValue(lang_id, out LocaleData? locale) && locale.TryGetValue(composite_id, out string? localized_string)
             ? localized_string
             : id;

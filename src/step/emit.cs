@@ -253,10 +253,17 @@ internal sealed class FhGameSpecificGenerator(
             _               => throw new NotImplementedException($"invalid game id {_game} - cannot generate function"),
         };
 
-        if (_reject.Contains(function.Location))
+        bool is_rejected = _reject.Contains(function.Location);
+        bool is_unknown  = should_map_to_unknownfn(function, signature_data);
+
+        if (is_rejected && is_unknown) {
+            Console.WriteLine($"[!] Function at {module}+{addr_label:X8} on the reject list, but unknown in Ghidra.");
+        }
+
+        if (is_rejected)
             return;
 
-        if (should_map_to_unknownfn(function, signature_data)) {
+        if (is_unknown) {
             _output.AppendLine($"""
                  // Unannotated function:
                  // {function.CallConv} {function.Signature} at {addr_label:x8}
@@ -411,10 +418,17 @@ internal sealed class FhCommonGenerator(
 
         string fused_label = $"FUN_{addr_label_src:X8}_{addr_label_dst:X8}";
 
-        if (_reject.Contains(common_data.SourceAddress))
+        bool is_rejected = _reject.Contains(common_data.SourceAddress);
+        bool is_unknown  = should_map_to_unknownfn(function, signature_data);
+
+        if (is_rejected && is_unknown) {
+            Console.WriteLine($"[!] Function at (FFX.exe+{addr_label_src:X}, FFX-2.exe+{addr_label_dst:X}) on the reject list, but unknown in Ghidra.");
+        }
+
+        if (is_rejected)
             return;
 
-        if (should_map_to_unknownfn(function, signature_data)) {
+        if (is_unknown) {
             _output.AppendLine($"""
                  // Fused unannotated identical entry: {function.CallConv} {function.Signature}
                  // at (FFX.exe+{addr_label_src:X}, FFX-2.exe+{addr_label_dst:X})

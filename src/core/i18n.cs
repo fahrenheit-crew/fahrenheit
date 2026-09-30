@@ -49,11 +49,11 @@ public sealed partial class FhLocalization {
     }
 
     /// <summary>
-    ///     Loads localization data for a given module.
+    ///     Loads localization data for a given <paramref name="mod"/>'s module.
     /// </summary>
     internal void load_for_module(FhModContext mod, DirectoryInfo module_dir) {
         foreach (FileInfo lang_file in module_dir.EnumerateFiles("*.json", SearchOption.TopDirectoryOnly)) {
-            string lang_id     = Path.GetFileNameWithoutExtension(lang_file.FullName);
+            string lang_id = Path.GetFileNameWithoutExtension(lang_file.FullName);
 
             string mod_name    = mod.Manifest.Id;
             string module_name = module_dir.Name; // ex. Fahrenheit.Runtime.FhSaveUiModule

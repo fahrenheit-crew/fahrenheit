@@ -41794,11 +41794,6 @@ public static unsafe partial class FhCall {
     public static FhMethodHandle<Fahrenheit.FhCall.d_UnknownFn> FUN_00207c10 => new( new FhMethodLocation("FFX.exe", 0x207C10) );
 
     // Unannotated function:
-    // unknown undefined FUN_00207d30() at 00207d30
-
-    public static FhMethodHandle<Fahrenheit.FhCall.d_UnknownFn> FUN_00207d30 => new( new FhMethodLocation("FFX.exe", 0x207D30) );
-
-    // Unannotated function:
     // unknown undefined FUN_00207d40() at 00207d40
 
     public static FhMethodHandle<Fahrenheit.FhCall.d_UnknownFn> FUN_00207d40 => new( new FhMethodLocation("FFX.exe", 0x207D40) );
@@ -43971,11 +43966,6 @@ public static unsafe partial class FhCall {
 
     // Symbol skipped (deemed uninterpretable):
     // __cdecl ATLSTRINGRESOURCEIMAGE* AtlGetStringResourceImage(HINSTANCE__* param_1, uint param_2) at 0021b2e0
-
-    // Unannotated function:
-    // unknown undefined FUN_0021bdb0() at 0021bdb0
-
-    public static FhMethodHandle<Fahrenheit.FhCall.d_UnknownFn> FUN_0021bdb0 => new( new FhMethodLocation("FFX.exe", 0x21BDB0) );
 
     // Unannotated function:
     // unknown undefined FUN_0021bfe0() at 0021bfe0

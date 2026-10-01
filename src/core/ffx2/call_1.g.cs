@@ -265,7 +265,7 @@ public static unsafe partial class FhCall {
     // Unannotated function:
     // unknown undefined Sentry_base() at 00004710
 
-    public static FhMethodHandle<Fahrenheit.FhCall.d_UnknownFn> Sentry_base => new( new FhMethodLocation("FFX-2.exe", 0x4710) );
+    public static FhMethodHandle<Fahrenheit.FhCall.d_UnknownFn> Sentry_base_4710 => new( new FhMethodLocation("FFX-2.exe", 0x4710) );
 
     // Unannotated function:
     // unknown undefined FUN_00004740() at 00004740

@@ -10847,7 +10847,7 @@ public static unsafe partial class FhCall {
     // Unannotated function:
     // unknown undefined __break() at 006e694d
 
-    public static FhMethodHandle<Fahrenheit.FhCall.d_UnknownFn> __break => new( new FhMethodLocation("FFX.exe", 0x6E694D) );
+    public static FhMethodHandle<Fahrenheit.FhCall.d_UnknownFn> __break_6E694D => new( new FhMethodLocation("FFX.exe", 0x6E694D) );
 
     // Unannotated function:
     // unknown undefined FUN_006e6b50() at 006e6b50

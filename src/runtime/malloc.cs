@@ -32,7 +32,7 @@ namespace Fahrenheit.Runtime;
 /// <summary>
 ///     Manipulates the game's allocator to improve its behavior.
 /// </summary>
-[FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
+//[FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
 [SupportedOSPlatform("windows5.1.2600")]
 public unsafe sealed class FhMallocModule : FhModule {
 

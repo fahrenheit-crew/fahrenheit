@@ -8,7 +8,7 @@ namespace Fahrenheit.Runtime.Gui;
 /// <summary>
 ///     Renders the modlist on the main menu.
 /// </summary>
-[FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
+//[FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
 public unsafe class FhModListDisplayModule : FhModule {
 
     public FhModListDisplayModule() { }

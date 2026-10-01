@@ -12,7 +12,7 @@ namespace Fahrenheit.Runtime.Battle;
 /// <summary>
 /// Fahrenheit module used to implement custom text in message cues.
 /// </summary>
-[FhLoad(FhGameId.FFX)]
+//[FhLoad(FhGameId.FFX)]
 public unsafe class CustomMessageCueModule : FhModule {
 
     public CustomMessageCueModule() { }

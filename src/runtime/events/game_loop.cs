@@ -5,7 +5,7 @@
 
 namespace Fahrenheit.Runtime.Events;
 
-[FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
+//[FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
 public class GameLoopEventsImplModule : FhModule {
 
     public GameLoopEventsImplModule() { }

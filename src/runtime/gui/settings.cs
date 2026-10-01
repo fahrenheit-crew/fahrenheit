@@ -5,7 +5,7 @@
 
 namespace Fahrenheit.Runtime.Gui;
 
-[FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
+//[FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
 public sealed class FhModConfigModule : FhModule {
     //private bool _dockbuilder_initialized = false;
     private bool _open;

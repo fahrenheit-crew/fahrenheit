@@ -23,7 +23,7 @@ namespace Fahrenheit.Runtime;
 /// <summary>
 ///     Implements Fahrenheit's extended save system.
 /// </summary>
-[FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
+//[FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
 public unsafe sealed class FhSaveExtensionModule : FhModule, IFhSaveSystemImpl {
 
     private int              _load_pending_slot;

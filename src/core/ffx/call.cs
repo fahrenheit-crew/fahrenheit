@@ -746,9 +746,9 @@ public static partial class FhCall {
         => new( new FhMethodLocation("FFX.exe", 0x2DB1C0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    internal delegate void d_FUN_2EFFF0();
-    internal static FhMethodHandle<d_FUN_2EFFF0> FUN_2EFFF0
-        => new( new FhMethodLocation("FFX.exe", 0x2EFFF0) );
+    internal delegate void d_FUN_2EFEB0();
+    internal static FhMethodHandle<d_FUN_2EFEB0> FUN_2EFEB0
+        => new( new FhMethodLocation("FFX.exe", 0x2EFEB0) );
 
     [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
     public delegate void d_FfxFmod_soundInit(nint ptr_this);

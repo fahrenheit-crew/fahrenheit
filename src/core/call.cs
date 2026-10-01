@@ -116,7 +116,7 @@ public static unsafe partial class FhCall {
     [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
     internal unsafe delegate void d_BigFileStream_ctor(BigFileStream* ptr_this);
     internal static FhMethodHandle<d_BigFileStream_ctor> BigFileStream_ctor =>
-        new( new FhMethodLocation(0x21BF90, 0x542A60) );
+        new( new FhMethodLocation(0x21BDD0, 0x5428C0) );
 
     [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
     internal unsafe delegate void d_BigFileStream_setStreamPrefix(BigFileStream* ptr_this, byte* ptr_stream_prefix);
@@ -479,67 +479,67 @@ public static unsafe partial class FhCall {
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal delegate void d_SaveDataManager_debugSave_Internal_6F0650(int size, byte* ptr);
     internal static FhMethodHandle<d_SaveDataManager_debugSave_Internal_6F0650> SaveDataManager_debugSave_Internal_6F0650
-        => new( new FhMethodLocation(0x2F0650, 0x11D510) );
+        => new( new FhMethodLocation(0x2F0510, 0x11D5C0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal delegate void d_SaveDataToSave();
     internal static FhMethodHandle<d_SaveDataToSave> SaveDataToSave
-        => new( new FhMethodLocation(0x248950, 0x884D0) );
+        => new( new FhMethodLocation(0x2487A0, 0x88540) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal delegate void d_SaveDataToLoad();
     internal static FhMethodHandle<d_SaveDataToLoad> SaveDataToLoad
-        => new( new FhMethodLocation(0x248910, 0x884A0) );
+        => new( new FhMethodLocation(0x248760, 0x88510) );
 
-    [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-    internal delegate void d_TkMenuJumpToLoadedScene();
-    internal static FhMethodHandle<d_TkMenuJumpToLoadedScene> TkMenuJumpToLoadedScene
-        => new( new FhMethodLocation(0x4B4E70, 0x36AD50 ) );
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    internal delegate void d_TkRefreshHdd();
+    internal static FhMethodHandle<d_TkRefreshHdd> TkRefreshHdd
+        => new( new FhMethodLocation(0x4724A0, 0x32D950) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal delegate int d_fix_mappic(ushort arg1);
     internal static FhMethodHandle<d_fix_mappic> fix_mappic
-        => new( new FhMethodLocation(0x2EF830, 0x11C9B0) );
+        => new( new FhMethodLocation(0x2EF6F0, 0x11CA70) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal delegate int d_isNeedShowJapanLogo();
     internal static FhMethodHandle<d_isNeedShowJapanLogo> isNeedShowJapanLogo
-        => new( new FhMethodLocation(0x387450, 0x20F500) );
+        => new( new FhMethodLocation(0x387390, 0x20F4D0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate byte* d_AtelGetSaveDicName(ushort arg1, uint arg2);
     public static FhMethodHandle<d_AtelGetSaveDicName> AtelGetSaveDicName
-        => new( new FhMethodLocation(0x46C3C0, 0x326B80) );
+        => new( new FhMethodLocation(0x46C430, 0x326B20) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal delegate void d_SaveDataGetLoc(int arg1, byte* arg2);
     internal static FhMethodHandle<d_SaveDataGetLoc> SaveDataGetLoc
-        => new( new FhMethodLocation(0x2480E0, 0x87CB0) );
+        => new( new FhMethodLocation(0x2412D0, 0x87D20) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal delegate nint d_SaveDataWriteCrc(byte* arg1);
     internal static FhMethodHandle<d_SaveDataWriteCrc> SaveDataWriteCrc
-        => new( new FhMethodLocation(0x2490D0, 0x889C0) );
+        => new( new FhMethodLocation(0x248F20, 0x88A30) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal delegate int d_SaveDataCheckCrc();
     internal static FhMethodHandle<d_SaveDataCheckCrc> SaveDataCheckCrc
-        => new( new FhMethodLocation(0x247F20, 0x87B10) );
+        => new( new FhMethodLocation(0x247D70, 0x87B80) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal delegate void d__SetUpDefaultSaveFolder();
     internal static FhMethodHandle<d__SetUpDefaultSaveFolder> _SetUpDefaultSaveFolder
-        => new( new FhMethodLocation(0x2F0470, 0x11D310) );
+        => new( new FhMethodLocation(0x2F0330, 0x11D3C0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal delegate bool d_isNeedRenamePlayer(byte arg1);
     internal static FhMethodHandle<d_isNeedRenamePlayer> isNeedRenamePlayer
-        => new( new FhMethodLocation(0x387430, 0x20F4E0) );
+        => new( new FhMethodLocation(0x387370, 0x20F4B0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal delegate void d_SaveDataSaveLoadSucceed(FhSaveSystemState arg1);
     internal static FhMethodHandle<d_SaveDataSaveLoadSucceed> SaveDataSaveLoadSucceed
-        => new( new FhMethodLocation(0x2486F0, 0x88290) );
+        => new( new FhMethodLocation(0x248540, 0x88300) );
 
     // INTERNAL/RESTRICTED - END
 

@@ -7,8 +7,8 @@ namespace Fahrenheit.Runtime;
 
 /* [fkelava 13/11/25 22:03]
  * The game's original save system is a basic manager operating a Iggy-based Flash UI.
- * It is fairly limiting. A global limit of 200 saves exist, which cannot be separated or logically organized. 
- * 
+ * It is fairly limiting. A global limit of 200 saves exist, which cannot be separated or logically organized.
+ *
  * In Fahrenheit, this creates several problems for us:
  * - We would like to let mods read and write to some local state at save/load time.
  * - We would like to offer the ability to have multiple sets of saves.
@@ -23,7 +23,7 @@ namespace Fahrenheit.Runtime;
 /// <summary>
 ///     Implements Fahrenheit's extended save system.
 /// </summary>
-//[FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
+[FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
 public unsafe sealed class FhSaveExtensionModule : FhModule, IFhSaveSystemImpl {
 
     private int              _load_pending_slot;
@@ -37,10 +37,10 @@ public unsafe sealed class FhSaveExtensionModule : FhModule, IFhSaveSystemImpl {
         bool is_ffx = FhGlobal.game_id is FhGameId.FFX;
 
         return FhCall.SaveDataManager_debugSave_Internal_6F0650.hook(this, impl_autosave)
-            && FhCall.TkMenuJumpToLoadedScene                  .hook(this, impl_copy)
+            && FhCall.TkRefreshHdd                             .hook(this, impl_copy)
             && FhCall.SaveDataToSave                           .hook(this, signal_enter_save)
             && FhCall.SaveDataToLoad                           .hook(this, signal_enter_load)
-            && (!is_ffx || FFX.FhCall.FUN_2EFFF0.hook(this, signal_enter_albd));
+            && (!is_ffx || FFX.FhCall.FUN_2EFEB0.hook(this, signal_enter_albd));
     }
 
     /* [fkelava 27/11/25 02:15]
@@ -142,10 +142,13 @@ public unsafe sealed class FhSaveExtensionModule : FhModule, IFhSaveSystemImpl {
 
     [UnmanagedCallConv(CallConvs = [ typeof(CallConvStdcall) ] )]
     private void impl_copy() {
-        FhCall.TkMenuJumpToLoadedScene.chain_from(impl_copy).fnptr!();
-        FhInternal.State.state_load_slot(_load_pending_slot);
+        FhCall.TkRefreshHdd.chain_from(impl_copy).fnptr!();
 
-        FhApi.Events.Common.GameLoop.PostLoadGame.invoke(new() { save_slot_idx = _load_pending_slot });
+        if (Interlocked.Exchange(ref _load_pending_slot, -1) != -1) {
+            FhInternal.State.state_load_slot(_load_pending_slot);
+
+            FhApi.Events.Common.GameLoop.PostLoadGame.invoke(new() { save_slot_idx = _load_pending_slot });
+        }
     }
 
     /// <summary>

@@ -20,7 +20,7 @@ namespace Fahrenheit;
 
 /// <summary>Implements the 'local state' mechanism of Fahrenheit.</summary>
 /// <remarks>
-///     In your module, implement <see cref="FhModule.save_local_state(FileStream)"/> 
+///     In your module, implement <see cref="FhModule.save_local_state(FileStream)"/>
 ///     and <see cref="FhModule.load_local_state(FileStream, FhLocalStateInfo)"/>.
 /// </remarks>
 internal sealed class FhState {

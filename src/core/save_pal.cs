@@ -546,13 +546,13 @@ internal unsafe static class FhSavePal {
      */
 
     internal static nint pal_addr_save_mgr() {
-        return FhEnvironment.BaseAddr + FhUtil.select(0x8E81E4, 0x9EDABC, 0x9EDABC);
+        return FhEnvironment.BaseAddr + FhUtil.select(0x8E81F4, 0x9ECABC, 0x9ECABC);
     }
 
     internal static nint pal_addr_buf_player_name_encoded() {
         return FhGlobal.game_id switch {
-            FhGameId.FFX2   => 0x9ED628,
-            FhGameId.FFX2LM => 0x9ED358,
+            FhGameId.FFX2   => 0x9EC628,
+            FhGameId.FFX2LM => 0x9EC358,
             _               => throw new NotImplementedException("Invalid game type"),
         };
     }
@@ -562,15 +562,15 @@ internal unsafe static class FhSavePal {
     }
 
     internal static nint pal_addr_screen_state() {
-        return FhUtil.select(0x8CB994, 0x9CEA50, 0x9CEA50);
+        return FhUtil.select(0x8CB994, 0x9CDA50, 0x9CDA50);
     }
 
     internal static nint pal_addr_dialog_state() {
-        return FhUtil.select(0x8CB998, 0x9CEA54, 0x9CEA54);
+        return FhUtil.select(0x8CB998, 0x9CDA54, 0x9CDA54);
     }
 
     internal static byte* pal_addr_buf_save() {
-        return FhUtil.ptr_at<byte>(FhUtil.select(0x1197F30, 0xF9E500, 0xF9E500));
+        return FhUtil.ptr_at<byte>(FhUtil.select(0x1197F70, 0xF9D500, 0xF9D500));
     }
 
     internal static int pal_sz_buf_save() {

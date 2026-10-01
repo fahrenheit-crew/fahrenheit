@@ -121,12 +121,12 @@ public static unsafe partial class FhCall {
     [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
     internal unsafe delegate void d_BigFileStream_setStreamPrefix(BigFileStream* ptr_this, byte* ptr_stream_prefix);
     internal static FhMethodHandle<d_BigFileStream_setStreamPrefix> BigFileStream_setStreamPrefix =>
-        new( new FhMethodLocation(0x21C560, 0x543030) );
+        new( new FhMethodLocation(0x21C3A0, 0x542E90) );
 
     [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
     internal unsafe delegate int d_BigFileStream_registerBigFile(BigFileStream* ptr_this, byte* ptr_vbf_name);
     internal static FhMethodHandle<d_BigFileStream_registerBigFile> BigFileStream_registerBigFile =>
-        new( new FhMethodLocation(0x21C310, 0x542DE0) );
+        new( new FhMethodLocation(0x21C150, 0x542C40) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal unsafe delegate byte* d_Phyre_PSerialization_PStreamFile_GetStreamPrefix();
@@ -141,12 +141,12 @@ public static unsafe partial class FhCall {
     [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
     internal unsafe delegate VFile* d_BigFileStream_openFile(BigFileStream* ptr_this, byte* ptr_file_name);
     internal static FhMethodHandle<d_BigFileStream_openFile> BigFileStream_openFile =>
-        new( new FhMethodLocation(0x21C0D0, 0x542BA0) );
+        new( new FhMethodLocation(0x21BF10, 0x542A00) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal unsafe delegate void d_fiosUnifyFilename(byte* src, byte* dest, int size);
     internal static FhMethodHandle<d_fiosUnifyFilename> fiosUnifyFilename =>
-        new( new FhMethodLocation(0x2799D0, 0x094E90) );
+        new( new FhMethodLocation(0x279820, 0x94F10) );
 
     // RT - Allocator fix
 

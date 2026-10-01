@@ -17147,20 +17147,10 @@ public static unsafe partial class FhCall {
 
     public static FhMethodHandle<Fahrenheit.FhCall.d_UnknownFn> FUN_0021BE40_00542930 => new( new FhMethodLocation(0x21BE40, 0x542930) );
 
-    // Fused unannotated identical entry: unknown undefined FUN_0021bf10()
-    // at (FFX.exe+21BF10, FFX-2.exe+542A00)
-
-    public static FhMethodHandle<Fahrenheit.FhCall.d_UnknownFn> FUN_0021BF10_00542A00 => new( new FhMethodLocation(0x21BF10, 0x542A00) );
-
     // Fused unannotated identical entry: unknown undefined FUN_0021c0a0()
     // at (FFX.exe+21C0A0, FFX-2.exe+542B90)
 
     public static FhMethodHandle<Fahrenheit.FhCall.d_UnknownFn> FUN_0021C0A0_00542B90 => new( new FhMethodLocation(0x21C0A0, 0x542B90) );
-
-    // Fused unannotated identical entry: unknown undefined FUN_0021c150()
-    // at (FFX.exe+21C150, FFX-2.exe+542C40)
-
-    public static FhMethodHandle<Fahrenheit.FhCall.d_UnknownFn> FUN_0021C150_00542C40 => new( new FhMethodLocation(0x21C150, 0x542C40) );
 
     // Fused unannotated identical entry: unknown undefined FUN_0021c220()
     // at (FFX.exe+21C220, FFX-2.exe+542D10)
@@ -17176,11 +17166,6 @@ public static unsafe partial class FhCall {
     // at (FFX.exe+21C2C0, FFX-2.exe+542DB0)
 
     public static FhMethodHandle<Fahrenheit.FhCall.d_UnknownFn> FUN_0021C2C0_00542DB0 => new( new FhMethodLocation(0x21C2C0, 0x542DB0) );
-
-    // Fused unannotated identical entry: unknown undefined FUN_0021c3a0()
-    // at (FFX.exe+21C3A0, FFX-2.exe+542E90)
-
-    public static FhMethodHandle<Fahrenheit.FhCall.d_UnknownFn> FUN_0021C3A0_00542E90 => new( new FhMethodLocation(0x21C3A0, 0x542E90) );
 
     // Fused unannotated identical entry: unknown undefined FUN_0021c400()
     // at (FFX.exe+21C400, FFX-2.exe+68FE20)

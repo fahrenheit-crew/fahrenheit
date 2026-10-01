@@ -153,42 +153,42 @@ public static unsafe partial class FhCall {
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal delegate void* d__VirtualAlloc_Commit_RW(void* ptr, uint size);
     internal static FhMethodHandle<d__VirtualAlloc_Commit_RW> _VirtualAlloc_Commit_RW =>
-       new( new FhMethodLocation(0x5438B0, 0x4782B0) );
+       new( new FhMethodLocation(0x5438B0, 0x4781C0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal delegate bool d__VirtualFree_Decommit(void* ptr, uint size);
     internal static FhMethodHandle<d__VirtualFree_Decommit> _VirtualFree_Decommit =>
-        new( new FhMethodLocation(0x5438E0, 0x4782E0) );
+        new( new FhMethodLocation(0x5438E0, 0x4781F0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal delegate void* d__VirtualAlloc_Reserve_NA(uint size);
     internal static FhMethodHandle<d__VirtualAlloc_Reserve_NA> _VirtualAlloc_Reserve_NA =>
-        new( new FhMethodLocation(0x5439A0, 0x4783A0) );
+        new( new FhMethodLocation(0x5439A0, 0x4782B0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal delegate void* d__VirtualAlloc_ReserveCommit_TopDown_RW(uint size);
     internal static FhMethodHandle<d__VirtualAlloc_ReserveCommit_TopDown_RW> _VirtualAlloc_ReserveCommit_TopDown_RW =>
-        new( new FhMethodLocation(0x2EBD00, 0x113340) );
+        new( new FhMethodLocation(0x2EBBC0, 0x1133C0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal delegate void d__malloc_pool_init();
     internal static FhMethodHandle<d__malloc_pool_init> _malloc_pool_init =>
-        new( new FhMethodLocation(0x2FBA90, 0x121F90) );
+        new( new FhMethodLocation(0x2FB9B0, 0x122040) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    internal delegate void d_FUN_009428A0_008772A0();
-    internal static FhMethodHandle<d_FUN_009428A0_008772A0> FUN_009428A0_008772A0 =>
-        new( new FhMethodLocation(0x5428A0, 0x4772A0) );
+    internal delegate void d_FUN_005428A0_008771A0();
+    internal static FhMethodHandle<d_FUN_005428A0_008771A0> FUN_005428A0_008771A0 =>
+        new( new FhMethodLocation(0x5428A0, 0x4771A0) );
 
     [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
-    internal delegate __ALLOC_DATA* d_FUN_00942A40_00877440(__ALLOC_DATA* ptr_this, uint size, uint p2, uint p3);
-    internal static FhMethodHandle<d_FUN_00942A40_00877440> FUN_00942A40_00877440 =>
-        new( new FhMethodLocation(0x542A40, 0x477440) );
+    internal delegate __ALLOC_DATA* d_FUN_00542A40_00477340(__ALLOC_DATA* ptr_this, uint size, uint p2, uint p3);
+    internal static FhMethodHandle<d_FUN_00542A40_00477340> FUN_00542A40_00477340 =>
+        new( new FhMethodLocation(0x542A40, 0x477340) );
 
     [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
-    internal delegate void* d_FUN_00942B60_00877560(__ALLOC_DATA* ptr_this, uint arg2);
-    internal static FhMethodHandle<d_FUN_00942B60_00877560> FUN_00942B60_00877560 =>
-        new( new FhMethodLocation(0x542B60, 0x477560) );
+    internal delegate void* d_FUN_00542B60_00477460(__ALLOC_DATA* ptr_this, uint arg2);
+    internal static FhMethodHandle<d_FUN_00542B60_00477460> FUN_00542B60_00477460 =>
+        new( new FhMethodLocation(0x542B60, 0x477460) );
 
     // Frame limiter
 

@@ -1,8 +1,1 @@
 "Name","Location","Type","Data Type","Namespace","Source"
-"g_saveLoadScreenState","00dcea50","Data Label","undefined4","Global","User Defined"
-"g_saveLoadDialogState","00dcea54","Data Label","undefined4","Global","User Defined"
-"g_saveLoadIsSave","00dcea58","Data Label","undefined4","Global","User Defined"
-"g_iIsCloudLocalFull","00df7408","Data Label","undefined4","Global","User Defined"
-"g_InSavedataUtility","00df7444","Data Label","undefined4","Global","User Defined"
-"selectLoad","00df751c","Data Label","undefined4","Global","User Defined"
-"ffx_langmode","011a0314","Data Label","undefined1","Global","User Defined"

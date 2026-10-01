@@ -461,6 +461,11 @@ public static unsafe partial class FhCall {
     internal static FhMethodHandle<d_ClusterManager_releasePCluster> ClusterManager_releasePCluster
         => new( new FhMethodLocation(0x29BDB0, 0x9ED80) );
 
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    internal delegate PNamespace* d_Phyre_PNamespace_GetGlobalNamespace();
+    internal static FhMethodHandle<d_Phyre_PNamespace_GetGlobalNamespace> Phyre_PNamespace_GetGlobalNamespace
+        => new( new FhMethodLocation(0x3E2F0, 0x53D0A0) );
+
     // RT - CD
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]

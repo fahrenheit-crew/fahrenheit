@@ -75,7 +75,7 @@ internal struct FhDataLabelDecl {
 public class AddressConverter : DefaultTypeConverter {
     public override object? ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData) {
         return int.TryParse(text, NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out int i)
-            ? i - 0x400000
+            ? i
             : base.ConvertFromString(text, row, memberMapData);
     }
 }

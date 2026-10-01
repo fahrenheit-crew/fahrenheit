@@ -20,6 +20,8 @@ namespace Fahrenheit.Tools.ModManager;
  */
 
 internal sealed unsafe class Program {
+    // Fahrenheit Theme Properties
+    internal static readonly FhImGuiHelper ImGuiHelper = new();
 
     // SDL3
     private static SDLWindow*   _sdl_window;
@@ -108,6 +110,7 @@ internal sealed unsafe class Program {
 
         // Setup Dear ImGui style
         ImGui.StyleColorsDark();
+        //FhImGuiHelper.init(); // Apply Fahrenheit theme. // todo uncomment when fahrenheit theme is accessible
 
         // Setup scaling
         style.ScaleAllSizes(main_display_scale); // Bake a fixed style scale. (Changing this requires resetting Style + calling this again).
@@ -164,7 +167,7 @@ internal sealed unsafe class Program {
             ImGui           .NewFrame();
 
             // Draw the mod manager UI
-            ModManager.UI();
+            FhModManagerUI.UI();
 
             // Rendering
             ImGui.Render();

@@ -18,8 +18,6 @@ internal enum ModLoadResult {
 }
 
 internal static partial class ModManager {
-    internal static FhImGuiHelper ImGuiHelper = new();
-
     internal static LinkedList<ModData> installed_mods = [];
 
     internal static void init() {
@@ -136,15 +134,13 @@ internal static partial class ModManager {
 
         start_info.ArgumentList.Add(get_path_for_game(game_id));
 
-        if (game_id == FhGameId.FFX2LM) {
-            start_info.ArgumentList.Add("--FFX2_LASTMISSION");
-        }
-
         if (debug) {
-            start_info.ArgumentList.Add("--debug");
+            start_info.ArgumentList.Add("--extdbg --wait");
         }
 
-
+        if (game_id == FhGameId.FFX2LM) {
+            start_info.ArgumentList.Add("-- FFX2_LASTMISSION");
+        }
     }
 
     internal static void launch_game_linux(FhGameId game_id, bool debug, string[] extra_args) {

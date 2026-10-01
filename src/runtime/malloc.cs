@@ -32,18 +32,18 @@ namespace Fahrenheit.Runtime;
 /// <summary>
 ///     Manipulates the game's allocator to improve its behavior.
 /// </summary>
-//[FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
+[FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
 [SupportedOSPlatform("windows5.1.2600")]
 public unsafe sealed class FhMallocModule : FhModule {
 
     private static nuint _reserved {
-        get => FhUtil.get_at<nuint>(FhUtil.select(0x153CD44, 0x14E6AB4, 0x14E6AB4));
-        set => FhUtil.set_at       (FhUtil.select(0x153CD44, 0x14E6AB4, 0x14E6AB4), value);
+        get => FhUtil.get_at<nuint>(FhUtil.select(0x153CD44, 0x14E5AB4, 0x14E5AB4));
+        set => FhUtil.set_at       (FhUtil.select(0x153CD44, 0x14E5AB4, 0x14E5AB4), value);
     }
 
     private static nuint _committed {
-        get => FhUtil.get_at<nuint>(FhUtil.select(0x153CD48, 0x14E6AB8, 0x14E6AB8));
-        set => FhUtil.set_at       (FhUtil.select(0x153CD48, 0x14E6AB8, 0x14E6AB8), value);
+        get => FhUtil.get_at<nuint>(FhUtil.select(0x153CD48, 0x14E5AB8, 0x14E5AB8));
+        set => FhUtil.set_at       (FhUtil.select(0x153CD48, 0x14E5AB8, 0x14E5AB8), value);
     }
 
     public FhMallocModule() { }
@@ -67,7 +67,7 @@ public unsafe sealed class FhMallocModule : FhModule {
          * the game normally uses, then failing here gives a clear indication of what is wrong.
          */
 
-        FhCall.FUN_009428A0_008772A0.fnptr!();
+        FhCall.FUN_005428A0_008771A0.fnptr!();
 
         /* [fkelava 06/08/26 23:51]
          * Be VERY careful. The pool size can't be _too small_ because it's reused as the upper
@@ -83,19 +83,19 @@ public unsafe sealed class FhMallocModule : FhModule {
 
         PInvoke.InitializeCriticalSection(&alloc_struct->crit_sec);
 
-        FhUtil.set_at(FhUtil.select(0x8E900C, 0x9EDBE4, 0x9EDBE4), (uint)alloc_struct);
-        _ = FhCall.FUN_00942A40_00877440.fnptr!(&alloc_struct->data, pool_size, 0, uint.CreateChecked( pool_size - 0x100000 ));
+        FhUtil.set_at(FhUtil.select(0x8E901C, 0x9ECBE4, 0x9ECBE4), (uint)alloc_struct);
+        _ = FhCall.FUN_00542A40_00477340.fnptr!(&alloc_struct->data, pool_size, 0, uint.CreateChecked( pool_size - 0x100000 ));
 
         PInvoke.EnterCriticalSection(&alloc_struct->crit_sec);
-        void* rv = FhCall.FUN_00942B60_00877560.fnptr!(&alloc_struct->data, 0x10);
+        void* rv = FhCall.FUN_00542B60_00477460.fnptr!(&alloc_struct->data, 0x10);
         PInvoke.LeaveCriticalSection(&alloc_struct->crit_sec);
 
         if (rv == null) {
             throw new Exception($"Failed to allocate primary memory pool of size 0x{pool_size:X8}.");
         }
 
-        FhUtil.set_at(FhUtil.select(0x8E9010, 0x9EDBE8, 0x9EDBE8), (uint)rv);
-        FhUtil.set_at(FhUtil.select(0x8E9014, 0x9EDBEC, 0x9EDBEC), pool_size);
+        FhUtil.set_at(FhUtil.select(0x8E9020, 0x9ECBE8, 0x9ECBE8), (uint)rv);
+        FhUtil.set_at(FhUtil.select(0x8E9024, 0x9ECBEC, 0x9ECBEC), pool_size);
     }
 
     /* [fkelava 06/08/26 14:29]

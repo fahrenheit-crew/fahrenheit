@@ -16,7 +16,7 @@ namespace Fahrenheit.Runtime;
 
 /// <summary>Provides the ability to use the ImGui GUI toolkit within the game.</summary>
 /// <remarks>In your module, access this functionality by implementing <see cref="FhModule.render_imgui"/>.</remarks>
-//[FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
+[FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
 [SupportedOSPlatform("windows6.1")] // To satisfy CA1416 warning about invoking D3D/DXGI API which TerraFX annotates as supported only on Windows.
 public unsafe sealed class FhImguiModule : FhModule, IFhPlatformUser {
 

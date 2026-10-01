@@ -19,7 +19,7 @@ namespace Fahrenheit.Runtime;
  * - ffx_ps2\ffx\proj\prog\cdidx\jp\sizetbl.vita.bin
  *
  * When the game loads a PS2 asset, it will look up these fixed tables and allocate a buffer according
- * to the file's original size. The EFL will correctly intercept the file open call and replace the file, 
+ * to the file's original size. The EFL will correctly intercept the file open call and replace the file,
  * but if it differs in size from the original, the game will crash.
  *
  * While users can create fixed-up size tables, that won't work if mods want to coexist.
@@ -36,13 +36,13 @@ internal struct Cd {
 ///     Performs certain overrides on the game's 'CD' reading emulation
 ///     to allow for modified files to be properly loaded.
 /// </summary>
-//[FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
+[FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
 public unsafe sealed class FhCdInterfaceModule : FhModule {
 
     private readonly Cd* _ptr_cd;
 
     public FhCdInterfaceModule() {
-        _ptr_cd = (Cd*)(FhEnvironment.BaseAddr + FhUtil.select(0x1F10C40, 0x16CA080, 0x16CA080));
+        _ptr_cd = (Cd*)(FhEnvironment.BaseAddr + FhUtil.select(0x1F10C40, 0x16C9080, 0x16C9080));
     }
 
     public override bool init(FhModContext mod_context, FileStream global_state_file) {

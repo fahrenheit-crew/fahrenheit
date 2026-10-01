@@ -52,13 +52,13 @@ internal readonly unsafe ref struct FhPClusterScope(PCluster* ptr_cluster, FhPhy
 /// <summary>
 ///     Provides Phyre asset load services to the Fahrenheit runtime.
 /// </summary>
-//[FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
+[FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
 public unsafe sealed class FhPhyreLoaderModule : FhModule {
 
     private readonly uint* _pp_cluster_mgr;
 
     public FhPhyreLoaderModule() {
-        _pp_cluster_mgr = FhUtil.ptr_at<uint>(FhUtil.select(0x8CCA44, 0x9CFE48, 0x9CFE48));
+        _pp_cluster_mgr = FhUtil.ptr_at<uint>(FhUtil.select(0x8CCA4C, 0x9DB3A8, 0x9DB3A8));
     }
 
     public override bool init(FhModContext mod_context, FileStream global_state_file) {

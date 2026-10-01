@@ -10,20 +10,12 @@
 namespace Fahrenheit.Tools.EEdit;
 
 internal static class EEdit {
-    public static EEditDisplayData Display = new();
-    public static EEditEditorData  Editors = new();
-}
+    public static bool       show_demo_window;
+    public static bool       show_mode_select;
+    public static EEditMode  mode;
 
-internal class EEditDisplayData {
-    public bool       show_demo_window;
-    public bool       show_mode_select;
-    public EEditMode  mode_select_selected_item;
-
-    public EEditComponent? active_editor;
-}
-
-internal class EEditEditorData {
-    public FileStream? active_file;
+    public static EEditComponent? active_editor;
+    public static FileStream?     active_file;
 }
 
 internal static partial class UI {
@@ -33,7 +25,7 @@ internal static partial class UI {
     /// </summary>
     private static void _handle_keybinds() {
         if (ImGui.IsKeyPressed(ImGuiKey.F7)) {
-            EEdit.Display.show_demo_window = !EEdit.Display.show_demo_window;
+            EEdit.show_demo_window = !EEdit.show_demo_window;
         }
     }
 
@@ -48,7 +40,7 @@ internal static partial class UI {
     ///     Initiates rendering of modal dialogs when required.
     /// </summary>
     private static void _handle_modal() {
-        if (EEdit.Display.show_mode_select) {
+        if (EEdit.show_mode_select) {
             ImGui.OpenPopup("Mode Select");
         }
 
@@ -77,12 +69,12 @@ internal static partial class UI {
          * The label is typically laid out on the right side, which is not particularly nice-looking.
          */
 
-        if (ImGui.BeginCombo("##File Types", _get_component_name_by_mode(EEdit.Display.mode_select_selected_item))) {
-            for (EEditMode mode = 0; mode < EEditMode.FILE_TYPES_COUNT; mode++) {
-                bool is_selected = mode == EEdit.Display.mode_select_selected_item;
+        if (ImGui.BeginCombo("##File Types", _get_component_name_by_mode(EEdit.mode))) {
+            for (EEditMode mode = EEditMode.NULL; mode < EEditMode.COUNT_TYPES; mode++) {
+                bool is_selected = mode == EEdit.mode;
 
                 if (ImGui.Selectable(_get_component_name_by_mode(mode), is_selected)) {
-                    EEdit.Display.mode_select_selected_item = mode;
+                    EEdit.mode = mode;
                 }
 
                 if (is_selected) ImGui.SetItemDefaultFocus();
@@ -94,8 +86,8 @@ internal static partial class UI {
         ImGui.SameLine();
 
         if (ImGui.Button("OK")) {
-            EEdit.Display.active_editor    = _get_component_by_mode(EEdit.Display.mode_select_selected_item);
-            EEdit.Display.show_mode_select = false;
+            EEdit.active_editor    = _get_component_by_mode(EEdit.mode);
+            EEdit.show_mode_select = false;
 
             ImGui.CloseCurrentPopup();
         }
@@ -112,25 +104,26 @@ internal static partial class UI {
 
         if (ImGui.BeginMenu("File")) {
             if (ImGui.MenuItem("Open", "Ctrl+O") && _dialog_fopen(out FileStream? opened_file)) {
-                EEdit.Editors.active_file = opened_file;
+                EEdit.active_file = opened_file;
 
                 /*
                  * If we can't deduce what kind of file this is, present a mode-select dialog.
                  */
 
-                if ((EEdit.Display.active_editor = _get_component_for_file(opened_file.Name)) == null) {
-                    EEdit.Display.show_mode_select = true;
+                if ((EEdit.mode = _get_mode_by_file_name(opened_file.Name)) != EEditMode.NULL) {
+                    EEdit.active_editor = _get_component_by_mode(EEdit.mode);
                 }
+                else EEdit.show_mode_select = true;
             }
 
             /*
              * Disallow saving if no file is loaded.
              */
 
-            ImGui.BeginDisabled(EEdit.Editors.active_file == null);
-            if (ImGui.MenuItem("Save", "Ctrl+S") && _dialog_fsave(EEdit.Editors.active_file!)) {
-                EEdit.Editors.active_file!.Dispose();
-                EEdit.Editors.active_file = null;
+            ImGui.BeginDisabled(EEdit.active_file == null);
+            if (ImGui.MenuItem("Save", "Ctrl+S") && _dialog_fsave(EEdit.active_file!)) {
+                EEdit.active_file!.Dispose();
+                EEdit.active_file = null;
             }
             ImGui.EndDisabled();
 
@@ -138,6 +131,15 @@ internal static partial class UI {
         }
 
         if (ImGui.BeginMenu("Mode")) {
+            for (EEditMode mode = EEditMode.NULL; mode < EEditMode.COUNT_TYPES; mode++) {
+                bool is_selected = mode == EEdit.mode;
+
+                if (ImGui.MenuItem(_get_component_name_by_mode(mode), is_selected)) {
+                    EEdit.mode = mode;
+                }
+
+                if (is_selected) ImGui.SetItemDefaultFocus();
+            }
 
             ImGui.EndMenu();
         }
@@ -153,8 +155,8 @@ internal static partial class UI {
          * This is to be removed. A handy reference for me while programming.
          */
 
-        if (EEdit.Display.show_demo_window) {
-            ImGui.ShowDemoWindow(ref EEdit.Display.show_demo_window);
+        if (EEdit.show_demo_window) {
+            ImGui.ShowDemoWindow(ref EEdit.show_demo_window);
         }
 
         /*
@@ -162,9 +164,10 @@ internal static partial class UI {
          * Abort if it cannot be displayed.
          */
 
-        ImGuiIOPtr io = ImGui.GetIO();
+        ImGuiIOPtr       io       = ImGui.GetIO();
+        ImGuiViewportPtr viewport = ImGui.GetMainViewport();
 
-        ImGui.SetNextWindowPos (Vector2.Zero);
+        ImGui.SetNextWindowPos (viewport.Pos);
         ImGui.SetNextWindowSize(io.DisplaySize);
 
         if (!ImGui.Begin("EEdit.Main",
@@ -186,7 +189,7 @@ internal static partial class UI {
 
         ImGui.SetNextWindowPos(ImGui.GetContentRegionAvail());
 
-        EEdit.Display.active_editor?.render();
+        EEdit.active_editor?.render();
 
         ImGui.End();
     }

@@ -62,8 +62,8 @@ public unsafe struct LpAbilityMapEngine {
     }
 
     [InlineArray(130)]
-    public struct SphereGridNodeTypeInfoArray {
-        private SphereGridNodeTypeInfo _data;
+    public struct SphereGridNodeTypeUiInfoArray {
+        private SphereGridNodeTypeUiInfo _data;
     }
 
     [InlineArray(7)]
@@ -80,7 +80,7 @@ public unsafe struct LpAbilityMapEngine {
     [FieldOffset(0xA808)]  public SphereGridLinkArray    links;
 
     [FieldOffset(0xF808)]  public SphereGridClusterSizesArray cluster_sizes;
-    [FieldOffset(0xF828)]  public SphereGridNodeTypeInfoArray node_type_infos;
+    [FieldOffset(0xF828)]  public SphereGridNodeTypeUiInfoArray node_type_infos;
     [FieldOffset(0x11088)] public SphereGridChrInfoArray      party_infos;
 
     [FieldOffset(0x112B8)] public Vector4              __0x112B8;

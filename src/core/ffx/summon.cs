@@ -113,12 +113,12 @@ public struct AeonStatBoostsMinimum {
     /// <summary>
     ///     The boost to the Aeon's HP.
     /// </summary>
-    public int hp;
+    public ushort hp;
 
     /// <summary>
     ///     The boost to the Aeon's MP.
     /// </summary>
-    public int mp;
+    public ushort mp;
 
     /// <summary>
     ///     The boost to the Aeon's strength.

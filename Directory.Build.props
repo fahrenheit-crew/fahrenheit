@@ -18,6 +18,7 @@
         <_FhOutDir Condition="'$(Configuration)'=='Debug'">$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', 'artifacts', 'deploy', 'dbg'))</_FhOutDir>
         <_FhBaseIntermediateOutputPath>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', 'artifacts', 'obj', '$(MSBuildProjectName)'))</_FhBaseIntermediateOutputPath>
         <_FhBaseOutputPath>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', 'artifacts', 'build', '$(MSBuildProjectName)'))</_FhBaseOutputPath>
+        <_FhVcpkgOutputPath>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', 'artifacts', 'vcpkg', '$(MSBuildProjectName)'))</_FhVcpkgOutputPath>
         <_FhOutDirBin>$([MSBuild]::NormalizeDirectory('$(_FhOutDir)', 'bin'))</_FhOutDirBin>
         <_FhOutDirMods>$([MSBuild]::NormalizeDirectory('$(_FhOutDir)', 'mods', '$(AssemblyName)'))</_FhOutDirMods>
         <_FhOutDirPkg Condition="'$(Configuration)'=='Release'">$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', 'artifacts', 'pkg', 'rel'))</_FhOutDirPkg>
@@ -27,6 +28,7 @@
         <PublishDir>$(_FhOutDirBin)</PublishDir>
         <BaseOutputPath>$(_FhBaseOutputPath)</BaseOutputPath>
         <BaseIntermediateOutputPath>$(_FhBaseIntermediateOutputPath)</BaseIntermediateOutputPath>
+        <VcpkgInstalledDir>$(_FhVcpkgOutputPath)</VcpkgInstalledDir>
 
         <!--
         We previously used 'embedded' portable PDBs.
@@ -43,7 +45,7 @@
 
         <Company>https://github.com/fahrenheit-crew/fahrenheit</Company>
         <Copyright>Copyright © The Fahrenheit contributors</Copyright>
-        <Version>1.0.0-alpha11</Version>
+        <Version>1.0.0-alpha12</Version>
 
     </PropertyGroup>
 

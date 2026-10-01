@@ -10,31 +10,14 @@ namespace Fahrenheit.FFX2;
 
 public partial struct Rom
 {
-    [NativeTypeName("unsigned int")]
     public uint poison_time;
-
-    [NativeTypeName("unsigned int")]
     public uint poison_damage;
-
-    [NativeTypeName("unsigned int")]
     public uint regen_time;
-
-    [NativeTypeName("unsigned int")]
     public uint regen_damage;
-
-    [NativeTypeName("unsigned int[2]")]
     public _count_value_e__FixedBuffer count_value;
-
-    [NativeTypeName("int[3]")]
     public _rapid_shot_e__FixedBuffer rapid_shot;
-
-    [NativeTypeName("short[4]")]
     public _ATB_speed_e__FixedBuffer ATB_speed;
-
-    [NativeTypeName("unsigned int[2]")]
     public _delay_count_e__FixedBuffer delay_count;
-
-    [NativeTypeName("unsigned int[24]")]
     public _off_count_e__FixedBuffer off_count;
 
     [InlineArray(2)]

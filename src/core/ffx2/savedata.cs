@@ -215,7 +215,9 @@ public unsafe struct SaveData {
     [FieldOffset(0xD548)]  public InlineArray14<byte>  extend_party;
     [FieldOffset(0xD570)]  public FriendMonsterArray   friend_monster;
 
-    [FieldOffset(0x14730)] public       byte dgn_save_data;
+    // Last Mission
+    [FieldOffset(0x14730)] public byte dgn_save_data;
+    [FieldOffset(0x14840)] public uint lm_gil;
 
     public bool get_met_monster(int monster_id) {
         return monster_id < 0x200 && monster_meet[monster_id / 16].get_bit(monster_id % 16);

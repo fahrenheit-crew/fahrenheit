@@ -1,0 +1,12 @@
+@sgen_settings.rsp
+@sgen_remap.rsp
+--headerFile
+sgen_ffx2_master_jppc_lastmiss_kernel_lm_monmagic.txt
+--file
+../env/ffx_ps2/ffx2/master/jppc/lastmiss/kernel/lm_monmagic.h
+--methodClassName
+LmMonmagicId
+--namespace
+Fahrenheit.FFX2
+--output
+../src/core/ffx2/

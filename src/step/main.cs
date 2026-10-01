@@ -3,487 +3,243 @@
 // This file is part of Fahrenheit, © 2023-2026 The Fahrenheit contributors.
 // It is licensed to you under the GNU Lesser General Public License, version 3.0 or later. See COPYING, COPYING.LESSER.
 
-/* [fkelava 17/5/23 02:48]
- * A small tool to emit (hopefully) valid C# code from Ghidra symbol JSONs.
- */
-
 namespace Fahrenheit.Tools.STEP;
-
-/// <summary>
-///     Represents a function declaration exported from Ghidra.
-/// </summary>
-internal struct FhFuncDecl {
-    public string Name      { get; set; }
-    public string Location  { get; set; }
-    [Name("Function Signature")]
-    public string Signature { get; set; }
-    [Name("Symbol Source")]
-    public string Source    { get; set; }
-    [Name("Symbol Type")]
-    public string Type      { get; set; }
-    [Name("Function Name")]
-    public string FuncName  { get; set; }
-    [Name("Function Calling Convention")]
-    public string CallConv  { get; set; }
-    public string Namespace { get; set; }
-}
-
-/// <summary>
-///     Represents a global/data symbol exported from Ghidra.
-/// </summary>
-internal struct FhDataLabelDecl {
-    public string Name      { get; set; }
-    public string Location  { get; set; }
-    public string Type      { get; set; }
-    [Name("Data Type")]
-    public string DataType  { get; set; }
-    public string Namespace { get; set; }
-    public string Source    { get; set; }
-}
-
-internal ref struct FhFuncSignatureData {
-    public ReadOnlySpan<char>    ReturnType;
-    public ReadOnlySpan<char>    FunctionName;
-    public List<FhFuncParameter> Parameters;
-}
-
-internal record FhFuncParameter(string ParameterType, string ParameterName);
 
 internal static class Program {
 
-    private static int[]                      _s_noemit  = [];
-    private static Dictionary<string, string> _s_typemap = [];
-    private static FhFuncDecl[]               _s_funcs   = [];
-    private static FhDataLabelDecl[]          _s_data    = [];
-
-    private static void Main(string[] args) {
-        Option<string>   opt_globals   = new ("-d", "--data") {
-            Description = "Set the path to the file containing data definitions.",
+    private static async Task Main(string[] args) {
+        Option<string>   opt_output     = new ("-o", "--output") {
+            Description = "Set the folder where the C# files should be written.",
             Required    = true
         };
-        Option<string>   opt_functions = new ("-f", "--functions") {
-            Description = "Set the path to the file containing function definitions.",
+        Option<string>   opt_global_x   = new ("-gx", "--global-x") {
+            Description = "Set the path to the file containing globals for FF X.",
             Required    = true
         };
-        Option<string>   opt_output    = new ("-o", "--output") {
-            Description = "Set the folder where the C# file should be written.",
+        Option<string>   opt_global_x2  = new ("-gx2", "--global-x2") {
+            Description = "Set the path to the file containing globals for FF X-2.",
             Required    = true
         };
-        Option<string>   opt_typemap   = new ("-m", "--map") {
-            Description = "Set the path to a Ghidra -> Fh type map.",
+        Option<string>   opt_fn         = new ("-f", "--functions") {
+            Description = "Set the path to the file containing common function definitions.",
+            Required    = true
+        };
+        Option<string>   opt_fn_x       = new ("-fx", "--functions-x") {
+            Description = "Set the path to the file containing function definitions for FF X.",
+            Required    = true
+        };
+        Option<string>   opt_fn_x2      = new ("-fx2", "--functions-x2") {
+            Description = "Set the path to the file containing function definitions for FF X-2.",
+            Required    = true
+        };
+        Option<string>   opt_remap      = new ("-r", "--remap") {
+            Description = "Set the path to the file containing Ghidra -> Fh remappings for common functions.",
             Required    = false
         };
-        Option<int[]>    opt_noemit    = new ("-ne", "--no-emit") {
-            Description  = "Specify a set of addresses for which calls shall not be emitted.",
-            Required     = false,
-            CustomParser = _parse_arg_noemit
+        Option<string>   opt_remap_x    = new ("-rx", "--remap-x") {
+            Description = "Set the path to the file containing Ghidra -> Fh remappings for FF X.",
+            Required    = false
         };
-        Option<FhGameId> opt_game      = new ("-g", "--game-id") {
-            Description = "Declare which game STEP is generating for.",
-            Required    = true
+        Option<string>   opt_remap_x2   = new ("-rx2", "--remap-x2") {
+            Description = "Set the path to the file containing Ghidra -> Fh remappings for FF X-2.",
+            Required    = false
+        };
+        Option<string>   opt_reject     = new ("-re", "--reject") {
+            Description  = "Set the path to the file specifying addresses not to emit common calls for.",
+            Required     = true
+        };
+        Option<string>   opt_reject_x   = new ("-rex", "--reject-x") {
+            Description  = "Set the path to the file specifying addresses not to emit calls for in FF X.",
+            Required     = true
+        };
+        Option<string>   opt_reject_x2  = new ("-rex2", "--reject-x2") {
+            Description  = "Set the path to the file specifying addresses not to emit calls for in FF X-2.",
+            Required     = true
         };
 
-        RootCommand cmd_root = new RootCommand("Process a Ghidra symbol table and create a C# code file.");
+        RootCommand cmd_root = new RootCommand("Process a Ghidra symbol table and create C# code files.");
 
-        // To permit no-emit addresses to be listed consecutively after a single -ne specifier.
-        opt_noemit.AllowMultipleArgumentsPerToken = true;
-
-        cmd_root.Options.Add(opt_globals);
-        cmd_root.Options.Add(opt_functions);
         cmd_root.Options.Add(opt_output);
-        cmd_root.Options.Add(opt_typemap);
-        cmd_root.Options.Add(opt_noemit);
-        cmd_root.Options.Add(opt_game);
+        cmd_root.Options.Add(opt_global_x);
+        cmd_root.Options.Add(opt_global_x2);
+        cmd_root.Options.Add(opt_fn);
+        cmd_root.Options.Add(opt_fn_x);
+        cmd_root.Options.Add(opt_fn_x2);
+        cmd_root.Options.Add(opt_remap);
+        cmd_root.Options.Add(opt_remap_x);
+        cmd_root.Options.Add(opt_remap_x2);
+        cmd_root.Options.Add(opt_reject);
+        cmd_root.Options.Add(opt_reject_x);
+        cmd_root.Options.Add(opt_reject_x2);
 
-        cmd_root.SetAction(parse_result => _emit_symtable(
-            parse_result.GetRequiredValue(opt_globals),
-            parse_result.GetRequiredValue(opt_functions),
-            parse_result.GetRequiredValue(opt_output),
-            parse_result.GetValue        (opt_typemap) ?? "",
-            parse_result.GetRequiredValue(opt_noemit),
-            parse_result.GetRequiredValue(opt_game)
+        cmd_root.SetAction(async (parse_result, _) => await _generate(
+            parse_result.GetRequiredValue(opt_global_x),
+            parse_result.GetRequiredValue(opt_global_x2),
+            parse_result.GetRequiredValue(opt_fn),
+            parse_result.GetRequiredValue(opt_fn_x),
+            parse_result.GetRequiredValue(opt_fn_x2),
+            parse_result.GetRequiredValue(opt_remap),
+            parse_result.GetRequiredValue(opt_remap_x),
+            parse_result.GetRequiredValue(opt_remap_x2),
+            parse_result.GetRequiredValue(opt_reject),
+            parse_result.GetRequiredValue(opt_reject_x),
+            parse_result.GetRequiredValue(opt_reject_x2),
+            parse_result.GetRequiredValue(opt_output)
             ));
 
         ParseResult parse_result = cmd_root.Parse(args);
-        parse_result.Invoke();
+        await parse_result.InvokeAsync();
     }
 
     /// <summary>
-    ///     Parses a set of no-emit addresses in hex form on the command line.
+    ///     Generates all symbol tables.
     /// </summary>
-    private static int[] _parse_arg_noemit(ArgumentResult arg) {
-        int[] rv = new int[arg.Tokens.Count];
+    private static async Task _generate(
+        string path_global_x,
+        string path_global_x2,
+        string path_fn,
+        string path_fn_x,
+        string path_fn_x2,
+        string path_remap,
+        string path_remap_x,
+        string path_remap_x2,
+        string path_reject,
+        string path_reject_x,
+        string path_reject_x2,
+        string path_output_dir)
+    {
+        Stopwatch perf = Stopwatch.StartNew();
 
-        // -ne args are only accepted in form: 0x{ADDR:X}, ex. -ne 0x207DB0
-        for (int i = 0; i < arg.Tokens.Count; i++) {
-            rv[i] = int.Parse(arg.Tokens[i].Value[ 2 .. ], NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+        string path_output_x  = Path.Join(path_output_dir, "ffx");
+        string path_output_x2 = Path.Join(path_output_dir, "ffx2");
+
+        /* [fkelava 30/07/26 16:07]
+         * For why only FF X functions are passed to the
+         * common generator, see _load_fn_common.
+         */
+        FuncData fn_x = _load_fn(path_fn_x);
+
+        FhCommonGenerator emitter_common = new FhCommonGenerator(
+            Directory.CreateDirectory(path_output_dir),
+            _load_reject   (path_reject),
+            _load_remap    (path_remap),
+            FhGameId.NULL,
+            fn_x,
+            _load_fn_common(path_fn));
+
+        FhGameSpecificGenerator emitter_x = new FhGameSpecificGenerator(
+            Directory.CreateDirectory(path_output_x),
+            _load_reject   (path_reject_x),
+            _load_remap    (path_remap_x),
+            FhGameId.FFX,
+            fn_x,
+            _load_globals  (path_global_x));
+
+        FhGameSpecificGenerator emitter_x2 = new FhGameSpecificGenerator(
+            Directory.CreateDirectory(path_output_x2),
+            _load_reject   (path_reject_x2),
+            _load_remap    (path_remap_x2),
+            FhGameId.FFX2,
+            _load_fn       (path_fn_x2),
+            _load_globals  (path_global_x2));
+
+        await Task.WhenAll(
+            Task.Run(emitter_common.generate_code),
+            Task.Run(emitter_x     .generate_code),
+            Task.Run(emitter_x2    .generate_code));
+
+        Console.WriteLine($"Complete in {perf.Elapsed}.");
+    }
+
+    /// <summary>
+    ///     Loads a file specifying addresses to reject during
+    ///     code generation from the given absolute <paramref name="file_path"/>.
+    /// </summary>
+    private static RejectData _load_reject(string file_path) {
+        string[] reject_lines = File.ReadAllLines(file_path);
+        int   [] reject       = new int[reject_lines.Length];
+
+        // -ne* args are only accepted in form: 0x{ADDR:X}, ex. -ne 0x207DB0
+        for (int i = 0; i < reject.Length; i++) {
+            reject[i] = int.Parse(reject_lines[i][ 2 .. ], NumberStyles.HexNumber, CultureInfo.InvariantCulture);
         }
 
-        return rv;
+        return reject;
     }
 
     /// <summary>
-    ///     Determines whether a specific function declaration provided by Ghidra should be interpreted.
+    ///    Loads a JSON file containing type remappings
+    ///    from the given absolute <paramref name="file_path"/>.
     /// </summary>
-    /// <param name="function">The function declaration to be checked.</param>
-    /// <returns>Whether the provided function declaration should be interpreted.</returns>
-    private static bool _should_interpret(FhFuncDecl function) {
-        return function is {
-                   Type:      "Function",
-                   Namespace: "Global", // Exclude potentially proprietary symbols
-               } &&
-               !function.Name.Contains("operator") && // ignore operator.new, operator.delete
-               !function.Name.Contains('@')        && // ignore Unwind@{ADDR}, Catch_All@{ADDR} thunks
-               !function.Signature.Contains('.')   && // ignore vararg functions
-               !function.Signature.Contains(':')   && // ignore anything that even vaguely resembles a C++ namespace
-               !function.Signature.Contains('`')   && // ignore vector ctors/dtors
-               !function.Signature.Contains('<')   && // ignore template specializations
-               !function.Signature.Contains('-')   &&
-               !function.Signature.Contains('+');     // ignore descriptively labeled but not authoritatively named functions
+    private static RemapData _load_remap(string file_path) {
+        return JsonSerializer.Deserialize<RemapData>(File.ReadAllText(file_path)) ??
+            throw new Exception($"Remap file at {file_path} is illegible or invalid.");
     }
 
     /// <summary>
-    ///     Determines whether a specific global declaration provided by Ghidra should be interpreted.
+    ///     Loads and fixes up the CSV file containing function definitions
+    ///     from the given absolute <paramref name="file_path"/>.
     /// </summary>
-    /// <param name="data_label">The global declaration to be checked.</param>
-    /// <returns>Whether the provided global declaration should be interpreted.</returns>
-    private static bool _should_interpret(FhDataLabelDecl data_label) {
-        return !data_label.Name.Contains('+'); // ignore descriptively labeled but not authoritatively named globals
-    }
+    private static FuncData _load_fn(string file_path) {
+        using StreamReader function_reader = new StreamReader(file_path);
+        using CsvReader    function_csv    = new CsvReader   (function_reader, CultureInfo.InvariantCulture);
 
-    /// <summary>
-    ///     Convert from a C++/Ghidra calling convention specifier to the equivalent C# attribute for delegates.
-    /// </summary>
-    /// <param name="call_conv">The C++/Ghidra-style calling convention specifier.</param>
-    /// <returns>An equivalent C# attribute applicable to delegates.</returns>
-    /// <exception cref="ArgumentException">Thrown if the C++/Ghidra-style calling convention specifier is not recognized.</exception>
-    private static ReadOnlySpan<char> _emit_callconv_attr(ReadOnlySpan<char> call_conv) {
-        return call_conv switch {
-            "__thiscall" => "[UnmanagedFunctionPointer(CallingConvention.ThisCall)]",
-            "__cdecl"    => "[UnmanagedFunctionPointer(CallingConvention.Cdecl)]",
-            "__stdcall"  => "[UnmanagedFunctionPointer(CallingConvention.StdCall)]",
-            "__fastcall" => "[UnmanagedFunctionPointer(CallingConvention.FastCall)]",
-            "unknown"    => "[UnmanagedFunctionPointer(CallingConvention.Cdecl)]",
-            _            => throw new ArgumentException($"Encountered an unknown calling convention `{call_conv}` while parsing functions."),
-        };
-    }
+        Span<FhFuncDecl> data  = [ .. function_csv.GetRecords<FhFuncDecl>() ];
+        FuncData         funcs = [];
 
-    /// <summary>
-    ///     Maps a Ghidra-provided type using the user-defined typemap.
-    /// </summary>
-    /// <example>
-    ///     Assuming Ghidra's <c>undefined4</c> type is mapped to C#'s <c>uint</c>,
-    ///     calling this function with <c>"undefined4"</c> will return <c>"uint"</c>.
-    /// </example>
-    /// <param name="type">The string representation of a Ghidra parameter type.</param>
-    /// <returns>The mapped parameter type.<br/>Returns <c>"nint"</c> if the given Ghidra type isn't mapped.</returns>
-    private static ReadOnlySpan<char> _map_type(string type) {
-        return _s_typemap.GetValueOrDefault(type, "nint");
-    }
-
-    /// <summary>
-    ///     Applies the user-defined type map to a parameter type provided by Ghidra.<br/>
-    ///     Unlike <see cref="_map_type"/>, accounts for <c>void</c>.
-    /// </summary>
-    /// <param name="return_type">The string representation of a Ghidra return type.</param>
-    /// <returns>The mapped return type.</returns>
-    private static ReadOnlySpan<char> _map_return_type(string return_type) {
-        return return_type switch {
-            "void"      => "void",
-            "undefined" => "void",
-            _           => _map_type(return_type),
-        };
-    }
-
-    /// <summary>
-    ///     Modifies a <paramref name="param_name"/> to not conflict with C# keywords.
-    /// </summary>
-    /// <returns>The modified parameter name.</returns>
-    private static ReadOnlySpan<char> _escape_param_name(string param_name) {
-        bool is_language_reserved =
-            SyntaxFacts.GetKeywordKind          (param_name) != SyntaxKind.None
-         || SyntaxFacts.GetContextualKeywordKind(param_name) != SyntaxKind.None;
-
-        return is_language_reserved ? $"_{param_name}" : param_name;
-    }
-
-    /// <summary>
-    ///     Translates a function's parameter list to a string with types and names mapped.
-    /// </summary>
-    /// <param name="parameters">The list of parameters</param>
-    /// <returns>A string representation of the parameter list, valid as C# code.</returns>
-    private static string _build_params_string(List<FhFuncParameter> parameters) {
-        List<string> param_str = [];
-
-        foreach (FhFuncParameter param in parameters) {
-            param_str.Add($"{_map_type(param.ParameterType)} {_escape_param_name(param.ParameterName)}");
-        }
-
-        return $"({string.Join(", ", param_str)})";
-    }
-
-    /// <summary>
-    ///     Converts a Ghidra function declaration and the associated signature data into valid C# code.
-    /// </summary>
-    /// <param name="function">A Ghidra-provided function declaration.</param>
-    /// <param name="signature_data">The signature data associated with the function.</param>
-    /// <returns>A valid C# delegate declaration and associated function address constant.</returns>
-    private static string _emit_function(FhFuncDecl function, FhFuncSignatureData signature_data, FhGameId game) {
-        int    addr   = int.Parse(function.Location, NumberStyles.HexNumber, CultureInfo.InvariantCulture) - 0x400000;
-        string module = game switch {
-            FhGameId.FFX    => "FFX.exe",
-            FhGameId.FFX2   or
-            FhGameId.FFX2LM => "FFX-2.exe",
-            _               => throw new NotImplementedException($"invalid game id {game} - cannot generate function"),
-        };
-
-        if (_s_noemit.Contains(addr)) {
-            return $"""
-                // Symbol on explicit no-emit list:
-                // {function.CallConv} {function.Signature} at {function.Location}
-
-            """;
-        }
-
-        return $"""
-                // Original after pruning:
-                // {function.CallConv} {function.Signature} at {function.Location}
-
-                {_emit_callconv_attr(function.CallConv)}
-                public unsafe delegate {signature_data.ReturnType} d_{function.FuncName}{_build_params_string(signature_data.Parameters)};
-                public static FhMethodHandle<d_{function.FuncName}> {function.Name} => new( new FhMethodLocation("{module}", 0x{addr:X}) );
-
-            """;
-    }
-
-    /// <summary>
-    ///     Converts a global symbol provided by Ghidra into valid C# code.
-    /// </summary>
-    /// <param name="global">A global symbol provided by Ghidra</param>
-    /// <returns>A valid C# const declaration for the given global</returns>
-    private static string _emit_global(FhDataLabelDecl global) {
-        int                addr        = int.Parse(global.Location, NumberStyles.HexNumber, CultureInfo.InvariantCulture) - 0x400000;
-        ReadOnlySpan<char> mapped_type = _map_type(global.DataType);
-
-        if (_s_noemit.Contains(addr)) {
-            return $"""
-                // Symbol on explicit no-emit list:
-                // {global.DataType} {global.Name} at {global.Location}
-
-            """;
-        }
-
-        //TODO: Make sure C# doesn't have issues with the pointer when the global is an array.
-        return $"""
-                // Original after pruning:
-                // {global.DataType} {global.Name} at {global.Location}
-
-                public const nint __addr_{global.Name} = 0x{addr:X};
-                public static {mapped_type}* {global.Name} => FhUtil.ptr_at<{mapped_type}>(__addr_{global.Name});
-
-            """;
-    }
-
-    /// <summary>
-    ///     Return FhCall's introductory comment.
-    /// </summary>
-    private static string _emit_prologue(FhGameId game) {
-        string ns = game switch {
-            FhGameId.FFX    => "namespace Fahrenheit.FFX;",
-            FhGameId.FFX2   or
-            FhGameId.FFX2LM => "namespace Fahrenheit.FFX2;",
-            _               => "namespace Fahrenheit;",
-        };
-
-        return $$"""
-            /* [STEP {{DateTime.UtcNow:dd/M/yy HH:mm}}]
-             * This file was generated by Fahrenheit's STEP tool (https://github.com/fahrenheit-crew/fh-tools-step/).
-             *
-             * Its purpose is to provide auto-generated delegates to allow you to call or hook game functions without having
-             * to go through an extensive reverse-engineering process. These are, for the time being, quite rudimentary;
-             * many parameters whose types are known to us are still mapped only to `nint`.
-             *
-             * The presence of a delegate or function signature in this file does not imply it has been tested. You have been warned.
-             *
-             * To improve the call map quality, add new entries to `typemap.json` in the STEP source code or annotate further
-             * functions in Ghidra. Every so often, STEP generation will be rerun and Fahrenheit updated with the result.
-             */
-
-            {{ns}}
-
-            public static unsafe partial class FhCall {
-
-            """;
-    }
-
-    /// <summary>
-    ///     Flushes a written out symbol table to disk.
-    /// </summary>
-    private static void _dump_symtable(string dest_path, StringBuilder sb) {
-        sb.AppendLine("}");
-        File.WriteAllText(dest_path, sb.ToString());
-
-        Console.WriteLine($"{dest_path}");
-    }
-
-    /// <summary>
-    ///    Loads the JSON file containing type remappings.
-    /// </summary>
-    private static void _load_typemap(string path_typemap) {
-        try {
-            string type_map_str = File.ReadAllText(path_typemap);
-            _s_typemap = JsonSerializer.Deserialize<Dictionary<string, string>>(type_map_str) ?? [];
-        }
-        catch {
-            Console.WriteLine("Type map load failed or type map path not specified.");
-        }
-    }
-
-    /// <summary>
-    ///     Loads and fixes up the CSV file containing function definitions.
-    /// </summary>
-    private static void _load_functions(string path_functions) {
-        using (StreamReader function_reader = new StreamReader(path_functions))
-        using (CsvReader    function_csv    = new CsvReader   (function_reader, CultureInfo.InvariantCulture)) {
-            _s_funcs = [ .. function_csv.GetRecords<FhFuncDecl>() ];
-        }
-
-        for (int i = 0; i < _s_funcs.Length; i++) {
-            _s_funcs[i].Signature = _s_funcs[i].Signature
+        for (int i = 0; i < data.Length; i++) {
+            data[i].Signature = data[i].Signature
                 .Replace(" *"   , "*") // Ghidra "float * param_1" -> "float* param_1"
                 .Replace("\\,"  , ",") // Ghidra CSV unescape
                 .Replace("\"\\" , "" );
         }
-    }
 
-    /// <summary>
-    ///     Loads the CSV file containing globals and other data labels.
-    /// </summary>
-    private static void _load_data(string path_data) {
-        using (StreamReader data_reader = new StreamReader(path_data))
-        using (CsvReader    data_csv    = new CsvReader   (data_reader, CultureInfo.InvariantCulture)) {
-            _s_data = [ .. data_csv.GetRecords<FhDataLabelDecl>() ];
+        foreach (FhFuncDecl func in data) {
+            funcs[func.Location] = func;
         }
+
+        return funcs;
     }
 
     /// <summary>
-    ///     Emits a C# code file to a specified path using exported Ghidra symbols and a user-defined typemap.
+    ///     Loads and fixes up the CSV file containing common function definitions
+    ///     from the given absolute <paramref name="file_path"/>.
     /// </summary>
-    /// <param name="path_data">A path to a CSV file containing Ghidra global exports.</param>
-    /// <param name="path_functions">A path to a CSV file containing Ghidra function exports.</param>
-    private static void _emit_symtable(
-        string   path_data,
-        string   path_functions,
-        string   path_dest,
-        string   path_typemap,
-        int[]    no_emit_addresses,
-        FhGameId game) {
+    private static CommonData _load_fn_common(string file_path) {
+        using StreamReader common_function_reader = new StreamReader(file_path);
+        using CsvReader    common_function_csv    = new CsvReader   (common_function_reader, CultureInfo.InvariantCulture);
 
-        _s_noemit = no_emit_addresses;
+        FhCommonFuncDecl[] data   = [ .. common_function_csv.GetRecords<FhCommonFuncDecl>() ];
+        CommonData         common = [];
 
-        /* [fkelava 01/06/26 13:47]
-         * Generating all functions for either game results in about a 400,000 line file.
-         * IDEs and IntelliSense absolutely cannot handle files that large, not even on
-         * top-end machines. We thus split the file at roughly the 50,000 line mark.
+        /* [fkelava 30/07/26 16:24]
+         * The 'source' address is the one in FF X, the 'destination' address the one in FF X-2.
+         * Because the former is much more actively and completely reversed, we use it as a basis
+         * for common function generation. Thus common functions also use thei FF X signatures.
          */
 
-        const int LINES_PER_FILE = 50_000;
-        const int LINES_PER_DECL = 7; // Guesstimate for file-wraparound
-        const int LINES_PER_SKIP = 4; // Guesstimate for file-wraparound
-
-        Stopwatch perf = Stopwatch.StartNew();
-
-        int file_count = 1;
-        int line_count = 0;
-
-        string output_file_path = Path.Join(path_dest, $"call_{file_count++}.g.cs");
-
-        _load_typemap  (path_typemap);
-        _load_functions(path_functions);
-        _load_data     (path_data);
-
-        // This local is reused in the loop
-        FhFuncSignatureData signature_data = new FhFuncSignatureData {
-            Parameters = [ ],
-        };
-
-        // Actual file contents.
-        StringBuilder sb = new(_emit_prologue(game));
-
-        foreach (FhFuncDecl function in _s_funcs) {
-            if (line_count >= LINES_PER_FILE) {
-                _dump_symtable(output_file_path, sb);
-
-                output_file_path = Path.Join(path_dest, $"call_{file_count++}.g.cs");
-                line_count       = 0;
-                sb               = new(_emit_prologue(game));
-            }
-
-            if (!_should_interpret(function)) {
-                sb.AppendLine($"    // Symbol skipped (deemed uninterpretable or explicitly rejected):");
-                sb.AppendLine($"    // {function.CallConv} {function.Signature} at {function.Location}");
-                sb.AppendLine();
-
-                line_count += LINES_PER_SKIP;
-                continue;
-            }
-
-            // We lex the function signature in the form {RETURN_TYPE} {NAME}({PARAMETER_TYPE} {PARAMETER_NAME} ... );
-            string[] tokens = function.Signature.Split(
-                [ ' ', '(', ',', ')' ],
-                StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries
-            );
-
-            /* Tokens:
-             * [0] -> Return type
-             * [1] -> Function name
-             * [2] -> Type of parameter 1
-             * [3] -> Name of parameter 1
-             * [4] -> Type of parameter 2
-             * [5] -> Name of parameter 2
-             * ... and so on
-             */
-
-            signature_data.ReturnType   = _map_return_type(tokens[0]);
-            signature_data.FunctionName = tokens[1]; //TODO: Add cleanup of function name (remove the '+' prefix)
-
-            // Parse parameters
-            for (int i = 2; i < tokens.Length - 1; i += 2) {
-                string type = tokens[i];
-                string name = tokens[i + 1];
-
-                signature_data.Parameters.Add(new (type, name));
-            }
-
-            sb.AppendLine(_emit_function(function, signature_data, game));
-            line_count += LINES_PER_DECL; // Guesstimate for file-wraparound
-
-            signature_data.Parameters.Clear();
+        foreach (FhCommonFuncDecl common_def in data) {
+            common[common_def.SourceAddress] = common_def;
         }
 
-        foreach (FhDataLabelDecl global in _s_data) {
-            if (line_count >= LINES_PER_FILE) {
-                _dump_symtable(output_file_path, sb);
+        return common;
+    }
 
-                output_file_path = Path.Join(path_dest, $"call_{file_count++}.g.cs");
-                line_count       = 0;
-                sb               = new(_emit_prologue(game));
-            }
+    /// <summary>
+    ///     Loads the CSV file containing globals and other data labels
+    ///     from the given absolute <paramref name="file_path"/>.
+    /// </summary>
+    private static GlobalData _load_globals(string file_path) {
+        using StreamReader global_reader = new StreamReader(file_path);
+        using CsvReader    global_csv    = new CsvReader   (global_reader, CultureInfo.InvariantCulture);
 
-            if (!_should_interpret(global)) {
-                sb.AppendLine($"    // Global skipped (deemed uninterpretable or explicitly rejected):");
-                sb.AppendLine($"    // {global.DataType} {global.Name} at {global.Location}");
-                sb.AppendLine();
+        Span<FhDataLabelDecl> data    = [ .. global_csv.GetRecords<FhDataLabelDecl>() ];
+        GlobalData            globals = [];
 
-                line_count += LINES_PER_SKIP;
-                continue;
-            }
-
-            sb.AppendLine(_emit_global(global));
-            line_count += LINES_PER_DECL;
+        foreach (FhDataLabelDecl item in data) {
+            globals[item.Location] = item;
         }
 
-        _dump_symtable(output_file_path, sb);
-        Console.WriteLine($"Done in {perf.Elapsed}.");
+        return globals;
     }
 }

@@ -18,12 +18,11 @@ namespace Fahrenheit;
  * Modules also have access to an analogous 'global state' file, which is not unique per save game.
  */
 
-/// <summary>
-///     Implements the 'local state' mechanism of Fahrenheit.
-///     <para/>
-///     In your module, implement <see cref="FhModule.load_local_state(FileStream, FhLocalStateInfo)"/>
-///     and <see cref="FhModule.save_local_state(FileStream)"/>.
-/// </summary>
+/// <summary>Implements the 'local state' mechanism of Fahrenheit.</summary>
+/// <remarks>
+///     In your module, implement <see cref="FhModule.save_local_state(FileStream)"/> 
+///     and <see cref="FhModule.load_local_state(FileStream, FhLocalStateInfo)"/>.
+/// </remarks>
 internal sealed class FhState {
 
     /// <summary>
@@ -34,7 +33,7 @@ internal sealed class FhState {
         string local_state_dir = Path.Join(
             FhEnvironment.Finder.State.FullName,
             FhInternal.Hasher.SaveSetHash,
-            FhInternal.Saves.get_active_set(),
+            FhApi.Saves.active_set,
             FhSavePal.pal_get_save_subfolder(),
             FhSavePal.pal_get_save_name_for_slot(slot),
             mod_context.Manifest.Id,

@@ -10,6 +10,5 @@ namespace Fahrenheit.FFX2;
 
 public partial struct BtlTxt
 {
-    [NativeTypeName("unsigned int")]
     public uint help;
 }

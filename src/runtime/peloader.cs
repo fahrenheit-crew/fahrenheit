@@ -55,10 +55,10 @@ internal readonly unsafe ref struct FhPClusterScope(PCluster* ptr_cluster, FhPhy
 [FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
 public unsafe sealed class FhPhyreLoaderModule : FhModule {
 
-    private readonly nint* _pp_cluster_mgr;
+    private readonly uint* _pp_cluster_mgr;
 
     public FhPhyreLoaderModule() {
-        _pp_cluster_mgr = FhUtil.ptr_at<nint>(FhUtil.select(0x8CCA44, 0x9CFE48, 0x9CFE48));
+        _pp_cluster_mgr = FhUtil.ptr_at<uint>(FhUtil.select(0x8CCA44, 0x9CFE48, 0x9CFE48));
     }
 
     public override bool init(FhModContext mod_context, FileStream global_state_file) {
@@ -71,7 +71,7 @@ public unsafe sealed class FhPhyreLoaderModule : FhModule {
     /// </summary>
     internal FhPClusterScope cluster_load(string file_path) {
         byte[] file_path_u8    = Encoding.UTF8.GetBytes(file_path);
-        nint   ptr_cluster_mgr = *_pp_cluster_mgr;
+        uint   ptr_cluster_mgr = *_pp_cluster_mgr;
 
         if (ptr_cluster_mgr == 0) {
             _logger.Warning($"ClusterManager not ready - {file_path}");
@@ -102,7 +102,7 @@ public unsafe sealed class FhPhyreLoaderModule : FhModule {
     ///     Releases a cluster attained by a previous call to <see cref="cluster_load"/>.
     /// </summary>
     internal void cluster_release(PCluster* ptr_cluster) {
-        nint ptr_cluster_mgr = *_pp_cluster_mgr;
+        uint ptr_cluster_mgr = *_pp_cluster_mgr;
         FhCall.ClusterManager_releasePCluster.fnptr!(ptr_cluster_mgr, ptr_cluster);
     }
 }

@@ -39,13 +39,13 @@ internal sealed class FhRuntimeHandle<T> {
     private readonly Lock _impl_lock = new Lock();
     private          T?   _impl;
 
-    public bool get_impl([NotNullWhen(true)] out T? impl) {
+    public bool get([NotNullWhen(true)] out T? impl) {
         lock (_impl_lock) {
             return (impl = _impl) != null;
         }
     }
 
-    public void set_impl(T impl) {
+    public void set(T impl) {
         lock (_impl_lock) {
             FhInternal.Log.Info(typeof(T).Name);
             _impl = impl;
@@ -95,9 +95,8 @@ public readonly ref struct FhMethodLocation {
     /// <summary>
     ///     Use this constructor for member functions or vtable entries of objects, such as
     ///     <see cref="IDXGISwapChain.Present(uint, DXGI_PRESENT)"/>.
-    ///     <para/>
-    ///     Unlike other constructors, no validation is performed on the input address.
     /// </summary>
+    /// <remarks>Unlike other constructors, no validation is performed on the input address.</remarks>
     public FhMethodLocation(nint abs_addr) {
         _ptr_target = abs_addr;
     }
@@ -109,9 +108,8 @@ public readonly ref struct FhMethodLocation {
 
     /// <summary>
     ///     Gets the address of the module with the given <paramref name="module_name"/>.
-    ///     <para/>
-    ///     If the module is not loaded, the return value is zero.
     /// </summary>
+    /// <returns>The address of the specified module, or zero if it is not loaded.</returns>
     private static nint get_module_addr(string module_name) {
         return _s_modules.TryGetValue(module_name, out nint ptr_module)
             ? ptr_module
@@ -121,9 +119,9 @@ public readonly ref struct FhMethodLocation {
     /// <summary>
     ///     Gets the address of a named <paramref name="export"/>
     ///     in the module at address <paramref name="module_addr"/>.
-    ///     <para/>
-    ///     If it does not exist, the return value is zero.
     /// </summary>
+    /// <param name="ptr_fn">The pointer to the given export, or zero if it does not exist.</param>
+    /// <returns>Whether the export exists.</returns>
     private static bool get_export(nint module_addr, string export, out nint ptr_fn) {
         var key = (module_addr, export);
 
@@ -172,16 +170,25 @@ public ref struct FhMethodHandle<T> where T : Delegate {
 
     private readonly nint _ptr_target;
 
-    /// <summary>
-    ///     A pointer to the target function. By default, this includes all hooks.
-    ///     <para/>
+    /// <summary>A pointer to the target function.</summary>
+    /// <remarks>
+    ///     By default, this includes all hooks.
     ///     To execute only part of the function's call chain, use <see cref="chain_from(T)"/>.
-    /// </summary>
-    public T? fnptr;
+    /// </remarks>
+    public T? fnptr {
+        get {
+            if (FhEnvironment.get_execution_state() != FhExecState.EXEC) {
+                throw new Exception("You cannot invoke game methods until all module initializers have completed.");
+            }
+
+            return field;
+        }
+        private set;
+    }
 
     public FhMethodHandle(FhMethodLocation location) {
         if (location.try_resolve(out _ptr_target)) {
-            fnptr = FhInternal.MethodTable.get_fnptr<T>(_ptr_target);
+            fnptr = FhInternal.Methods.get_fnptr<T>(_ptr_target);
         }
     }
 
@@ -189,7 +196,7 @@ public ref struct FhMethodHandle<T> where T : Delegate {
     ///     Retargets the handle to only execute hooks subsequent to the given <paramref name="hook"/>.
     /// </summary>
     public FhMethodHandle<T> chain_from(T hook) {
-        fnptr = FhInternal.MethodTable.get_fnptr_chain(hook);
+        fnptr = FhInternal.Methods.get_fnptr_chain(hook);
         return this;
     }
 
@@ -199,7 +206,7 @@ public ref struct FhMethodHandle<T> where T : Delegate {
     public readonly bool hook(FhModule owner, T hook) {
         FhHookContext hook_info = new(owner, hook);
 
-        return _ptr_target != 0 && FhInternal.MethodTable.fnptr_chain_add<T>(_ptr_target, hook_info);
+        return _ptr_target != 0 && FhInternal.Methods.fnptr_chain_add<T>(_ptr_target, hook_info);
     }
 }
 
@@ -221,7 +228,7 @@ internal sealed class FhMethodContext {
 /// <summary>
 ///     Keeps track of the global hook state of functions.
 /// </summary>
-internal sealed class FhMethodTable {
+internal sealed class FhMethods {
 
     private readonly static Dictionary<nint,     Delegate>        _fnptrs  = []; // Any function -> Cached delegate
     private readonly static Dictionary<nint,     FhMethodContext> _methods = []; // Original     -> All hooks (for keep-alive)

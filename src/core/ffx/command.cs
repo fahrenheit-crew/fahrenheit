@@ -5,55 +5,62 @@
 
 namespace Fahrenheit.FFX;
 
-[StructLayout(LayoutKind.Explicit, Pack = 4, Size = 0x4)]
-public struct PCommandData {
-    [FieldOffset(0x00)] public byte ordering_idx;
-    [FieldOffset(0x01)] public byte sphere_grid_role;
-}
-
 public struct PCommand {
     public Command      command;
     public PCommandData command_pdata;
 }
 
-[StructLayout(LayoutKind.Explicit, Pack = 4, Size = 0x5C)]
+[StructLayout(LayoutKind.Sequential)]
+public struct PCommandData {
+    public  byte   ordering_idx;
+    public  byte   sphere_grid_role;
+    private ushort _0x02;
+}
+
+[StructLayout(LayoutKind.Sequential)]
 public struct Command {
-    [FieldOffset(0x00)] public  ushort            name_offset;
-    [FieldOffset(0x04)] public  ushort            dash_offset;
-    [FieldOffset(0x08)] public  ushort            desc_offset;
-    [FieldOffset(0x0C)] public  ushort            misc_offset;
-    [FieldOffset(0x10)] private ushort            _anim_1;
-    [FieldOffset(0x12)] private ushort            _anim_2;
-    [FieldOffset(0x14)] public  byte              icon;
-    [FieldOffset(0x15)] public  byte              caster_anim;
-    [FieldOffset(0x16)] public  byte              flags_menu;
-    [FieldOffset(0x17)] public  byte              sub_menu_cat2;
-    [FieldOffset(0x18)] public  byte              sub_menu_cat;
-    [FieldOffset(0x19)] public  byte              user_id;
-    [FieldOffset(0x1A)] public  byte              flags_target;
-    [FieldOffset(0x1B)] public  byte              flags_usage;
-    [FieldOffset(0x1C)] public  uint              flags_misc;
-    [FieldOffset(0x20)] public  byte              flags_damage;
-    [FieldOffset(0x21)] public  bool              steals_gil;
-    [FieldOffset(0x22)] public  byte              party_preview;
-    [FieldOffset(0x23)] public  byte              flags_damage_class;
-    [FieldOffset(0x24)] public  byte              ctb_rank;
-    [FieldOffset(0x25)] public  byte              mp_cost;
-    [FieldOffset(0x26)] public  byte              limit_cost;
-    [FieldOffset(0x27)] public  byte              crit_bonus;
-    [FieldOffset(0x28)] public  byte              dmg_formula;
-    [FieldOffset(0x29)] public  byte              accuracy;
-    [FieldOffset(0x2A)] public  byte              power;
-    [FieldOffset(0x2B)] public  byte              hit_count;
-    [FieldOffset(0x2C)] public  byte              shatter_chance;
-    [FieldOffset(0x2D)] public  ElementFlags      element;
-    [FieldOffset(0x2E)] public  StatusMap         status_map;
-    [FieldOffset(0x47)] public  StatusDurationMap status_duration_map;
-    [FieldOffset(0x54)] public  StatusExtraFlags  flags_status_extra;
-    [FieldOffset(0x56)] public  byte              flags_buffs_stat;
-    [FieldOffset(0x58)] public  byte              overdrive_category;
-    [FieldOffset(0x59)] public  byte              buff_amount;
-    [FieldOffset(0x5A)] public  byte              flags_buffs_mix;
+    public ExcelSimplifiableTextOffset name;
+    public ExcelSimplifiableTextOffset desc;
+
+    public ushort anim_1;
+    public ushort anim_2;
+    public byte   icon;
+    public byte   caster_anim;
+
+    public byte flags_menu;
+    public byte sub_menu_cat2;
+    public byte sub_menu_cat;
+    public byte user_id;
+
+    public byte flags_target;
+    public byte flags_usage;
+    public uint flags_misc;
+    public byte flags_damage;
+    public bool steals_gil;
+    public byte party_preview;
+    public byte flags_damage_class;
+
+    public byte ctb_rank;
+    public byte mp_cost;
+    public byte limit_cost;
+
+    public byte crit_bonus;
+    public byte dmg_formula;
+    public byte accuracy;
+    public byte power;
+    public byte hit_count;
+    public byte shatter_chance;
+
+    public ElementFlags element;
+
+    public StatusMap         status_map;
+    public StatusDurationMap status_duration_map;
+    public StatusExtraFlags  flags_status_extra;
+
+    public ushort flags_buffs_stat;
+    public byte   overdrive_category;
+    public byte   buff_amount;
+    public ushort flags_buffs_mix;
 
     public  bool is_top_level_in_menu { get { return flags_menu.get_bit(0); } set { flags_menu.set_bit (0, value); } }
     private bool _menu_f4             { get { return flags_menu.get_bit(3); } set { flags_menu.set_bit (3, value); } } // Only used on Skill, Special, Blk/Wht Magic

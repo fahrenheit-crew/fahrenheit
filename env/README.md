@@ -1,0 +1,1 @@
+You can extract the game's data files into this directory. Most things in the `scripts` folder know to target `env` automatically.

@@ -5,6 +5,7 @@
 
 namespace Fahrenheit.FFX.Battle;
 
+[StructLayout(LayoutKind.Sequential)]
 public struct ChrItemLoot {
     public ushort item_primary_common;
     public ushort item_primary_rare;
@@ -31,11 +32,13 @@ public struct ChrEquipmentLootAbilitiesArray {
     private ushort _u;
 }
 
+[StructLayout(LayoutKind.Sequential)]
 public struct ChrEquipmentLootAbilities {
     public ChrEquipmentLootAbilitiesArray weapon_abilities;
     public ChrEquipmentLootAbilitiesArray armor_abilities;
 }
 
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct ChrEquipmentLoot {
     public byte slot_count;
     public byte dmg_formula;
@@ -52,22 +55,24 @@ public struct ChrEquipmentLoot {
     public ChrEquipmentLootAbilities abilities_rikku;
 }
 
-[StructLayout(LayoutKind.Explicit, Pack = 4, Size = 0x118)]
-public unsafe struct ChrLoot {
-    [FieldOffset(0x00)] public ushort gil;
-    [FieldOffset(0x02)] public ushort ap;
-    [FieldOffset(0x04)] public ushort ap_overkill;
-    [FieldOffset(0x06)] public ushort ronso_rage;
+[StructLayout(LayoutKind.Sequential)]
+public struct ChrLoot {
+    public ushort gil;
+    public ushort ap;
+    public ushort ap_overkill;
+    public ushort ronso_rage;
 
-    [FieldOffset(0x08)] public byte drop_chance_primary;
-    [FieldOffset(0x09)] public byte drop_chance_secondary;
-    [FieldOffset(0x0A)] public byte steal_chance;
-    [FieldOffset(0x0B)] public byte drop_chance_equipment;
+    public byte drop_chance_primary;
+    public byte drop_chance_secondary;
+    public byte steal_chance;
+    public byte drop_chance_equipment;
 
-    [FieldOffset(0x0C)] public ChrItemLoot      item_loot;
-    [FieldOffset(0x18)] public ChrItemLoot      item_loot_overkill;
-    [FieldOffset(0x24)] public ChrStealLoot     steal_loot;
-    [FieldOffset(0x2D)] public ChrEquipmentLoot equipment_loot;
+    public ChrItemLoot      item_loot;
+    public ChrItemLoot      item_loot_overkill;
+    public ChrStealLoot     steal_loot;
+    public ChrEquipmentLoot equipment_loot;
 
-    [FieldOffset(0x112)] public byte zanmato_level;
+    public byte zanmato_level;
+    public byte gil_steal;
+    public uint monster_arena_price;
 }

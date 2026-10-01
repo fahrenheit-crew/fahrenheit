@@ -13,7 +13,7 @@ namespace Fahrenheit;
  */
 using LocaleData = Dictionary<string, string>;
 
-public sealed partial class FhLocalizationManager {
+public sealed partial class FhLocalization {
 
     /* [fkelava 08/07/26 00:07]
      * For initialization, see `i18n_cctor.cs`.
@@ -21,6 +21,31 @@ public sealed partial class FhLocalizationManager {
 
     private readonly static string[]                       _s_locale_ids;
     private readonly static Dictionary<string, LocaleData> _s_locales = [];
+
+    /* [fkelava 30/09/26 19:47]
+     * One of the rare differences between previous and later remaster
+     * versions is that Simplified Chinese (zh-Hans) support was later added.
+     *
+     * Steam only supports Traditional (zh-Hant) though.
+     */
+
+    /// <summary>
+    ///     Returns the ISO 639 language ID for the current game language.
+    /// </summary>
+    private string get_default_lang_id() {
+        return FhGlobal.lang_id switch {
+            FhLangId.English  => "en-US",
+            FhLangId.French   => "fr-FR",
+            FhLangId.Spanish  => "es-ES",
+            FhLangId.German   => "de-DE",
+            FhLangId.Italian  => "it-IT",
+            FhLangId.Japanese or
+            FhLangId.Debug    => "ja-JP",
+            FhLangId.Chinese  => "zh-Hant",
+            FhLangId.Korean   => "ko-KR",
+            _                 => "en-US"
+        };
+    }
 
     /// <summary>
     ///     Loads localization data for all mods.
@@ -55,8 +80,8 @@ public sealed partial class FhLocalizationManager {
         foreach (FileInfo lang_file in module_dir.EnumerateFiles("*.json", SearchOption.TopDirectoryOnly)) {
             string lang_id = Path.GetFileNameWithoutExtension(lang_file.FullName);
 
-            string mod_name    = mod.Manifest.Name; // We use the 'pretty' name to make errors more legible.
-            string module_name = module_dir.Name;   // ex. Fahrenheit.Runtime.FhSaveUiModule
+            string mod_name    = mod.Manifest.Id;
+            string module_name = module_dir.Name; // ex. Fahrenheit.Runtime.FhSaveUiModule
 
             if (!_s_locales.TryGetValue(lang_id, out LocaleData? locale)) {
                 FhInternal.Log.Warning($"Mod '{mod_name}', module '{module_name}': ignoring unknown locale '{lang_id}'.");
@@ -75,7 +100,7 @@ public sealed partial class FhLocalizationManager {
                     ?? throw new Exception("Invalid or uninterpretable language file.");
             }
             catch {
-                FhInternal.Log.Error($"While parsing locale {lang_id} for mod {mod_name}:");
+                FhInternal.Log.Error($"While parsing locale {lang_id} from mod {mod_name} for module {module_name}:");
                 throw;
             }
 
@@ -84,13 +109,13 @@ public sealed partial class FhLocalizationManager {
                 string key      = $"{module_name}.{user_key}";
 
                 if (locale.ContainsKey(key)) {
-                    FhInternal.Log.Warning($"Key '{user_key}' in locale '{lang_id}' of module '{module_name}' superseded by '{mod_name}'");
+                    FhInternal.Log.Warning($"Key '{user_key}' in locale '{lang_id}' of module '{module_name}' superseded by '{mod_name}'.");
                 }
 
                 locale[key] = user_string.Value;
             }
 
-            FhInternal.Log.Info($"Loaded locale {lang_id} for mod {mod_name}.");
+            FhInternal.Log.Info($"Loaded locale {lang_id} from mod {mod_name} for module {module_name}.");
         }
     }
 
@@ -99,11 +124,16 @@ public sealed partial class FhLocalizationManager {
     ///     for the locale with ID <paramref name="lang_id"/>,
     ///     falling back to <paramref name="id"/> if unavailable.
     /// </summary>
-    public string localize(string id, FhModule? caller = null, string lang_id = "en-US") {
+    public string localize(
+        string    id,
+        FhModule? caller  = null,
+        string?   lang_id = null
+    ) {
         string composite_id = (caller == null)
             ? id
             : $"{caller.ModuleType}.{id}";
 
+        lang_id ??= get_default_lang_id();
         return _s_locales.TryGetValue(lang_id, out LocaleData? locale) && locale.TryGetValue(composite_id, out string? localized_string)
             ? localized_string
             : id;

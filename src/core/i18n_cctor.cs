@@ -16,9 +16,9 @@ namespace Fahrenheit;
  */
 using LocaleData = Dictionary<string, string>;
 
-public sealed partial class FhLocalizationManager {
+public sealed partial class FhLocalization {
 
-    static FhLocalizationManager() {
+    static FhLocalization() {
         // https://www.localeplanet.com/api/codelist.json
         _s_locale_ids = [
             "af",

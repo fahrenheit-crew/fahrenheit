@@ -36,8 +36,8 @@
     <!-- PACKAGE REFERENCES -->
     <ItemGroup>
         <PackageReference Include="NativeFileDialogCore" Version="1.0.3" />
-        <PackageReference Include="Hexa.NET.ImGui.Backends" Version="1.0.18" />
-        <PackageReference Include="Hexa.NET.ImGui.Backends.SDL3" Version="1.0.18" />
+        <PackageReference Include="Hexa.NET.ImGui.Backends" Version="3.1.0-experimental" />
+        <PackageReference Include="Hexa.NET.ImGui.Backends.SDL3" Version="3.1.0-experimental" />
         <PackageReference Include="Hexa.NET.SDL3" Version="1.2.11" />
         <PackageReference Include="Hexa.NET.OpenGL3" Version="1.1.0" />
     </ItemGroup>

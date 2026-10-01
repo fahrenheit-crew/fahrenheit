@@ -41,9 +41,8 @@
 
     <!-- ASSET PACKAGING -->
     <ItemGroup>
-        <None Include="data/*.ffx*.csv"  CopyToOutputDirectory="Always" />
-        <None Include="data/*.ffx*.json" CopyToOutputDirectory="Always" />
-        <None Include="data/*.ffx*.rsp"  CopyToOutputDirectory="Always" />
+        <None Include="data/*.common*.*" CopyToOutputDirectory="Always" />
+        <None Include="data/*.ffx*.*"    CopyToOutputDirectory="Always" />
     </ItemGroup>
 
 </Project>

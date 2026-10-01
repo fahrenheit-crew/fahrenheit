@@ -43,69 +43,6 @@ public enum FhSaveScreenState {
 }
 
 /// <summary>
-///     Represents the possible states of the game's default Iggy-based save/load UI.
-///     <para/>
-///     This is not used when Fahrenheit is overriding the save UI.
-/// </summary>
-public enum FhSaveUiState {
-    /// <summary>
-    ///     No-op. Flows from <see cref="SAVE_TERMINATING"/>.
-    ///     Default state on boot, and in-game if the last action was a save.
-    /// </summary>
-    SAVE_TERMINATED     = 0x00,
-    /// <summary>
-    ///     Input is blocked. The disk is queried for existing save games.
-    /// </summary>
-    // "Loading. Do not close the game."
-    SAVE_LISTING        = 0x01,
-    // Listing complete, handling input
-    SAVE_IDLE           = 0x02,
-    // "Save this game? Yes/No"
-    SAVE_PROMPT_IDLE    = 0x03,
-    // "Saving. Do not close the game."
-    //` h_save` invoked on this/the next main loop
-    SAVE_REQUESTED      = 0x04,
-    // `h_save` finished
-    // Dismisses "Saving. Do not close the game"
-    // Listing triggered
-    SAVE_COMPLETE       = 0x05,
-    // Destroy menu, swap to state 0x00
-    SAVE_TERMINATING    = 0x06,
-    // NOP, flows from LOAD_TERMINATING
-    // Default state in-game when last action was load
-    LOAD_TERMINATED     = 0x0A,
-    // "Loading. Do not close the game."
-    // Input blocked
-    LOAD_LISTING        = 0x0B,
-    // Listing complete, handling input
-    LOAD_IDLE           = 0x0C,
-    // "Load this game? Yes/No"
-    LOAD_PROMPT_IDLE    = 0x0D,
-    // "Loading. Do not close the game."
-    // `h_load` invoked on this/the next main loop
-    LOAD_REQUESTED      = 0x0E,
-    // `h_load` finished
-    // Dismisses "Loading. Do not close the game"
-    // CRC/player name checks triggered
-    LOAD_POSTPROCESS    = 0x0F,
-    // CRC corrupt or player name needs reset
-    // Wait for player to acknowledge this - CRC is fatal, playername is non-fatal fault
-    LOAD_FAILED         = 0x10,
-    // Destroy menu, swap to state 0x0A
-    LOAD_TERMINATING    = 0x11,
-
-    // FF X only, Al-Bhed Compilation Sphere modes
-    ALBHED_TERMINATED    = 0x14,
-    ALBHED_LISTING       = 0x15,
-    ALBHED_IDLE          = 0x16,
-    ALBHED_REQUESTED     = 0x17,
-    ALBHED_COMPLETE      = 0x18,
-    ALBHED_POSTPROCESS   = 0x19,
-    ALBHED_TERMINATING_A = 0x1A,
-    ALBHED_TERMINATING_B = 0x1B,
-}
-
-/// <summary>
 ///     The game's default save data manager structure for FF X.
 /// </summary>
 [StructLayout(LayoutKind.Sequential, Size = 0x488)]
@@ -143,34 +80,28 @@ public unsafe struct FhSaveDataManager2 {
 }
 
 /// <summary>
-///     The game's default representation of an entry in the save manager's list.
-/// </summary>
-[StructLayout(LayoutKind.Sequential)]
-internal struct FhSaveListEntry(int slot_nb) {
-    public int slot          = slot_nb;
-    public int creation_date = -1;
-    public int creation_time = -1;
-}
-
-[InlineArray(0x20)]
-internal struct FhSavePlayerName {
-    private byte _b;
-}
-
-/// <summary>
 ///     The save game header for FF X.
 /// </summary>
 [StructLayout(LayoutKind.Sequential)]
-internal struct FhSaveHeader {
+public struct FhSaveHeader {
+    [InlineArray(0x20)]
+    public struct FhSavePlayerName {
+        private byte _b;
+    }
+
+    [InlineArray(0x7)]
+    public struct Formation {
+        private byte _e0;
+    }
+
     public uint             _0x00;
     public byte             _0x04;
-    public byte             id_chr1;
-    public byte             id_chr2;
-    public byte             id_chr3;
-    public uint             _0x08;
-    public uint             _0x0c;
-    public uint             playtime_sec;
-    public uint             _0x14;
+    public Formation        formation;
+    public FhLangId         lang_id;
+    public byte             _0x0D;
+    public ushort           _0x0E;
+    public uint             playtime_secs;
+    public uint             gil;
     public ushort           id_location;
     public ushort           _0x1a;
     public ushort           _0x1c;
@@ -182,45 +113,45 @@ internal struct FhSaveHeader {
 ///     The save game header for FF X-2.
 /// </summary>
 [StructLayout(LayoutKind.Sequential)]
-internal struct FhSaveHeader2 {
-    public uint   _0x00;
-    public byte   _0x04;
-    public byte   id_chr1;
-    public byte   id_chr2;
-    public byte   id_chr3;
-    public byte   _0x08;
-    public byte   _0x09;
-    public byte   _0x0A;
-    public byte   chapter;
-    public byte   completion;
-    public byte   id_chr1_dress;
-    public byte   id_chr2_dress;
-    public byte   id_chr3_dress;
-    public uint   playtime_secs;
-    public uint   _0x14;
-    public ushort location_id;
-    public ushort _0x1A;
-    public uint   _0x1C;
-    public byte   _0x20;
-    public byte   _0x21;
-    public byte   _0x22;
-    public byte   _0x23;
-    public byte   _0x24;
-    public byte   _0x25;
-    public byte   _0x26;
-    public byte   _0x27;
-    public byte   _0x28;
-    public byte   _0x29;
-    public byte   _0x2A;
-    public byte   _0x2B;
-    public byte   _0x2C;
+public struct FhSaveHeader2 {
+    [InlineArray(0x3)]
+    public struct Party {
+        private byte _e0;
+    }
+
+    public uint     _0x00;
+    public byte     _0x04;
+    public Party    ply;
+    public Party    ply_levels;
+    public byte     chapter;
+    public byte     completion;
+    public Party    ply_jobs;
+    public uint     playtime_secs;
+    public uint     gil;
+    public ushort   id_location;
+    public ushort   _0x1A;
+    public uint     _0x1C;
+    public byte     times_played;
+    public byte     lm_ply;
+    public byte     lm_ply_level;
+    public byte     lm_job;
+    public byte     lm_job_level;
+    public byte     lm_id_location;
+    public byte     lm_retry;
+    public byte     _0x27;
+    public FhLangId lang_id;
+    public byte     _0x29;
+    public ushort   id_map_icon;
+    public byte     _0x2C;
+
+    public bool is_new_game_plus => times_played > 1;
 }
 
 /// <summary>
 ///     Contains the fields the game shows as part of its standard save game display.
 /// </summary>
 [StructLayout(LayoutKind.Sequential)]
-internal struct FhSaveDisplayData {
+public struct FhSaveDisplayData {
 
     /* [fkelava 19/01/26 13:14]
      * An array of these of size DEFAULT_SET_SIZE is allocated by the save UI module on boot.
@@ -231,17 +162,15 @@ internal struct FhSaveDisplayData {
      * and ImGui accept them as input. The sizes are taken from the base game.
      */
 
-    internal int slot;
+    public int    slot;
+    public string slot_str;
+
+    public DateTimeOffset create_time;
 
     public InlineArray64 <byte> header;
-    public InlineArray16 <byte> slot_str;
-    public InlineArray64 <byte> create_time;
     public InlineArray128<byte> location;
     public InlineArray128<byte> play_time;
     public InlineArray32 <byte> player_name;
-    public InlineArray16 <byte> icon_chr1;
-    public InlineArray16 <byte> icon_chr2;
-    public InlineArray16 <byte> icon_chr3;
     public InlineArray16 <byte> icon_map;
     public InlineArray128<byte> chapter;
     public InlineArray128<byte> completion;
@@ -259,7 +188,7 @@ internal struct FhSaveDisplayData {
 /// <summary>
 ///     Abstracts the game's save data system.
 /// </summary>
-internal static unsafe class FhSavePal {
+internal unsafe static class FhSavePal {
 
     /* [fkelava 01/01/26 15:04]
      * TODO:
@@ -306,11 +235,11 @@ internal static unsafe class FhSavePal {
     }
 
     /* [fkelava 12/11/25 16:51]
-     * To show `Tower {X}F` in LM or `Chapter {X}` and `Story Completion: {X}%` in X-2,
-     * the game gets a template from SaveDataGetLoc(), with a 0x05 byte marking a fill point.
-     * The string must be shifted left after filling to remove the mark byte.
+     * To show `Tower {X}F` in LM or `Chapter {X}` and `Story Completion: {X}%` in X-2, the game gets
+     * a template from SaveDataGetLoc(), with a [ 0x05, 0x30 ] sequence marking a fill point.
+     * The marker must be removed after completing the fill.
      *
-     * It is unclear whether this is the only use of the 0x05 opcode.
+     * It is unclear whether 0x05 is a dialogue op code in this context or simply a random choice.
      */
 
     /* [fkelava 13/11/25 22:05]
@@ -321,15 +250,33 @@ internal static unsafe class FhSavePal {
     ///     Inserts <paramref name="fill"/> into the empty space
     ///     in a game-encoded <paramref name="template"/> string.
     /// </summary>
-    internal static void pal_fill_template(Span<byte> template, byte fill) {
-        Span<byte> scratch = stackalloc byte[8];
+    internal static void pal_fill_template(Span<byte> template, int fill) {
+        ReadOnlySpan<byte> marker  = [ 0x05, 0x30 ];
+                Span<byte> scratch = stackalloc byte[8];
 
-        int fill_length = Encoding.UTF8.GetBytes($"{fill}", scratch);
-        int fill_target = template.IndexOf((byte)0x05);
+        scratch.Clear();
 
-        _ = FhEncoding.encode(scratch[ .. fill_length ], template[ (fill_target + 1) .. ]);
+        int length = Encoding.UTF8.GetBytes($"{fill}", scratch);
+        int target = template.IndexOf(marker);
 
-        template [ (fill_target + 1) .. ].CopyTo(template[ fill_target .. ]);
+        ReadOnlySpan<byte> post = [ .. template [ (target + 2) .. template.IndexOf((byte)0) ] ];
+
+        /* [fkelava 04/08/26 14:16]
+         * The fill-byte will always be encoded as its Basic Latin block representation,
+         * but the game in CJK modes expects the fullwidth equivalent. This is thus the one case
+         * where implicit extension is not merely handy, but required for proper functionality.
+         *
+         * See generally #200. Step through this function without the flag and the issue should be clear.
+         */
+
+        target += FhEncoding.encode(
+            scratch [ .. length ],
+            template[ target .. ],
+            flags: FhEncodingFlags.IMPLICIT_CJK_EXTENSION
+        );
+
+        post.CopyTo(template [ target .. ]);
+        template[ (target + post.Length) ] = 0;
     }
 
     /* [fkelava 18/11/25 21:27]
@@ -344,7 +291,7 @@ internal static unsafe class FhSavePal {
      */
 
     /// <summary>
-    ///     Writes the icon ID of the current map in the save represented by
+    ///     Writes the icon ID of the current map in the save with the given
     ///     <paramref name="header"/> to <paramref name="dest"/> as a UTF-8 string.
     /// </summary>
     internal static void pal_get_icon_map(in ReadOnlySpan<byte> header, in Span<byte> dest) {
@@ -370,20 +317,22 @@ internal static unsafe class FhSavePal {
      */
 
     /// <summary>
-    ///     Writes the story chapter in the FF X-2 save represented by
-    ///     <paramref name="header"/> to <paramref name="dest"/> as a UTF-8 string.
+    ///     Writes the story chapter in the FF X-2 save with the given
+    ///     <paramref name="header_bytes"/> to <paramref name="dest"/> as a UTF-8 string.
     /// </summary>
-    internal static void pal_get_chapter(in ReadOnlySpan<byte> header, in Span<byte> dest) {
+    internal static void pal_get_chapter(in ReadOnlySpan<byte> header_bytes, in Span<byte> dest) {
         if (FhGlobal.game_id is not FhGameId.FFX2) {
             dest[0] = 0x00;
             return;
         }
 
+        FhSaveHeader2 header = MemoryMarshal.Read<FhSaveHeader2>(header_bytes);
+
         byte*      ptr_chapter_encoded = FhUtil.ptr_at<byte>(0x9ED648);
         Span<byte> chapter_encoded     = new(ptr_chapter_encoded, 0x80);
 
         FhCall.SaveDataGetLoc.fnptr!(0x4D8, ptr_chapter_encoded);
-        pal_fill_template(chapter_encoded, header[0x0B]);
+        pal_fill_template(chapter_encoded, header.chapter);
 
         int len_chapter = FhEncoding.decode(chapter_encoded, dest, flags: FhEncodingFlags.IMPLICIT_END);
         dest[ len_chapter ] = 0x00;
@@ -394,20 +343,22 @@ internal static unsafe class FhSavePal {
      */
 
     /// <summary>
-    ///     Writes the story completion in the FF X-2 save represented by
-    ///     <paramref name="header"/> to <paramref name="dest"/> as a UTF-8 string.
+    ///     Writes the story completion in the FF X-2 save with the given
+    ///     <paramref name="header_bytes"/> to <paramref name="dest"/> as a UTF-8 string.
     /// </summary>
-    internal static void pal_get_completion(in ReadOnlySpan<byte> header, in Span<byte> dest) {
+    internal static void pal_get_completion(in ReadOnlySpan<byte> header_bytes, in Span<byte> dest) {
         if (FhGlobal.game_id is not FhGameId.FFX2) {
             dest[0] = 0x00;
             return;
         }
 
+        FhSaveHeader2 header = MemoryMarshal.Read<FhSaveHeader2>(header_bytes);
+
         byte*      ptr_completion_encoded = FhUtil.ptr_at<byte>(0x9ED7C8);
         Span<byte> completion_encoded     = new(ptr_completion_encoded, 0x80);
 
         FhCall.SaveDataGetLoc.fnptr!(0x39A, ptr_completion_encoded);
-        pal_fill_template(completion_encoded, header[0x0C]);
+        pal_fill_template(completion_encoded, header.completion);
 
         int len_completion = FhEncoding.decode(completion_encoded, dest, flags: FhEncodingFlags.IMPLICIT_END);
         dest [ len_completion ] = 0x00;
@@ -420,7 +371,7 @@ internal static unsafe class FhSavePal {
      */
 
     /// <summary>
-    ///     Writes the total play time in the save represented by
+    ///     Writes the total play time in the save with the given
     ///     <paramref name="header"/> to <paramref name="dest"/> as a UTF-8 string.
     /// </summary>
     internal static void pal_get_playtime(in ReadOnlySpan<byte> header, in Span<byte> dest) {
@@ -445,14 +396,16 @@ internal static unsafe class FhSavePal {
      */
 
     /// <summary>
-    ///     Writes the player character's name in the save represented by
-    ///     <paramref name="header"/> to <paramref name="dest"/> as a UTF-8 string.
+    ///     Writes the player character's name in the save with the given
+    ///     <paramref name="header_bytes"/> to <paramref name="dest"/> as a UTF-8 string.
     /// </summary>
-    internal static void pal_get_player_name(in ReadOnlySpan<byte> header, in Span<byte> dest) {
+    internal static void pal_get_player_name(in ReadOnlySpan<byte> header_bytes, in Span<byte> dest) {
         int len_player_name;
 
         if (FhGlobal.game_id is FhGameId.FFX) {
-            len_player_name = FhEncoding.decode(header[ 0x20 .. ], dest, flags: FhEncodingFlags.IMPLICIT_END);
+            FhSaveHeader header = MemoryMarshal.Read<FhSaveHeader>(header_bytes);
+
+            len_player_name = FhEncoding.decode(header.player_name, dest, header.lang_id, flags: FhEncodingFlags.IMPLICIT_END);
             dest [ len_player_name ] = 0x00;
             return;
         }
@@ -460,7 +413,7 @@ internal static unsafe class FhSavePal {
         byte*              ptr_player_name_encoded = FhUtil.ptr_at<byte>(pal_addr_buf_player_name_encoded());
         ReadOnlySpan<byte> player_name_encoded     = new(ptr_player_name_encoded, int.MaxValue);
 
-        FhCall.SaveDataGetLoc.fnptr!(0xDD + header[0x21], ptr_player_name_encoded);
+        FhCall.SaveDataGetLoc.fnptr!(0xDD + header_bytes[0x21], ptr_player_name_encoded);
 
         len_player_name = FhEncoding.decode(player_name_encoded, dest, flags: FhEncodingFlags.IMPLICIT_END);
         dest [ len_player_name ] = 0x00;
@@ -471,7 +424,7 @@ internal static unsafe class FhSavePal {
      */
 
     /// <summary>
-    ///     Writes the player's job in the FF X-2 LM save represented by
+    ///     Writes the player's job in the FF X-2 LM save with the given
     ///     <paramref name="header"/> to <paramref name="dest"/> as a UTF-8 string.
     /// </summary>
     internal static void pal_get_lm_job(in ReadOnlySpan<byte> header, in Span<byte> dest) {
@@ -492,7 +445,7 @@ internal static unsafe class FhSavePal {
      */
 
     /// <summary>
-    ///     Writes the player's level in the FF X-2 LM save represented by
+    ///     Writes the player's level in the FF X-2 LM save with the given
     ///     <paramref name="header"/> to <paramref name="dest"/> as a UTF-8 string.
     /// </summary>
     internal static void pal_get_lm_level(in ReadOnlySpan<byte> header, in Span<byte> dest) {
@@ -513,7 +466,7 @@ internal static unsafe class FhSavePal {
     }
 
     /// <summary>
-    ///     Writes the current location in the save represented by <paramref name="header"/>
+    ///     Writes the current location in the save with the given <paramref name="header"/>
     ///     to <paramref name="dest"/> as a UTF-8 string.
     /// </summary>
     internal static void pal_get_location(in ReadOnlySpan<byte> header, in Span<byte> dest) {
@@ -546,34 +499,10 @@ internal static unsafe class FhSavePal {
         pal_fill_template(lm_location_suffix_encoded, (byte)(header[0x25] >> 1));
 
         int len_lm_location_prefix = FhEncoding.decode(lm_location_prefix_encoded, dest, flags: FhEncodingFlags.IMPLICIT_END);
-        int len_lm_location        = len_lm_location_prefix + FhEncoding.decode(lm_location_suffix_encoded, dest[ len_lm_location_prefix .. ], flags: FhEncodingFlags.IMPLICIT_END);
+        int len_lm_location        = len_lm_location_prefix + Encoding.UTF8.GetBytes(" ", dest[ len_lm_location_prefix .. ]);
 
+        len_lm_location += FhEncoding.decode(lm_location_suffix_encoded, dest[ len_lm_location .. ], flags: FhEncodingFlags.IMPLICIT_END);
         dest [ len_lm_location ] = 0x00;
-    }
-
-    /* [fkelava 13/11/25 22:08]
-     * FFX.exe  +2F0DA0, L63-65   (X)
-     * FFX-2.exe+11DC50, L80-82   (X-2)
-     * FFX-2.exe+11DC50, L146-160 (X-2 LM)
-     */
-
-    // todo: not according to spec for LM
-
-    /// <summary>
-    ///     Writes to <paramref name="dest"/> the UTF-8 string ID of the icon for the
-    ///     <paramref name="index"/>'th player character in the save represented by <paramref name="header"/>.
-    /// </summary>
-    internal static void pal_get_icon_chr(in ReadOnlySpan<byte> header, in Span<byte> dest, int index) {
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(index, 2); // inform JIT of true access bounds
-
-        int len_icon_chr = FhGlobal.game_id switch {
-            FhGameId.FFX    => Encoding.UTF8.GetBytes($"_{header[0x05 + index] + 1}",                       dest),
-            FhGameId.FFX2   or
-            FhGameId.FFX2LM => Encoding.UTF8.GetBytes($"{header[0x05 + index] + 1}_{header[0x0D + index]}", dest),
-            _               => throw new Exception("Invalid game type")
-        };
-
-        dest [ len_icon_chr ] = 0x00;
     }
 
     /// <summary>

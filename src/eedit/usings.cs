@@ -21,6 +21,7 @@ global using HexaGen.Runtime;
 
 // C# stdlib essentials
 global using System;
+global using System.Collections.Generic;
 global using System.Diagnostics.CodeAnalysis;
 global using System.Drawing;
 global using System.Numerics;
@@ -34,4 +35,5 @@ global using System.Text;
 global using NativeFileDialogCore;
 
 // Fahrenheit support libraries
+global using Fahrenheit;
 global using Fahrenheit.FFX;

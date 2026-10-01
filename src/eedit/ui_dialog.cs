@@ -12,7 +12,7 @@ namespace Fahrenheit.Tools.EEdit;
  * https://github.com/lofcz/NativeFileDialogCore
  */
 
-internal static unsafe partial class UI {
+internal static partial class UI {
     /// <summary>
     ///     Handles a file open request using a native file dialog. If successful,
     ///     <paramref name="opened_file"/> contains the user-selected file.

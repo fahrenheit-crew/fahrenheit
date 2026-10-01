@@ -10,7 +10,7 @@ public struct EquipmentAbilityArray {
     private ushort _u;
 }
 
-[StructLayout(LayoutKind.Sequential, Pack = 1)]
+[StructLayout(LayoutKind.Sequential)]
 public struct Equipment {
     public ushort                name_id;
     public bool                  exists;
@@ -34,7 +34,7 @@ public struct Equipment {
     public readonly bool is_armor  { get { return (type & 1) != 0; } }
 }
 
-[StructLayout(LayoutKind.Sequential, Pack = 1)]
+[StructLayout(LayoutKind.Sequential)]
 public struct UnownedEquipment {
     public byte                  flags;
     public byte                  owner;

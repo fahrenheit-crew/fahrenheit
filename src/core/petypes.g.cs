@@ -4121,12 +4121,3 @@ internal struct PInputMapper {
 internal struct PApplicationViewport {
 }
 // this class (descriptor) has a parent; PClassDescriptor<PBase (sz 0x0, align 0x1)>
-
-/* [fkelava 26/04/26 14:52]
- * PClassDescriptor<PApplication> -> +8C9D20
- */
-
-[StructLayout(LayoutKind.Explicit, Size = 0x3A0, Pack = 0x10)]
-internal struct PApplication {
-}
-// this class (descriptor) has a parent; PClassDescriptor<PBase (sz 0x0, align 0x1)>

@@ -9,7 +9,7 @@ namespace Fahrenheit.FFX.Battle;
 public struct MonStats {
     public  ExcelTextOffset             name;
     public  ExcelSimplifiableTextOffset sensor_text;
-    public  ExcelSimplifiableTextOffset scan_text_offset;
+    public  ExcelSimplifiableTextOffset scan_text;
     public  uint                        hp;
     public  uint                        mp;
     public  uint                        overkill_threshold;

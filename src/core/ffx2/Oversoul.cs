@@ -10,10 +10,7 @@ namespace Fahrenheit.FFX2;
 
 public partial struct Oversoul
 {
-    [NativeTypeName("unsigned int")]
     public uint name;
-
-    [NativeTypeName("short[2]")]
     public _count_e__FixedBuffer count;
 
     [InlineArray(2)]

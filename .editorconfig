@@ -1,12 +1,11 @@
-﻿[*.cs]
+﻿# indentation style
+indent_style = space
+indent_size = 4
 
 # guidelines
 guidelines = 100
 
-# indentation style
-indent_style = space
-indent_size = 4
-
+[*.cs]
 # copyright notice
 file_header_template = SPDX-License-Identifier: LGPL-3.0-or-later\n\nThis file is part of Fahrenheit, © 2023-2026 The Fahrenheit contributors.\nIt is licensed to you under the GNU Lesser General Public License, version 3.0 or later. See COPYING, COPYING.LESSER.
 
@@ -22,6 +21,9 @@ csharp_style_expression_bodied_indexers = false
 csharp_style_expression_bodied_accessors = false
 csharp_style_expression_bodied_lambdas = false
 csharp_style_expression_bodied_local_functions = false
+
+# Modifier order
+csharp_preferred_modifier_order = public,private,internal,protected,file,unsafe,static,extern,new,virtual,abstract,sealed,override,readonly,required,volatile,async
 
 # K&R style braces, for Evelyn
 csharp_new_line_before_open_brace = none

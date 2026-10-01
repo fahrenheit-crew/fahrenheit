@@ -7,32 +7,50 @@ namespace Fahrenheit;
 
 public unsafe static class FhUtil {
 
-    /// <summary>
-    ///     Selects between <typeparamref name="T"/>s based on the currently executing game.
-    ///     <para/>
-    ///     If no game is executing, returns <paramref name="defval"/> if non-null, else throws.
-    /// </summary>
-    internal static T select<T>(T ffx, T ffx2, T ffx2lm, T? defval = default) {
+    /// <summary>Selects between <typeparamref name="T"/>s based on the currently executing game.</summary>
+    /// <remarks>If no game is executing, throws.</remarks>
+    public static T select<T>(T ffx, T ffx2, T ffx2lm) {
         return FhGlobal.game_id switch {
             FhGameId.FFX    => ffx,
             FhGameId.FFX2   => ffx2,
             FhGameId.FFX2LM => ffx2lm,
-            _               => defval ?? throw new NotImplementedException($"no game detectable and no fallback value in select({ffx},{ffx2},{ffx2lm})"),
+            _               => throw new Exception("Attempted to `select` without a game running."),
         };
     }
 
-    public static T* ptr_at<T>(nint address)          where T : unmanaged { return (T*)(FhEnvironment.BaseAddr + address); }
-    public static T  get_at<T>(nint address)          where T : unmanaged { return *ptr_at<T>(address);                    }
-    public static T  set_at<T>(nint address, T value) where T : unmanaged { return *ptr_at<T>(address) = value;            }
+    /// <summary>
+    ///     Returns a pointer to <typeparamref name="T"/> at the absolute address obtained by
+    ///     adding the given offset to the base address of the running game's executable.
+    /// </summary>
+    /// <param name="offset">The offset, from the running game executable's base address, to return a pointer to <typeparamref name="T"/> at.</param>
+    /// <returns>A pointer to a value of type <typeparamref name="T"/> at the given address.</returns>
+    public static T* ptr_at<T>(nint offset) where T : unmanaged => (T*)(FhEnvironment.BaseAddr + offset);
 
-    public static void cast_to_bytes<T>(in ReadOnlySpan<T> src, in Span<byte> dest, out int bytesWritten) where T : struct {
-        bytesWritten = Unsafe.SizeOf<T>() * src.Length;
-        MemoryMarshal.AsBytes(src).CopyTo(dest);
-    }
+    /// <summary>
+    ///     Reads a value of type <typeparamref name="T"/> from the address obtained by adding
+    ///     the given offset to the base address of the running game's executable.
+    /// </summary>
+    /// <param name="offset">The offset, from the running game executable's base address, to read a value of type <typeparamref name="T"/> from.</param>
+    /// <returns>The current value at the given address.</returns>
+    public static T get_at<T>(nint offset) where T : unmanaged => *ptr_at<T>(offset);
 
-    public static void cast_from_bytes<T>(in ReadOnlySpan<byte> src, in Span<T> dest, int srcLen, out int count) where T : struct {
-        count = srcLen / Unsafe.SizeOf<T>();
-        MemoryMarshal.Cast<byte, T>(src).CopyTo(dest);
+    /// <summary>
+    ///     Writes a given value of type <typeparamref name="T"/> to the address obtained
+    ///     by adding the given offset to the base address of the running game's executable.
+    /// </summary>
+    /// <remarks>
+    ///     The target offset must be in a writable memory region. If it is not, you must
+    ///     use a <see cref="FhVirtualProtectScope{T}"/> to avoid an <see cref="AccessViolationException"/>.
+    /// </remarks>
+    /// <param name="offset">The offset, from the running game executable's base address, to write the given value to.</param>
+    /// <param name="value">The value of type <typeparamref name="T"/> to write at the given address.</param>
+    /// <returns>The previous value at the given address.</returns>
+    public static T set_at<T>(nint offset, T value) where T : unmanaged {
+        T* ptr = ptr_at<T>(offset);
+        T  old = *ptr;
+
+        *ptr = value;
+        return old;
     }
 
     /// <summary>
@@ -89,16 +107,6 @@ public unsafe static class FhUtil {
         for (; len > 0; len--, offset++) { bitfield.set_bit(offset, value.get_bit(offset)); }
     }
 
-    public static string get_timestamp_string() {
-        DateTime dt = DateTime.UtcNow;
-        return $"{dt.Year:D2}{dt.Month:D2}{dt.Day:D2}_{dt.Hour:D2}{dt.Minute:D2}{dt.Second:D2}";
-    }
-
-    public static string get_extended_timestamp_string() {
-        DateTime dt = DateTime.UtcNow;
-        return $"{dt.Year:D2}{dt.Month:D2}{dt.Day:D2}_{dt.Hour:D2}{dt.Minute:D2}{dt.Second:D2}.{dt.Millisecond:D3}";
-    }
-
     internal static JsonSerializerOptions InternalJsonOpts { get; } = new JsonSerializerOptions {
         Converters = {
             new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseUpper)
@@ -143,17 +151,6 @@ public unsafe static class FhUtil {
         }
     }
 
-    internal static void load_settings(this FhModule module, Utf8JsonReader reader) {
-        reader.enter_json_object();
-        module.settings?.load(reader);
-    }
-
-    internal static void save_settings(this FhModule module, Utf8JsonWriter writer) {
-        writer.WriteStartObject();
-        module.settings?.save(writer);
-        writer.WriteEndObject();
-    }
-
     internal static void enter_json_object(this ref Utf8JsonReader reader) {
         while (reader.TokenType != JsonTokenType.StartObject) {
             reader.Read();
@@ -168,22 +165,8 @@ public unsafe static class FhUtil {
         reader.Read();
     }
 
-    public static TDelegate get_fptr<TDelegate>(nint address) {
-        return Marshal.GetDelegateForFunctionPointer<TDelegate>(FhEnvironment.BaseAddr + address);
-    }
-
-    public static Vector2 game_remap_720p(this Vector2 vec) {
-        return new Vector2 {
-            X = vec.X * 512 / 1280,
-            Y = vec.Y * 416 / 720,
-        };
-    }
-
-    public static Vector2 game_remap_1080p(this Vector2 vec) {
-        return new Vector2 {
-            X = vec.X * 512 / 1920,
-            Y = vec.Y * 416 / 1080,
-        };
+    public static Vector2 inverse(this Vector2 vec) {
+        return new Vector2(1f) / vec;
     }
 
     public static uint as_rgba(this Vector4 vec) {

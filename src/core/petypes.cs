@@ -29,13 +29,11 @@ namespace Fahrenheit;
  * RTTI inheritance graph -> +793EE8
  */
 
-/// <summary>
-///     Describes a unique member of a Phyre class.
-///     <para/>
+/// <summary>Describes a unique member of a Phyre class.</summary>
+/// <remarks>
 ///     A <see cref="PClassMember"/> can be a field, function or method. Thus, it has no <see cref="PType"/>.
-///     <para/>
 ///     For fields, derived types <see cref="PClassData"/> and/or <see cref="PClassDataMember"/> carry type information.
-/// </summary>
+/// </remarks>
 [StructLayout(LayoutKind.Sequential, Size = 0x14, Pack = 4)]
 internal unsafe struct PClassMember {
     public PSimpleDoubleListElement<PClassMember> base_PSimpleDoubleListElement;
@@ -186,11 +184,10 @@ internal unsafe struct PRedBlackTreeNode<T> where T : unmanaged {
  * RTTI inheritance graph -> +79265C
  */
 
-/// <summary>
-///     Describes a unique type in the Phyre type system- its name, size, alignment, and more.
-///     <para/>
-///     Classes have a derived <see cref="PClassDescriptor"/> instead, providing information about their members, layout and inheritance chain.
-/// </summary>
+/// <summary>Describes a unique type in the Phyre type system- its name, size, alignment, and more.</summary>
+/// <remarks>
+///     Classes have a derived <see cref="PClassDescriptor"/> instead, providing information about their members, layout, and inheritance chain.
+/// </remarks>
 [StructLayout(LayoutKind.Sequential, Size = 0x2C, Pack = 4)]
 internal struct PType {
     public nint            vftable;
@@ -242,11 +239,10 @@ internal unsafe struct PInstanceList {
  * RTTI inheritance graph -> +792834
  */
 
-/// <summary>
-///     Describes a Phyre class- its layout, members, and inheritance chain.
-///     <para/>
+/// <summary>Describes a Phyre class- its layout, members, and inheritance chain.</summary>
+/// <remarks>
 ///     Basic type information such as name, size and alignment is provided by the base class <see cref="PType"/>.
-/// </summary>
+/// </remarks>
 [StructLayout(LayoutKind.Sequential, Size = 0x94, Pack = 4)]
 internal unsafe struct PClassDescriptor {
 
@@ -309,12 +305,11 @@ internal struct PClassDescriptorDynamic {
  * +80A160, 80B180, 80B620, 80E448, 8312F8 - Phyre::PSimpleDoubleListElement<>
  */
 
-/// <summary>
-///     An element of a doubly-linked list of <typeparamref name="T"/>.
-///     <para/>
+/// <summary>An element of a doubly-linked list of <typeparamref name="T"/>.</summary>
+/// <remarks>
 ///     Unlike typical implementations, the absence of an element is not denoted by <c>null</c>,
 ///     but by the next and/or previous pointer being equal to the head pointer.
-/// </summary>
+/// </remarks>
 [StructLayout(LayoutKind.Sequential, Size = 0x8, Pack = 4)]
 internal unsafe readonly struct PSimpleDoubleListElement<T> where T : unmanaged {
     public readonly PSimpleDoubleListElement<T>* ptr_next;
@@ -372,12 +367,11 @@ internal struct PNamespace {
  * .ctor -> +3F910
  */
 
-/// <summary>
-///     A cluster is, roughly spoken, a Phyre asset container.
-///     <para/>
+/// <summary>A cluster is, roughly spoken, a Phyre asset container.</summary>
+/// <remarks>
 ///     On disk, a cluster contains the asset in question, references to other
 ///     assets that must be simultaneously loaded, and more.
-/// </summary>
+/// </remarks>
 [StructLayout(LayoutKind.Sequential, Size = 0x50, Pack = 4)]
 internal unsafe struct PCluster {
     public PNamespace                              _0x00_namespace;
@@ -402,13 +396,10 @@ internal struct PNamedSemanticDescriptor {
     public PSimpleDoubleListElement<PUnknown> base_PSimpleDoubleListElement;
 }
 
-/// <summary>
-///     Used when a target Phyre type is not known, as a placeholder.
-///     <para/>
-///     This type is a stub and corresponds to no Phyre type.
-/// </summary>
+/// <summary>A stub that corresponds to no Phyre type.</summary> 
+/// <remarks>Used when a target Phyre type is not known, as a placeholder.</remarks>
 [StructLayout(LayoutKind.Sequential, Size = 0x80, Pack = 4)]
-internal struct PUnknown {
+public struct PUnknown {
     public nint _0x00;
     public nint _0x04;
     public nint _0x08;
@@ -609,8 +600,15 @@ internal struct PWorld { }
 /// <summary>
 ///     A file as seen by the game. Can be backed by either a VBF or OS handle.
 /// </summary>
-internal struct PStreamFile {
-    public nint handle_os;
-    public nint handle_vbf;
+internal unsafe struct PStreamFile {
+    public HANDLE handle_os;
+    public VFile* handle_vbf;
 }
 
+/* [fkelava 26/04/26 14:52]
+ * PClassDescriptor<PApplication> -> +8C9D20
+ */
+
+[StructLayout(LayoutKind.Explicit, Size = 0x3A0, Pack = 0x10)]
+public struct PApplication { }
+// this class (descriptor) has a parent; PClassDescriptor<PBase (sz 0x0, align 0x1)>

@@ -5,53 +5,200 @@
 
 namespace Fahrenheit;
 
-/// <summary>Internal setting-related utilities and constants.</summary>
+/// <summary>
+///     Pairs a setting category with data
+///     to control its persistence and rendering.
+/// </summary>
+internal sealed record FhSettingData(
+    string             settings_path,
+    FhSettingsCategory settings
+) {
+    /// <summary>
+    ///     Marks that a <see cref="FhSettingReference{T}"/>
+    ///     has taken over displaying the associated setting category.
+    /// </summary>
+    internal bool ref_active = false;
+}
+
+/// <summary>
+///     Declares the settings provided by <typeparamref name="T"/>.
+/// </summary>
+/// <remarks>
+///     Only one provider may exist for any given module. It must be instantiated in that module's constructor.
+/// </remarks>
+public abstract class FhSettingProvider<T> where T : FhModule {
+    public FhSettingProvider() {
+        FhInternal.Settings.register<T>(this);
+    }
+
+    /// <summary>
+    ///     Returns the settings the module wishes to expose through
+    ///     the mod settings UI, in display order.
+    /// </summary>
+    internal abstract IEnumerable<FhSetting> get();
+}
+
+/// <summary>
+///     A reference takes over setting display for <typeparamref name="T"/>.
+///     Its settings will be rendered in place of the reference.
+/// </summary>
+/// <remarks>
+///     This is used to present a unified settings panel for a number of disparate modules.
+///     Only one reference can target any given module.
+/// </remarks>
+public sealed class FhSettingReference<T> : FhSetting where T : FhModule {
+    private static readonly ConcurrentDictionary<Type, byte> _s_refs   = [];
+    private                 FhSettingsCategory?              _settings = null;
+
+    public FhSettingReference(string id) : base(id) {
+        Type module_type = typeof(T);
+
+        if (!_s_refs.TryAdd(module_type, 0)) {
+            throw new Exception($"Only one {nameof(FhSettingReference<T>)} can exist for module {module_type}.");
+        }
+    }
+
+    internal sealed override void save(Utf8JsonWriter writer) { }
+    internal sealed override void load(Utf8JsonReader reader) { }
+
+    internal sealed override void render() {
+        if (_settings == null && !FhInternal.Settings.try_bind_reference<T>(out _settings))
+            return;
+
+        _settings.render();
+    }
+}
+
+/// <summary>
+///     Carries out setting-related operations.
+/// </summary>
 internal sealed class FhSettings {
 
-    internal const float TOOLTIP_SIZE = 40;
-    internal const float NAME_WIDTH   = 300;
+    private readonly ConcurrentDictionary<Type, FhSettingData> _settings = [];
+
+    /// <summary>
+    ///     Registers a given module's settings for display.
+    /// </summary>
+    /// <param name="provider">The <see cref="FhSettingProvider{T}"/> for the module.</param>
+    internal void register<T>(FhSettingProvider<T> provider) where T : FhModule {
+        if (FhEnvironment.get_execution_state() != FhExecState.CTOR) {
+            throw new Exception($"{nameof(FhSettingProvider<T>)} may only be instantiated in a module constructor.");
+        }
+
+        Type          module_type     = typeof(T);
+        FhSettingData module_settings = new(
+            settings_path: "", // We'll fill in the path in initialize(), when all module constructors have finished running.
+            settings:      new FhSettingsCategory(module_type.FullName!, [ .. provider.get() ])
+        );
+
+        if (!_settings.TryAdd(module_type, module_settings)) {
+            throw new Exception($"Only one {nameof(FhSettingProvider<T>)} can be registered for module {module_type}.");
+        }
+    }
+
+    /// <summary>
+    ///     Prepares settings for persistence.
+    /// </summary>
+    internal void initialize() {
+        foreach (FhModuleContext module_context in FhApi.Mods.get_modules()) {
+            Type module_type = module_context.Module.GetType();
+
+            if (!_settings.TryGetValue(module_type, out FhSettingData? sd))
+                continue;
+
+            _settings[module_type] = sd with { settings_path = module_context.Paths.GlobalConfigPath };
+        }
+
+        load_all();
+    }
+
+    /// <summary>
+    ///     Attempts to retrieve the settings of the given <paramref name="module"/>.
+    /// </summary>
+    internal bool try_get(FhModule module, [NotNullWhen(true)] out FhSettingsCategory? settings) {
+        settings = null;
+        if (!_settings.TryGetValue(module.GetType(), out FhSettingData? sd) || sd.ref_active)
+            return false;
+
+        settings = sd.settings;
+        return true;
+    }
+
+    /// <summary>
+    ///     Transfers displaying the settings for <typeparamref name="T"/> to a <see cref="FhSettingReference{T}"/>.
+    /// </summary>
+    internal bool try_bind_reference<T>([NotNullWhen(true)] out FhSettingsCategory? settings) where T : FhModule {
+        settings = null;
+        if (!_settings.TryGetValue(typeof(T), out FhSettingData? sd))
+            return false;
+
+        settings = sd.settings;
+        sd.ref_active = true;
+
+        return true;
+    }
 
     /// <summary>Reads out all settings from disk.</summary>
-    public void load() {
-        foreach (FhModuleContext module_ctx in FhApi.Mods.get_modules()) {
+    internal void load_all() {
+        foreach (FhSettingData sd in _settings.Values) {
             try {
-                Span<byte>     config = File.ReadAllBytes(module_ctx.Paths.GlobalConfigPath);
-                Utf8JsonReader reader = new(config);
+                Utf8JsonReader reader = new(File.ReadAllBytes(sd.settings_path));
 
-                module_ctx.Module.load_settings(reader);
+                reader.enter_json_object();
+                sd.settings.load(reader);
             }
             catch (FileNotFoundException) { }
         }
     }
 
     /// <summary>Persists all settings to disk.</summary>
-    public void save() {
+    internal void save_all() {
         JsonWriterOptions opts = new() {
             Indented   = true,
             IndentSize = 4
         };
 
-        foreach (FhModuleContext module_ctx in FhApi.Mods.get_modules()) {
+        foreach (FhSettingData sd in _settings.Values) {
             using FileStream file = File.Open(
-                module_ctx.Paths.GlobalConfigPath,
+                sd.settings_path,
                 FileMode  .OpenOrCreate,
                 FileAccess.ReadWrite,
-                FileShare .None);
+                FileShare .None
+            );
+
             using Utf8JsonWriter writer = new Utf8JsonWriter(file, opts);
 
-            module_ctx.Module.save_settings(writer);
+            writer.WriteStartObject();
+            sd.settings.save(writer);
+            writer.WriteEndObject();
+
+            // Truncate the file.
+            file.SetLength(writer.BytesCommitted);
         }
     }
 }
 
 /// <summary>
-///     A persistent, configurable value associated with a given module, with a unique <paramref name="id"/>.
+///     A configurable value with a unique <paramref name="id"/>.
 /// </summary>
+/// <remarks>
+///     Settings are automatically persisted to disk and exposed through the
+///     mod settings UI when provided through an <see cref="FhSettingProvider{T}"/>.
+/// </remarks>
 public abstract class FhSetting(string id) {
+    internal string id = id;
 
-    internal string id   =  id;
-    public   string name => FhApi.Localization.localize($"{id}.name");
-    public   string desc => FhApi.Localization.localize($"{id}.desc");
+    /// <summary>
+    ///     The setting's display name.
+    /// </summary>
+    /// <remarks>This must be provided in localization data with ID <c>{setting_id}.name</c>.</remarks>
+    public string name => FhApi.Localization.localize($"{id}.name");
+
+    /// <summary>
+    ///     The setting's description.
+    /// </summary>
+    /// <remarks>This must be provided in localization data with ID <c>{setting_id}.desc</c>.</remarks>
+    public string desc => FhApi.Localization.localize($"{id}.desc");
 
     /// <summary>
     ///     Writes out the setting's value to disk through the provided <paramref name="writer"/>.
@@ -63,6 +210,9 @@ public abstract class FhSetting(string id) {
     /// </summary>
     internal abstract void load(Utf8JsonReader reader);
 
+    /// <summary>
+    ///     Displays the setting.
+    /// </summary>
     internal abstract void render();
 
     public virtual void render_name() {
@@ -73,7 +223,7 @@ public abstract class FhSetting(string id) {
     protected static void render_tooltip(string tooltip) {
         if (!ImGui.BeginItemTooltip()) return;
 
-        ImGui.PushTextWrapPos(ImGui.GetFontSize() * FhSettings.TOOLTIP_SIZE);
+        ImGui.PushTextWrapPos(ImGui.GetFontSize() * 40);
         ImGui.TextUnformatted(tooltip);
         ImGui.PopTextWrapPos ();
         ImGui.EndTooltip     ();
@@ -81,13 +231,17 @@ public abstract class FhSetting(string id) {
 }
 
 /// <summary>
-///     A persistent, configurable value of type <typeparamref name="T"/>
-///     associated with a given module, with a unique <paramref name="id"/>.
+///     A configurable value of type <typeparamref name="T"/> with a unique <paramref name="id"/>.
 /// </summary>
+/// <remarks>
+///     Settings are automatically persisted to disk and exposed through the
+///     mod settings UI when provided through an <see cref="FhSettingProvider{T}"/>.
+/// </remarks>
 public abstract class FhSetting<T>(string id, T defval) : FhSetting(id) where T : notnull {
-    protected T    _default  = defval;
-    protected T    _value    = defval;
     protected bool _disabled = false;
+
+    protected readonly T _default = defval;
+    protected          T _value   = defval;
 
     public           T    get()        => _value;
     internal virtual void set(T value) => _value = value;
@@ -141,7 +295,6 @@ public sealed class FhSettingsCategory : FhSetting {
         }
     }
 
-    /// <inheritdoc cref="FhSetting.save" />
     internal override void save(Utf8JsonWriter writer) {
         writer.WriteBoolean($"{id}.collapsed", collapsed);
         foreach (FhSetting setting in settings) {
@@ -149,7 +302,6 @@ public sealed class FhSettingsCategory : FhSetting {
         }
     }
 
-    /// <inheritdoc cref="FhSetting.load" />
     internal override void load(Utf8JsonReader reader) {
         Utf8JsonReader copy = reader;
         if (copy.try_find_key_and_deserialize($"{id}.collapsed", out bool is_collapsed)) {
@@ -177,7 +329,7 @@ public sealed class FhSettingsCategory : FhSetting {
 
         foreach (FhSetting setting in settings) {
             setting.render_name();
-            ImGui.SameLine(FhSettings.NAME_WIDTH);
+            ImGui.SameLine(300);
             setting.render();
         }
 
@@ -187,13 +339,23 @@ public sealed class FhSettingsCategory : FhSetting {
 
 /// <summary>A text input setting, with flags.</summary>
 /// <remarks>Callbacks are not currently supported.</remarks>
-public sealed class FhSettingText(string id, string def_value, ImGuiInputTextFlags flags = ImGuiInputTextFlags.None) : FhSetting<string>(id, def_value) {
+public sealed class FhSettingText(
+    string              id,
+    string              def_value,
+    ImGuiInputTextFlags flags = ImGuiInputTextFlags.None
+) : FhSetting<string>(id, def_value) {
+
     internal const int MAX_LENGTH = 1024;
 
     private readonly ImGuiInputTextFlags _flags = flags;
 
     internal override void render() {
-        ImGui.InputText($"##setting.{id}", ref _value, MAX_LENGTH, _disabled ? _flags | ImGuiInputTextFlags.ReadOnly : _flags);
+        ImGui.InputText(
+            $"##setting.{id}",
+            ref _value,
+            MAX_LENGTH,
+            _disabled ? _flags | ImGuiInputTextFlags.ReadOnly : _flags
+        );
     }
 }
 
@@ -204,24 +366,19 @@ public sealed class FhSettingText(string id, string def_value, ImGuiInputTextFla
 /// <param name="max">The biggest accepted number. Defaults to 1.</param>
 /// <param name="step">The amount the arrows increase/decrease the value. Defaults to 1. Set to 0 to disable the arrows.</param>
 /// <typeparam name="T">The underlying numeric type for the value.</typeparam>
-public class FhSettingNumber<T>(string id, T def_value, T? min, T? max, T? step) : FhSetting<T>(id, def_value) where T : unmanaged, INumber<T> {
+public class FhSettingNumber<T>(
+    string id,
+    T      def_value,
+    T?     min,
+    T?     max,
+    T?     step
+) : FhSetting<T>(id, def_value) where T : unmanaged, INumber<T> {
+
     private readonly ImGuiDataType _type = get_data_type(def_value);
-    private readonly T             _step = step ?? T.One;
-    private readonly T             _min  = min  ?? T.Zero;
-    private readonly T             _max  = max  ?? T.One;
 
-    internal override void set(T value) => _value = T.Clamp(value, _min, _max);
-
-    internal override void render() {
-        unsafe {
-            fixed (T* ptr_value = &_value)
-            fixed (T* ptr_step  = &_step) {
-                if (ImGui.InputScalar($"##setting.{id}", _type, ptr_value, ptr_step)) {
-                    set(_value);
-                }
-            }
-        }
-    }
+    private readonly T _step = step ?? T.One;
+    private readonly T _min  = min  ?? T.Zero;
+    private readonly T _max  = max  ?? T.One;
 
     private static ImGuiDataType get_data_type(T value) {
         return value switch {
@@ -235,8 +392,23 @@ public class FhSettingNumber<T>(string id, T def_value, T? min, T? max, T? step)
             long   => ImGuiDataType.S64,
             float  => ImGuiDataType.Float,
             double => ImGuiDataType.Double,
-            _      => throw new NotImplementedException($"FhSettingNumber<T> expected a built-in number type, not {typeof(T).Name}"),
+            _      => throw new NotImplementedException($"{nameof(FhSettingNumber<T>)} expected a built-in number type, not {typeof(T).Name}"),
         };
+    }
+
+    internal override void set(T value) {
+        _value = T.Clamp(value, _min, _max);
+    }
+
+    internal override void render() {
+        unsafe {
+            fixed (T* ptr_value = &_value)
+            fixed (T* ptr_step  = &_step) {
+                if (ImGui.InputScalar($"##setting.{id}", _type, ptr_value, ptr_step)) {
+                    set(_value);
+                }
+            }
+        }
     }
 }
 

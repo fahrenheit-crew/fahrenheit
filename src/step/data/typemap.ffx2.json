@@ -1,8 +1,0 @@
-{
-    "void":       "",
-    "undefined":  "nint",
-    "undefined1": "byte",
-    "undefined2": "ushort",
-    "undefined4": "uint",
-    "undefined8": "ulong"
-}

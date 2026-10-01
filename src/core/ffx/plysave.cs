@@ -10,53 +10,67 @@ public struct PlySaveLimitModeCtrArray {
     private ushort _u;
 }
 
-[StructLayout(LayoutKind.Explicit, Pack = 4, Size = 0x94)]
+[StructLayout(LayoutKind.Sequential, Pack = 2)]
 public struct PlySave {
-    [FieldOffset(0x00)] public  uint                     name_offset;
-    [FieldOffset(0x04)] public  uint                     base_hp;
-    [FieldOffset(0x08)] public  uint                     base_mp;
-    [FieldOffset(0x0C)] public  byte                     base_strength;
-    [FieldOffset(0x0D)] public  byte                     base_defense;
-    [FieldOffset(0x0E)] public  byte                     base_magic;
-    [FieldOffset(0x0F)] public  byte                     base_magic_defense;
-    [FieldOffset(0x10)] public  byte                     base_agility;
-    [FieldOffset(0x11)] public  byte                     base_luck;
-    [FieldOffset(0x12)] public  byte                     base_evasion;
-    [FieldOffset(0x13)] public  byte                     base_accuracy;
-    [FieldOffset(0x14)] public  uint                     total_ap;
-    [FieldOffset(0x18)] public  uint                     ap;
-    [FieldOffset(0x1C)] public  uint                     hp;
-    [FieldOffset(0x20)] public  uint                     mp;
-    [FieldOffset(0x24)] public  uint                     max_hp;
-    [FieldOffset(0x28)] public  uint                     max_mp;
-    [FieldOffset(0x2C)] public  byte                     ply_flags;
-    [FieldOffset(0x2D)] public  byte                     wpn_inv_idx;
-    [FieldOffset(0x2E)] public  byte                     arm_inv_idx;
-    [FieldOffset(0x2F)] public  byte                     strength;
-    [FieldOffset(0x30)] public  byte                     defense;
-    [FieldOffset(0x31)] public  byte                     magic;
-    [FieldOffset(0x32)] public  byte                     magic_defense;
-    [FieldOffset(0x33)] public  byte                     agility;
-    [FieldOffset(0x34)] public  byte                     luck;
-    [FieldOffset(0x35)] public  byte                     evasion;
-    [FieldOffset(0x36)] public  byte                     accuracy;
-    [FieldOffset(0x37)] public  byte                     poison_dmg;
-    [FieldOffset(0x38)] public  byte                     limit_mode_index;
-    [FieldOffset(0x39)] public  byte                     limit_charge;
-    [FieldOffset(0x3A)] public  byte                     limit_charge_max;
-    [FieldOffset(0x3B)] public  byte                     slv_available;
-    [FieldOffset(0x3C)] public  byte                     slv_spent;
-    [FieldOffset(0x3D)] public  byte                     battles_until_recovery;
-    [FieldOffset(0x3E)] public  AbilityMap               abi_map;
-    [FieldOffset(0x4A)] public  AutoAbilityEffectsMap    auto_ability_effects;
-    [FieldOffset(0x50)] public  uint                     battle_count;
-    [FieldOffset(0x54)] public  uint                     enemies_defeated;
-    [FieldOffset(0x58)] public  uint                     deaths;
-    [FieldOffset(0x5C)] public  uint                     limits_charged;
-    [FieldOffset(0x60)] public  PlySaveLimitModeCtrArray limit_mode_counters;
-    [FieldOffset(0x88)] public  OverdriveModeFlags       obtained_limit_modes;
-    [FieldOffset(0x8C)] private uint                     __0x8C;
-    [FieldOffset(0x90)] private uint                     __0x90;
+    public ExcelTextOffset name;
+
+    public uint base_hp;
+    public uint base_mp;
+    public byte base_strength;
+    public byte base_defense;
+    public byte base_magic;
+    public byte base_magic_defense;
+    public byte base_agility;
+    public byte base_luck;
+    public byte base_evasion;
+    public byte base_accuracy;
+
+    public uint total_ap;
+    public uint ap;
+
+    public uint hp;
+    public uint mp;
+    public uint max_hp;
+    public uint max_mp;
+
+    public byte ply_flags;
+
+    public byte wpn_inv_idx;
+    public byte arm_inv_idx;
+
+    public byte strength;
+    public byte defense;
+    public byte magic;
+    public byte magic_defense;
+    public byte agility;
+    public byte luck;
+    public byte evasion;
+    public byte accuracy;
+
+    public byte poison_dmg;
+
+    public byte limit_mode_index;
+    public byte limit_charge;
+    public byte limit_charge_max;
+
+    public byte slv_available;
+    public byte slv_spent;
+
+    public byte battles_until_recovery;
+
+    public AbilityMap            abi_map;
+    public AutoAbilityEffectsMap auto_ability_effects;
+
+    public uint battle_count;
+    public uint enemies_defeated;
+    public uint deaths;
+    public uint limits_charged;
+
+    public PlySaveLimitModeCtrArray limit_mode_counters;
+    public OverdriveModeFlags       obtained_limit_modes;
+
+    private uint __0x8C;
+    private uint __0x90;
 
     public bool join   { readonly get { return ply_flags.get_bit(0); } set { ply_flags.set_bit(0, value); } }
     public bool joined { readonly get { return ply_flags.get_bit(4); } set { ply_flags.set_bit(4, value); } }

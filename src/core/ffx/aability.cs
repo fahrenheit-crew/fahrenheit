@@ -5,33 +5,39 @@
 
 namespace Fahrenheit.FFX;
 
-[StructLayout(LayoutKind.Explicit, Pack = 1, Size = 0x6C)]
+[StructLayout(LayoutKind.Sequential)]
 public struct AutoAbility {
-    [FieldOffset(0x00)] public ushort                name_offset;
-    [FieldOffset(0x04)] public ushort                dash_offset;
-    [FieldOffset(0x08)] public ushort                desc_offset;
-    [FieldOffset(0x0C)] public ushort                misc_offset;
-    [FieldOffset(0x10)] public bool                  is_sos;
-    [FieldOffset(0x11)] public ElementFlags          elem_strike;
-    [FieldOffset(0x12)] public ElementFlags          elem_absorb;
-    [FieldOffset(0x13)] public ElementFlags          elem_ignore;
-    [FieldOffset(0x14)] public ElementFlags          elem_resist;
-    [FieldOffset(0x15)] public ElementFlags          elem_weak;
-    [FieldOffset(0x16)] public StatusMap             status_inflict;
-    [FieldOffset(0x2F)] public StatusDurationMap     status_duration;
-    [FieldOffset(0x3C)] public StatusMap             status_resist;
-    [FieldOffset(0x55)] public byte                  stat_inc_amount;
-    [FieldOffset(0x56)] public StatIncreaseFlags     stat_inc_flags;
-    [FieldOffset(0x58)] public StatusPermanentFlags  status_auto_permanent;
-    [FieldOffset(0x5A)] public StatusTemporalFlags   status_auto_temporal;
-    [FieldOffset(0x5C)] public StatusExtraFlags      status_auto_extra;
-    [FieldOffset(0x5E)] public StatusExtraFlags      status_inflict_extra;
-    [FieldOffset(0x60)] public StatusExtraFlags      status_resist_extra;
-    [FieldOffset(0x62)] public AutoAbilityEffectsMap auto_ability_effects;
-    [FieldOffset(0x68)] public byte                  icon;
-    [FieldOffset(0x69)] public byte                  group_idx;
-    [FieldOffset(0x6A)] public byte                  group_level;
-    [FieldOffset(0x6B)] public byte                  international_bonus_idx;
+    public ExcelSimplifiableTextOffset name;
+    public ExcelSimplifiableTextOffset desc;
+
+    public bool is_sos;
+
+    public ElementFlags elem_strike;
+    public ElementFlags elem_absorb;
+    public ElementFlags elem_ignore;
+    public ElementFlags elem_resist;
+    public ElementFlags elem_weak;
+
+    public StatusMap         status_inflict;
+    public StatusDurationMap status_duration;
+    public StatusMap         status_resist;
+
+    public byte              stat_inc_amount;
+    public StatIncreaseFlags stat_inc_flags;
+
+    public StatusPermanentFlags status_auto_permanent;
+    public StatusTemporalFlags  status_auto_temporal;
+    public StatusExtraFlags     status_auto_extra;
+
+    public StatusExtraFlags status_inflict_extra;
+    public StatusExtraFlags status_resist_extra;
+
+    public AutoAbilityEffectsMap auto_ability_effects;
+
+    public byte icon;
+    public byte group_idx;
+    public byte group_level;
+    public byte international_bonus_idx;
 }
 
 [Flags]
@@ -127,43 +133,4 @@ public static partial class FhEnumExt {
             set { if (value) flags |= (StatIncreaseFlags.MAGIC_DEFENSE_BONUS); else flags &= ~(StatIncreaseFlags.MAGIC_DEFENSE_BONUS); }
         }
     }
-}
-
-[Flags]
-public enum GearType : byte {
-    NONE   = 0,
-    WEAPON = 1,
-    ARMOR  = 2,
-}
-
-public static partial class FhEnumExt {
-    extension(GearType gear_type) {
-        public bool is_weapon => gear_type.HasFlag(GearType.WEAPON);
-        public bool is_armor  => gear_type.HasFlag(GearType.ARMOR);
-    }
-}
-
-/// <summary>
-///     Recipe for customizing an auto-ability onto gear using a set amount of an item.
-/// </summary>
-public struct CustomizationRecipe {
-    /// <summary>
-    ///     The gear type that can be customized using this recipe.
-    /// </summary>
-    public GearType target_gear_type;
-
-    /// <summary>
-    ///     The auto-ability that results from this recipe.
-    /// </summary>
-    public T_XAutoAbilityId auto_ability;
-
-    /// <summary>
-    ///     The item to be spent on the customization.
-    /// </summary>
-    public T_XCommandId item;
-
-    /// <summary>
-    ///     The amount of the item that is needed.
-    /// </summary>
-    public ushort item_cost;
 }

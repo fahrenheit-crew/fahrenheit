@@ -15,19 +15,15 @@
         <ImplicitUsings>disable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <RuntimeIdentifiers>win-x86</RuntimeIdentifiers>
+        <RuntimeIdentifier>win-x86</RuntimeIdentifier>
         <EnableDynamicLoading>true</EnableDynamicLoading>
-    </PropertyGroup>
-
-    <!-- ASSEMBLY IDENTIFICATION -->
-    <PropertyGroup>
-        <AssemblyName>fhr</AssemblyName>
-        <AssemblyTitle>Fahrenheit Runtime</AssemblyTitle>
-        <Product>Fahrenheit Runtime</Product>
     </PropertyGroup>
 
     <!-- MANIFEST PROPERTIES -->
     <PropertyGroup>
+        <AssemblyName>fhr</AssemblyName>
+        <AssemblyTitle>Fahrenheit Runtime</AssemblyTitle>
+        <Product>Fahrenheit Runtime</Product>
         <Description>Implements Fahrenheit's API.</Description>
         <Authors>The Fahrenheit contributors</Authors>
         <RepositoryUrl>https://github.com/fahrenheit-crew/fahrenheit.git</RepositoryUrl>
@@ -62,13 +58,13 @@
     <ItemGroup>
         <None Include="resources/**" CopyToOutputDirectory="Always" />
 
-        <!-- Runtime font. -->
-        <None Include="$(SolutionDir)\assets\NotoSans-VariableFont_wdth,wght.ttf" Link="resources\fonts\NotoSans-VariableFont_wdth,wght.ttf">
+        <!-- Runtime fonts. -->
+        <None Include="$(SolutionDir)\assets\*.ttf" LinkBase="resources\fonts">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
     </ItemGroup>
 
-    <Target Name="__FhEmitManifest" AfterTargets="Publish" >
+    <Target Name="__FhEmitManifest" AfterTargets="Publish">
         <PropertyGroup>
             <!--
             We unconditionally prefer RepositoryUrl where available.

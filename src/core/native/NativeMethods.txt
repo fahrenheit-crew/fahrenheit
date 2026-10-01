@@ -20,6 +20,18 @@ LRESULT
 HRESULT
 HMODULE
 
+// Memory protection modifier
+
+VirtualProtect
+VirtualAlloc
+
+// RT: Allocator fix
+
+InitializeCriticalSection
+EnterCriticalSection
+LeaveCriticalSection
+IMAGE_FILE_HEADER
+
 // RT: ImGui (WndProc, in-process)
 
 DefWindowProcW

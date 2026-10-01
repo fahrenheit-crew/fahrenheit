@@ -1,6 +1,7 @@
 ﻿global using System;                           // primitives
 global using System.Buffers;                   // OperationStatus for Rune decoding, et al.
 global using System.Buffers.Binary;            // BinaryPrimitives, et al.
+global using System.Collections.Concurrent;    // ConcurrentDictionary<T>
 global using System.Collections.Generic;       // List<T>, Dictionary<T,U> and others
 global using System.Collections.Immutable;     // ImmutableArray<T>
 global using System.Diagnostics;               // [Conditional] et al.
@@ -21,6 +22,7 @@ global using System.Text.Json.Serialization;
 global using System.Threading;                 // Lock
 
 global using Fahrenheit.Events;
+global using Fahrenheit.Gui;
 
 global using Hexa.NET.ImGui;
 
@@ -34,3 +36,6 @@ global using Windows.Win32.Graphics.Dxgi;
 global using Windows.Win32.Graphics.Dxgi.Common;
 global using Windows.Win32.Graphics.Gdi;
 global using Windows.Win32.UI.WindowsAndMessaging;
+global using Windows.Win32.System.Diagnostics.Debug;
+global using Windows.Win32.System.Memory;
+global using Windows.Win32.System.Threading;

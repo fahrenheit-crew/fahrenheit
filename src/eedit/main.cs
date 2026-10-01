@@ -67,7 +67,7 @@ internal sealed unsafe class Program {
           | SDLWindowFlags.HighPixelDensity;
 
         _sdl_window = SDL.CreateWindow(
-            "Fahrenheit Mod Manager",
+            "Fahrenheit EEdit",
             int.CreateChecked(1280 * main_display_scale),
             int.CreateChecked(800  * main_display_scale),
             window_flags);

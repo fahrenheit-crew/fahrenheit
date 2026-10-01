@@ -9,59 +9,63 @@
  * See THIRD-PARTY-NOTICES.
  *
  * For the HostFXR bits, see https://github.com/dotnet/samples/blob/main/core/hosting/src/NativeHost/nativehost.cpp.
- * For the exception handling, see:
- * - http://code.aaronballman.com/minidumper/MiniDump.cpp
- * - https://github.com/folgerwang/UnrealEngine/blob/release/Engine/Source/Runtime/Core/Private/Windows/WindowsPlatformCrashContext.cpp
  */
 
 #include "fhstage1.h"
 
-// Function pointer to managed delegate with our own signature
-typedef void (CORECLR_DELEGATE_CALLTYPE* fh_init)();
+typedef void (CORECLR_DELEGATE_CALLTYPE* fh_init)(); // Function pointer to managed delegate with our own signature
 
-using string_t = std::basic_string<char_t>;
-using main_fn  = int(*)(void);
-using eh_fn    = LONG(*)(EXCEPTION_POINTERS*);
+using main_fn = int(*)(void);
 
-// Globals to hold original and detour addresses of program entrypoint and SEH filter
-main_fn g_fnptr_main_original = nullptr;
-main_fn g_fnptr_main_target   = nullptr;
-eh_fn   g_fnptr_eh_original   = nullptr;
+main_fn g_fnptr_main_original = nullptr; // A function pointer to the game's original entrypoint.
+main_fn g_fnptr_main_target   = nullptr; // A function pointer to our modified Stage 1 entrypoint.
 
-// Globals for EH override
-DWORD               g_eh_thread_faulting_id;
-DWORD               g_eh_thread_handler_id;
-HANDLE              g_eh_thread_handler;
-EXCEPTION_POINTERS* g_eh_exception_ptr;
+wchar_t g_path_fh_dir[MAX_PATH]; // The path to the `fahrenheit/bin` directory we were started in.
 
-// Globals to hold hostfxr exports
 hostfxr_initialize_for_runtime_config_fn g_fnptr_hostfxr_init;
 hostfxr_set_runtime_property_value_fn    g_fnptr_hostfxr_set_runtime_property;
 hostfxr_get_runtime_delegate_fn          g_fnptr_hostfxr_get_delegate;
 hostfxr_close_fn                         g_fnptr_hostfxr_close;
 
-// Using the nethost library, discover the location of hostfxr and get exports
-static bool load_hostfxr() {
-    // Pre-allocate a large buffer for the path to hostfxr
-    char_t buffer[MAX_PATH];
-    size_t buffer_size = sizeof(buffer) / sizeof(char_t);
+FILE* g_stdout;
+FILE* g_stderr;
 
-    int rc = get_hostfxr_path(buffer, &buffer_size, nullptr);
+BOOL s1_eh_suppress(); // Forward declaration of EH suppressor function
+
+// Uses the `nethost` library to discover the location of the .NET hosting library,
+// `hostfxr`, and obtains the necessary function pointers from it.
+static BOOL s1_load_hostfxr(
+    DWORD& error_code // [out] The error code, if the method returns FALSE.
+) {
+    wchar_t path_hostfxr_buf[MAX_PATH];
+    size_t  path_hostfxr_size = sizeof(path_hostfxr_buf) / sizeof(wchar_t);
+
+    int rc = get_hostfxr_path(
+        path_hostfxr_buf,
+        &path_hostfxr_size,
+        nullptr
+    );
+
     if (rc != 0) {
-        std::wcerr << "get_hostfxr_path() failed, error code: " << rc << std::endl;
-        return false;
+        fwprintf_s(stderr, L"[!] get_hostfxr_path() failed.\n");
+        error_code = rc;
+
+        return FALSE;
     }
 
-    // Load hostfxr and get desired exports
-    HMODULE lib = ::LoadLibraryW(buffer);
+    HMODULE lib_hostfxr = LoadLibraryW(path_hostfxr_buf);
 
-    if (lib == nullptr)
+    if (lib_hostfxr == nullptr) {
+        fwprintf_s(stderr, L"[!] LoadLibraryW() failed.\n");
+        error_code = GetLastError();
+
         return FALSE;
+    }
 
-    g_fnptr_hostfxr_init                 = (hostfxr_initialize_for_runtime_config_fn)::GetProcAddress(lib, "hostfxr_initialize_for_runtime_config");
-    g_fnptr_hostfxr_set_runtime_property = (hostfxr_set_runtime_property_value_fn)   ::GetProcAddress(lib, "hostfxr_set_runtime_property_value");
-    g_fnptr_hostfxr_get_delegate         = (hostfxr_get_runtime_delegate_fn)         ::GetProcAddress(lib, "hostfxr_get_runtime_delegate");
-    g_fnptr_hostfxr_close                = (hostfxr_close_fn)                        ::GetProcAddress(lib, "hostfxr_close");
+    g_fnptr_hostfxr_init                 = (hostfxr_initialize_for_runtime_config_fn)GetProcAddress(lib_hostfxr, "hostfxr_initialize_for_runtime_config");
+    g_fnptr_hostfxr_set_runtime_property = (hostfxr_set_runtime_property_value_fn)   GetProcAddress(lib_hostfxr, "hostfxr_set_runtime_property_value");
+    g_fnptr_hostfxr_get_delegate         = (hostfxr_get_runtime_delegate_fn)         GetProcAddress(lib_hostfxr, "hostfxr_get_runtime_delegate");
+    g_fnptr_hostfxr_close                = (hostfxr_close_fn)                        GetProcAddress(lib_hostfxr, "hostfxr_close");
 
     return g_fnptr_hostfxr_init
         && g_fnptr_hostfxr_set_runtime_property
@@ -69,271 +73,70 @@ static bool load_hostfxr() {
         && g_fnptr_hostfxr_close;
 }
 
-/* [fkelava 11/06/26 16:27]
- * An exception handler which behaves the same as the game's,
- * except that it _unconditionally_ emits a customized core dump.
- *
- * See:
- * - https://learn.microsoft.com/en-us/windows/win32/api/minidumpapiset/nf-minidumpapiset-minidumpwritedump
- * - https://learn.microsoft.com/en-us/windows/win32/api/errhandlingapi/nf-errhandlingapi-unhandledexceptionfilter
- * - FFX.exe+226A90
- * - https://www.debuginfo.com/examples/src/effminidumps/MiniDump.cpp
- */
-
-// Filters the core dump to exclude objects which we do not want to record.
-static BOOL CALLBACK stage1_eh_filter_dump(
-          PVOID                     ptr_callback_param,
-    const PMINIDUMP_CALLBACK_INPUT  ptr_callback_input,
-          PMINIDUMP_CALLBACK_OUTPUT ptr_callback_output) {
-    if (!ptr_callback_input || !ptr_callback_output) return FALSE;
-
-    switch (ptr_callback_input->CallbackType) {
-        case CancelCallback:
-            return FALSE;
-
-        case IncludeThreadCallback: {
-            // Exclude the thread which writes the minidump.
-            return ptr_callback_input->IncludeThread.ThreadId != g_eh_thread_handler_id;
-        } break;
-    }
-
-    return TRUE;
-}
-
-// Writes a customized core dump.
-static DWORD CALLBACK stage1_eh_create_dump(LPVOID ptr_thread_parameter) {
-    HANDLE hFile = CreateFileW(
-        L"crash_dump.dmp",
-        GENERIC_READ | GENERIC_WRITE,
-        0,
-        nullptr,
-        CREATE_ALWAYS,
-        FILE_ATTRIBUTE_NORMAL,
-        nullptr);
-
-    if (hFile == NULL || hFile == INVALID_HANDLE_VALUE) {
-        std::wcerr << "Failed to open a file to write the core dump to." << std::endl;
-        return 1;
-    }
-
-    HANDLE        hProcess  = GetCurrentProcess();
-    DWORD         ProcessId = GetProcessId(hProcess);
-    MINIDUMP_TYPE DumpType  = (MINIDUMP_TYPE)(
-                              MiniDumpNormal
-                            | MiniDumpWithDataSegs
-                            | MiniDumpWithHandleData
-                            | MiniDumpWithFullMemoryInfo
-                            | MiniDumpWithThreadInfo
-                            | MiniDumpWithProcessThreadData
-                            | MiniDumpWithUnloadedModules);
-
-    /* [fkelava 11/06/26 21:24]
-     * For ClientPointers:
-     * https://learn.microsoft.com/en-us/windows/win32/api/minidumpapiset/ns-minidumpapiset-minidump_exception_information#members
-     * > If you are accessing local memory (in the calling process) you should not set this member to TRUE.
-     */
-    MINIDUMP_EXCEPTION_INFORMATION mdei = { 0 };
-    mdei.ThreadId          = g_eh_thread_faulting_id;
-    mdei.ExceptionPointers = g_eh_exception_ptr;
-    mdei.ClientPointers    = FALSE;
-
-    MINIDUMP_CALLBACK_INFORMATION mci = { 0 };
-    mci.CallbackRoutine = (MINIDUMP_CALLBACK_ROUTINE)stage1_eh_filter_dump;
-    mci.CallbackParam   = nullptr;
-
-    PMINIDUMP_EXCEPTION_INFORMATION ExceptionParam = g_eh_exception_ptr != nullptr ? &mdei : nullptr;
-    PMINIDUMP_CALLBACK_INFORMATION  CallbackParam  = &mci;
-
-    std::wcerr << "Dumping process core. Please wait." << std::endl;
-
-    BOOL rv = MiniDumpWriteDump(
-        hProcess,
-        ProcessId,
-        hFile,
-        DumpType,
-        ExceptionParam,
-        nullptr,
-        CallbackParam);
-
-    if (!rv) {
-        std::wcerr << "Failed to capture a core dump." << std::endl;
-        return 1;
-    }
-
-    CloseHandle(hFile);
-    return 0;
-}
-
-// The Stage1 exception handler.
-static LONG WINAPI stage1_eh(EXCEPTION_POINTERS* ptr_exception_info) {
-    g_eh_exception_ptr      = ptr_exception_info;
-    g_eh_thread_faulting_id = GetCurrentThreadId();
-
-    ::ResumeThread       (g_eh_thread_handler);
-    ::WaitForSingleObject(g_eh_thread_handler, INFINITE);
-    ::CloseHandle        (g_eh_thread_handler);
-
-    return EXCEPTION_CONTINUE_SEARCH;
-}
-
-// Ignores the game's attempt to install its own exception handler.
-static LPTOP_LEVEL_EXCEPTION_FILTER WINAPI stage1_eh_set_filter(LPTOP_LEVEL_EXCEPTION_FILTER fnptr_exception_filter) {
-    return &stage1_eh;
-}
-
-// If necessary, replaces the game's EH filter with a Stage1 custom one.
-static BOOL stage1_eh_install(LPBYTE ptr_main_module) {
-    char_t exe_full_name_buf[MAX_PATH];
-    auto size = ::GetModuleFileNameW(NULL, exe_full_name_buf, sizeof(exe_full_name_buf) / sizeof(char_t));
-
-    string_t exe_full_name       = exe_full_name_buf;
-    size_t   exe_name_dirsep_pos = exe_full_name.find_last_of(DIR_SEPARATOR) + 1;
-
-    if (exe_name_dirsep_pos == string_t::npos) {
-        std::wcerr << "The path to the target binary is invalid." << std::endl;
-        return FALSE;
-    }
-
-    string_t exe_name = exe_full_name.substr(exe_name_dirsep_pos, exe_full_name.length());
-
-    // This can be generalized for other games in the future.
-    if (exe_name.compare(L"FFX.exe")   != 0
-    &&  exe_name.compare(L"FFX-2.exe") != 0)
-        return TRUE;
-
-    g_eh_thread_handler = ::CreateThread(
-        nullptr,
-        0,
-        stage1_eh_create_dump,
-        nullptr,
-        CREATE_SUSPENDED,
-        &g_eh_thread_handler_id);
-
-    if (g_eh_thread_handler == nullptr || g_eh_thread_handler == INVALID_HANDLE_VALUE) {
-        std::wcerr << "Failed to create EH thread for " << exe_name << std::endl;
-        return FALSE;
-    }
-
-    ::SetThreadDescription(g_eh_thread_handler, L"Fahrenheit EH");
-    SetUnhandledExceptionFilter(&stage1_eh);
-
-    if (MH_CreateHookApi(L"kernel32.dll", "SetUnhandledExceptionFilter", &stage1_eh_set_filter, reinterpret_cast<void**>(&g_fnptr_eh_original)) != MH_OK
-    ||  MH_EnableHook   (&SetUnhandledExceptionFilter)                                                                                          != MH_OK) {
-        std::wcerr << "Failed to install EH hook for " << exe_name << std::endl;
-        return FALSE;
-    }
-
-    std::wcout << "Installed EH hook for " << exe_name << std::endl;
-    return TRUE;
-}
-
 // Runs before the program's own entrypoint, setting up Fahrenheit.
-static int stage1_main(void) {
-    // STEP 1:
-    // Attach to the Stage0 console and forward stdout/stderr to it.
-    if (!AttachConsole(ATTACH_PARENT_PROCESS)) {
-        std::wcerr << "Failed to attach to the Stage0 console." << std::endl;
-        exit(GetLastError());
+static int s1_main(void) {
+    /* [fkelava 16/09/26 17:07]
+     * Sometimes Visual Studio is obstinate and won't honor breakpoints in Stage 1.
+     *
+     * If that happens on your system, block here and attach with WinDbg.
+     */
+
+    // If necessary, suppress the game's SEH filters, so Stage 0
+    // takes over exception handling and core dumping.
+    if (!s1_eh_suppress()) {
+        fwprintf_s(stderr, L"Failed to suppress SEH filter.\n");
+        return 1;
     }
 
-    FILE* parent_stdout;
-    FILE* parent_stderr;
-
-    if (freopen_s(&parent_stdout, "CONOUT$", "w", stdout) != 0 ||
-        freopen_s(&parent_stderr, "CONOUT$", "w", stderr) != 0) {
-        std::wcerr << "Failed to redirect standard output and error pipes to Stage0 console." << std::endl;
-        exit(EXIT_FAILURE);
-    }
-
-    // STEP 2:
-    // If supported, install an EH override which allows us to capture
-    // a customized core dump for easier debugging.
-    HMODULE hMainModule = GetModuleHandleW(nullptr);
-    LPBYTE  pMainModule = reinterpret_cast<LPBYTE>(hMainModule);
-
-    if (!stage1_eh_install(pMainModule)) {
-        std::wcerr << "Failed to install EH hook." << std::endl;
-        exit(EXIT_FAILURE);
-    }
-
-    // STEP 3:
-    // Determine the current working directory and the location
-    // of the executable being launched, to which we will swap
-    // the working directory later.
-    char_t host_path_buf[MAX_PATH]; // where is the game?
-    char_t cwd_path_buf [MAX_PATH]; // where are _we_?
-
-    auto size     = ::GetModuleFileNameW  (NULL, host_path_buf, sizeof(host_path_buf) / sizeof(char_t));
-    auto cwd_size = ::GetCurrentDirectoryW(sizeof(cwd_path_buf) / sizeof(char_t), cwd_path_buf);
-
-    if (size == 0) {
-        std::wcerr << "GetModuleFileName() failed." << std::endl;
-        exit(GetLastError());
-    }
-
-    if (cwd_size == 0) {
-        std::wcerr << "GetCurrentDirectory() failed." << std::endl;
-        exit(GetLastError());
-    }
-
-    string_t host_path = host_path_buf;
-    string_t cwd_path  = cwd_path_buf;
-
-    // STEP 4:
     // Declare the name, type, and location of the bootstrap method to invoke.
-    const string_t clrhost_config_path = cwd_path + STR("\\fh.runtimeconfig.json");
-    const string_t clrhost_lib_path    = cwd_path + STR("\\fh.dll");
-    const char_t*  clrhost_type        = STR("Fahrenheit.FhEnvironment, fh");
-    const char_t*  clrhost_init_method = STR("boot");
+    wchar_t path_fh_runtimeconfig[MAX_PATH] = { 0 };
+    wchar_t path_fh_dll          [MAX_PATH] = { 0 };
 
-    auto host_dirsep_pos = host_path.find_last_of(DIR_SEPARATOR);
-
-    if (host_dirsep_pos == string_t::npos) {
-        std::wcerr << "The path to the target binary is invalid." << std::endl;
-        exit(EXIT_FAILURE);
+    if (FAILED(StringCchCatW(path_fh_runtimeconfig, MAX_PATH, g_path_fh_dir))              ||
+        FAILED(StringCchCatW(path_fh_runtimeconfig, MAX_PATH, L"\\fh.runtimeconfig.json")) ||
+        FAILED(StringCchCatW(path_fh_dll,           MAX_PATH, g_path_fh_dir))              ||
+        FAILED(StringCchCatW(path_fh_dll,           MAX_PATH, L"\\fh.dll"))
+    ) {
+        fwprintf_s(stderr, L"[!] StringCchCatW() failed.\n");
+        return 1;
     }
 
-    std::wcout << "Stage 1 Loader executing for: " << host_path << std::endl;
+    const wchar_t* fh_init_type   = L"Fahrenheit.FhEnvironment, fh";
+    const wchar_t* fh_init_method = L"boot";
 
-    host_path = host_path.substr(0, host_dirsep_pos + 1);
-
-    // STEP 5:
     // Load HostFxr. This library will locate the .NET runtime for us.
-    if (!load_hostfxr()) {
-        std::wcerr << "hostfxr: failed to load" << std::endl;
-        std::wcerr << "Fahrenheit failed to load the .NET Runtime. Ensure it is installed as per the setup guide." << std::endl;
-        exit(EXIT_FAILURE);
+    DWORD load_hostfxr_rc = 0;
+    if (!s1_load_hostfxr(load_hostfxr_rc)) {
+        fwprintf_s(stderr, L"Fahrenheit failed to load the .NET Runtime. Ensure it is installed as per the setup guide.\n");
+        return load_hostfxr_rc;
     }
 
-    // STEP 6:
     // Initialize and start the .NET runtime.
     void*          ptr_hostfxr_load_assembly        = nullptr;
     void*          ptr_hostfxr_get_function_pointer = nullptr;
     hostfxr_handle cxt                              = nullptr;
 
-    int rc = g_fnptr_hostfxr_init(clrhost_config_path.c_str(), nullptr, &cxt);
+    int rc = g_fnptr_hostfxr_init(path_fh_runtimeconfig, nullptr, &cxt);
     if (rc != 0 || cxt == nullptr) {
-        std::wcerr << "hostfxr: initialize_for_runtime_config() failed" << std::endl;
-        std::wcerr << "This is an uncommon error. Please contact the Fahrenheit developers at https://github.com/fahrenheit-crew/fahrenheit." << std::endl;
+        fwprintf_s(stderr, L"hostfxr: initialize_for_runtime_config() failed\n");
+        fwprintf_s(stderr, L"This is an uncommon error. Please contact the Fahrenheit developers at https://github.com/fahrenheit-crew/fahrenheit.\n");
 
         g_fnptr_hostfxr_close(cxt);
-        exit(rc);
+        return rc;
     }
 
-    // STEP 7:
     // Set up AppContext.BaseDirectory so we can use it to find runtime dependencies.
     rc = g_fnptr_hostfxr_set_runtime_property(
         cxt,
         L"APP_CONTEXT_BASE_DIRECTORY",
-        cwd_path.c_str());
+        g_path_fh_dir);
 
     if (rc != 0) {
-        std::wcerr << "hostfxr: failed to set APP_CONTEXT_BASE_DIRECTORY" << std::endl;
-        std::wcerr << "This is an uncommon error. Please contact the Fahrenheit developers at https://github.com/fahrenheit-crew/fahrenheit." << std::endl;
-        exit(rc);
+        fwprintf_s(stderr, L"hostfxr: failed to set APP_CONTEXT_BASE_DIRECTORY\n");
+        fwprintf_s(stderr, L"This is an uncommon error. Please contact the Fahrenheit developers at https://github.com/fahrenheit-crew/fahrenheit.\n");
+        return rc;
     }
 
-    // STEP 8:
     // Get function pointers to HostFxr's `load_assembly()` and `get_function_pointer()`.
     rc = g_fnptr_hostfxr_get_delegate(
         cxt,
@@ -341,9 +144,9 @@ static int stage1_main(void) {
         &ptr_hostfxr_load_assembly);
 
     if (rc != 0 || ptr_hostfxr_load_assembly == nullptr) {
-        std::wcerr << "hostfxr: failed to obtain fnptr (hdt_load_assembly)" << std::endl;
-        std::wcerr << "This is an uncommon error. Please contact the Fahrenheit developers at https://github.com/fahrenheit-crew/fahrenheit." << std::endl;
-        exit(rc);
+        fwprintf_s(stderr, L"hostfxr: failed to obtain fnptr (hdt_load_assembly)\n");
+        fwprintf_s(stderr, L"This is an uncommon error. Please contact the Fahrenheit developers at https://github.com/fahrenheit-crew/fahrenheit.\n");
+        return rc;
     }
 
     rc = g_fnptr_hostfxr_get_delegate(
@@ -352,9 +155,9 @@ static int stage1_main(void) {
         &ptr_hostfxr_get_function_pointer);
 
     if (rc != 0 || ptr_hostfxr_get_function_pointer == nullptr) {
-        std::wcerr << "hostfxr: failed to obtain fnptr (hdt_get_function_pointer)"  << std::endl;
-        std::wcerr << "This is an uncommon error. Please contact the Fahrenheit developers at https://github.com/fahrenheit-crew/fahrenheit." << std::endl;
-        exit(rc);
+        fwprintf_s(stderr, L"hostfxr: failed to obtain fnptr (hdt_get_function_pointer)\n");
+        fwprintf_s(stderr, L"This is an uncommon error. Please contact the Fahrenheit developers at https://github.com/fahrenheit-crew/fahrenheit.\n");
+        return rc;
     }
 
     g_fnptr_hostfxr_close(cxt);
@@ -362,85 +165,111 @@ static int stage1_main(void) {
     load_assembly_fn        fnptr_hostfxr_load_assembly        = (load_assembly_fn)       ptr_hostfxr_load_assembly;
     get_function_pointer_fn fnptr_hostfxr_get_function_pointer = (get_function_pointer_fn)ptr_hostfxr_get_function_pointer;
 
-    // STEP 9:
     // Load managed assembly and get function pointer to bootstrap function.
     fh_init fnptr_fh_init = nullptr;
 
     rc = fnptr_hostfxr_load_assembly(
-        clrhost_lib_path.c_str(),
+        path_fh_dll,
         nullptr,
         nullptr);
 
     if (rc != 0) {
-        std::wcerr << "hostfxr: load_assembly() failed" << std::endl;
-        std::wcerr << "Could not load the Fahrenheit DLL. It is in an unexpected place, or does not exist. Double-check your install." << std::endl;
-        exit(rc);
+        fwprintf_s(stderr, L"hostfxr: load_assembly() failed\n");
+        fwprintf_s(stderr, L"Could not load the Fahrenheit DLL. It is in an unexpected place, or does not exist. Double-check your install.\n");
+        return rc;
     }
 
     rc = fnptr_hostfxr_get_function_pointer(
-        clrhost_type,
-        clrhost_init_method,
+        fh_init_type,
+        fh_init_method,
         UNMANAGEDCALLERSONLY_METHOD,
         nullptr,
         nullptr,
         (void**)&fnptr_fh_init);
 
     if (rc != 0 || fnptr_fh_init == nullptr) {
-        std::wcerr << "hostfxr: get_function_pointer() failed" << std::endl;
-        std::wcerr << "Failed to locate the Fahrenheit boot function. You made a change to the bootloader, but forgot to update Stage1." << std::endl;
-        exit(rc);
+        fwprintf_s(stderr, L"hostfxr: get_function_pointer() failed\n");
+        fwprintf_s(stderr, L"Failed to locate the Fahrenheit boot function. You made a change to the bootloader, but forgot to update Stage1.\n");
+        return rc;
     }
 
-    // STEP 10:
     // Boot Fahrenheit by invoking the boot function in `fh.dll`.
-
-    // TRANSITION: NATIVE -> MANAGED
     fnptr_fh_init();
-    // TRANSITION: MANAGED -> NATIVE
 
-    // STEP 11:
-    // Change the working directory to the targeted executable's location,
-    // now that we have finished initialization.
-    rc = _wchdir(host_path.c_str());
-    if (rc != 0) {
-        std::wcerr << "Failed to switch to the game's working directory." << std::endl;
-        exit(rc);
-    }
-
-    // STEP 11:
-    // Let the game run. Enjoy!
-    std::wcout << "Stage 1 Loader complete. The game is now executing." << std::endl;
+    // Finally, invoke the original program entrypoint.
+    fwprintf_s(stdout, L"Stage 1 Loader complete. The game is now executing.\n");
     return g_fnptr_main_original();
 }
 
+
+// Records the directory we started from and hooks the target's entrypoint.
+static BOOL s1_init(
+    HMODULE h_self
+) {
+    // Attach to the Stage 0 console and forward stdout/stderr to it.
+    if (!AttachConsole(ATTACH_PARENT_PROCESS)) {
+        fwprintf_s(stderr, L"Failed to attach to the Stage 0 console with code 0x%X.\n", GetLastError());
+        return FALSE;
+    }
+
+    if (freopen_s(&g_stdout, "CONOUT$", "w", stdout) != 0 ||
+        freopen_s(&g_stderr, "CONOUT$", "w", stderr) != 0
+    ) {
+        fwprintf_s(stderr, L"Failed to redirect standard output and error to Stage 0 console.\n");
+        return FALSE;
+    }
+
+    DWORD path_fh_dir_size = GetModuleFileNameW(
+        h_self,
+        g_path_fh_dir,
+        sizeof(g_path_fh_dir) / sizeof(wchar_t)
+    );
+
+    if (path_fh_dir_size == 0) {
+        fwprintf_s(stderr, L"[!] GetModuleFileNameW() failed.\n");
+        return FALSE;
+    }
+
+    HRESULT hr = PathCchRemoveFileSpec(g_path_fh_dir, MAX_PATH);
+    if (hr != S_OK) {
+        fwprintf_s(stderr, L"PathCchRemoveFileSpec() failed for path %s, error code: %X\n", g_path_fh_dir, hr);
+        return FALSE;
+    }
+
+    // Override the program entrypoint. We need to run Fahrenheit initialization first.
+    HMODULE h_target        = GetModuleHandleW(nullptr);
+    LPBYTE  ptr_target_base = reinterpret_cast<LPBYTE>(h_target);
+
+    PIMAGE_DOS_HEADER ptr_dos_headers = reinterpret_cast<PIMAGE_DOS_HEADER>(h_target);
+    if (ptr_dos_headers->e_magic != IMAGE_DOS_SIGNATURE)
+        return FALSE;
+
+    PIMAGE_NT_HEADERS ptr_nt_headers  = reinterpret_cast<PIMAGE_NT_HEADERS>((ptr_target_base + ptr_dos_headers->e_lfanew));
+    if (ptr_nt_headers->Signature != IMAGE_NT_SIGNATURE)
+        return FALSE;
+
+    g_fnptr_main_target = reinterpret_cast<main_fn>(ptr_target_base + ptr_nt_headers->OptionalHeader.AddressOfEntryPoint);
+
+    if (MH_Initialize() != MH_OK
+    ||  MH_CreateHook(g_fnptr_main_target, &s1_main, reinterpret_cast<void**>(&g_fnptr_main_original)) != MH_OK
+    ||  MH_EnableHook(g_fnptr_main_target) != MH_OK)
+        return FALSE;
+
+    return TRUE;
+}
+
 BOOL APIENTRY DllMain(
-    HMODULE hdll,
+    HMODULE h_self,
     DWORD   reason,
     LPVOID  ptr_reserved
 ) {
     switch (reason) {
         case DLL_PROCESS_ATTACH: {
-            // Return the IAT to its original self.
+            // Now that we're in, restore the original IAT.
             if (!DetourRestoreAfterWith())
-                exit(GetLastError());
-
-            // Override the program's entrypoint. We need to host the .NET Runtime and boot Fahrenheit first.
-            HMODULE hMainModule = GetModuleHandleW(nullptr);
-            LPBYTE  pMainModule = reinterpret_cast<LPBYTE>(hMainModule);
-
-            PIMAGE_DOS_HEADER pImgDosHeaders = reinterpret_cast<PIMAGE_DOS_HEADER>(hMainModule);
-            if (pImgDosHeaders->e_magic  != IMAGE_DOS_SIGNATURE)
                 return FALSE;
 
-            PIMAGE_NT_HEADERS pImgNTHeaders  = reinterpret_cast<PIMAGE_NT_HEADERS>((pMainModule + pImgDosHeaders->e_lfanew));
-            if (pImgNTHeaders->Signature != IMAGE_NT_SIGNATURE)
-                return FALSE;
-
-            g_fnptr_main_target = reinterpret_cast<main_fn>(pMainModule + pImgNTHeaders->OptionalHeader.AddressOfEntryPoint);
-
-            if (MH_Initialize()                                                                                    != MH_OK
-            ||  MH_CreateHook(g_fnptr_main_target, &stage1_main, reinterpret_cast<void**>(&g_fnptr_main_original)) != MH_OK
-            ||  MH_EnableHook(g_fnptr_main_target)                                                                 != MH_OK)
+            if (!s1_init(h_self))
                 return FALSE;
         }
         case DLL_THREAD_ATTACH:

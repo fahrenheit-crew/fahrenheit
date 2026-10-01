@@ -31,8 +31,9 @@ internal sealed class FhHasher {
             return DEFAULT_HASH_VALUE;
 
         ReadOnlySpan<byte> input = Encoding.UTF8.GetBytes(mods.ToString());
-        Span        <byte> hash  = stackalloc byte[16];
+                Span<byte> hash  = stackalloc byte[16];
 
+        hash.Clear();
         Blake3.Hasher.Hash(input, hash);
 
         return Convert.ToHexString(hash);
@@ -54,8 +55,9 @@ internal sealed class FhHasher {
             return DEFAULT_HASH_VALUE;
 
         ReadOnlySpan<byte> input = Encoding.UTF8.GetBytes(stateful_mods.ToString());
-        Span        <byte> hash  = stackalloc byte[16];
+                Span<byte> hash  = stackalloc byte[16];
 
+        hash.Clear();
         Blake3.Hasher.Hash(input, hash);
 
         return Convert.ToHexString(hash);

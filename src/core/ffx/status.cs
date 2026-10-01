@@ -5,6 +5,7 @@
 
 namespace Fahrenheit.FFX;
 
+[StructLayout(LayoutKind.Sequential)]
 public struct StatusMap {
     public byte death;
     public byte zombie;
@@ -14,7 +15,7 @@ public struct StatusMap {
     public byte magic_break;
     public byte armor_break;
     public byte mental_break;
-    public byte confuse;
+    public byte confusion;
     public byte berserk;
     public byte provoke;
     public byte threaten;
@@ -33,6 +34,7 @@ public struct StatusMap {
     public byte slow;
 }
 
+[StructLayout(LayoutKind.Sequential)]
 public struct StatusDurationMap {
     public byte sleep;
     public byte silence;
@@ -60,7 +62,7 @@ public enum StatusPermanentFlags : ushort {
     MAGIC_BREAK   = 1 <<  5,
     ARMOR_BREAK   = 1 <<  6,
     MENTAL_BREAK  = 1 <<  7,
-    CONFUSE       = 1 <<  8,
+    CONFUSION     = 1 <<  8,
     BERSERK       = 1 <<  9,
     PROVOKE       = 1 << 10,
     THREATEN      = 1 << 11,
@@ -88,9 +90,9 @@ public static partial class FhEnumExt {
             set { if (value) flags |= (StatusPermanentFlags.POISON); else flags &= ~(StatusPermanentFlags.POISON); }
         }
 
-        public bool confuse {
-            get { return flags.HasFlag(StatusPermanentFlags.CONFUSE); }
-            set { if (value) flags |= (StatusPermanentFlags.CONFUSE); else flags &= ~(StatusPermanentFlags.CONFUSE); }
+        public bool confusion {
+            get { return flags.HasFlag(StatusPermanentFlags.CONFUSION); }
+            set { if (value) flags |= (StatusPermanentFlags.CONFUSION); else flags &= ~(StatusPermanentFlags.CONFUSION); }
         }
 
         public bool berserk {

@@ -11,12 +11,7 @@ namespace Fahrenheit.FFX2;
 
 public partial struct Treasure
 {
-    [NativeTypeName("unsigned char")]
     public byte type;
-
-    [NativeTypeName("unsigned char")]
     public byte kazu;
-
-    [NativeTypeName("unsigned short")]
     public ushort item_name;
 }

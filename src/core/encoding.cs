@@ -5,7 +5,25 @@
 
 namespace Fahrenheit;
 
-public enum FhLangId {
+/* [fkelava 03/09/26 16:30]
+ * The game uses a custom text encoding to save space on disk. Text may contain 
+ * embedded 'ops' or commands which modify its display, reference script variables, 
+ * or expand macros. This is an encoder and decoder for all languages of FF X and 
+ * non-CJK languages of FF X-2/LM; it round-trips all original game dialogue byte-perfectly,
+ * with some additional bugfixes for things which never worked in the original.
+ * 
+ * The frontend for this functionality is DEdit.
+ * 
+ * Input to this encoder is 'DEdit' or 'Fahrenheit' text syntax. It is similar, but not identical,
+ * to text syntax in the FFXDataParser. Commands are given between curly brackets, ex. {END}.
+ * 
+ * Consult the tests and `_op_*` literals in the source below for all supported syntax elements.
+ */
+
+/// <summary>
+///     The game's supported languages.
+/// </summary>
+public enum FhLangId : byte {
     Japanese = 0,
     English  = 1,
     French   = 2,
@@ -84,7 +102,9 @@ public static class FhEncoding {
     /// <summary>
     ///     Returns the UTF-8 plaintext literal corresponding to a given text <paramref name="op_code"/>.
     /// </summary>
-    private static ReadOnlySpan<byte> _select_op_literal(byte op_code) {
+    private static ReadOnlySpan<byte> _select_op_literal(
+        byte op_code
+    ) {
         return op_code switch {
             0x00                => _op_end,
             0x01                => _op_break,
@@ -104,7 +124,9 @@ public static class FhEncoding {
     /// <summary>
     ///     Returns the op code corresponding to a UTF-8 text op <paramref name="expression"/>.
     /// </summary>
-    private static byte _select_op_code(ReadOnlySpan<byte> expression) {
+    private static byte _select_op_code(
+        ReadOnlySpan<byte> expression
+    ) {
         return 0 switch {
             _ when expression.IndexOf(_op_end    ) != -1 => 0x00,
             _ when expression.IndexOf(_op_break  ) != -1 => 0x01,
@@ -124,14 +146,20 @@ public static class FhEncoding {
     /// <summary>
     ///     Gets the first argument of a text <paramref name="op"/> from an UTF-8 plaintext <paramref name="expression"/>.
     /// </summary>
-    private static byte _get_op_arg1(in ReadOnlySpan<byte> expression, in ReadOnlySpan<byte> op) {
+    private static byte _get_op_arg1(
+        in ReadOnlySpan<byte> expression, 
+        in ReadOnlySpan<byte> op
+    ) {
         return byte.Parse(expression[ op.Length .. (op.Length + 2) ], NumberStyles.HexNumber); // inverse of $"{arg1:X2}"
     }
 
     /// <summary>
     ///     Gets the second argument of a text <paramref name="op"/> from an UTF-8 plaintext <paramref name="expression"/>.
     /// </summary>
-    private static byte _get_op_arg2(in ReadOnlySpan<byte> expression, in ReadOnlySpan<byte> op) {
+    private static byte _get_op_arg2(
+        in ReadOnlySpan<byte> expression, 
+        in ReadOnlySpan<byte> op
+    ) {
         return byte.Parse(expression[ (op.Length + 3) .. (op.Length + 5) ], NumberStyles.HexNumber); // inverse of $"{arg1:X2}:{arg2:X2}"
     }
 
@@ -139,7 +167,11 @@ public static class FhEncoding {
     ///     Emits to <paramref name="dest"/> the UTF-8 plaintext literal of the op
     ///     defined by <paramref name="op_code"/>.
     /// </summary>
-    private static int _decode_op(in Span<byte> dest, byte op_code) {
+    /// <returns>The amount of bytes written to <paramref name="dest"/>.</returns>
+    private static int _decode_op(
+        in Span<byte> dest, 
+           byte       op_code
+    ) {
         ReadOnlySpan<byte> op = _select_op_literal(op_code);
         op.CopyTo(dest);
 
@@ -150,7 +182,12 @@ public static class FhEncoding {
     ///     Emits to <paramref name="dest"/> the UTF-8 plaintext literal of the op
     ///     defined by <paramref name="op_code"/> with argument <paramref name="op_arg1"/>.
     /// </summary>
-    private static int _decode_op(in Span<byte> dest, byte op_code, byte op_arg1) {
+    /// <returns>The amount of bytes written to <paramref name="dest"/>.</returns>
+    private static int _decode_op(
+        in Span<byte> dest, 
+           byte       op_code,
+           byte       op_arg1
+    ) {
         ReadOnlySpan<byte> op = _select_op_literal(op_code);
         op.CopyTo(dest);
 
@@ -161,7 +198,13 @@ public static class FhEncoding {
     ///     Emits to <paramref name="dest"/> the UTF-8 plaintext literal of the op
     ///     defined by <paramref name="op_code"/> with arguments <paramref name="op_arg1"/> and <paramref name="op_arg2"/>.
     /// </summary>
-    private static int _decode_op(in Span<byte> dest, byte op_code, byte op_arg1, byte op_arg2) {
+    /// <returns>The amount of bytes written to <paramref name="dest"/>.</returns>
+    private static int _decode_op(
+        in Span<byte> dest, 
+           byte       op_code,
+           byte       op_arg1,
+           byte       op_arg2
+    ) {
         ReadOnlySpan<byte> op = _select_op_literal(op_code);
         op.CopyTo(dest);
 
@@ -173,7 +216,12 @@ public static class FhEncoding {
     ///     from <paramref name="src"/> and emits its UTF-8 equivalent, if any, to <paramref name="dest"/>.
     /// </summary>
     /// <returns>The amount of bytes written to <paramref name="dest"/>.</returns>
-    private static int _decode_char(in ReadOnlySpan<byte> src, Span<byte> dest, FhLangId lang, FhGameId game) {
+    private static int _decode_char(
+        in ReadOnlySpan<byte> src, 
+                   Span<byte> dest, 
+           FhLangId           lang, 
+           FhGameId           game
+    ) {
         return _is_cjk(lang)
             ? _decode_cjk(src, dest, lang, game)
             : _decode_we (src, dest, lang, game);
@@ -182,7 +230,11 @@ public static class FhEncoding {
     /// <summary>
     ///     Writes to <paramref name="dest"/> the game encoding character at <paramref name="index"/> in the Shift-JIS table.
     /// </summary>
-    private static int _encode_char(in Span<byte> dest, int index) {
+    /// <returns>The amount of bytes written to <paramref name="dest"/>.</returns>
+    private static int _encode_char(
+        in Span<byte> dest, 
+           int        index
+    ) {
         int i = 0;
 
         if (index >= 0x410) {
@@ -203,11 +255,12 @@ public static class FhEncoding {
 
     /// <summary>
     ///     Attempts to extend an eligible character in the Shift-JIS table to its fullwidth form.
-    ///     <para/>
-    ///     Only valid for Chinese, Japanese, and Korean game languages.
     /// </summary>
+    /// <remarks>Only valid for Chinese, Japanese, and Korean game languages.</remarks>
     /// <returns>Whether the character was rewritten.</returns>
-    private static bool _extend_cjk(ref Rune code_point) {
+    private static bool _extend_cjk(
+        ref Rune code_point
+    ) {
         /* [fkelava 14/07/26 17:23]
          * See issue #200, https://www.unicode.org/charts/PDF/UFF00.pdf, https://www.unicode.org/charts/PDF/U0000.pdf,
          * https://www.compart.com/en/unicode/decomposition/%3Cwide%3E.
@@ -228,29 +281,37 @@ public static class FhEncoding {
     /// <summary>
     ///     Determines whether the given <paramref name="code_point"/> is invalid and should be ignored.
     /// </summary>
-    private static bool _is_invalid(Rune code_point) {
+    private static bool _is_invalid(
+        Rune code_point
+    ) {
         return code_point.Value is 0x000D  // U+000D - <Carriage Return> (CR)
                                 or 0x000A  // U+000A - <End of Line> (EOL, LF, NL)
                                 or 0xFEFF; // U+FEFF - Zero Width No-Break Space (BOM, ZWNBSP)
     }
 
     /// <summary>
-    ///     Determines whether the given <paramref name="language"/> is a CJK language.
+    ///     Determines whether the given <paramref name="lang"/> is a CJK language.
     /// </summary>
-    private static bool _is_cjk(FhLangId language) {
-        return language is FhLangId.Chinese
-                        or FhLangId.Japanese
-                        or FhLangId.Korean;
+    private static bool _is_cjk(
+        FhLangId lang
+    ) {
+        return lang is FhLangId.Chinese
+                    or FhLangId.Japanese
+                    or FhLangId.Korean;
     }
 
     /// <summary>
     ///     Decodes an expression at the start of <paramref name="src"/> and
     ///     writes the resulting UTF-8 character into <paramref name="dest"/>.
-    ///     <para/>
-    ///     Only valid for Chinese, Japanese, and Korean game languages.
     /// </summary>
+    /// <remarks>Only valid for Chinese, Japanese, and Korean game languages.</remarks>
     /// <returns>The amount of bytes written to <paramref name="dest"/>.</returns>
-    private static int _decode_cjk(in ReadOnlySpan<byte> src, Span<byte> dest, FhLangId lang, FhGameId game) {
+    private static int _decode_cjk(
+        in ReadOnlySpan<byte> src, 
+                   Span<byte> dest, 
+           FhLangId           lang, 
+           FhGameId           game
+    ) {
         // FFX.exe+646250 (DecodingGamecodeJPCHKR) - cleaned up rewrite
         ReadOnlySpan<byte> sjistbl     = FhShiftJisTables.get_table(lang, game);
         int                sjistbl_idx = 0; // iVar4
@@ -304,11 +365,15 @@ public static class FhEncoding {
     /// <summary>
     ///     Decodes an expression at the start of <paramref name="src"/> and
     ///     writes the resulting UTF-8 character into <paramref name="dest"/>.
-    ///     <para/>
-    ///     Only valid for Western game languages, i.e. not Chinese, Japanese, or Korean.
     /// </summary>
+    /// <remarks>Only valid for Western game languages, i.e. not Chinese, Japanese, or Korean.</remarks>
     /// <returns>The amount of bytes written to <paramref name="dest"/>.</returns>
-    private static int _decode_we(in ReadOnlySpan<byte> src, Span<byte> dest, FhLangId lang, FhGameId game) {
+    private static int _decode_we(
+        in ReadOnlySpan<byte> src, 
+                   Span<byte> dest, 
+           FhLangId           lang, 
+           FhGameId           game
+    ) {
         // FFX.exe+6463a0 (DecodingGamecodeUK) - cleaned up rewrite
         ReadOnlySpan<byte> sjistbl     = FhShiftJisTables.get_table(lang, game);
         int                sjistbl_idx = 0; // iVar2
@@ -466,12 +531,16 @@ public static class FhEncoding {
     }
 
     /// <summary>
-    ///     Given some DEdit syntax text in <paramref name="src"/>, computes the size of the buffer required to write all indices
+    ///     Given some text in <paramref name="src"/>, computes the size of the buffer required to write all indices
     ///     of a given <paramref name="index_type"/> necessary for the game to access that text once encoded.
-    ///     <para/>
-    ///     Such a buffer is given as the second argument to <see cref="write_indices(ReadOnlySpan{byte}, Span{byte}, FhTextIndexType)"/>.
     /// </summary>
-    public static int compute_index_buffer_size(in ReadOnlySpan<byte> src, FhTextIndexType index_type) {
+    /// <remarks>
+    ///     Such a buffer is given as the second argument to <see cref="write_indices(in ReadOnlySpan{byte}, Span{byte}, FhTextIndexType)"/>.
+    /// </remarks>
+    public static int compute_index_buffer_size(
+        in ReadOnlySpan<byte> src, 
+           FhTextIndexType    index_type
+    ) {
         int offset = 0;
         int size   = 0;
 
@@ -491,11 +560,16 @@ public static class FhEncoding {
     /// <summary>
     ///     Given some game-encoded text in <paramref name="src"/>, writes to <paramref name="dest"/> the indices
     ///     of a given <paramref name="index_type"/> necessary for the game to access that text.
-    ///     <para/>
-    ///     <paramref name="dest"/> must be properly sized. To obtain the correct size, perform
-    ///     <see cref="compute_index_buffer_size(ReadOnlySpan{byte}, FhTextIndexType)"/> on the source DEdit text.
     /// </summary>
-    public static void write_indices(in ReadOnlySpan<byte> src, Span<byte> dest, FhTextIndexType index_type) {
+    /// <remarks>
+    ///     <paramref name="dest"/> must be properly sized. To obtain the correct size, perform
+    ///     <see cref="compute_index_buffer_size(in ReadOnlySpan{byte}, FhTextIndexType)"/> on the source text.
+    /// </remarks>
+    public static void write_indices(
+        in ReadOnlySpan<byte> src, 
+                   Span<byte> dest, 
+           FhTextIndexType    index_type
+    ) {
         int src_offset  = 0;
         int dest_offset = 0;
         int index       = short.CreateChecked(dest.Length);
@@ -521,7 +595,11 @@ public static class FhEncoding {
     /// <summary>
     ///     Reads a text file index of a given <paramref name="index_type"/>.
     /// </summary>
-    public static int read_index(in ReadOnlySpan<byte> src, FhTextIndexType index_type, out int consumed) {
+    public static int read_index(
+        in  ReadOnlySpan<byte> src, 
+            FhTextIndexType    index_type, 
+        out int                consumed
+    ) {
         consumed = index_type switch {
             FhTextIndexType.COM_X2 => 8,
             FhTextIndexType.COM_X1 or
@@ -561,16 +639,21 @@ public static class FhEncoding {
 
     /// <summary>
     ///     Writes to <paramref name="dest"/> an index of a given <paramref name="index_type"/> with the literal
-    ///     offset <paramref name="value"/> and option count <paramref name="options"/>.
+    ///     offset <paramref name="value"/> and <paramref name="option_count"/>.
     /// </summary>
-    private static int _write_index(Span<byte> dest, int value, int options, FhTextIndexType index_type) {
+    /// <returns>The amount of bytes written to <paramref name="dest"/>.</returns>
+    private static int _write_index(
+        Span<byte>      dest, 
+        int             value, 
+        int             option_count, 
+        FhTextIndexType index_type
+    ) {
         if (index_type is FhTextIndexType.I32_X1) {
             BinaryPrimitives.WriteInt32LittleEndian(dest, value);
             return 4;
         }
 
-        short index        = short.CreateChecked(value);
-        byte  option_count = byte .CreateChecked(options);
+        short index = short.CreateChecked(value);
 
         BinaryPrimitives.WriteInt16LittleEndian(dest, index);
         if (index_type is FhTextIndexType.I16_X1) {
@@ -584,7 +667,7 @@ public static class FhEncoding {
 
         if (index_type is FhTextIndexType.COM_X1 or FhTextIndexType.COM_X2) {
             dest[2] = 0x00; // TODO: check actual purpose
-            dest[3] = option_count;
+            dest[3] = byte.CreateChecked(option_count);
 
             if (index_type is FhTextIndexType.COM_X1) return 4;
 
@@ -596,11 +679,14 @@ public static class FhEncoding {
     }
 
     /// <summary>
-    ///     Converts a given DEdit syntax <paramref name="expression"/>- a UTF-8 byte sequence starting with
+    ///     Converts a given <paramref name="expression"/>- a UTF-8 byte sequence starting with
     ///     U+007B and ending with U+007D- to game encoding and writes it to <paramref name="dest"/>.
     /// </summary>
     /// <returns>The number of bytes written to <paramref name="dest"/>.</returns>
-    private static int _encode_expr(in ReadOnlySpan<byte> expression, Span<byte> dest) {
+    private static int _encode_expr(
+        in ReadOnlySpan<byte> expression, 
+                   Span<byte> dest
+    ) {
         byte               op_code = _select_op_code   (expression);
         ReadOnlySpan<byte> op      = _select_op_literal(op_code);
 
@@ -641,27 +727,35 @@ public static class FhEncoding {
     /// <summary>
     ///     Computes, in bytes, how large a buffer should be to store the encoded contents of <paramref name="src"/>.
     /// </summary>
-    public static int compute_encode_buffer_size(in ReadOnlySpan<byte> src, FhLangId? lang = default, FhGameId? game = default, FhEncodingFlags flags = default) {
+    public static int compute_encode_buffer_size(
+        in ReadOnlySpan<byte> src, 
+           FhLangId?          lang  = default,
+           FhGameId?          game  = default,
+           FhEncodingFlags    flags = default
+    ) {
         Span<byte> dest = stackalloc byte[64];
+        dest.Clear();
+
         return encode(src, dest, lang, game, flags | FhEncodingFlags.IGNORE_DEST_BUFFER);
     }
 
     /// <summary>
     ///     Writes into <paramref name="dest"/> the game encoding representation of a
     ///     UTF-8 string contained in <paramref name="src"/>.
-    ///     <para/>
+    /// </summary>
+    /// <remarks>
     ///     If <paramref name="lang"/> or <paramref name="game"/>
     ///     are not specified, the active game type and language are used.
     ///     If calling outside the game process, they MUST be specified.
-    /// </summary>
+    /// </remarks>
     /// <returns>The number of bytes written to <paramref name="dest"/>.</returns>
     public static int encode(
         in ReadOnlySpan<byte> src,
-           Span        <byte> dest,
+                   Span<byte> dest,
            FhLangId?          lang  = default,
            FhGameId?          game  = default,
-           FhEncodingFlags    flags = default) {
-
+           FhEncodingFlags    flags = default
+    ) {
         FhLangId lang_id = lang ?? FhGlobal.lang_id;
         FhGameId game_id = game ?? FhGlobal.game_id;
 
@@ -759,27 +853,35 @@ public static class FhEncoding {
     ///     If calling outside the game process, they MUST be specified.
     /// </summary>
     /// <returns>The size of a buffer that can store the decoded contents of <paramref name="src"/>.</returns>
-    public static int compute_decode_buffer_size(in ReadOnlySpan<byte> src, FhLangId? lang = default, FhGameId? game = default, FhEncodingFlags flags = default) {
+    public static int compute_decode_buffer_size(
+        in ReadOnlySpan<byte> src, 
+           FhLangId?          lang  = default, 
+           FhGameId?          game  = default, 
+           FhEncodingFlags    flags = default
+    ) {
         Span<byte> dest = stackalloc byte[64];
+        dest.Clear();
+
         return decode(src, dest, lang, game, flags | FhEncodingFlags.IGNORE_DEST_BUFFER);
     }
 
     /// <summary>
     ///     Writes into <paramref name="dest"/> the UTF-8 representation of a
     ///     game encoding string contained in <paramref name="src"/>.
-    ///     <para/>
+    /// </summary>
+    /// <remarks>
     ///     If <paramref name="lang"/> or <paramref name="game"/>
     ///     are not specified, the active game type and language are used.
     ///     If calling outside the game process, they MUST be specified.
-    /// </summary>
+    /// </remarks>
     /// <returns>The number of bytes written to <paramref name="dest"/>.</returns>
     public static int decode(
         in ReadOnlySpan<byte> src,
            Span        <byte> dest,
            FhLangId?          lang  = default,
            FhGameId?          game  = default,
-           FhEncodingFlags    flags = default) {
-
+           FhEncodingFlags    flags = default
+    ) {
         FhLangId lang_id = lang ?? FhGlobal.lang_id;
         FhGameId game_id = game ?? FhGlobal.game_id;
 

@@ -124,7 +124,7 @@ public unsafe struct SphereGridNode {
         get => _node_type == -1 ? NodeType.NULL : (NodeType)_node_type;
         set => _node_type = (short)value;
     }
-    public SphereGridNodeTypeInfo type_info => Globals.SphereGrid.lpamng->node_type_infos[node_type.normalize()];
+    public SphereGridNodeTypeUiInfo type_info => Globals.SphereGrid.lpamng->node_type_infos[node_type.normalize()];
 
     public Vector2 pos => new(x, y);
     public Vector2 size => type_info.size;
@@ -173,7 +173,7 @@ public unsafe struct SphereGridNode {
 }
 
 [StructLayout(LayoutKind.Explicit, Pack = 1, Size = 0x30)]
-public unsafe struct SphereGridNodeTypeInfo {
+public unsafe struct SphereGridNodeTypeUiInfo {
     [InlineArray(7)]
     public struct Vec2s16Array {
         private Vec2s16 _data;

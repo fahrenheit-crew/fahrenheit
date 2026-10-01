@@ -24,6 +24,7 @@ global using Hexa_WICFlags              = Hexa.NET.DirectXTex.WICFlags;
 global using System;                          // primitives
 global using System.Buffers.Binary;           // BinaryPrimitives et al.
 global using System.Collections.Generic;      // List<T>, Dictionary<T,U> and others
+global using System.Diagnostics;              // UnreachableException
 global using System.Diagnostics.CodeAnalysis; // [NotNullWhen] contract
 global using System.IO;                       // Path, File, and similar
 global using System.Numerics;                 // Vector2, et al.
@@ -34,7 +35,11 @@ global using System.Text;                     // Encoding.UTF8 et al.
 global using System.Text.Json;                // For JSON (de)serialization, we use STJ.
 global using System.Threading;                // Interlocked, Lock, et al.
 
+global using Fahrenheit.Atel;
+
 global using Hexa.NET.ImGui;                  // ImGui is required to render large parts of the runtime UI.
+
+global using Fahrenheit.Gui;
 
 // Win32/D3D11 typedefs
 global using Windows.Win32;
@@ -46,3 +51,5 @@ global using Windows.Win32.Graphics.Dxgi;
 global using Windows.Win32.Graphics.Dxgi.Common;
 global using Windows.Win32.Graphics.Gdi;
 global using Windows.Win32.UI.WindowsAndMessaging;
+global using Windows.Win32.System.Memory;
+global using Windows.Win32.System.Threading;

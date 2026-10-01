@@ -69,10 +69,11 @@ public sealed record FhManifest(
 /// <summary>
 ///     A module is the base unit of functionality in Fahrenheit.
 ///     Modules are used to logically partition your functionality.
-///     <para/>
+/// </summary>
+/// <remarks>
 ///     A mod can consist of any number of modules. Modules can link with
 ///     other modules at runtime using <see cref="FhModuleHandle{TTarget}"/>.
-/// </summary>
+/// </remarks>
 public abstract class FhModule {
     protected readonly string   _module_type_name;
     protected readonly FhLogger _logger;
@@ -87,16 +88,6 @@ public abstract class FhModule {
     }
 
     /// <summary>
-    ///     A collection of the mod's global settings; those whose values apply to all saves.
-    /// </summary>
-    public FhSettingsCategory? settings       { get; protected init; }
-
-    /// <summary>
-    ///     A collection of the mod's local settings; those whose values are isolated to the current save.
-    /// </summary>
-    public FhSettingsCategory? settings_local { get; protected init; }
-
-    /// <summary>
     ///     Your module should perform all Fahrenheit-related initialization here. When this is called, all mods are loaded, and:
     ///     <br/>
     ///     <br/> - you may call <see cref="FhModuleHandle{T}.try_get_context(out FhModuleContext?)"/> to obtain references to other modules;
@@ -106,25 +97,20 @@ public abstract class FhModule {
     /// <returns>Whether initialization succeeded. If <see cref="false"/>, an error is shown to the user, but execution continues.</returns>
     public abstract bool init(FhModContext mod_context, FileStream global_state_file);
 
-    /// <summary>
-    ///     Called when the game saves, allowing the module to save state specific to that save game.
-    ///     <para/>
+    /// <summary>Called when the game saves, allowing the module to save state specific to that save game.</summary>
+    /// <remarks>
     ///     Do not flush, dispose/close, or save <paramref name="local_state_file"/> as a local variable.
     ///     The stream only lasts for the duration of this call, and the framework cleans it up.
-    /// </summary>
+    /// </remarks>
     public virtual void save_local_state(FileStream local_state_file) { }
 
-    /// <summary>
-    ///     Called when the game loads, allowing the module to load state specific to that save game.
-    ///     <para/>
+    /// <summary>Called when the game loads, allowing the module to load state specific to that save game.</summary>
+    /// <remarks>
     ///     Do not flush, dispose/close, or save <paramref name="local_state_file"/> as a local variable.
     ///     The stream only lasts for the duration of this call, and the framework cleans it up.
-    /// </summary>
+    /// </remarks>
     public virtual void load_local_state(FileStream local_state_file, FhLocalStateInfo local_state_info) { }
 
-    /// <summary>
-    ///     Called just before <see cref="IDXGISwapChain.Present(IDXGISwapChain*, uint, DXGI_PRESENT)"/> time.
-    ///     You may freely invoke ImGui methods here, and <i>only</i> here.
-    /// </summary>
+    /// <summary>Called every frame. Invoke ImGui methods here to submit draw calls for the frame.</summary>
     public virtual void render_imgui() { }
 }

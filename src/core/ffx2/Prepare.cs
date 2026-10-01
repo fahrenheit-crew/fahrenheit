@@ -10,7 +10,6 @@ namespace Fahrenheit.FFX2;
 
 public partial struct Prepare
 {
-    [NativeTypeName("unsigned short[112]")]
     public _prepare_e__FixedBuffer prepare;
 
     [InlineArray(112)]

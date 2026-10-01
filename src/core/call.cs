@@ -99,9 +99,9 @@ public static unsafe partial class FhCall {
         new( new FhMethodLocation(0x207E00, 0x490EC0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public unsafe delegate void d_FUN_00607F10_008910A0(byte* ptr_path);
-    public static FhMethodHandle<d_FUN_00607F10_008910A0> FUN_00607F10_008910A0 =>
-        new( new FhMethodLocation(0x207F10, 0x4910A0) );
+    public unsafe delegate void d_FUN_00607D50_00890FA0(byte* ptr_path);
+    public static FhMethodHandle<d_FUN_00607D50_00890FA0> FUN_00607D50_00890FA0 =>
+        new( new FhMethodLocation(0x207D50, 0x490FA0) );
 
     [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
     internal unsafe delegate PCluster* d_ClusterManager_getPClusterByName(uint ptr_this, byte* ptr_name);
@@ -394,14 +394,14 @@ public static unsafe partial class FhCall {
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
     internal delegate int d_Phyre_PFramework_PInput_Update();
     internal static FhMethodHandle<d_Phyre_PFramework_PInput_Update> Phyre_PFramework_PInput_Update
-        => new( new FhMethodLocation(0x225930, 0x6B51E0) );
+        => new( new FhMethodLocation(0x225770, 0x6B50A0) );
 
     // RT - Game loop
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal delegate void d_Sg_MainLoop(float delta);
     internal static FhMethodHandle<d_Sg_MainLoop> Sg_MainLoop
-        => new( new FhMethodLocation(0x420C00, 0x205150) );
+        => new( new FhMethodLocation(0x420AE0, 0x205130) );
 
     // RT - EFL
 

@@ -1209,7 +1209,7 @@ public static partial class FhCall {
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void d_AtelSetEventJump2(int room, int entrance, int do_fade);
     public static FhMethodHandle<d_AtelSetEventJump2> AtelSetEventJump2
-        => new( new FhMethodLocation("FFX.exe", 0x46FED0) );
+        => new( new FhMethodLocation("FFX.exe", 0x46FF40) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void d_AtelEventSetUp(int event_id);

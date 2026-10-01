@@ -41363,11 +41363,6 @@ public static unsafe partial class FhCall {
     public static FhMethodHandle<Fahrenheit.FhCall.d_UnknownFn> FUN_00204ec0 => new( new FhMethodLocation("FFX-2.exe", 0x204EC0) );
 
     // Unannotated function:
-    // unknown undefined FUN_00205130() at 00205130
-
-    public static FhMethodHandle<Fahrenheit.FhCall.d_UnknownFn> FUN_00205130 => new( new FhMethodLocation("FFX-2.exe", 0x205130) );
-
-    // Unannotated function:
     // unknown undefined FUN_002060d0() at 002060d0
 
     public static FhMethodHandle<Fahrenheit.FhCall.d_UnknownFn> FUN_002060d0 => new( new FhMethodLocation("FFX-2.exe", 0x2060D0) );

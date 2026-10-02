@@ -39,9 +39,13 @@ public class FhSettingsUiBase : FhModule {
                new FhModuleHandle<FhSettingsUiX> (this).try_get_module(out _ui_x)
             && new FhModuleHandle<FhSettingsUiX2>(this).try_get_module(out _ui_x2);
 
-        if (got_modules) _settings.selected_ui.set(get_default_ui_id());
+        if (!got_modules) return false;
 
-        return got_modules;
+        if (_settings.selected_ui.get() == string.Empty) {
+            _settings.selected_ui.set(get_default_ui_id());
+        }
+
+        return true;
     }
 
     private void open() {

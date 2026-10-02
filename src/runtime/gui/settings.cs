@@ -35,17 +35,10 @@ public class FhSettingsUiBase : FhModule {
     }
 
     public override bool init(FhModContext mod_context, FileStream global_state_file) {
-        bool got_modules = FhGlobal.game_id switch {
-            FhGameId.FFX    => new FhModuleHandle<FhSettingsUiX> (this).try_get_module(out _ui_x),
-            FhGameId.FFX2   or
-            FhGameId.FFX2LM => new FhModuleHandle<FhSettingsUiX2>(this).try_get_module(out _ui_x2),
-
-            _ => throw new NotImplementedException(),
-        };
-
         _settings.selected_ui.set(get_default_ui_id());
 
-        return got_modules;
+        return new FhModuleHandle<FhSettingsUiX> (this).try_get_module(out _ui_x)
+            && new FhModuleHandle<FhSettingsUiX2>(this).try_get_module(out _ui_x2);
     }
 
     private void open() {

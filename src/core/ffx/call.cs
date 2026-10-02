@@ -1023,7 +1023,7 @@ public static partial class FhCall {
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate byte d_MsMessageCueProcess();
     public static FhMethodHandle<d_MsMessageCueProcess> MsMessageCueProcess
-        => new( new FhMethodLocation("FFX.exe", 0x39CE10) );
+        => new( new FhMethodLocation("FFX.exe", 0x39CDF0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate int d_MsMessageCueRegist(uint type, int arg2, int arg3, byte arg4, byte arg5);
@@ -1078,7 +1078,7 @@ public static partial class FhCall {
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate uint d_MsRegSEplay(byte arg1, int arg2);
     public static FhMethodHandle<d_MsRegSEplay> MsRegSEplay
-        => new( new FhMethodLocation("FFX.exe", 0x3A0120) );
+        => new( new FhMethodLocation("FFX.exe", 0x3A0100) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate uint d_MsRegSEplay2(int arg1, uint arg2);
@@ -1238,52 +1238,52 @@ public static partial class FhCall {
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void d_TOBtlCloseSimpleHelpMes();
     public static FhMethodHandle<d_TOBtlCloseSimpleHelpMes> TOBtlCloseSimpleHelpMes
-        => new( new FhMethodLocation("FFX.exe", 0x490E60) );
+        => new( new FhMethodLocation("FFX.exe", 0x490EF0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate int d_TOBtlDrawCaptureMonsterMessageWindow(int mon_id, int text_id);
     public static FhMethodHandle<d_TOBtlDrawCaptureMonsterMessageWindow> TOBtlDrawCaptureMonsterMessageWindow
-        => new( new FhMethodLocation("FFX.exe", 0x4927E0) );
+        => new( new FhMethodLocation("FFX.exe", 0x492870) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate int d_TOBtlDrawFirstStrikeEnemyMessageWindow();
     public static FhMethodHandle<d_TOBtlDrawFirstStrikeEnemyMessageWindow> TOBtlDrawFirstStrikeEnemyMessageWindow
-        => new( new FhMethodLocation("FFX.exe", 0x493440) );
+        => new( new FhMethodLocation("FFX.exe", 0x4934D0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate int d_TOBtlDrawFirstStrikePlayerMessageWindow();
     public static FhMethodHandle<d_TOBtlDrawFirstStrikePlayerMessageWindow> TOBtlDrawFirstStrikePlayerMessageWindow
-        => new( new FhMethodLocation("FFX.exe", 0x493460) );
+        => new( new FhMethodLocation("FFX.exe", 0x4934F0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public unsafe delegate int d_TOBtlDrawGetItemMessageWindow(byte* item_name, int amount);
     public static FhMethodHandle<d_TOBtlDrawGetItemMessageWindow> TOBtlDrawGetItemMessageWindow
-        => new( new FhMethodLocation("FFX.exe", 0x493480) );
+        => new( new FhMethodLocation("FFX.exe", 0x493510) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate int d_TOBtlDrawGetLimitTypeMessageWindow(int ply_id, int limit_mode);
     public static FhMethodHandle<d_TOBtlDrawGetLimitTypeMessageWindow> TOBtlDrawGetLimitTypeMessageWindow
-        => new( new FhMethodLocation("FFX.exe", 0x493560) );
+        => new( new FhMethodLocation("FFX.exe", 0x4935F0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate int d_TOBtlDrawGetMoneyMessageWindow(int amount);
     public static FhMethodHandle<d_TOBtlDrawGetMoneyMessageWindow> TOBtlDrawGetMoneyMessageWindow
-        => new( new FhMethodLocation("FFX.exe", 0x4935D0) );
+        => new( new FhMethodLocation("FFX.exe", 0x493660) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate int d_TOBtlDrawLearningMessageWindow(int ply_id, int com_id);
     public static FhMethodHandle<d_TOBtlDrawLearningMessageWindow> TOBtlDrawLearningMessageWindow
-        => new( new FhMethodLocation("FFX.exe", 0x495290) );
+        => new( new FhMethodLocation("FFX.exe", 0x495320) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate int d_TOBtlDrawStdChrNameMessageWindow(int chr_id, int text_id);
     public static FhMethodHandle<d_TOBtlDrawStdChrNameMessageWindow> TOBtlDrawStdChrNameMessageWindow
-        => new( new FhMethodLocation("FFX.exe", 0x497170) );
+        => new( new FhMethodLocation("FFX.exe", 0x497200) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public unsafe delegate int d_FUN_0089db10(int arg1, byte* text);
-    public static FhMethodHandle<d_FUN_0089db10> FUN_0089db10
-        => new( new FhMethodLocation("FFX.exe", 0x49DB10) );
+    public unsafe delegate int d_FUN_0049dba0(int arg1, byte* text);
+    public static FhMethodHandle<d_FUN_0049dba0> FUN_0049dba0
+        => new( new FhMethodLocation("FFX.exe", 0x49DBA0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate byte d_TkMenuGetCurrentSummon();

@@ -5,6 +5,8 @@
 
 namespace Fahrenheit;
 
+using UserInterfaces = Dictionary<string, FhSettingsUi>;
+
 /// <summary>
 ///     Pairs a setting category with data
 ///     to control its persistence and rendering.
@@ -73,8 +75,23 @@ public sealed class FhSettingReference<T> : FhSetting where T : FhModule {
 ///     Carries out setting-related operations.
 /// </summary>
 internal sealed class FhSettings {
+    private readonly UserInterfaces _uis = [];
 
-    private readonly ConcurrentDictionary<Type, FhSettingData> _settings = [];
+    private readonly ConcurrentDictionary<Type, FhSettingData>  _settings = [];
+
+    /// <summary>Get the settings UI associated with the given ID.</summary>
+    /// <param name="id">The ID of the desired UI.</param>
+    /// <param name="ui">The UI with the given ID.</param>
+    /// <returns>Whether the operation succeeded.</returns>
+    internal bool get_ui(string id, [NotNullWhen(true)] out FhSettingsUi? ui) {
+        return _uis.TryGetValue(id, out ui);
+    }
+
+    /// <summary>Register a new settings UI for selection by the user.</summary>
+    /// <param name="ui">The new UI to register.</param>
+    public void register_ui(FhSettingsUi ui) {
+        _uis[ui.ModuleType] = ui;
+    }
 
     /// <summary>
     ///     Registers a given module's settings for display.

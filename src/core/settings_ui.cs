@@ -38,7 +38,7 @@ public abstract class FhSettingsUi : FhModule {
     protected float font_scale => float.Min(aspect_scale.X, aspect_scale.Y);
 
     public override bool init(FhModContext mod_context, FileStream global_state_file) {
-        _logger.Info($"Registering new save UI: {ModuleType}");
+        _logger.Info($"Registering new settings UI: {ModuleType}");
         FhInternal.Settings.register_ui(this);
 
         FhApi.Events.Common.GameLoop.PostOpenSettingsMenu.subscribe(post_open);
@@ -49,7 +49,7 @@ public abstract class FhSettingsUi : FhModule {
     private void post_open(EventArgs e) {
         /*
          * NOTE:
-         *   Unlike in vanilla, Fahrenheit does not allow you to open the Escape menu,
+         *   Fahrenheit does not allow you to open the Escape menu,
          *   and hence change your resolution, while the settings UI is open.
          *
          *   Because of this, we can set up the aspect_helper once in PostOpenConfigMenu

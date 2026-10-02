@@ -414,7 +414,7 @@ public static unsafe partial class FhCall {
         uint         p4,  // unused
         bool         p5); // unused
     internal static FhMethodHandle<d_Phyre_PSerialization_PStreamFile_ctor> Phyre_PSerialization_PStreamFile_ctor
-        => new( new FhMethodLocation(0x207BC0, 0x490E40) );
+        => new( new FhMethodLocation(0x207BC0, 0x490D40) );
 
     // RT - VBF loader
 
@@ -575,7 +575,7 @@ public static unsafe partial class FhCall {
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate int d_SndSepPlay(uint sound_id, uint pan, uint volume);
     public static FhMethodHandle<d_SndSepPlay> SndSepPlay
-        => new( new FhMethodLocation(0x486DB0, 0x344720) );
+        => new( new FhMethodLocation(0x486E50, 0x3446D0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate int d_SndSepPlaySimple(uint sound_id);

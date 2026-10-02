@@ -134,7 +134,7 @@ public unsafe sealed class FhPlatformBindingModule : FhModule {
                 *ppDevice,
                 *ppImmediateContext,
                 *ppSwapChain,
-                FhUtil.get_at<HWND>(FhUtil.select(0x8C9CE8, 0x16641B8, 0x16641B8)));
+                FhUtil.get_at<HWND>(FhUtil.select(0x8C9CE8, 0x16631B8, 0x16631B8)));
         }
 
         return hr;

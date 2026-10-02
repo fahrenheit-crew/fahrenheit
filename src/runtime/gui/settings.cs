@@ -77,7 +77,7 @@ public class FhSettingsUiBase : FhModule {
             else {
                 close();
                 FhApi.Events.Common.GameLoop.PostCloseSettingsMenu.invoke(EventArgs.Empty);
-            };
+            }
         }
 
         //TODO: Add visual button to open the UI on the main menu
@@ -88,9 +88,6 @@ public class FhSettingsUiBase : FhModule {
         }
 
         FhInternal.Settings.get_ui(_selected_ui, out FhSettingsUi? ui);
-
-        if (FhSavePal.pal_get_screen_state() is FhSaveScreenState.OPEN) {
-            ui!.render_ui();
-        }
+        ui!.render_ui();
     }
 }

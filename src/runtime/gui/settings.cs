@@ -35,10 +35,13 @@ public class FhSettingsUiBase : FhModule {
     }
 
     public override bool init(FhModContext mod_context, FileStream global_state_file) {
-        _settings.selected_ui.set(get_default_ui_id());
-
-        return new FhModuleHandle<FhSettingsUiX> (this).try_get_module(out _ui_x)
+        bool got_modules =
+               new FhModuleHandle<FhSettingsUiX> (this).try_get_module(out _ui_x)
             && new FhModuleHandle<FhSettingsUiX2>(this).try_get_module(out _ui_x2);
+
+        if (got_modules) _settings.selected_ui.set(get_default_ui_id());
+
+        return got_modules;
     }
 
     private void open() {

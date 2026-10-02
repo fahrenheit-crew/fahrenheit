@@ -63,7 +63,7 @@ public class FhSettingsUiX : FhSettingsUi {
         _texture_menu_new,
     ];
 
-    protected override Vector2 get_ref_size() => new(1600f, 900f);
+    protected override Vector2 get_ref_size() => new(1920f, 1080f);
 
     public FhSettingsUiX() {
         _current_scrollable = null;
@@ -148,6 +148,19 @@ public class FhSettingsUiX : FhSettingsUi {
         };
     }
 
+    private bool has_settings(FhModuleContext module_ctx) {
+        return FhInternal.Settings.try_get(module_ctx.Module, out _);
+    }
+
+    private bool has_settings(FhModContext mod_ctx) {
+        foreach (FhModuleContext module_ctx in mod_ctx.Modules) {
+            if(has_settings(module_ctx))
+                return true;
+        }
+
+        return false;
+    }
+
     // Input handling
     private void handle_input() {
 
@@ -165,6 +178,8 @@ public class FhSettingsUiX : FhSettingsUi {
 
         ui_background();
         ui_help();
+
+        ui_modlist();
 
         // ui_scrollbar_mods();
         //
@@ -185,8 +200,8 @@ public class FhSettingsUiX : FhSettingsUi {
         }.as_uv(_tex_bg_size);
 
         UV screen_uv = new Rect {
-            pos  = new(   0f,   0f),
-            size = new(1600f, 900f),
+            pos  = new(   0f,    0f),
+            size = new(1920f, 1080f),
         }.scale_to_aspect(aspect_helper).as_uv();
 
         draw.AddImage(bg, screen_uv.p0, screen_uv.p1, tex_uv.p0, tex_uv.p1);
@@ -194,7 +209,6 @@ public class FhSettingsUiX : FhSettingsUi {
 
     /// <summary>Render the help text.</summary>
     private void ui_help() {
-
         if (!_texture_help.try_use(out ImTextureRef help, out _)) {
             return;
         }
@@ -206,8 +220,8 @@ public class FhSettingsUiX : FhSettingsUi {
 
         // Saving this one as a rect to more easily calculate the text position later
         Rect bg_screen = new Rect {
-            pos  = new( 151f, 81f),
-            size = new(1589f, 73f),
+            pos  = new( 151f, 80f),
+            size = new(1618f, 70f),
         }.scale_to_aspect(aspect_helper);
 
         UV bg_suv = bg_screen.as_uv();
@@ -226,8 +240,7 @@ public class FhSettingsUiX : FhSettingsUi {
             _ => throw new NotImplementedException(),
         };
 
-        Vector2 text_pos = bg_screen.left;
-        text_pos.X += 20f * aspect_scale.X;
+        Vector2 text_pos = bg_screen.left + new Vector2(24f, 5f) * aspect_scale;
 
         float font_size = 36f * font_scale;
 
@@ -239,5 +252,69 @@ public class FhSettingsUiX : FhSettingsUi {
             true,
             new(Alignment.BEGIN, Alignment.CENTER)
         );
+    }
+
+    private void ui_mod(FhModContext mod_ctx, int global_index, int local_index) {
+        if (!_texture_menu_new.try_use(out ImTextureRef menu_new, out _)) {
+            return;
+        }
+
+        Vector2 plate_tex_size    = new(477f, 65f);
+        Vector2 plate_screen_size = new(477f, 65f);
+
+        float[] plate_tex_dy_array =
+            [ 0f, 75f, 150f, 224f, 299f, 374f, 449f, 523f, 598f, 673f, 748f ];
+
+        float plate_tex_dy    = plate_tex_dy_array[global_index % 11];
+        float plate_screen_dy = plate_screen_size.Y + 12f;
+
+        float plate_shadow_height = 5f * aspect_scale.Y;
+
+        UV plate_tuv = new Rect {
+            pos  = new(1120f, 959f - plate_tex_dy),
+            size = plate_tex_size,
+        }.as_uv(_tex_menu_new_size);
+
+        Rect plate_screen = new Rect {
+            pos  = new(32f, 182f + plate_screen_dy * local_index),
+            size = plate_screen_size,
+        }.scale_to_aspect(aspect_helper);
+
+        UV plate_suv = plate_screen.as_uv();
+
+        ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
+
+        draw.AddImage(menu_new, plate_suv.p0, plate_suv.p1, plate_tuv.p0, plate_tuv.p1);
+
+        Vector2 text_pos = plate_screen.center;
+        text_pos.Y -= plate_shadow_height;
+        text_pos.Y += 1f * aspect_scale.Y;
+
+        float font_size = 36f * font_scale;
+
+        FhApi.Gui.draw_text(
+            draw,
+            text_pos,
+            mod_ctx.Manifest.Name,
+            font_size,
+            true,
+            new(Alignment.CENTER, Alignment.CENTER)
+        );
+    }
+
+    private static FhModContext? _dbg_mod_ctx;
+    private void ui_modlist() {
+        if (_dbg_mod_ctx is null) {
+            foreach (FhModContext ctx in FhApi.Mods.get_mods()) {
+                if (ctx.Manifest.Id != "fhr") continue;
+
+                _dbg_mod_ctx = ctx;
+                break;
+            }
+        }
+
+        for (int i = 0; i < 11; i++) {
+            ui_mod(_dbg_mod_ctx!, i, i);
+        }
     }
 }

@@ -19,7 +19,7 @@ public sealed class FhSoftResetModule : FhModule {
         return true;
     }
 
-    public override void render_imgui() {
+    public unsafe override void render_imgui() {
         bool activated = (ImGui.IsKeyDown(ImGuiKey.GamepadL1) && ImGui.IsKeyDown(ImGuiKey.GamepadR1) && ImGui.IsKeyPressed(ImGuiKey.GamepadStart))
                       || (ImGui.IsKeyDown(ImGuiKey.R)         && ImGui.IsKeyDown(ImGuiKey.S)         && ImGui.IsKeyPressed(ImGuiKey.T));
 
@@ -27,11 +27,11 @@ public sealed class FhSoftResetModule : FhModule {
             return;
 
         if (FhCall.MsBattleCheck.fnptr!() != 0) {
-            FhUtil.set_at<ushort>(FhUtil.select(0xD2C9F1, 0x9F94B5, 0x9F94B5), 1); // btl.battle_end_type = GAME_OVER
-            FhUtil.set_at<byte>  (FhUtil.select(0xD2A8E0, 0x9F78A0, 0x9F78A0), 2); // btl.battle_state    = END
+            FhUtil.set_at<ushort>(FhUtil.select(0xD2C9F1, 0x9F84B5, 0x9F84B5), 1); // btl.battle_end_type = GAME_OVER
+            FhUtil.set_at<byte>  (FhUtil.select(0xD2A8E0, 0x9F68A0, 0x9F68A0), 2); // btl.battle_state    = END
             return;
         }
-          
+
         FhCall.graphicDestroyFmv.fnptr!();
         FhCall.AtelJumpGameOver .fnptr!();
     }

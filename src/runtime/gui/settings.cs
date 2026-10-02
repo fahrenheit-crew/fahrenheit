@@ -10,8 +10,9 @@ public class FhSettingsUiBase : FhModule {
     private FhSettingsUiX?  _ui_x;
     private FhSettingsUiX2? _ui_x2;
 
-    private bool   _is_open;
     private string _selected_ui = string.Empty;
+
+    public bool is_open { get; private set; }
 
     private class FhSettingsUiSettings : FhSettingProvider<FhSettingsUiBase> {
         //TODO: Change this to a Set-based dropdown once that's created.
@@ -69,8 +70,8 @@ public class FhSettingsUiBase : FhModule {
     }
 
     public override void render_imgui() {
-        if (_is_open != (_is_open ^= ImGui.IsKeyPressed(ImGuiKey.F7))) {
-            if (_is_open) {
+        if (is_open != (is_open ^= ImGui.IsKeyPressed(ImGuiKey.F7))) {
+            if (is_open) {
                 open();
                 FhApi.Events.Common.GameLoop.PostOpenSettingsMenu.invoke(EventArgs.Empty);
             }
@@ -83,7 +84,7 @@ public class FhSettingsUiBase : FhModule {
         //TODO: Add visual button to open the UI on the main menu
         //TODO: Prevent settings UI from being opened outside of the main menu
 
-        if (!_is_open) {
+        if (!is_open) {
             return;
         }
 

@@ -70,8 +70,14 @@ public class FhSettingsUiBase : FhModule {
 
     public override void render_imgui() {
         if (_is_open != (_is_open ^= ImGui.IsKeyPressed(ImGuiKey.F7))) {
-            if (_is_open) open();
-            else          close();
+            if (_is_open) {
+                open();
+                FhApi.Events.Common.GameLoop.PostOpenSettingsMenu.invoke(EventArgs.Empty);
+            }
+            else {
+                close();
+                FhApi.Events.Common.GameLoop.PostCloseSettingsMenu.invoke(EventArgs.Empty);
+            };
         }
 
         //TODO: Add visual button to open the UI on the main menu

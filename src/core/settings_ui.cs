@@ -41,6 +41,8 @@ public abstract class FhSettingsUi : FhModule {
         _logger.Info($"Registering new save UI: {ModuleType}");
         FhInternal.Settings.register_ui(this);
 
+        FhApi.Events.Common.GameLoop.PostOpenSettingsMenu.subscribe(post_open);
+
         return true;
     }
 

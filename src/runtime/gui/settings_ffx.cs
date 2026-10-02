@@ -63,7 +63,7 @@ public class FhSettingsUiX : FhSettingsUi {
         _texture_menu_new,
     ];
 
-    protected override Vector2 get_ref_size() => new(1920f, 1080f);
+    protected override Vector2 get_ref_size() => new(1600f, 900f);
 
     public FhSettingsUiX() {
         _current_scrollable = null;

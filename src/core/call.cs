@@ -42,39 +42,39 @@ public static unsafe partial class FhCall {
      */
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public unsafe delegate int d_FUN_0088E6C0_0074C2B0(int param_1);
-    public static FhMethodHandle<d_FUN_0088E6C0_0074C2B0> FUN_0088E6C0_0074C2B0 =>
-        new( new FhMethodLocation(0x48E6C0, 0x34C2B0) );
+    public unsafe delegate int d_FUN_0048E750_0034C250(int param_1);
+    public static FhMethodHandle<d_FUN_0048E750_0034C250> FUN_0048E750_0034C250 =>
+        new( new FhMethodLocation(0x48E750, 0x34C250) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate ushort d_AtelGetSaveDic();
     public static FhMethodHandle<d_AtelGetSaveDic> AtelGetSaveDic =>
-        new( new FhMethodLocation(0x46C3A0, 0x326B60) );
+        new( new FhMethodLocation(0x46C410, 0x326B00) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public unsafe delegate void d_MsSetSavePartyMember(uint param_1, uint param_2, uint param_3);
     public static FhMethodHandle<d_MsSetSavePartyMember> MsSetSavePartyMember =>
-        new( new FhMethodLocation(0x386A10, 0x20EB20) );
+        new( new FhMethodLocation(0x386950, 0x20EAF0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public unsafe delegate int d_FUN_0088E6A0_0074C290(int param_1);
-    public static FhMethodHandle<d_FUN_0088E6A0_0074C290> FUN_0088E6A0_0074C290 =>
-        new( new FhMethodLocation(0x48E6A0, 0x34C290) );
+    public unsafe delegate int d_FUN_0048E730_0034C230(int param_1);
+    public static FhMethodHandle<d_FUN_0048E730_0034C230> FUN_0048E730_0034C230 =>
+        new( new FhMethodLocation(0x48E730, 0x34C230) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public unsafe delegate uint d_MsGetSaveItemNum(uint param_1);
     public static FhMethodHandle<d_MsGetSaveItemNum> MsGetSaveItemNum =>
-        new( new FhMethodLocation(0x390500, 0x220BC0) );
+        new( new FhMethodLocation(0x3904B0, 0x220BA0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate byte d_AtelPushMember();
     public static FhMethodHandle<d_AtelPushMember> AtelPushMember =>
-        new( new FhMethodLocation(0x46E2A0, 0x328DA0) );
+        new( new FhMethodLocation(0x46E310, 0x328D40) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate byte d_AtelPopMember();
     public static FhMethodHandle<d_AtelPopMember> AtelPopMember =>
-        new( new FhMethodLocation(0x46DD40, 0x3287E0) );
+        new( new FhMethodLocation(0x46DDB0, 0x328780) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public unsafe delegate void d_AtelJumpGameOver();
@@ -558,7 +558,7 @@ public static unsafe partial class FhCall {
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate int d_brnd(int rng_idx);
     public static FhMethodHandle<d_brnd> brnd
-        => new( new FhMethodLocation(0x398900, 0x21E290) );
+        => new( new FhMethodLocation(0x3988F0, 0x21E270) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void d_CT_Init(AtelBasicWorker* work, int* storage, AtelStack* stack);

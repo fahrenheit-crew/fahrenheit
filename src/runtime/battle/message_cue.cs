@@ -22,7 +22,7 @@ public unsafe class CustomMessageCueModule : FhModule {
     }
 
     private int _draw_custom_message_window(byte* message) {
-        FFX.FhCall.FUN_0049DBA0.fnptr!(0, message);
+        FFX.FhCall.FUN_0049dba0.fnptr!(0, message);
         return 7;
     }
 

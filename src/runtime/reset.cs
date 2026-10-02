@@ -19,7 +19,7 @@ public sealed class FhSoftResetModule : FhModule {
         return true;
     }
 
-    public unsafe override void render_imgui() {
+    public override void render_imgui() {
         bool activated = (ImGui.IsKeyDown(ImGuiKey.GamepadL1) && ImGui.IsKeyDown(ImGuiKey.GamepadR1) && ImGui.IsKeyPressed(ImGuiKey.GamepadStart))
                       || (ImGui.IsKeyDown(ImGuiKey.R)         && ImGui.IsKeyDown(ImGuiKey.S)         && ImGui.IsKeyPressed(ImGuiKey.T));
 

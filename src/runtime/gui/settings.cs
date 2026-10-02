@@ -13,7 +13,7 @@ public class FhSettingsUiBase : FhModule {
     private bool   _is_open;
     private string _selected_ui = string.Empty;
 
-    private class FhSettingsUiSettings : FhSettingProvider<FhSaveUiSelector> {
+    private class FhSettingsUiSettings : FhSettingProvider<FhSettingsUiBase> {
         //TODO: Change this to a Set-based dropdown once that's created.
         public readonly FhSettingText selected_ui = new("selected_ui", string.Empty);
 

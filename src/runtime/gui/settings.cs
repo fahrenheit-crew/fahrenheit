@@ -8,7 +8,7 @@ namespace Fahrenheit.Runtime.Gui;
 [FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
 public class FhSettingsUiBase : FhModule {
     private FhSettingsUiX?  _ui_x;
-    //private FhSettingsUiX2? _ui_x2;
+    private FhSettingsUiX2? _ui_x2;
 
     private bool   _is_open;
     private string _selected_ui = string.Empty;
@@ -27,8 +27,8 @@ public class FhSettingsUiBase : FhModule {
     private string get_default_ui_id() {
         return FhGlobal.game_id switch {
             FhGameId.FFX    => _ui_x! .ModuleType,
-            //FhGameId.FFX2   or
-            //FhGameId.FFX2LM => _ui_x2!.ModuleType,
+            FhGameId.FFX2   or
+            FhGameId.FFX2LM => _ui_x2!.ModuleType,
 
             _ => throw new NotImplementedException(),
         };
@@ -37,8 +37,8 @@ public class FhSettingsUiBase : FhModule {
     public override bool init(FhModContext mod_context, FileStream global_state_file) {
         bool got_modules = FhGlobal.game_id switch {
             FhGameId.FFX    => new FhModuleHandle<FhSettingsUiX> (this).try_get_module(out _ui_x),
-            //FhGameId.FFX2   or
-            //FhGameId.FFX2LM => new FhModuleHandle<FhSettingsUiX2>(this).try_get_module(out _ui_x2),
+            FhGameId.FFX2   or
+            FhGameId.FFX2LM => new FhModuleHandle<FhSettingsUiX2>(this).try_get_module(out _ui_x2),
 
             _ => throw new NotImplementedException(),
         };

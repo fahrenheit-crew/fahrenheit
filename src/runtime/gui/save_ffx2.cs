@@ -18,7 +18,7 @@ namespace Fahrenheit.Runtime.Gui;
  */
 
 /// <summary>The default save UI renderer for Final Fantasy X-2/Last Mission.</summary>
-//[FhLoad(FhGameId.FFX2 | FhGameId.FFX2LM)]
+[FhLoad(FhGameId.FFX2 | FhGameId.FFX2LM)]
 public sealed class FhSaveUiX2 : FhSaveUi {
     /// <summary>Possible open windows of the save/load menu.</summary>
     private enum UiMode {

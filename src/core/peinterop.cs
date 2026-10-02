@@ -142,10 +142,10 @@ internal static unsafe class FhPhyreUtil {
         return (delegate* unmanaged[Thiscall]<FhPFilteredInstanceList<T>*, void>)(FhEnvironment.BaseAddr + (0 switch {
             _ when typeof(T) == typeof(PTexture2D)
                 || typeof(T) == typeof(PTexture2DD3D11)
-                || typeof(T) == typeof(PTexture2DBase) => FhUtil.select(0x64FF0, 0x37D50, 0x37D50),
+                || typeof(T) == typeof(PTexture2DBase) => FhUtil.select(0x64F30, 0x37D50, 0x37D50),
             _ when typeof(T) == typeof(PTexture3D)
                 || typeof(T) == typeof(PTexture3DD3D11)
-                || typeof(T) == typeof(PTexture3DBase) => FhUtil.select(0x65060, 0x0, 0x0),
+                || typeof(T) == typeof(PTexture3DBase) => FhUtil.select(0x64FA0, 0x0, 0x0),
             _                                          => throw new NotImplementedException($"Instance list filter for type {typeof(T).Name} not known or mapped"),
         }));
     }

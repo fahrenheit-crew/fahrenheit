@@ -58,7 +58,7 @@ public unsafe sealed class FhPhyreLoaderModule : FhModule {
     private readonly uint* _pp_cluster_mgr;
 
     public FhPhyreLoaderModule() {
-        _pp_cluster_mgr = FhUtil.ptr_at<uint>(FhUtil.select(0x8CCA4C, 0x9DB3A8, 0x9DB3A8));
+        _pp_cluster_mgr = FhUtil.ptr_at<uint>(FhUtil.select(0x8CCA4C, 0x9CEE48, 0x9CEE48));
     }
 
     public override bool init(FhModContext mod_context, FileStream global_state_file) {

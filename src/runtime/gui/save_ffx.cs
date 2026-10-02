@@ -18,7 +18,7 @@ namespace Fahrenheit.Runtime.Gui;
  */
 
 /// <summary>The default save UI renderer for Final Fantasy X.</summary>
-//[FhLoad(FhGameId.FFX)]
+[FhLoad(FhGameId.FFX)]
 public sealed class FhSaveUiX : FhSaveUi {
     /// <summary>Possible open windows of the save/load menu.</summary>
     private enum UiMode {

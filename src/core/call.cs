@@ -623,6 +623,11 @@ public static unsafe partial class FhCall {
     public static FhMethodHandle<d_Phyre_PhyrePrintf> Phyre_PhyrePrintf =>
         new ( new FhMethodLocation(0x352F0, 0x48CB70) );
 
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void d_FUN_0046A130_00324820();
+    public static FhMethodHandle<d_FUN_0046A130_00324820> FUN_0046A130_00324820 =>
+        new( new FhMethodLocation(0x46A130, 0x324820) );
+
     // PUBLIC/UNRESTRICTED - END
 
 }

@@ -596,7 +596,6 @@ public static unsafe partial class FhCall {
      * For now we assume sixteen. If you crash with a buffer/stack overrun, increase it.
      */
 
-    // TODO
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void d__Printf(string fmt,
         nint va0,  nint va1,  nint va2,  nint va3,

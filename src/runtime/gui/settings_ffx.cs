@@ -41,10 +41,14 @@ public class FhSettingsUiX : FhSettingsUi {
 
     private FhSettingsCategory? _displayed_settings;
 
-    private Scrollable _scrollable_mods;
+    private Scrollable _scrollable_mods = new() {
+        visible = 11,
+        max     = 50,
+    };
     private Scrollable _scrollable_modules;
     // private ContinuousScrollable _scrollable_settings;
-    private Scrollable _current_scrollable;
+
+    private Scrollable? _current_scrollable;
 
     // Textures
     private bool _loaded_all_textures;
@@ -181,8 +185,8 @@ public class FhSettingsUiX : FhSettingsUi {
 
         ui_modlist();
 
-        // ui_scrollbar_mods();
-        //
+        ui_scrollbars();
+
         // ui_fade();
     }
 
@@ -316,5 +320,159 @@ public class FhSettingsUiX : FhSettingsUi {
         for (int i = 0; i < 11; i++) {
             ui_mod(_dbg_mod_ctx!, i, i);
         }
+    }
+
+    private void ui_scrollbar(Scrollable scrollable, Rect track_bounds) {
+        if (scrollable.max <= scrollable.visible) {
+            return;
+        }
+
+        float progress = scrollable.get_progress();
+
+        float visible_percentage = scrollable.visible / (float)scrollable.max;
+
+        float thumb_margin = 2f * aspect_scale.X;
+
+        float scrollable_height = track_bounds.size.Y - thumb_margin * 2f;
+
+        float thumb_height_max = 0.8f * scrollable_height;
+        float thumb_height_min = float.Min(60f * aspect_scale.Y, thumb_height_max);
+        float thumb_height     = float.Clamp(
+            scrollable_height * visible_percentage,
+            thumb_height_min,
+            thumb_height_max
+        );
+
+        float thumb_y = scrollable.get_progress() * scrollable_height;
+
+        Rect track = track_bounds;
+
+        Rect thumb = new() {
+            pos  = track.top_left + new Vector2(thumb_margin, thumb_margin + thumb_y),
+            size = new(track.size.X - thumb_margin * 2f, thumb_height),
+        };
+
+        Vector2 triangle_size = new(36f, 18f);
+        float   triangle_gap  = triangle_size.Y * 0.8f;
+
+        Rect triangle_top = new() {
+            pos = new(
+                track.top.X - triangle_size.X / 2f,
+                track.top.Y - triangle_gap - triangle_size.Y
+            ),
+            size = triangle_size,
+        };
+
+        Rect triangle_bottom = new() {
+            pos = new(
+                track.bottom.X - triangle_size.X / 2f,
+                track.bottom.Y + triangle_gap
+            ),
+            size = triangle_size,
+        };
+
+        uint track_color = 0xFF000000;
+
+        uint gradient_top    = 0xFFCBCBCB;
+        uint gradient_bottom = 0xFF808080;
+
+        ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
+
+        float thumb_max_y    = scrollable_height - thumb.size.Y;
+        float thumb_progress = progress * thumb_max_y;
+
+        Rect scaled_track = track.scale_to_aspect(aspect_helper);
+        Rect scaled_thumb = thumb.scale_to_aspect(aspect_helper);
+
+        // Make sure that the thumb is still in the middle of the track after scaling
+        scaled_thumb.size.X = float.Round(scaled_track.size.X)
+            - (float.Round(scaled_thumb.pos.X) - float.Round(scaled_track.pos.X)) * 2f;
+
+        Rect scaled_triangle_top    = triangle_top   .scale_to_aspect(aspect_helper);
+        Rect scaled_triangle_bottom = triangle_bottom.scale_to_aspect(aspect_helper);
+
+        float scaled_thumb_max_y = thumb_max_y * aspect_scale.Y;
+
+        draw.AddRectFilled(
+            scaled_track.top_left,
+            scaled_track.bottom_right,
+            track_color
+        );
+
+        draw.AddRectFilledMultiColor(
+            scaled_thumb.top_left,
+            scaled_thumb.bottom_right,
+            gradient_top,
+            gradient_top,
+            gradient_bottom,
+            gradient_bottom
+        );
+
+        FhApi.Gui.draw_triangle_filled_multi_color(
+            draw,
+            scaled_triangle_top,
+            0,
+            gradient_bottom,
+            gradient_bottom,
+            gradient_top
+        );
+
+        FhApi.Gui.draw_triangle_filled_multi_color(
+            draw,
+            scaled_triangle_bottom,
+            2,
+            gradient_bottom,
+            gradient_bottom,
+            gradient_top
+        );
+
+        // Handle input
+        if (scrollable != _current_scrollable) return;
+
+        // Allow grabbing the thumb on the entire track width
+        Rect expanded_thumb = thumb.expand(
+            new(track.size.X - thumb.size.X),
+            new(Alignment.CENTER, Alignment.CENTER)
+        );
+
+        float expanded_track_height = thumb_max_y + (track.size.X - thumb.size.X);
+
+        // if (mouse_clicked(expanded_thumb)) {
+        //     _scrollbar_dragging = true;
+        //     _scrollbar_held_pos = ImGui.GetMousePos() - expanded_thumb.pos;
+        // }
+        //
+        // if (_scrollbar_dragging) {
+        //     Vector2 new_held_pos = ImGui.GetMousePos() - expanded_thumb.pos;
+        //
+        //     float drag_delta     = new_held_pos.Y - _scrollbar_held_pos!.Value.Y;
+        //     float progress_delta = drag_delta / expanded_track_height;
+        //
+        //     _current_scrollable.set_progress(progress + progress_delta, true);
+        //
+        //     if (ImGui.IsMouseReleased(ImGuiMouseButton.Left)) {
+        //         _scrollbar_dragging = false;
+        //         _scrollbar_held_pos = null;
+        //     }
+        //
+        //     return;
+        // }
+
+        if (mouse_clicked(triangle_top, repeat: true)) {
+            scrollable.move_hover(-1);
+        }
+
+        if (mouse_clicked(triangle_bottom, repeat: true)) {
+            scrollable.move_hover(1);
+        }
+    }
+
+    private void ui_scrollbars() {
+        Rect scrollbar_mods = new() {
+            pos  = new(527f, 208f),
+            size = new( 17f, 757f),
+        };
+
+        ui_scrollbar(_scrollable_mods, scrollbar_mods);
     }
 }

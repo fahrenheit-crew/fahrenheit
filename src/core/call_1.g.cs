@@ -32560,11 +32560,6 @@ public static unsafe partial class FhCall {
 
     public static FhMethodHandle<Fahrenheit.FhCall.d_UnknownFn> FUN_0046A0E0_003247D0 => new( new FhMethodLocation(0x46A0E0, 0x3247D0) );
 
-    // Fused unannotated identical entry: unknown undefined FUN_0046a130()
-    // at (FFX.exe+46A130, FFX-2.exe+324820)
-
-    public static FhMethodHandle<Fahrenheit.FhCall.d_UnknownFn> FUN_0046A130_00324820 => new( new FhMethodLocation(0x46A130, 0x324820) );
-
     // Fused unannotated identical entry: unknown undefined FUN_0046a170()
     // at (FFX.exe+46A170, FFX-2.exe+324860)
 

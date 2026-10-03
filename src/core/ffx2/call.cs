@@ -20,8 +20,8 @@ namespace Fahrenheit.FFX2;
 public static unsafe partial class FhCall {
 
     [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
-    public unsafe delegate void d_FUN_00534BD0(int* ptr_this, int arg2, int arg3, int arg4, int arg5, int arg6, int* arg7, int* arg8, int* arg9);
-    public static FhMethodHandle<d_FUN_00534BD0> FUN_00534BD0
+    public unsafe delegate void d_FUN_00134BD0(int* ptr_this, int arg2, int arg3, int arg4, int arg5, int arg6, int* arg7, int* arg8, int* arg9);
+    public static FhMethodHandle<d_FUN_00134BD0> FUN_00134BD0
         => new( new FhMethodLocation("FFX-2.exe", 0x134BD0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -70,8 +70,8 @@ public static unsafe partial class FhCall {
         => new( new FhMethodLocation("FFX-2.exe", 0x1EB9E0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate int d_FUN_00608380(uint arg1);
-    public static FhMethodHandle<d_FUN_00608380> FUN_00608380
+    public delegate int d_FUN_00208380(uint arg1);
+    public static FhMethodHandle<d_FUN_00208380> FUN_00208380
         => new( new FhMethodLocation("FFX-2.exe", 0x208380) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -250,8 +250,8 @@ public static unsafe partial class FhCall {
         => new( new FhMethodLocation("FFX-2.exe", 0x229260) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate uint d_FUN_006294d0(uint arg1, int arg2, int arg3);
-    public static FhMethodHandle<d_FUN_006294d0> FUN_006294d0
+    public delegate uint d_FUN_002294d0(uint arg1, int arg2, int arg3);
+    public static FhMethodHandle<d_FUN_002294d0> FUN_002294d0
         => new( new FhMethodLocation("FFX-2.exe", 0x2294D0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -265,8 +265,8 @@ public static unsafe partial class FhCall {
         => new( new FhMethodLocation("FFX-2.exe", 0x22A0D0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public unsafe delegate uint d_FUN_0062AB10(uint chr_id, uint sound_id);
-    public static FhMethodHandle<d_FUN_0062AB10> FUN_0062AB10
+    public unsafe delegate uint d_FUN_0022AB10(uint chr_id, uint sound_id);
+    public static FhMethodHandle<d_FUN_0022AB10> FUN_0022AB10
         => new( new FhMethodLocation("FFX-2.exe", 0x22AB10) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -315,8 +315,8 @@ public static unsafe partial class FhCall {
         => new( new FhMethodLocation("FFX-2.exe", 0x234AB0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate uint d_FUN_00634AD0(Chr* chr);
-    public static FhMethodHandle<d_FUN_00634AD0> FUN_00634AD0
+    public delegate uint d_FUN_00234AD0(Chr* chr);
+    public static FhMethodHandle<d_FUN_00234AD0> FUN_00234AD0
         => new( new FhMethodLocation("FFX-2.exe", 0x234AD0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -340,8 +340,8 @@ public static unsafe partial class FhCall {
         => new( new FhMethodLocation("FFX-2.exe", 0x2363D0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate uint d_FUN_00636660(uint chr_id, Chr* chr, byte arg3);
-    public static FhMethodHandle<d_FUN_00636660> FUN_00636660
+    public delegate uint d_FUN_00236660(uint chr_id, Chr* chr, byte arg3);
+    public static FhMethodHandle<d_FUN_00236660> FUN_00236660
         => new( new FhMethodLocation("FFX-2.exe", 0x236660) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -364,7 +364,6 @@ public static unsafe partial class FhCall {
     public static FhMethodHandle<d_MsCommandComplete> MsCommandComplete
         => new( new FhMethodLocation("FFX-2.exe", 0x240190) );
 
-    ////6422a0
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void d_MsDamageBufferExe(uint user_id, uint target_id, DamageBuffer* dmg_buffer);
     public static FhMethodHandle<d_MsDamageBufferExe> MsDamageBufferExe
@@ -464,23 +463,23 @@ public static unsafe partial class FhCall {
         => new( new FhMethodLocation("FFX-2.exe", 0x376830) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate int d_FUN_776DE0(uint arg1, uint ability_slot);
-    public static FhMethodHandle<d_FUN_776DE0> FUN_776DE0
+    public delegate int d_FUN_376DE0(uint arg1, uint ability_slot);
+    public static FhMethodHandle<d_FUN_376DE0> FUN_376DE0
         => new( new FhMethodLocation("FFX-2.exe", 0x376DE0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate void d_FUN_777190(uint arg1);
-    public static FhMethodHandle<d_FUN_777190> FUN_777190
+    public delegate void d_FUN_377190(uint arg1);
+    public static FhMethodHandle<d_FUN_377190> FUN_377190
         => new( new FhMethodLocation("FFX-2.exe", 0x377190) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate void d_FUN_777B80(uint arg1);
-    public static FhMethodHandle<d_FUN_777B80> FUN_777B80
+    public delegate void d_FUN_377B80(uint arg1);
+    public static FhMethodHandle<d_FUN_377B80> FUN_377B80
         => new( new FhMethodLocation("FFX-2.exe", 0x377B80) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate void d_FUN_778080(int arg1, int arg2, int arg3, int arg4);
-    public static FhMethodHandle<d_FUN_778080> FUN_778080
+    public delegate void d_FUN_378080(int arg1, int arg2, int arg3, int arg4);
+    public static FhMethodHandle<d_FUN_378080> FUN_378080
         => new( new FhMethodLocation("FFX-2.exe", 0x378080) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -526,7 +525,7 @@ public static unsafe partial class FhCall {
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void d_TOMenuDrawRotPlate(int arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7);
     public static FhMethodHandle<d_TOMenuDrawRotPlate> TOMenuDrawRotPlate
-        => new( new FhMethodLocation("FFX-2.exe", 0x379D20) );
+        => new( new FhMethodLocation("FFX-2.exe", 0x379CE0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void d_TOMkpExPlateParam(int arg1, int arg2, int arg3, int arg4, int arg5);

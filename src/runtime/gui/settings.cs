@@ -6,107 +6,89 @@
 namespace Fahrenheit.Runtime.Gui;
 
 [FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
-public sealed class FhModConfigModule : FhModule {
-    //private bool _dockbuilder_initialized = false;
-    private bool _open;
-    private int  _selected_mod_idx;
+public class FhSettingsUiBase : FhModule {
+    private FhSettingsUiX?  _ui_x;
+    private FhSettingsUiX2? _ui_x2;
+
+    private string _selected_ui = string.Empty;
+
+    public bool is_open { get; private set; }
+
+    private class FhSettingsUiSettings : FhSettingProvider<FhSettingsUiBase> {
+        //TODO: Change this to a Set-based dropdown once that's created.
+        public readonly FhSettingText selected_ui = new("selected_ui", string.Empty);
+
+        internal override IEnumerable<FhSetting> get() {
+            return [ selected_ui ];
+        }
+    }
+
+    private readonly FhSettingsUiSettings _settings = new();
+
+    private string get_default_ui_id() {
+        return FhGlobal.game_id switch {
+            FhGameId.FFX    => _ui_x! .ModuleType,
+            FhGameId.FFX2   or
+            FhGameId.FFX2LM => _ui_x2!.ModuleType,
+
+            _ => throw new NotImplementedException(),
+        };
+    }
 
     public override bool init(FhModContext mod_context, FileStream global_state_file) {
+        bool got_modules =
+               new FhModuleHandle<FhSettingsUiX> (this).try_get_module(out _ui_x)
+            && new FhModuleHandle<FhSettingsUiX2>(this).try_get_module(out _ui_x2);
+
+        if (!got_modules) return false;
+
+        if (_settings.selected_ui.get() == string.Empty) {
+            _settings.selected_ui.set(get_default_ui_id());
+        }
+
         return true;
     }
 
-    internal void open() {
-        _open = true;
-        //TODO: Prevent the game from playing the Zanarkand scene while the config menu is open
+    private void open() {
+        _selected_ui = _settings.selected_ui.get();
+        if (FhInternal.Settings.get_ui(_selected_ui, out _)) return;
+
+        _logger.Warning($"Failed to find desired settings UI \"{_settings.selected_ui.get()}\", falling back to default.");
+
+        _settings.selected_ui.set(get_default_ui_id());
+        _selected_ui = _settings.selected_ui.get();
+        if (FhInternal.Settings.get_ui(_settings.selected_ui.get(), out _)) return;
+
+        // Something has gone disastrously wrong – we're missing our default UI!
+        _logger.Error("Failed to find default settings UI.");
+
+        throw new NotImplementedException("Failed to find default settings UI.");
     }
 
-    internal void close() {
-        _open             = false;
-        _selected_mod_idx = 0;
-
-        FhInternal.Settings.save_all();
+    private void close() {
+        _selected_ui = string.Empty;
     }
 
     public override void render_imgui() {
-        //TODO: Add a proper open/close button in the topright corner
-        if (ImGui.IsKeyPressed(ImGuiKey.F7)) {
-            if (_open) close();
-            else       open();
-        }
-
-        if (!_open) return;
-
-        ImGuiViewportPtr viewport = ImGui.GetMainViewport();
-
-        ImGui.SetNextWindowPos     (viewport.WorkPos);
-        ImGui.SetNextWindowSize    (viewport.WorkSize);
-        ImGui.SetNextWindowViewport(viewport.ID);
-
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding,   0f);
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0f);
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding,    Vector2.Zero);
-
-        ImGui.PushStyleColor(ImGuiCol.WindowBg, new Vector4(0, 0, 0, 1));
-        ImGui.PushFont(FhApi.Gui.FONT_DEFAULT, 20f);
-
-        if (ImGui.Begin("ModConfig", FhApi.Gui.WINDOW_FLAGS_FULLSCREEN)) {
-            // TODO: Make the docking code in https://gist.github.com/fkelava/6c6ab0089a63280fdfb4bea4a9cdf9b0 work
-            // Docking code here
-
-            ImGui.SetNextWindowPos (viewport.WorkPos);
-            ImGui.SetNextWindowSize(new (viewport.WorkSize.X * 0.16f, viewport.WorkSize.Y));
-
-            if (ImGui.Begin("ModTabs", ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoMove)) {
-                int   mod_idx   = 0;
-                float tab_width = ImGui.GetContentRegionAvail().X;
-
-                foreach (FhModContext mod in FhApi.Mods.get_mods()) {
-                    if (has_settings(mod)) {
-                        render_mod_tab(mod, mod_idx, tab_width);
-                    }
-
-                    mod_idx++;
-                }
+        if (is_open != (is_open ^= ImGui.IsKeyPressed(ImGuiKey.F7))) {
+            if (is_open) {
+                open();
+                FhApi.Events.Common.GameLoop.PostOpenSettingsMenu.invoke(EventArgs.Empty);
             }
-            ImGui.End();
-
-            ImGui.SetNextWindowPos (new Vector2(viewport.WorkPos.X + viewport.WorkSize.X * 0.17f, viewport.WorkPos.Y));
-            ImGui.SetNextWindowSize(new Vector2(viewport.WorkSize.X * 0.83f, viewport.WorkSize.Y));
-
-            if (ImGui.Begin("ModSettings", ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoMove)) {
-                FhModContext[] mods = [ .. FhApi.Mods.get_mods() ];
-                foreach (FhModuleContext module in mods[_selected_mod_idx].Modules) {
-                    if (!FhInternal.Settings.try_get(module.Module, out FhSettingsCategory? settings))
-                        continue;
-
-                    settings.render_name();
-                    settings.render();
-                }
+            else {
+                close();
+                FhApi.Events.Common.GameLoop.PostCloseSettingsMenu.invoke(EventArgs.Empty);
             }
-
-            ImGui.End();
         }
 
-        // ImGui uses the style var in `Begin()` so we're free to pop it before `End()`
-        // See: https://github.com/ocornut/imgui/issues/1797#issuecomment-644131003
-        ImGui.PopStyleVar(3);
-        ImGui.PopStyleColor();
-        ImGui.PopFont();
+        //TODO: Add visual button to open the UI on the main menu
+        //TODO: Prevent settings UI from being opened outside of the main menu
 
-        ImGui.End(); // Closing the fullscreen window!
-    }
-
-    private void render_mod_tab(FhModContext mod, int mod_idx, float tab_width) {
-        if (ImGui.Button($"{mod.Manifest.Name}##mod{mod_idx}", new Vector2(tab_width, 0)))
-            _selected_mod_idx = mod_idx;
-    }
-
-    private static bool has_settings(FhModContext mod_context) {
-        foreach (FhModuleContext module_context in mod_context.Modules) {
-            if (FhInternal.Settings.try_get(module_context.Module, out _))
-                return true;
+        if (!is_open) {
+            return;
         }
 
-        return false;
+        FhInternal.Settings.get_ui(_selected_ui, out FhSettingsUi? ui);
+        ui!.render_ui();
     }
 }

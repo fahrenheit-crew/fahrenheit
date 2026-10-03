@@ -476,4 +476,65 @@ public unsafe class FhGui {
         return text_size;
     }
 
+    /// <summary>Draw a filled triangle with a gradient to the given draw list.</summary>
+    /// <param name="draw_list">The draw list to draw the triangle to.</param>
+    /// <param name="bounds">The bounding box of the desired triangle.</param>
+    /// <param name="direction">The cardinal direction the triangle should point in.</param>
+    /// <param name="color_base1">The color of the left point of the base of the triangle.</param>
+    /// <param name="color_base2">The color of the right point of the base of the triangle.</param>
+    /// <param name="color_peak">The color of the top point of the triangle.</param>
+    /// <seealso cref="ImGui.GetWindowDrawList()"/>
+    /// <seealso cref="ImGui.GetBackgroundDrawList()"/>
+    /// <seealso cref="ImGui.GetForegroundDrawList()"/>
+    public void draw_triangle_filled_multi_color(
+        ImDrawListPtr draw_list,
+        Rect          bounds,
+        int           direction,
+        uint          color_base1,
+        uint          color_base2,
+        uint          color_peak
+    ) {
+        if (((color_base1 | color_base2 | color_peak) & 0xFF000000) == 0) {
+            return;
+        }
+
+        Vector2 uv = draw_list.Data.TexUvWhitePixel;
+
+        draw_list.PrimReserve(3, 3);
+
+        draw_list.PrimWriteIdx((ushort)draw_list.VtxCurrentIdx);
+        draw_list.PrimWriteIdx((ushort)(draw_list.VtxCurrentIdx + 1));
+        draw_list.PrimWriteIdx((ushort)(draw_list.VtxCurrentIdx + 2));
+
+        Vector2 peak = direction switch {
+            0 => bounds.top,
+            1 => bounds.right,
+            2 => bounds.bottom,
+            3 => bounds.left,
+
+            _ => throw new ArgumentOutOfRangeException(nameof(direction), direction, $"Expected {nameof(direction)} to be within 0-3."),
+        };
+
+        Vector2 base1 = direction switch {
+            0 => bounds.bottom_left,
+            1 => bounds.top_left,
+            2 => bounds.top_right,
+            3 => bounds.bottom_right,
+
+            _ => throw new ArgumentOutOfRangeException(nameof(direction), direction, $"Expected {nameof(direction)} to be within 0-3."),
+        };
+
+        Vector2 base2 = direction switch {
+            0 => bounds.bottom_right,
+            1 => bounds.bottom_left,
+            2 => bounds.top_left,
+            3 => bounds.top_right,
+
+            _ => throw new ArgumentOutOfRangeException(nameof(direction), direction, $"Expected {nameof(direction)} to be within 0-3."),
+        };
+
+        draw_list.PrimWriteVtx(peak , uv, color_peak);
+        draw_list.PrimWriteVtx(base1, uv, color_base1);
+        draw_list.PrimWriteVtx(base2, uv, color_base2);
+    }
 }

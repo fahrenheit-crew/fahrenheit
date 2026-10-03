@@ -158,6 +158,19 @@ public class FhSettingsUiX2 : FhSettingsUi {
         };
     }
 
+    private bool has_settings(FhModuleContext module_ctx) {
+        return FhInternal.Settings.try_get(module_ctx.Module, out _);
+    }
+
+    private bool has_settings(FhModContext mod_ctx) {
+        foreach (FhModuleContext module_ctx in mod_ctx.Modules) {
+            if (has_settings(module_ctx))
+                return true;
+        }
+
+        return false;
+    }
+
     // Input handling
     private void handle_input() {
 
@@ -176,9 +189,42 @@ public class FhSettingsUiX2 : FhSettingsUi {
         ui_background();
         ui_help();
 
+        ui_modlist();
+
         // ui_scrollbar_mods();
         //
         // ui_fade();
+    }
+
+    /// <summary>Draws the highlights/shadows for the save slot texture.</summary>
+    private void draw_highlight_shadow(ImDrawListPtr draw, Rect bounds, float thickness, uint highlight, uint shadow) {
+        // Top Highlight
+        draw.AddRectFilled(
+            bounds.top_left,
+            new Vector2(bounds.top_right.X, bounds.top_left.Y + thickness),
+            highlight
+        );
+
+        // Left Highlight
+        draw.AddRectFilled(
+            new Vector2(bounds.top_left.X, bounds.top_left.Y + thickness),
+            new Vector2(bounds.top_left.X + thickness, bounds.bottom_left.Y),
+            highlight
+        );
+
+        // Bottom Shadow - intentional overlap with left highlight to mimic the vanilla game!
+        draw.AddRectFilled(
+            new Vector2(bounds.top_left.X, bounds.bottom_left.Y - thickness),
+            bounds.bottom_right,
+            shadow
+        );
+
+        // Right Shadow
+        draw.AddRectFilled(
+            bounds.top_right + new Vector2(-thickness, thickness),
+            new Vector2(bounds.bottom_right.X, bounds.bottom_right.Y - thickness),
+            shadow
+        );
     }
 
     /// <summary>Render the background.</summary>
@@ -357,8 +403,7 @@ public class FhSettingsUiX2 : FhSettingsUi {
             _ => throw new NotImplementedException(),
         };
 
-        Vector2 text_pos = bg_screen.left;
-        text_pos.X += 219f * aspect_scale.X;
+        Vector2 text_pos = bg_screen.left + new Vector2(219f, 0f) * aspect_scale;
 
         float font_size = 36f * font_scale;
 
@@ -370,5 +415,92 @@ public class FhSettingsUiX2 : FhSettingsUi {
             true,
             new(Alignment.BEGIN, Alignment.CENTER)
         );
+    }
+
+    private void ui_mod(FhModContext mod_ctx, int global_index, int local_index) {
+        if (!_texture_plate.try_use(out ImTextureRef plate, out _)) {
+            return;
+        }
+
+        // Texture coordinates
+        int   tex_idx     = (local_index % 8) + 1;
+        float slice_size  = 64f;
+        float plate_max_y = slice_size * tex_idx;
+
+        Vector2 plate_screen_size = new(477f, 65f);
+        float plate_screen_dy = plate_screen_size.Y + 12f;
+
+        UV plate_tuv = new Rect {
+            pos  = new(  0f, plate_max_y - slice_size),
+            size = new(512f, slice_size),
+        }.as_uv(_tex_plate_size);
+
+        Rect plate_screen = new Rect {
+            pos  = new(32f, 182f + plate_screen_dy * local_index),
+            size = plate_screen_size,
+        }.scale_to_aspect(aspect_helper);
+
+        UV plate_suv = plate_screen.as_uv();
+
+        ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
+
+        Vector2 shadow_offset = 7f * aspect_scale;
+
+        draw.AddRectFilled(
+            plate_suv.p0 + shadow_offset,
+            plate_suv.p1 + shadow_offset,
+            0xA5000000
+        );
+
+        draw.AddImage(
+            plate,
+            plate_suv.p0,
+            plate_suv.p1,
+            plate_tuv.p0,
+            plate_tuv.p1,
+            0xFFE4F0F1
+        );
+
+        // Draw shading/edges on the plate texture for definition
+        float border_thickness = 5f * aspect_scale.Y;
+        uint  highlight        = 0x28FFFFFF;
+        uint  shadow           = 0x80000000;
+
+        draw_highlight_shadow(
+            draw,
+            plate_screen,
+            border_thickness,
+            highlight,
+            shadow
+        );
+
+        Vector2 text_pos = plate_screen.center * aspect_scale;
+
+        float font_size = 36f * font_scale;
+
+        FhApi.Gui.draw_text(
+            draw,
+            text_pos,
+            mod_ctx.Manifest.Name,
+            font_size,
+            true,
+            new(Alignment.CENTER, Alignment.CENTER)
+        );
+    }
+
+    private static FhModContext? _dbg_mod_ctx;
+    private void ui_modlist() {
+        if (_dbg_mod_ctx is null) {
+            foreach (FhModContext ctx in FhApi.Mods.get_mods()) {
+                if (ctx.Manifest.Id != "fhr") continue;
+
+                _dbg_mod_ctx = ctx;
+                break;
+            }
+        }
+
+        for (int i = 0; i < 11; i++) {
+            ui_mod(_dbg_mod_ctx!, i, i);
+        }
     }
 }

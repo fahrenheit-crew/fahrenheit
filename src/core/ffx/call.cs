@@ -1378,68 +1378,68 @@ public static partial class FhCall {
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate int d_TkMn2GetSummonGrowMax();
     public static FhMethodHandle<d_TkMn2GetSummonGrowMax> TkMn2GetSummonGrowMax
-        => new( new FhMethodLocation("FFX.exe", 0x4C1C20) );
+        => new( new FhMethodLocation("FFX.exe", 0x4C1C40) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate void d_FUN_008c1c70(int arg1, int arg2, uint arg3, int arg4);
-    public static FhMethodHandle<d_FUN_008c1c70> FUN_008c1c70
-        => new( new FhMethodLocation("FFX.exe", 0x4C1C70) );
+    public delegate void d_FUN_004c1c90(int arg1, int arg2, uint arg3, int arg4);
+    public static FhMethodHandle<d_FUN_004c1c90> FUN_004c1c90
+        => new( new FhMethodLocation("FFX.exe", 0x4C1C90) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public unsafe delegate void d_FUN_008c2370(TkMenuItemListId menu_list_id, Equipment* gear);
-    public static FhMethodHandle<d_FUN_008c2370> FUN_008c2370 // PrepareMenuList
-        => new( new FhMethodLocation("FFX.exe", 0x4C2370) );
+    public unsafe delegate void d_FUN_004c2390(TkMenuItemListId menu_list_id, Equipment* gear);
+    public static FhMethodHandle<d_FUN_004c2390> FUN_004c2390 // PrepareMenuList
+        => new( new FhMethodLocation("FFX.exe", 0x4C2390) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public unsafe delegate void d_FUN_008c2c40(int arg1, int arg2, byte* arg3);
-    public static FhMethodHandle<d_FUN_008c2c40> FUN_008c2c40
-        => new( new FhMethodLocation("FFX.exe", 0x4C2C40) );
+    public unsafe delegate void d_FUN_004c2c60(int arg1, int arg2, byte* arg3);
+    public static FhMethodHandle<d_FUN_004c2c60> FUN_004c2c60
+        => new( new FhMethodLocation("FFX.exe", 0x4C2C60) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate int d_TkSetLegendAbility(int chr_id, int level);
     public static FhMethodHandle<d_TkSetLegendAbility> TkSetLegendAbility
-        => new( new FhMethodLocation("FFX.exe", 0x4C3150) );
+        => new( new FhMethodLocation("FFX.exe", 0x4C3170) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate void d_FUN_008cc120(int arg1);
-    public static FhMethodHandle<d_FUN_008cc120> FUN_008cc120
-        => new( new FhMethodLocation("FFX.exe", 0x4CC120) );
+    public delegate void d_FUN_004cc150(int arg1);
+    public static FhMethodHandle<d_FUN_004cc150> FUN_004cc150
+        => new( new FhMethodLocation("FFX.exe", 0x4CC150) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public unsafe delegate void d_TkMenuCtrl(TkMenu* menu, int arg);
     public static FhMethodHandle<d_TkMenuCtrl> TkMenuCtrlSummon
-        => new( new FhMethodLocation("FFX.exe", 0x4CC300) );
+        => new( new FhMethodLocation("FFX.exe", 0x4CC330) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public unsafe delegate void d_FUN_008cd960(TkWindow* window, int arg2, int arg3, float arg4, float arg5);
-    public static FhMethodHandle<d_FUN_008cd960> FUN_008cd960
-        => new( new FhMethodLocation("FFX.exe", 0x4CD960) );
+    public unsafe delegate void d_FUN_004cd990(TkWindow* window, int arg2, int arg3, float arg4, float arg5);
+    public static FhMethodHandle<d_FUN_004cd990> FUN_004cd990
+        => new( new FhMethodLocation("FFX.exe", 0x4CD990) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public unsafe delegate void d_FUN_008cd9f0(TkWindow* window, int arg2, int arg3);
-    public static FhMethodHandle<d_FUN_008cd9f0> FUN_008cd9f0
-        => new( new FhMethodLocation("FFX.exe", 0x4CD9F0) );
+    public unsafe delegate void d_FUN_004cda20(TkWindow* window, int arg2, int arg3);
+    public static FhMethodHandle<d_FUN_004cda20> FUN_004cda20
+        => new( new FhMethodLocation("FFX.exe", 0x4CDA20) );
 
     // DrawAeonCustomizationMenu
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public unsafe delegate void d_FUN_008cdb70(TkWindow* window);
-    public static FhMethodHandle<d_FUN_008cdb70> FUN_008cdb70
-        => new( new FhMethodLocation("FFX.exe", 0x4CDB70) );
+    public unsafe delegate void d_FUN_004cdba0(TkWindow* window);
+    public static FhMethodHandle<d_FUN_004cdba0> FUN_004cdba0
+        => new( new FhMethodLocation("FFX.exe", 0x4CDBA0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate void d_FUN_008d4140(uint arg1, int arg2);
-    public static FhMethodHandle<d_FUN_008d4140> FUN_008d4140
-        => new( new FhMethodLocation("FFX.exe", 0x4D4140) );
+    public delegate void d_FUN_004d4170(uint arg1, int arg2);
+    public static FhMethodHandle<d_FUN_004d4170> FUN_004d4170
+        => new( new FhMethodLocation("FFX.exe", 0x4D4170) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate uint d_FUN_008d48e0();
-    public static FhMethodHandle<d_FUN_008d48e0> FUN_008d48e0
-        => new( new FhMethodLocation("FFX.exe", 0x4D48E0) );
+    public delegate uint d_FUN_004d4910();
+    public static FhMethodHandle<d_FUN_004d4910> FUN_004d4910
+        => new( new FhMethodLocation("FFX.exe", 0x4D4910) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate bool d_FUN_008d5720(uint gear_id, int arg2);
-    public static FhMethodHandle<d_FUN_008d5720> FUN_008d5720
-        => new( new FhMethodLocation("FFX.exe", 0x4D5720) );
+    public delegate bool d_FUN_004d5750(uint gear_id, int arg2);
+    public static FhMethodHandle<d_FUN_004d5750> FUN_004d5750
+        => new( new FhMethodLocation("FFX.exe", 0x4D5750) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public unsafe delegate void d_UpdateGearCustomizationMenuState(TkWindow* window);

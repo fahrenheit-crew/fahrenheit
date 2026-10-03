@@ -581,7 +581,6 @@ public static unsafe partial class FhCall {
     public static FhMethodHandle<d_SndSepPlay> SndSepPlay
         => new( new FhMethodLocation(0x486E50, 0x3446D0) );
 
-    // TODO
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate int d_SndSepPlaySimple(uint sound_id);
     public static FhMethodHandle<d_SndSepPlaySimple> SndSepPlaySimple

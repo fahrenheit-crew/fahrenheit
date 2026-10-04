@@ -489,7 +489,7 @@ public unsafe class FhGui {
     public void draw_triangle_filled_multi_color(
         ImDrawListPtr draw_list,
         Rect          bounds,
-        int           direction,
+        Direction     direction,
         uint          color_base1,
         uint          color_base2,
         uint          color_peak
@@ -507,30 +507,30 @@ public unsafe class FhGui {
         draw_list.PrimWriteIdx((ushort)(draw_list.VtxCurrentIdx + 2));
 
         Vector2 peak = direction switch {
-            0 => bounds.top,
-            1 => bounds.right,
-            2 => bounds.bottom,
-            3 => bounds.left,
+            Direction.UP    => bounds.top,
+            Direction.RIGHT => bounds.right,
+            Direction.DOWN  => bounds.bottom,
+            Direction.LEFT  => bounds.left,
 
-            _ => throw new ArgumentOutOfRangeException(nameof(direction), direction, $"Expected {nameof(direction)} to be within 0-3."),
+            _ => throw new UnreachableException(),
         };
 
         Vector2 base1 = direction switch {
-            0 => bounds.bottom_left,
-            1 => bounds.top_left,
-            2 => bounds.top_right,
-            3 => bounds.bottom_right,
+            Direction.UP    => bounds.bottom_left,
+            Direction.RIGHT => bounds.top_left,
+            Direction.DOWN  => bounds.top_right,
+            Direction.LEFT  => bounds.bottom_right,
 
-            _ => throw new ArgumentOutOfRangeException(nameof(direction), direction, $"Expected {nameof(direction)} to be within 0-3."),
+            _ => throw new UnreachableException(),
         };
 
         Vector2 base2 = direction switch {
-            0 => bounds.bottom_right,
-            1 => bounds.bottom_left,
-            2 => bounds.top_left,
-            3 => bounds.top_right,
+            Direction.UP    => bounds.bottom_right,
+            Direction.RIGHT => bounds.bottom_left,
+            Direction.DOWN  => bounds.top_left,
+            Direction.LEFT  => bounds.top_right,
 
-            _ => throw new ArgumentOutOfRangeException(nameof(direction), direction, $"Expected {nameof(direction)} to be within 0-3."),
+            _ => throw new UnreachableException(),
         };
 
         draw_list.PrimWriteVtx(peak , uv, color_peak);

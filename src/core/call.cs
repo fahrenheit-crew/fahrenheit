@@ -41,6 +41,8 @@ public static unsafe partial class FhCall {
      * circumvent it. We simply refuse to support any such scenario.
      */
 
+    // Seymour
+
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public unsafe delegate int d_FUN_0048E750_0034C250(int param_1);
     public static FhMethodHandle<d_FUN_0048E750_0034C250> FUN_0048E750_0034C250 =>
@@ -76,6 +78,8 @@ public static unsafe partial class FhCall {
     public static FhMethodHandle<d_AtelPopMember> AtelPopMember =>
         new( new FhMethodLocation(0x46DDB0, 0x328780) );
 
+    // RT - Soft-reset
+
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public unsafe delegate void d_AtelJumpGameOver();
     public static FhMethodHandle<d_AtelJumpGameOver> AtelJumpGameOver
@@ -94,13 +98,13 @@ public static unsafe partial class FhCall {
     // RT - File cross-loader
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public unsafe delegate int d_FUN_00607E00_00890EC0(byte* ptr_path, byte* arg2, byte* arg3);
-    public static FhMethodHandle<d_FUN_00607E00_00890EC0> FUN_00607E00_00890EC0 =>
-        new( new FhMethodLocation(0x207E00, 0x490EC0) );
+    public unsafe delegate int d_FUN_00207C40_00490DC0(byte* ptr_path, byte* arg2, byte* arg3);
+    public static FhMethodHandle<d_FUN_00207C40_00490DC0> FUN_00207C40_00490DC0 =>
+        new( new FhMethodLocation(0x207C40, 0x490DC0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public unsafe delegate void d_FUN_00607D50_00890FA0(byte* ptr_path);
-    public static FhMethodHandle<d_FUN_00607D50_00890FA0> FUN_00607D50_00890FA0 =>
+    public static FhMethodHandle<d_FUN_00607D50_00890FA0> FUN_00207D50_00490FA0 =>
         new( new FhMethodLocation(0x207D50, 0x490FA0) );
 
     [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
@@ -195,146 +199,146 @@ public static unsafe partial class FhCall {
     [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
     public unsafe delegate VFXDynamicGeometry* d_ClassVFXRenderDataTable_GetDynamicGeometryByInstance(ClassVFXRenderDataTable* ptr_this, uint param_1, uint param_2);
     public static FhMethodHandle<d_ClassVFXRenderDataTable_GetDynamicGeometryByInstance> ClassVFXRenderDataTable_GetDynamicGeometryByInstance
-        => new( new FhMethodLocation(0x29F760, 0x0B3050) );
+        => new( new FhMethodLocation(0x29F620, 0xB30F0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void d_TkSetFadeOut(uint frame_count);
     public static FhMethodHandle<d_TkSetFadeOut> TkSetFadeOut
-        => new( new FhMethodLocation(0x48EAC0, 0x34C780) );
+        => new( new FhMethodLocation(0x48EB50, 0x34C720) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public unsafe delegate void d_PhyreScene_updateTextureVideoCallback(uint param_1);
     public static FhMethodHandle<d_PhyreScene_updateTextureVideoCallback> PhyreScene_updateTextureVideoCallback
-        => new( new FhMethodLocation(0x272210, 0x085F70) );
+        => new( new FhMethodLocation(0x272070, 0x85FE0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void d_MsEffectProcess(uint param_1);
     public static FhMethodHandle<d_MsEffectProcess> MsEffectProcess
-        => new( new FhMethodLocation(0x387EC0, 0x216680) );
+        => new( new FhMethodLocation(0x387E00, 0x216660) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public unsafe delegate uint* d_Sg_GetDBuffDC(uint* out_sg_count);
     public static FhMethodHandle<d_Sg_GetDBuffDC> Sg_GetDBuffDC
-        => new( new FhMethodLocation(0x420640, 0x204B00) );
+        => new( new FhMethodLocation(0x420530, 0x204AE0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void d_yiCallFieldParticle();
     public static FhMethodHandle<d_yiCallFieldParticle> yiCallFieldParticle
-        => new( new FhMethodLocation(0x5083E0, 0x3B9220) );
+        => new( new FhMethodLocation(0x5083E0, 0x3B9160) );
 
     // Unofficial name
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void d_rcefTaskRetSeqCont_Inner(uint* ptr_task);
     public static FhMethodHandle<d_rcefTaskRetSeqCont_Inner> rcefTaskRetSeqCont_Inner
-        => new( new FhMethodLocation(0x52EDE0, 0x3E92F0) );
+        => new( new FhMethodLocation(0x52EDE0, 0x3E9210) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void d_rcefTaskRetSeqCont(uint* ptr_task);
     public static FhMethodHandle<d_rcefTaskRetSeqCont> rcefTaskRetSeqCont
-        => new( new FhMethodLocation(0x52EE00, 0x3E9310) );
+        => new( new FhMethodLocation(0x52EE00, 0x3E9230) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public unsafe delegate void d_enableGameControlTextureAnimation(uint enable);
     public static FhMethodHandle<d_enableGameControlTextureAnimation> enableGameControlTextureAnimation
-        => new( new FhMethodLocation(0x436790, 0x2E56A0) );
+        => new( new FhMethodLocation(0x436710, 0x2E55C0) );
 
     // Unofficial name
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void d_Sg_Fade_Common(ushort frame_count, uint mode_in, uint mode_w);
     public static FhMethodHandle<d_Sg_Fade_Common> Sg_Fade_Common
-        => new( new FhMethodLocation(0x42CE40, 0x2D4980) );
+        => new( new FhMethodLocation(0x42CDC0, 0x2D48B0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public unsafe delegate void d_Sg_Flash(ushort frame_count, byte arg2, byte arg3, byte arg4);
     public static FhMethodHandle<d_Sg_Flash> Sg_Flash
-        => new( new FhMethodLocation(0x42CD20, 0x2D4810) );
+        => new( new FhMethodLocation(0x42CCA0, 0x2D4740) );
 
     [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
     public delegate void d_PhyFMVPlayerManager_UpdateTexture(uint ptr_this);
     public static FhMethodHandle<d_PhyFMVPlayerManager_UpdateTexture> PhyFMVPlayerManager_UpdateTexture
-        => new( new FhMethodLocation(0x2D77B0, 0x035600) );
+        => new( new FhMethodLocation(0x2D7680, 0x35600) );
 
     [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
     public unsafe delegate ulong d_Phyre_PVideo_PVideoPlaybackWin32_getCurrentTime(uint* ptr_this);
     public static FhMethodHandle<d_Phyre_PVideo_PVideoPlaybackWin32_getCurrentTime> Phyre_PVideo_PVideoPlaybackWin32_getCurrentTime
-        => new( new FhMethodLocation(0x627BD0, 0x50F740) );
+        => new( new FhMethodLocation(0x627BD0, 0x50F590) );
 
     [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
     public unsafe delegate ulong d_Phyre_PVideo_PVideoPlaybackWin32_getEndTime(uint* ptr_this);
     public static FhMethodHandle<d_Phyre_PVideo_PVideoPlaybackWin32_getEndTime> Phyre_PVideo_PVideoPlaybackWin32_getEndTime
-        => new( new FhMethodLocation(0x627C40, 0x50F7C0) );
+        => new( new FhMethodLocation(0x627C40, 0x50F600) );
 
     [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
     public unsafe delegate void d_PhyreScene_UpdateTextureVideo(uint* ptr_this);
     public static FhMethodHandle<d_PhyreScene_UpdateTextureVideo> PhyreScene_UpdateTextureVideo
-        => new( new FhMethodLocation(0x254B10, 0x064C00) );
+        => new( new FhMethodLocation(0x254960, 0x64C70) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void d_graphicTextureVideoPlay(uint arg1);
     public static FhMethodHandle<d_graphicTextureVideoPlay> graphicTextureVideoPlay
-        => new( new FhMethodLocation(0x244430, 0x055460) );
+        => new( new FhMethodLocation(0x244280, 0x55460) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void d_graphicTextureVideoUpdate();
     public static FhMethodHandle<d_graphicTextureVideoUpdate> graphicTextureVideoUpdate
-        => new( new FhMethodLocation(0x244470, 0x055490) );
+        => new( new FhMethodLocation(0x2442C0, 0x55490) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void d_pppFpStopStatus(uint arg1);
     public static FhMethodHandle<d_pppFpStopStatus> pppFpStopStatus
-        => new( new FhMethodLocation(0x32A840, 0x411010) );
+        => new( new FhMethodLocation(0x32A750, 0x410EF0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate sbyte d_Sg_GetKeepFps();
     public static FhMethodHandle<d_Sg_GetKeepFps> Sg_GetKeepFps
-        => new( new FhMethodLocation(0x4206B0, 0x204B70) );
+        => new( new FhMethodLocation(0x4205A0, 0x204B50) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate sbyte d_Sg_SetKeepFps(sbyte arg1);
     public static FhMethodHandle<d_Sg_SetKeepFps> Sg_SetKeepFps
-        => new( new FhMethodLocation(0x421C00, 0x2065A0) );
+        => new( new FhMethodLocation(0x421AE0, 0x206570) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void d_Phyre_PFramework_PWindowWin32Base_SetFlipVSyncInterval(uint param_1);
     public static FhMethodHandle<d_Phyre_PFramework_PWindowWin32Base_SetFlipVSyncInterval> Phyre_PFramework_PWindowWin32Base_SetFlipVSyncInterval
-        => new( new FhMethodLocation(0x225250, 0x6B4B00) );
+        => new( new FhMethodLocation(0x225090, 0x6B49C0) );
 
     [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
     public unsafe delegate uint d_Phyre_PFramework_PApplication_frame(PApplication* ptr_this);
     public static FhMethodHandle<d_Phyre_PFramework_PApplication_frame> Phyre_PFramework_PApplication_frame
-        => new( new FhMethodLocation(0x227AF0, 0x6B7390) );
+        => new( new FhMethodLocation(0x227940, 0x6B7250) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate uint d_rnd();
     public static FhMethodHandle<d_rnd> rnd
-        => new( new FhMethodLocation(0x3989B0, 0x21E360) );
+        => new( new FhMethodLocation(0x3989A0, 0x21E340) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate void d_FUN_00821F90_00606930(float delta);
-    public static FhMethodHandle<d_FUN_00821F90_00606930> FUN_00821F90_00606930
-        => new( new FhMethodLocation(0x421F90, 0x206930) );
+    public delegate void d_FUN_00421E80_00206900(float delta);
+    public static FhMethodHandle<d_FUN_00421E80_00206900> FUN_00421E80_00206900
+        => new( new FhMethodLocation(0x421E80, 0x206900) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate byte d_graphicIsVideoPlaying();
     public static FhMethodHandle<d_graphicIsVideoPlaying> graphicIsVideoPlaying
-        => new( new FhMethodLocation(0x241EA0, 0x052CD0) );
+        => new( new FhMethodLocation(0x241CF0, 0x52CD0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void d_MsCameraMoveFrame(uint camera_id, uint arg2, uint arg3, uint frame_count, uint arg5);
     public static FhMethodHandle<d_MsCameraMoveFrame> MsCameraMoveFrame
-        => new( new FhMethodLocation(0x3BDDD0, 0x251D20) );
+        => new( new FhMethodLocation(0x3BDE50, 0x251D00) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void d_MsCameraMoveAcc(uint camera_id, uint mode_non_ref, uint mode_polar, uint arg4, uint arg5, uint arg6, uint arg7);
     public static FhMethodHandle<d_MsCameraMoveAcc> MsCameraMoveAcc
-        => new( new FhMethodLocation(0x3BD7E0, 0x251720) );
+        => new( new FhMethodLocation(0x3BD860, 0x251700) );
 
     // RT - Input tracking
 
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
     internal delegate void d_AtelExec_Internal_871D10();
     internal static FhMethodHandle<d_AtelExec_Internal_871D10> AtelExec_Internal_871D10 =>
-        new( new FhMethodLocation(0x471D10, 0x32CE90) );
+        new( new FhMethodLocation(0x471D70, 0x32CE30) );
 
     // RT - Platform bind
 
@@ -363,7 +367,7 @@ public static unsafe partial class FhCall {
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
     public delegate void d_TODrawMessageWindow();
     public static FhMethodHandle<d_TODrawMessageWindow> TODrawMessageWindow
-        => new( new FhMethodLocation(0x4ABCE0, 0x391D00) );
+        => new( new FhMethodLocation(0x4ABD30, 0x391C20) );
 
     // RT - ImGui
 
@@ -553,7 +557,7 @@ public static unsafe partial class FhCall {
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate int d_MsCheckRange(int value, int min, int max);
     public static FhMethodHandle<d_MsCheckRange> MsCheckRange
-        => new( new FhMethodLocation(0x39A0D0, 0x224CD0) );
+        => new( new FhMethodLocation(0x39A0C0, 0x224CA0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate int d_brnd(int rng_idx);
@@ -580,7 +584,7 @@ public static unsafe partial class FhCall {
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate int d_SndSepPlaySimple(uint sound_id);
     public static FhMethodHandle<d_SndSepPlaySimple> SndSepPlaySimple
-        => new( new FhMethodLocation(0x486DE0, 0x344760) );
+        => new( new FhMethodLocation(0x486E80, 0x344710) );
 
     // `printf` and similar methods for use by the debug mod
 
@@ -599,15 +603,15 @@ public static unsafe partial class FhCall {
         nint va12, nint va13, nint va14, nint va15);
 
     public static FhMethodHandle<d__Printf> dbgPrintf =>
-        new( new FhMethodLocation(0x22F6B0, 0x9ADD0) );
+        new( new FhMethodLocation(0x22F500, 0x9AE50) );
     public static FhMethodHandle<d__Printf> scePrintf =>
-        new( new FhMethodLocation(0x22FDA0, 0x9B4B0) );
+        new( new FhMethodLocation(0x22FBF0, 0x9B530) );
     public static FhMethodHandle<d__Printf> AtelPs2DebugString =>
-        new( new FhMethodLocation(0x473C10, 0x30E9E0) );
+        new( new FhMethodLocation(0x473C70, 0x30E960) );
     public static FhMethodHandle<d__Printf> AtelPs2DebugString2 =>
-        new( new FhMethodLocation(0x473C20, 0x30E9F0) );
+        new( new FhMethodLocation(0x473C80, 0x30E970) );
     public static FhMethodHandle<d__Printf> rcPrint =>
-        new( new FhMethodLocation(0x527550, 0x3D9690) );
+        new( new FhMethodLocation(0x527550, 0x3D9610) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void d_Phyre_PhyrePrintf(int rc, string fmt,
@@ -617,7 +621,12 @@ public static unsafe partial class FhCall {
         nint va12, nint va13, nint va14, nint va15);
 
     public static FhMethodHandle<d_Phyre_PhyrePrintf> Phyre_PhyrePrintf =>
-        new ( new FhMethodLocation(0x0353F0, 0x48CC60) );
+        new ( new FhMethodLocation(0x352F0, 0x48CB70) );
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void d_FUN_0046A130_00324820();
+    public static FhMethodHandle<d_FUN_0046A130_00324820> FUN_0046A130_00324820 =>
+        new( new FhMethodLocation(0x46A130, 0x324820) );
 
     // PUBLIC/UNRESTRICTED - END
 

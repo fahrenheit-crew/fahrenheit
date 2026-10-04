@@ -816,6 +816,26 @@ static void s0_dbg_create_dump(
     CloseHandle(dump_handle);
 }
 
+// Returns whether to treat exception as fatal or not.
+static BOOL s0_dbg_exception_filter(
+    EXCEPTION_RECORD* ptr_exception_record // The record of the thrown exception.
+) {
+    /* [fkelava 04/10/26 02:28]
+     * We only checked exception flags for EXCEPTION_NONCONTINUABLE until Square Enix began
+     * making AV with all flags unset. We must honor that flag for .NET to avoid dumping on
+     * 1st chance exceptions that will be handled by `try` block, but ignore it otherwise.
+     *
+     * Per Passant (https://stackoverflow.com/a/12300563):
+     * > Exception codes with values less than 0x80000000 are
+     * > just informal and never an indicator of real trouble.
+     */
+    DWORD code  = ptr_exception_record->ExceptionCode;
+    DWORD flags = ptr_exception_record->ExceptionFlags;
+
+    return (code == 0xE0434352 && (flags & EXCEPTION_NONCONTINUABLE) != 0)
+        || (code != 0xE0434352 && code > 0x80000000);
+}
+
 // Handles exception events, returning whether to continue or treat the exception as unhandled.
 static DWORD s0_dbg_exception(
     HANDLE                h_process,         // The handle to the process that encountered an exception.
@@ -833,7 +853,7 @@ static DWORD s0_dbg_exception(
     if (ptr_info_exception->dwFirstChance == 0)
         return DBG_EXCEPTION_NOT_HANDLED;
 
-    if ((ptr_info_exception->ExceptionRecord.ExceptionFlags & EXCEPTION_NONCONTINUABLE) == EXCEPTION_NONCONTINUABLE) {
+    if (s0_dbg_exception_filter(&ptr_info_exception->ExceptionRecord)) {
         CONTEXT faulting_thread_context = { 0 };
         faulting_thread_context.ContextFlags = CONTEXT_ALL;
 

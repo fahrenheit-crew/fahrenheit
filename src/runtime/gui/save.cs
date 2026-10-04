@@ -26,7 +26,7 @@ public sealed class FhSaveUiSelector : FhModule {
         //TODO: Change this to a Set-based dropdown once that's created.
         public readonly FhSettingText selected_ui = new("selected_ui", "");
 
-        internal override IEnumerable<FhSetting> get() {
+        internal protected override IEnumerable<FhSetting> get() {
             return [ selected_ui ];
         }
     }

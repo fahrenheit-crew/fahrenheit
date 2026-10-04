@@ -35,7 +35,7 @@ public abstract class FhSettingProvider<T> where T : FhModule {
     ///     Returns the settings the module wishes to expose through
     ///     the mod settings UI, in display order.
     /// </summary>
-    internal abstract IEnumerable<FhSetting> get();
+    internal protected abstract IEnumerable<FhSetting> get();
 }
 
 /// <summary>

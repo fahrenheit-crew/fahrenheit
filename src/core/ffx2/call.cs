@@ -20,8 +20,8 @@ namespace Fahrenheit.FFX2;
 public static unsafe partial class FhCall {
 
     [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
-    public unsafe delegate void d_FUN_00134BD0(int* ptr_this, int arg2, int arg3, int arg4, int arg5, int arg6, int* arg7, int* arg8, int* arg9);
-    public static FhMethodHandle<d_FUN_00134BD0> FUN_00134BD0
+    public unsafe delegate void d_FUN_00134bd0(int* ptr_this, int arg2, int arg3, int arg4, int arg5, int arg6, int* arg7, int* arg8, int* arg9);
+    public static FhMethodHandle<d_FUN_00134bd0> FUN_00134bd0
         => new( new FhMethodLocation("FFX-2.exe", 0x134BD0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -265,8 +265,8 @@ public static unsafe partial class FhCall {
         => new( new FhMethodLocation("FFX-2.exe", 0x22A0D0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public unsafe delegate uint d_FUN_0022AB10(uint chr_id, uint sound_id);
-    public static FhMethodHandle<d_FUN_0022AB10> FUN_0022AB10
+    public unsafe delegate uint d_FUN_0022ab10(uint chr_id, uint sound_id);
+    public static FhMethodHandle<d_FUN_0022ab10> FUN_0022ab10
         => new( new FhMethodLocation("FFX-2.exe", 0x22AB10) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -315,8 +315,8 @@ public static unsafe partial class FhCall {
         => new( new FhMethodLocation("FFX-2.exe", 0x234AB0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate uint d_FUN_00234AD0(Chr* chr);
-    public static FhMethodHandle<d_FUN_00234AD0> FUN_00234AD0
+    public delegate uint d_FUN_00234ad0(Chr* chr);
+    public static FhMethodHandle<d_FUN_00234ad0> FUN_00234ad0
         => new( new FhMethodLocation("FFX-2.exe", 0x234AD0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -463,8 +463,8 @@ public static unsafe partial class FhCall {
         => new( new FhMethodLocation("FFX-2.exe", 0x376830) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate int d_FUN_376DE0(uint arg1, uint ability_slot);
-    public static FhMethodHandle<d_FUN_376DE0> FUN_376DE0
+    public delegate int d_FUN_376de0(uint arg1, uint ability_slot);
+    public static FhMethodHandle<d_FUN_376de0> FUN_376de0
         => new( new FhMethodLocation("FFX-2.exe", 0x376DE0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -473,8 +473,8 @@ public static unsafe partial class FhCall {
         => new( new FhMethodLocation("FFX-2.exe", 0x377190) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate void d_FUN_377B80(uint arg1);
-    public static FhMethodHandle<d_FUN_377B80> FUN_377B80
+    public delegate void d_FUN_377b80(uint arg1);
+    public static FhMethodHandle<d_FUN_377b80> FUN_377b80
         => new( new FhMethodLocation("FFX-2.exe", 0x377B80) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -583,8 +583,8 @@ public static unsafe partial class FhCall {
         => new( new FhMethodLocation("FFX-2.exe", 0x3ADC00) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public unsafe delegate void d_FUN_007AE330(byte* arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7);
-    public static FhMethodHandle<d_FUN_007AE330> FUN_007AE330
+    public unsafe delegate void d_FUN_007ae330(byte* arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7);
+    public static FhMethodHandle<d_FUN_007ae330> FUN_007ae330
         => new( new FhMethodLocation("FFX-2.exe", 0x3AE330) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -598,8 +598,8 @@ public static unsafe partial class FhCall {
         => new( new FhMethodLocation("FFX-2.exe", 0x3AE8B0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate void d_FUN_007AECA0(byte* arg1, float arg2, float arg3);
-    public static FhMethodHandle<d_FUN_007AECA0> FUN_007AECA0
+    public delegate void d_FUN_007aeca0(byte* arg1, float arg2, float arg3);
+    public static FhMethodHandle<d_FUN_007aeca0> FUN_007aeca0
         => new( new FhMethodLocation("FFX-2.exe", 0x3AECA0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]

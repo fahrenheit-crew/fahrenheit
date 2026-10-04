@@ -463,23 +463,23 @@ public static unsafe partial class FhCall {
         => new( new FhMethodLocation("FFX-2.exe", 0x376830) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate int d_FUN_376de0(uint arg1, uint ability_slot);
-    public static FhMethodHandle<d_FUN_376de0> FUN_376de0
+    public delegate int d_FUN_00376de0(uint arg1, uint ability_slot);
+    public static FhMethodHandle<d_FUN_00376de0> FUN_00376de0
         => new( new FhMethodLocation("FFX-2.exe", 0x376DE0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate void d_FUN_377190(uint arg1);
-    public static FhMethodHandle<d_FUN_377190> FUN_377190
+    public delegate void d_FUN_00377190(uint arg1);
+    public static FhMethodHandle<d_FUN_00377190> FUN_00377190
         => new( new FhMethodLocation("FFX-2.exe", 0x377190) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate void d_FUN_377b80(uint arg1);
-    public static FhMethodHandle<d_FUN_377b80> FUN_377b80
+    public delegate void d_FUN_00377b80(uint arg1);
+    public static FhMethodHandle<d_FUN_00377b80> FUN_00377b80
         => new( new FhMethodLocation("FFX-2.exe", 0x377B80) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate void d_FUN_378080(int arg1, int arg2, int arg3, int arg4);
-    public static FhMethodHandle<d_FUN_378080> FUN_378080
+    public delegate void d_FUN_00378080(int arg1, int arg2, int arg3, int arg4);
+    public static FhMethodHandle<d_FUN_00378080> FUN_00378080
         => new( new FhMethodLocation("FFX-2.exe", 0x378080) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]

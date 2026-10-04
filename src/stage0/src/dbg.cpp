@@ -832,7 +832,7 @@ static BOOL s0_dbg_exception_filter(
     DWORD code  = ptr_exception_record->ExceptionCode;
     DWORD flags = ptr_exception_record->ExceptionFlags;
 
-    return (code == 0xE0434352 && (flags & EXCEPTION_NONCONTINUABLE) == EXCEPTION_NONCONTINUABLE)
+    return (code == 0xE0434352 && (flags & EXCEPTION_NONCONTINUABLE) != 0)
         || (code != 0xE0434352 && code > 0x80000000);
 }
 

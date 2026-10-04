@@ -45,7 +45,10 @@ public class FhSettingsUiX : FhSettingsUi {
         visible = 11,
         max     = 50,
     };
-    private Scrollable _scrollable_modules;
+
+    private Scrollable _scrollable_modules = new(){
+        visible = 10,
+    };
     // private ContinuousScrollable _scrollable_settings;
 
     private Scrollable? _current_scrollable;
@@ -82,7 +85,7 @@ public class FhSettingsUiX : FhSettingsUi {
     }
 
     private void post_open(EventArgs e) {
-        _focus = UiFocus.MOD_LIST;
+        _focus = UiFocus.MODULE_LIST;
 
         try_load_textures();
 
@@ -173,6 +176,9 @@ public class FhSettingsUiX : FhSettingsUi {
     // Rendering
     internal protected override void render_ui() {
         _current_scrollable = _focus switch {
+            UiFocus.MOD_LIST    => _scrollable_mods,
+            UiFocus.MODULE_LIST => _scrollable_modules,
+
             _ => null,
         };
 
@@ -183,7 +189,10 @@ public class FhSettingsUiX : FhSettingsUi {
         ui_background();
         ui_help();
 
-        ui_modlist();
+        if (_focus == UiFocus.MOD_LIST)
+            ui_list_mods();
+        else
+            ui_list_modules();
 
         ui_scrollbars();
 
@@ -258,6 +267,10 @@ public class FhSettingsUiX : FhSettingsUi {
         );
     }
 
+    /// <summary>Renders a mod plate.</summary>
+    /// <param name="mod_ctx">The context of the mod to render the plate for.</param>
+    /// <param name="global_index">The index of the mod in the mod list.</param>
+    /// <param name="local_index">The index of the plate on the screen.</param>
     private void ui_mod(FhModContext mod_ctx, int global_index, int local_index) {
         if (!_texture_menu_new.try_use(out ImTextureRef menu_new, out _)) {
             return;
@@ -307,7 +320,8 @@ public class FhSettingsUiX : FhSettingsUi {
     }
 
     private static FhModContext? _dbg_mod_ctx;
-    private void ui_modlist() {
+    /// <summary>Renders all mod plates.</summary>
+    private void ui_list_mods() {
         if (_dbg_mod_ctx is null) {
             foreach (FhModContext ctx in FhApi.Mods.get_mods()) {
                 if (ctx.Manifest.Id != "fhr") continue;
@@ -317,11 +331,100 @@ public class FhSettingsUiX : FhSettingsUi {
             }
         }
 
-        for (int i = 0; i < 11; i++) {
-            ui_mod(_dbg_mod_ctx!, i, i);
+        int max_i = int.Min(_scrollable_mods.max, _scrollable_mods.visible);
+
+        for (int i = 0, mod_i = _scrollable_mods.current; i < max_i; i++, mod_i++) {
+            ui_mod(_dbg_mod_ctx!, mod_i, i);
         }
     }
 
+    /// <summary>Renders a module plate.</summary>
+    /// <param name="module_ctx">The context of the module to render the plate for.</param>
+    /// <param name="global_index">The index of the module in the mod list.</param>
+    /// <param name="local_index">The index of the plate on the screen.</param>
+    private void ui_module(FhModuleContext module_ctx, int global_index, int local_index) {
+        if (!_texture_menu_new.try_use(out ImTextureRef menu_new, out _)) {
+            return;
+        }
+
+        Vector2 plate_tex_size    = new(477f, 65f);
+        Vector2 plate_screen_size = new(417f, 65f);
+
+        float[] plate_tex_dy_array =
+            [ 0f, 75f, 150f, 224f, 299f, 374f, 449f, 523f, 598f, 673f, 748f ];
+
+        float plate_tex_dy    = plate_tex_dy_array[global_index % 11];
+        float plate_screen_dy = plate_screen_size.Y + 12f;
+
+        float plate_shadow_height = 5f * aspect_scale.Y;
+
+        uint plate_color_mult = 0xFF9EA3A7;
+
+        UV plate_tuv = new Rect {
+            pos  = new(1120f, 959f - plate_tex_dy),
+            size = plate_tex_size,
+        }.as_uv(_tex_menu_new_size);
+
+        Rect plate_screen = new Rect {
+            pos  = new(92f, 182f + plate_screen_dy * local_index),
+            size = plate_screen_size,
+        }.scale_to_aspect(aspect_helper);
+
+        UV plate_suv = plate_screen.as_uv();
+
+        ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
+
+        draw.AddImage(
+            menu_new,
+            plate_suv.p0,
+            plate_suv.p1,
+            plate_tuv.p0,
+            plate_tuv.p1,
+            plate_color_mult
+        );
+
+        Vector2 text_pos = plate_screen.center;
+        text_pos.Y -= plate_shadow_height;
+        text_pos.Y += 1f * aspect_scale.Y;
+
+        float font_size = 36f * font_scale;
+
+        FhApi.Gui.draw_text(
+            draw,
+            text_pos,
+            module_ctx.Module.ModuleType.Split('.')[^1],
+            font_size,
+            true,
+            new(Alignment.CENTER, Alignment.CENTER)
+        );
+    }
+
+    /// <summary>Renders all module plates.</summary>
+    private void ui_list_modules() {
+        if (_dbg_mod_ctx is null) {
+            foreach (FhModContext ctx in FhApi.Mods.get_mods()) {
+                if (ctx.Manifest.Id != "fhr") continue;
+
+                _dbg_mod_ctx = ctx;
+                break;
+            }
+        }
+
+        ui_mod(_dbg_mod_ctx!, _selected_mod_idx, 0);
+
+        _scrollable_modules.max = _dbg_mod_ctx!.Modules.Count;
+
+        int max_i = int.Min(_scrollable_modules.max, _scrollable_modules.visible);
+        List<FhModuleContext> modules = _dbg_mod_ctx.Modules;
+
+        for (int i = 1, module_i = _scrollable_modules.current; i < max_i + 1; i++, module_i++) {
+            ui_module(modules[module_i], module_i, i);
+        }
+    }
+
+    /// <summary>Renders a scrollbar.</summary>
+    /// <param name="scrollable">The scrollable to draw the scrollbar for.</param>
+    /// <param name="track_bounds">The bounding rectangle of the scrollbar's track.</param>
     private void ui_scrollbar(Scrollable scrollable, Rect track_bounds) {
         if (scrollable.max <= scrollable.visible) {
             return;
@@ -467,10 +570,11 @@ public class FhSettingsUiX : FhSettingsUi {
         }
     }
 
+    /// <summary>Renders all scrollbars.</summary>
     private void ui_scrollbars() {
         Rect scrollbar_mods = new() {
             pos  = new(527f, 208f),
-            size = new( 17f, 757f),
+            size = new( 17f, 777f),
         };
 
         ui_scrollbar(_scrollable_mods, scrollbar_mods);

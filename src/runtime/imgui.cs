@@ -187,7 +187,7 @@ public unsafe sealed class FhImguiModule : FhModule, IFhPlatformUser {
             return FhCall.Phyre_PFramework_PInput_Update.chain_from(h_pinput).fnptr!();
 
         ImGuiIOPtr io = ImGui.GetIO();
-        return io.WantCaptureKeyboard || io.WantCaptureMouse
+        return FhApi.Input.lock_get() || io.WantCaptureKeyboard || io.WantCaptureMouse
             ? 0
             : FhCall.Phyre_PFramework_PInput_Update.chain_from(h_pinput).fnptr!();
     }

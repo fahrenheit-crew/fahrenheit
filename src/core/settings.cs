@@ -61,10 +61,10 @@ public sealed class FhSettingReference<T> : FhSetting where T : FhModule {
         }
     }
 
-    internal sealed override void save(Utf8JsonWriter writer) { }
-    internal sealed override void load(Utf8JsonReader reader) { }
+    internal override void save(Utf8JsonWriter writer) { }
+    internal override void load(Utf8JsonReader reader) { }
 
-    internal sealed override void render() {
+    internal override void render() {
         if (_settings == null && !FhInternal.Settings.try_bind_reference<T>(out _settings))
             return;
 

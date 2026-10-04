@@ -46,7 +46,10 @@ public class FhSettingsUiX2 : FhSettingsUi {
         visible = 11,
         max     = 50,
     };
-    private Scrollable _scrollable_modules;
+
+    private Scrollable _scrollable_modules = new(){
+        visible = 10,
+    };
     // private ContinuousScrollable _scrollable_settings;
 
     private Scrollable? _current_scrollable;
@@ -92,7 +95,7 @@ public class FhSettingsUiX2 : FhSettingsUi {
     }
 
     private void post_open(EventArgs e) {
-        _focus = UiFocus.MOD_LIST;
+        _focus = UiFocus.MODULE_LIST;
 
         try_load_textures();
 
@@ -183,6 +186,9 @@ public class FhSettingsUiX2 : FhSettingsUi {
     // Rendering
     internal protected override void render_ui() {
         _current_scrollable = _focus switch {
+            UiFocus.MOD_LIST => _scrollable_mods,
+            UiFocus.MODULE_LIST => _scrollable_modules,
+
             _ => null,
         };
 
@@ -193,7 +199,10 @@ public class FhSettingsUiX2 : FhSettingsUi {
         ui_background();
         ui_help();
 
-        ui_modlist();
+        if (_focus == UiFocus.MOD_LIST)
+            ui_list_mods();
+        else
+            ui_list_modules();
 
         ui_scrollbars();
 
@@ -409,7 +418,7 @@ public class FhSettingsUiX2 : FhSettingsUi {
 
         Vector2 text_pos = bg_screen.left + new Vector2(219f, 0f) * aspect_scale;
 
-        float font_size = 36f * font_scale;
+        float font_size = 30f * font_scale;
 
         FhApi.Gui.draw_text(
             draw,
@@ -421,6 +430,10 @@ public class FhSettingsUiX2 : FhSettingsUi {
         );
     }
 
+    /// <summary>Renders a mod plate.</summary>
+    /// <param name="mod_ctx">The context of the mod to render the plate for.</param>
+    /// <param name="global_index">The index of the mod in the mod list.</param>
+    /// <param name="local_index">The index of the plate on the screen.</param>
     private void ui_mod(FhModContext mod_ctx, int global_index, int local_index) {
         if (!_texture_plate.try_use(out ImTextureRef plate, out _)) {
             return;
@@ -454,7 +467,7 @@ public class FhSettingsUiX2 : FhSettingsUi {
         draw.AddRectFilled(
             plate_suv.p0 + shadow_offset,
             plate_suv.p1 + shadow_offset,
-            0xA5000000
+            0x80000000
         );
 
         draw.AddImage(
@@ -463,7 +476,7 @@ public class FhSettingsUiX2 : FhSettingsUi {
             plate_suv.p1,
             plate_tuv.p0,
             plate_tuv.p1,
-            0xFFE4F0F1
+            0xFFD3EEF2
         );
 
         // Draw shading/edges on the plate texture for definition
@@ -481,7 +494,7 @@ public class FhSettingsUiX2 : FhSettingsUi {
 
         Vector2 text_pos = plate_screen.center * aspect_scale;
 
-        float font_size = 36f * font_scale;
+        float font_size = 30f * font_scale;
 
         FhApi.Gui.draw_text(
             draw,
@@ -494,7 +507,8 @@ public class FhSettingsUiX2 : FhSettingsUi {
     }
 
     private static FhModContext? _dbg_mod_ctx;
-    private void ui_modlist() {
+    /// <summary>Renders all mod plates.</summary>
+    private void ui_list_mods() {
         if (_dbg_mod_ctx is null) {
             foreach (FhModContext ctx in FhApi.Mods.get_mods()) {
                 if (ctx.Manifest.Id != "fhr") continue;
@@ -504,11 +518,117 @@ public class FhSettingsUiX2 : FhSettingsUi {
             }
         }
 
-        for (int i = 0; i < 11; i++) {
-            ui_mod(_dbg_mod_ctx!, i, i);
+        int max_i = int.Min(_scrollable_mods.max, _scrollable_mods.visible);
+
+        for (int i = 0, mod_i = _scrollable_mods.current; i < max_i; i++, mod_i++) {
+            ui_mod(_dbg_mod_ctx!, mod_i, i);
         }
     }
 
+    /// <summary>Renders a module plate.</summary>
+    /// <param name="module_ctx">The context of the module to render the plate for.</param>
+    /// <param name="global_index">The index of the module in the mod list.</param>
+    /// <param name="local_index">The index of the plate on the screen.</param>
+    private void ui_module(FhModuleContext module_ctx, int global_index, int local_index) {
+        if (!_texture_plate.try_use(out ImTextureRef plate, out _)) {
+            return;
+        }
+
+        // Texture coordinates
+        int   tex_idx     = (global_index % 8) + 1;
+        float slice_size  = 64f;
+        float plate_max_y = slice_size * tex_idx;
+
+        Vector2 plate_screen_size = new(417f, 65f);
+
+        float plate_screen_dy = plate_screen_size.Y + 12f;
+
+        uint plate_color_mult = 0xFFC6B1AF;
+
+        UV plate_tuv = new Rect {
+            pos  = new(  0f, plate_max_y - slice_size),
+            size = new(512f, slice_size),
+        }.as_uv(_tex_plate_size);
+
+        Rect plate_screen = new Rect {
+            pos  = new(92f, 182f + plate_screen_dy * local_index),
+            size = plate_screen_size,
+        }.scale_to_aspect(aspect_helper);
+
+        UV plate_suv = plate_screen.as_uv();
+
+        ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
+
+        Vector2 shadow_offset = 7f * aspect_scale;
+
+        draw.AddRectFilled(
+            plate_suv.p0 + shadow_offset,
+            plate_suv.p1 + shadow_offset,
+            0x80000000
+        );
+
+        draw.AddImage(
+            plate,
+            plate_suv.p0,
+            plate_suv.p1,
+            plate_tuv.p0,
+            plate_tuv.p1,
+            plate_color_mult
+        );
+
+        // Draw shading/edges on the plate texture for definition
+        float border_thickness = 5f * aspect_scale.Y;
+        uint  highlight        = 0x28FFFFFF;
+        uint  shadow           = 0x80000000;
+
+        draw_highlight_shadow(
+            draw,
+            plate_screen,
+            border_thickness,
+            highlight,
+            shadow
+        );
+
+        Vector2 text_pos = plate_screen.center * aspect_scale;
+
+        float font_size = 30f * font_scale;
+
+        FhApi.Gui.draw_text(
+            draw,
+            text_pos,
+            module_ctx.Module.ModuleType.Split('.')[^1],
+            font_size,
+            true,
+            new(Alignment.CENTER, Alignment.CENTER)
+        );
+    }
+
+    /// <summary>Renders all module plates.</summary>
+    private void ui_list_modules() {
+        if (_dbg_mod_ctx is null) {
+            foreach (FhModContext ctx in FhApi.Mods.get_mods()) {
+                if (ctx.Manifest.Id != "fhr") continue;
+
+                _dbg_mod_ctx = ctx;
+                break;
+            }
+        }
+
+        ui_mod(_dbg_mod_ctx!, _selected_mod_idx, 0);
+
+        _scrollable_modules.max = _dbg_mod_ctx!.Modules.Count;
+
+        int max_i = int.Min(_scrollable_modules.max, _scrollable_modules.visible);
+        List<FhModuleContext> modules = _dbg_mod_ctx.Modules;
+
+        for (int i = 1, module_i = _scrollable_modules.current; i < max_i + 1; i++, module_i++) {
+            ui_module(modules[module_i], module_i, i);
+        }
+    }
+
+    /// <summary>Renders a scrollbar.</summary>
+    /// <param name="scrollable">The scrollable to draw the scrollbar for.</param>
+    /// <param name="track_bounds">The bounding rectangle of the scrollbar's track.</param>
     private void ui_scrollbar(Scrollable scrollable, Rect track_bounds) {
         if (scrollable.max <= scrollable.visible) {
             return;
@@ -654,10 +774,11 @@ public class FhSettingsUiX2 : FhSettingsUi {
         }
     }
 
+    /// <summary>Renders all scrollbars.</summary>
     private void ui_scrollbars() {
         Rect scrollbar_mods = new() {
             pos  = new(527f, 208f),
-            size = new( 17f, 757f),
+            size = new( 17f, 777f),
         };
 
         ui_scrollbar(_scrollable_mods, scrollbar_mods);

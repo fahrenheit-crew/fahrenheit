@@ -146,7 +146,7 @@ public unsafe sealed class FhFileLoaderModule : FhModule {
         if (ptr_this->handle_vbf != null)
             return ptr_this;
 
-        FhCall.FUN_00607D50_00890FA0.fnptr!(ptr_path);
+        FhCall.FUN_00207D50_00490FA0.fnptr!(ptr_path);
 
         VFile* ptr_crossload_file = FhCall.BigFileStream_openFile.fnptr!(_ptr_vbf_secondary, ptr_path);
         ptr_this->handle_vbf = ptr_crossload_file;

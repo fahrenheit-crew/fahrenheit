@@ -258,18 +258,39 @@ public unsafe class FhGui {
 
     /// <summary>Detect whether the mouse cursor is hovering over a specified rectangle.</summary>
     /// <param name="rect">The rect describing an area of the game window to detect the mouse cursor over.</param>
+    /// <param name="require_movement">
+    ///     Whether the method should return <c>false</c> if the mouse is not moving.
+    /// </param>
+    /// <param name="respect_want_capture">
+    ///     Whether the method should return <c>false</c> if something else is capturing mouse input.
+    /// </param>
     /// <returns>Whether the mouse cursor is hovering the specified rectangle.</returns>
-    public bool mouse_hovering(Rect rect) {
-        return ImGui.IsMouseHoveringRect(rect.pos, rect.pos + rect.size, false);
+    public bool mouse_hovering(
+        Rect rect,
+        bool require_movement = false,
+        bool respect_want_capture = true
+    ) {
+        return (!respect_want_capture || !ImGui.GetIO().WantCaptureMouse)
+            && (!require_movement || ImGui.GetIO().MouseDelta.LengthSquared() > 0)
+            && ImGui.IsMouseHoveringRect(rect.pos, rect.pos + rect.size, false);
     }
 
     /// <summary>Detect whether the user clicked on a specified rectangle.</summary>
     /// <param name="rect">The rect describing an area of the game window to detect mouse clicks on.</param>
     /// <param name="button">The button of the mouse to detect clicks of.</param>
     /// <param name="repeat">Whether the method should repeatedly return <c>true</c> for held inputs.</param>
+    /// <param name="respect_want_capture">
+    ///     Whether the method should return <c>false</c> if something else is capturing mouse input.
+    /// </param>
     /// <returns>Whether the user clicked with the button on the specified rectangle.</returns>
-    public bool mouse_clicked(Rect rect, ImGuiMouseButton button = ImGuiMouseButton.Left, bool repeat = false) {
-        return ImGui.IsMouseHoveringRect(rect.pos, rect.pos + rect.size, false)
+    public bool mouse_clicked(
+        Rect rect,
+        ImGuiMouseButton button = ImGuiMouseButton.Left,
+        bool repeat = false,
+        bool respect_want_capture = true
+    ) {
+        return (!respect_want_capture || !ImGui.GetIO().WantCaptureMouse)
+            && ImGui.IsMouseHoveringRect(rect.pos, rect.pos + rect.size, false)
             && ImGui.IsMouseClicked(button, repeat);
     }
 

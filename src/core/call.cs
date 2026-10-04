@@ -44,8 +44,8 @@ public static unsafe partial class FhCall {
     // Seymour
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public unsafe delegate int d_FUN_0048E750_0034C250(int param_1);
-    public static FhMethodHandle<d_FUN_0048E750_0034C250> FUN_0048E750_0034C250 =>
+    public unsafe delegate int d_FUN_0048e750_0034c250(int param_1);
+    public static FhMethodHandle<d_FUN_0048e750_0034c250> FUN_0048e750_0034c250 =>
         new( new FhMethodLocation(0x48E750, 0x34C250) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -59,8 +59,8 @@ public static unsafe partial class FhCall {
         new( new FhMethodLocation(0x386950, 0x20EAF0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public unsafe delegate int d_FUN_0048E730_0034C230(int param_1);
-    public static FhMethodHandle<d_FUN_0048E730_0034C230> FUN_0048E730_0034C230 =>
+    public unsafe delegate int d_FUN_0048e730_0034c230(int param_1);
+    public static FhMethodHandle<d_FUN_0048e730_0034c230> FUN_0048e730_0034c230 =>
         new( new FhMethodLocation(0x48E730, 0x34C230) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -98,13 +98,13 @@ public static unsafe partial class FhCall {
     // RT - File cross-loader
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public unsafe delegate int d_FUN_00207C40_00490DC0(byte* ptr_path, byte* arg2, byte* arg3);
-    public static FhMethodHandle<d_FUN_00207C40_00490DC0> FUN_00207C40_00490DC0 =>
+    public unsafe delegate int d_FUN_00207c40_00490dc0(byte* ptr_path, byte* arg2, byte* arg3);
+    public static FhMethodHandle<d_FUN_00207c40_00490dc0> FUN_00207c40_00490dc0 =>
         new( new FhMethodLocation(0x207C40, 0x490DC0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public unsafe delegate void d_FUN_00607D50_00890FA0(byte* ptr_path);
-    public static FhMethodHandle<d_FUN_00607D50_00890FA0> FUN_00207D50_00490FA0 =>
+    public unsafe delegate void d_FUN_00607d50_00890fa0(byte* ptr_path);
+    public static FhMethodHandle<d_FUN_00607d50_00890fa0> FUN_00207d50_00490fa0 =>
         new( new FhMethodLocation(0x207D50, 0x490FA0) );
 
     [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
@@ -180,18 +180,18 @@ public static unsafe partial class FhCall {
         new( new FhMethodLocation(0x2FB9B0, 0x122040) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    internal delegate void d_FUN_005428A0_008771A0();
-    internal static FhMethodHandle<d_FUN_005428A0_008771A0> FUN_005428A0_008771A0 =>
+    internal delegate void d_FUN_005428a0_008771a0();
+    internal static FhMethodHandle<d_FUN_005428a0_008771a0> FUN_005428a0_008771a0 =>
         new( new FhMethodLocation(0x5428A0, 0x4771A0) );
 
     [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
-    internal delegate __ALLOC_DATA* d_FUN_00542A40_00477340(__ALLOC_DATA* ptr_this, uint size, uint p2, uint p3);
-    internal static FhMethodHandle<d_FUN_00542A40_00477340> FUN_00542A40_00477340 =>
+    internal delegate __ALLOC_DATA* d_FUN_00542a40_00477340(__ALLOC_DATA* ptr_this, uint size, uint p2, uint p3);
+    internal static FhMethodHandle<d_FUN_00542a40_00477340> FUN_00542a40_00477340 =>
         new( new FhMethodLocation(0x542A40, 0x477340) );
 
     [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
-    internal delegate void* d_FUN_00542B60_00477460(__ALLOC_DATA* ptr_this, uint arg2);
-    internal static FhMethodHandle<d_FUN_00542B60_00477460> FUN_00542B60_00477460 =>
+    internal delegate void* d_FUN_00542b60_00477460(__ALLOC_DATA* ptr_this, uint arg2);
+    internal static FhMethodHandle<d_FUN_00542b60_00477460> FUN_00542b60_00477460 =>
         new( new FhMethodLocation(0x542B60, 0x477460) );
 
     // Frame limiter
@@ -314,8 +314,8 @@ public static unsafe partial class FhCall {
         => new( new FhMethodLocation(0x3989A0, 0x21E340) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate void d_FUN_00421E80_00206900(float delta);
-    public static FhMethodHandle<d_FUN_00421E80_00206900> FUN_00421E80_00206900
+    public delegate void d_FUN_00421e80_00206900(float delta);
+    public static FhMethodHandle<d_FUN_00421e80_00206900> FUN_00421e80_00206900
         => new( new FhMethodLocation(0x421E80, 0x206900) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -336,8 +336,8 @@ public static unsafe partial class FhCall {
     // RT - Input tracking
 
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-    internal delegate void d_AtelExec_Internal_871D10();
-    internal static FhMethodHandle<d_AtelExec_Internal_871D10> AtelExec_Internal_871D10 =>
+    internal delegate void d_AtelExec_Internal_871d10();
+    internal static FhMethodHandle<d_AtelExec_Internal_871d10> AtelExec_Internal_871d10 =>
         new( new FhMethodLocation(0x471D70, 0x32CE30) );
 
     // RT - Platform bind
@@ -486,8 +486,8 @@ public static unsafe partial class FhCall {
     // RT - Save impl
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    internal delegate void d_SaveDataManager_debugSave_Internal_6F0650(int size, byte* ptr);
-    internal static FhMethodHandle<d_SaveDataManager_debugSave_Internal_6F0650> SaveDataManager_debugSave_Internal_6F0650
+    internal delegate void d_SaveDataManager_debugSave_Internal_6f0650(int size, byte* ptr);
+    internal static FhMethodHandle<d_SaveDataManager_debugSave_Internal_6f0650> SaveDataManager_debugSave_Internal_6f0650
         => new( new FhMethodLocation(0x2F0510, 0x11D5C0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -624,8 +624,8 @@ public static unsafe partial class FhCall {
         new ( new FhMethodLocation(0x352F0, 0x48CB70) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate void d_FUN_0046A130_00324820();
-    public static FhMethodHandle<d_FUN_0046A130_00324820> FUN_0046A130_00324820 =>
+    public delegate void d_FUN_0046a130_00324820();
+    public static FhMethodHandle<d_FUN_0046a130_00324820> FUN_0046a130_00324820 =>
         new( new FhMethodLocation(0x46A130, 0x324820) );
 
     // PUBLIC/UNRESTRICTED - END

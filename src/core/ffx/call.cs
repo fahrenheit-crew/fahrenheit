@@ -740,8 +740,8 @@ public static partial class FhCall {
         => new( new FhMethodLocation("FFX.exe", 0x2DB090) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    internal delegate void d_FUN_2EFEB0();
-    internal static FhMethodHandle<d_FUN_2EFEB0> FUN_2EFEB0
+    internal delegate void d_FUN_002efeb0();
+    internal static FhMethodHandle<d_FUN_002efeb0> FUN_002efeb0
         => new( new FhMethodLocation("FFX.exe", 0x2EFEB0) );
 
     [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
@@ -760,8 +760,8 @@ public static partial class FhCall {
         => new( new FhMethodLocation("FFX.exe", 0x30AB90) );
 
     [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
-    public delegate uint d_FUN_0070add0(nint ptr_this, uint voice_id, uint arg3);
-    public static FhMethodHandle<d_FUN_0070add0> FUN_0070add0
+    public delegate uint d_FUN_0030add0(nint ptr_this, uint voice_id, uint arg3);
+    public static FhMethodHandle<d_FUN_0030add0> FUN_0030add0
         => new( new FhMethodLocation("FFX.exe", 0x30ADD0) );
 
     [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
@@ -961,8 +961,8 @@ public static partial class FhCall {
         => new( new FhMethodLocation("FFX.exe", 0x390B30) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate void d_FUN_003917D0();
-    public static FhMethodHandle<d_FUN_003917D0> FUN_003917D0
+    public delegate void d_FUN_003917d0();
+    public static FhMethodHandle<d_FUN_003917d0> FUN_003917d0
         => new( new FhMethodLocation("FFX.exe", 0x3917D0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -1170,8 +1170,8 @@ public static partial class FhCall {
         => new( new FhMethodLocation("FFX.exe", 0x467230) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public unsafe delegate int d_FUN_004673D0(byte opcode, AtelBasicWorker* work, AtelWorkThread* thread, AtelStack* stack, uint arg5);
-    public static FhMethodHandle<d_FUN_004673D0> FUN_004673D0
+    public unsafe delegate int d_FUN_004673d0(byte opcode, AtelBasicWorker* work, AtelWorkThread* thread, AtelStack* stack, uint arg5);
+    public static FhMethodHandle<d_FUN_004673d0> FUN_004673d0
         => new( new FhMethodLocation("FFX.exe", 0x4673D0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -1372,7 +1372,7 @@ public static partial class FhCall {
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void d_FUN_004c1370_DrawScissor512x416();
-    public static FhMethodHandle<d_FUN_004c1370_DrawScissor512x416> FUN_008c1350_DrawScissor512x416
+    public static FhMethodHandle<d_FUN_004c1370_DrawScissor512x416> FUN_004c1370_DrawScissor512x416
         => new( new FhMethodLocation("FFX.exe", 0x4C1370) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]

@@ -49,8 +49,9 @@ public abstract class FhSettingProvider<T> where T : FhModule {
 ///     Only one reference can target any given module.
 /// </remarks>
 public sealed class FhSettingReference<T> : FhSetting where T : FhModule {
-    private static readonly ConcurrentDictionary<Type, byte> _s_refs   = [];
-    private                 FhSettingsCategory?              _settings = null;
+    private static readonly ConcurrentDictionary<Type, byte> _s_refs = [];
+
+    private FhSettingsCategory? _settings = null;
 
     public FhSettingReference(string id) : base(id) {
         Type module_type = typeof(T);
@@ -77,7 +78,7 @@ public sealed class FhSettingReference<T> : FhSetting where T : FhModule {
 internal sealed class FhSettings {
     private readonly UserInterfaces _uis = [];
 
-    private readonly ConcurrentDictionary<Type, FhSettingData>  _settings = [];
+    private readonly ConcurrentDictionary<Type, FhSettingData> _settings = [];
 
     /// <summary>Get the settings UI associated with the given ID.</summary>
     /// <param name="id">The ID of the desired UI.</param>

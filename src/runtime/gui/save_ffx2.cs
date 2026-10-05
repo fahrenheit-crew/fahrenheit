@@ -510,7 +510,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             size = new(960f, 665f),
         };
 
-        Rect[] menuback_rects = [
+        ReadOnlySpan<Rect> menuback_rects = [
             menuback_screen,
             menuback_screen with { pos = new(menuback_screen.size.X, menuback_screen.pos.Y) },
             menuback_screen with { pos = new(menuback_screen.pos.X, menuback_screen.size.Y) },

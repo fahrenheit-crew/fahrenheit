@@ -1271,7 +1271,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
 
         draw_highlight_shadow(
             draw,
-            header_rect,
+            header_rect.scale_to_aspect(aspect_helper),
             border_thickness,
             highlight,
             shadow
@@ -1285,7 +1285,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
 
         draw_highlight_shadow(
             draw,
-            info_rect,
+            info_rect.scale_to_aspect(aspect_helper),
             border_thickness,
             highlight,
             shadow

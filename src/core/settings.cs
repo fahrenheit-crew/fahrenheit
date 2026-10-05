@@ -47,9 +47,9 @@ public abstract class FhSettingRenderer<TSetting, TSettingUi>
     where TSetting   : FhSetting
     where TSettingUi : FhSettingsUi {
 
-    internal protected abstract Vector2 get_size();
-    internal protected abstract void render(TSettingUi ui, Rect max_bounds);
-    internal protected abstract void handle_input(TSettingUi ui);
+    internal protected abstract Vector2 get_size(TSettingUi ui);
+    internal protected abstract void render(TSettingUi ui, TSetting setting, Rect max_bounds);
+    internal protected abstract void handle_input(TSettingUi ui, TSetting setting);
 }
 
 /// <summary>

@@ -152,11 +152,12 @@ public unsafe sealed class FhSaveExtensionModule : FhModule, IFhSaveSystemImpl {
     private void impl_copy() {
         FhCall.TkRefreshHdd.chain_from(impl_copy).fnptr!();
 
-        if (Interlocked.Exchange(ref _load_pending_slot, -1) != -1) {
-            FhInternal.State.state_load_slot(_load_pending_slot);
+        int load_pending_slot = Interlocked.Exchange(ref _load_pending_slot, -1);
+        if (load_pending_slot == -1)
+            return;
 
-            FhApi.Events.Common.GameLoop.PostLoadGame.invoke(new() { save_slot_idx = _load_pending_slot });
-        }
+        FhInternal.State.state_load_slot(load_pending_slot);
+        FhApi.Events.Common.GameLoop.PostLoadGame.invoke(new() { save_slot_idx = load_pending_slot });
     }
 
     /// <summary>

@@ -36,11 +36,11 @@ public unsafe sealed class FhSaveExtensionModule : FhModule, IFhSaveSystemImpl {
 
         bool is_ffx = FhGlobal.game_id is FhGameId.FFX;
 
-        return FhCall.SaveDataManager_debugSave_Internal_6F0650.hook(this, impl_autosave)
+        return FhCall.SaveDataManager_debugSave_Internal_6f0650.hook(this, impl_autosave)
             && FhCall.TkRefreshHdd                             .hook(this, impl_copy)
             && FhCall.SaveDataToSave                           .hook(this, signal_enter_save)
             && FhCall.SaveDataToLoad                           .hook(this, signal_enter_load)
-            && (!is_ffx || FFX.FhCall.FUN_2EFEB0.hook(this, signal_enter_albd));
+            && (!is_ffx || FFX.FhCall.FUN_002efeb0.hook(this, signal_enter_albd));
     }
 
     /* [fkelava 27/11/25 02:15]
@@ -60,7 +60,9 @@ public unsafe sealed class FhSaveExtensionModule : FhModule, IFhSaveSystemImpl {
     /// </summary>
     [UnmanagedCallConv(CallConvs = [ typeof(CallConvCdecl) ] )]
     private void signal_enter_save() {
+        FhApi.Input.lock_on();
         FhApi.Saves.index_active_set();
+
         _mode = FhSaveSystemMode.SAVE;
         FhSavePal.pal_set_system_state(FhSaveSystemState.SAVE);
 
@@ -72,7 +74,9 @@ public unsafe sealed class FhSaveExtensionModule : FhModule, IFhSaveSystemImpl {
     /// </summary>
     [UnmanagedCallConv(CallConvs = [ typeof(CallConvCdecl) ] )]
     private void signal_enter_load() {
+        FhApi.Input.lock_on();
         FhApi.Saves.index_active_set();
+
         _mode = FhSaveSystemMode.LOAD;
         FhSavePal.pal_set_system_state(FhSaveSystemState.LOAD);
 
@@ -85,7 +89,9 @@ public unsafe sealed class FhSaveExtensionModule : FhModule, IFhSaveSystemImpl {
     /// </summary>
     [UnmanagedCallConv(CallConvs = [ typeof(CallConvCdecl ) ] )]
     private void signal_enter_albd() {
+        FhApi.Input.lock_on();
         FhApi.Saves.index_active_set();
+
         _mode = FhSaveSystemMode.ALBD;
         FhSavePal.pal_set_system_state(FhSaveSystemState.LOAD);
 
@@ -102,6 +108,7 @@ public unsafe sealed class FhSaveExtensionModule : FhModule, IFhSaveSystemImpl {
             : FhSaveSystemState.LOAD);
         FhSavePal.pal_set_dialog_state(FhSaveDialogState.CLOSED);
 
+        FhApi.Input.lock_off();
         FhApi.Events.Common.GameLoop.PostCloseSaveMenu.invoke(EventArgs.Empty);
     }
 
@@ -115,6 +122,7 @@ public unsafe sealed class FhSaveExtensionModule : FhModule, IFhSaveSystemImpl {
             : FhSaveSystemState.LOAD);
         FhSavePal.pal_set_dialog_state(FhSaveDialogState.CLOSED);
 
+        FhApi.Input.lock_off();
         FhApi.Events.Common.GameLoop.PostCloseSaveMenu.invoke(EventArgs.Empty);
     }
 

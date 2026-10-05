@@ -3,10 +3,10 @@
 // This file is part of Fahrenheit, © 2023-2026 The Fahrenheit contributors.
 // It is licensed to you under the GNU Lesser General Public License, version 3.0 or later. See COPYING, COPYING.LESSER.
 
-namespace Fahrenheit;
+namespace Fahrenheit.Gui;
 
-/// <summary>The base class for custom save/load user interfaces.</summary>
-public abstract class FhSettingsUi : FhModule {
+public abstract class FhFullscreenUi : FhModule {
+
     /// <summary>The helper used to scale Rects to the game's forced 16:9 aspect ratio.</summary>
     protected Rect aspect_helper;
 
@@ -37,22 +37,13 @@ public abstract class FhSettingsUi : FhModule {
     /// <summary>The scale for font sizes at the game's forced 16:9 aspect ratio.</summary>
     protected float font_scale => float.Min(aspect_scale.X, aspect_scale.Y);
 
-    public override bool init(FhModContext mod_context, FileStream global_state_file) {
-        _logger.Info($"Registering new settings UI: {ModuleType}");
-        FhInternal.Settings.register_ui(this);
-
-        FhApi.Events.Common.GameLoop.PostOpenSettingsMenu.subscribe(post_open);
-
-        return true;
-    }
-
-    private void post_open(EventArgs e) {
+    internal void post_open_menu(EventArgs e) {
         /*
          * NOTE:
          *   Fahrenheit does not allow you to open the Escape menu,
-         *   and hence change your resolution, while the settings UI is open.
+         *   and hence change your resolution, while a fullscreen UI is open.
          *
-         *   Because of this, we can set up the aspect_helper once in PostOpenConfigMenu
+         *   Because of this, we can set up the aspect_helper once after the UI is opened
          *   instead of redoing it every frame.
          *
          */
@@ -86,6 +77,6 @@ public abstract class FhSettingsUi : FhModule {
     /// <returns>The reference size used by the UI.</returns>
     protected abstract Vector2 get_ref_size();
 
-    /// <summary>Render the settings UI.</summary>
+    /// <summary>Render the UI.</summary>
     protected internal abstract void render_ui();
 }

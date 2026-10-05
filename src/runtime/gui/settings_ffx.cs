@@ -156,7 +156,7 @@ public class FhSettingsUiX : FhSettingsUi {
     }
 
     private bool has_settings(FhModuleContext module_ctx) {
-        return FhInternal.Settings.try_get(module_ctx.Module, out _);
+        return FhInternal.Settings.try_get_settings(module_ctx.Module, out _);
     }
 
     private bool has_settings(FhModContext mod_ctx) {
@@ -514,7 +514,7 @@ public class FhSettingsUiX : FhSettingsUi {
         FhApi.Gui.draw_triangle_filled_multi_color(
             draw,
             scaled_triangle_top,
-            0,
+            Direction.UP,
             gradient_bottom,
             gradient_bottom,
             gradient_top
@@ -523,7 +523,7 @@ public class FhSettingsUiX : FhSettingsUi {
         FhApi.Gui.draw_triangle_filled_multi_color(
             draw,
             scaled_triangle_bottom,
-            2,
+            Direction.DOWN,
             gradient_bottom,
             gradient_bottom,
             gradient_top

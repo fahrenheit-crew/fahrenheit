@@ -6,7 +6,7 @@
 namespace Fahrenheit.Runtime.Gui;
 
 [FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
-public class FhSettingsUiX : FhSettingsUi {
+public partial class FhSettingsUiX : FhSettingsUi {
     /// <summary>Possible elements for the UI to focus on.</summary>
     private enum UiFocus {
         /// <summary>The scrollable list of mods with settings.</summary>
@@ -56,13 +56,13 @@ public class FhSettingsUiX : FhSettingsUi {
     // Textures
     private bool _loaded_all_textures;
 
-    private readonly FhTexture _texture_help     = new(Path.Join(HIKU_D3D11_DIR, "0_0_512_448_0.dds.phyre"), FhTextureType.PHYRE);
-    private readonly FhTexture _texture_bg       = new(Path.Join(MENU_D3D11_DIR, "ffx_bg.dds.phyre"),        FhTextureType.PHYRE);
-    private readonly FhTexture _texture_menu_new = new(Path.Join(MENU_D3D11_DIR, "menu_new.dds.phyre"),      FhTextureType.PHYRE);
+    public readonly FhTexture _texture_help     = new(Path.Join(HIKU_D3D11_DIR, "0_0_512_448_0.dds.phyre"), FhTextureType.PHYRE);
+    public readonly FhTexture _texture_bg       = new(Path.Join(MENU_D3D11_DIR, "ffx_bg.dds.phyre"),        FhTextureType.PHYRE);
+    public readonly FhTexture _texture_menu_new = new(Path.Join(MENU_D3D11_DIR, "menu_new.dds.phyre"),      FhTextureType.PHYRE);
 
-    private readonly Vector2 _tex_help_size     = new(2048f, 2048f);
-    private readonly Vector2 _tex_bg_size       = new(2048f, 1024f);
-    private readonly Vector2 _tex_menu_new_size = new(2048f, 1024f);
+    public readonly Vector2 _tex_help_size     = new(2048f, 2048f);
+    public readonly Vector2 _tex_bg_size       = new(2048f, 1024f);
+    public readonly Vector2 _tex_menu_new_size = new(2048f, 1024f);
 
     private FhTexture[] _textures => [
         _texture_help,
@@ -122,7 +122,6 @@ public class FhSettingsUiX : FhSettingsUi {
                 _logger.Warning($"Failed to unload texture: {texture.path}");
         }
     }
-
 
     // Helper functions
     private void fade_out(Action action) {

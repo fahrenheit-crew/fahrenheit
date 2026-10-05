@@ -5,7 +5,10 @@
 
 namespace Fahrenheit;
 
-using UserInterfaces = Dictionary<string, FhSettingsUi>;
+using SettingRenderer  = FhSettingRenderer<FhSetting, FhSettingsUi>;
+using UserInterfaces   = Dictionary<string, FhSettingsUi>;
+using ModuleSettings   = ConcurrentDictionary<Type, FhSettingData>;
+using SettingRenderers = ConcurrentDictionary<Type, FhSettingRenderer<FhSetting, FhSettingsUi>>;
 
 /// <summary>
 ///     Pairs a setting category with data
@@ -30,7 +33,7 @@ internal sealed record FhSettingData(
 /// </remarks>
 public abstract class FhSettingProvider<T> where T : FhModule {
     public FhSettingProvider() {
-        FhInternal.Settings.register<T>(this);
+        FhInternal.Settings.register_provider<T>(this);
     }
 
     /// <summary>
@@ -38,6 +41,15 @@ public abstract class FhSettingProvider<T> where T : FhModule {
     ///     the mod settings UI, in display order.
     /// </summary>
     internal protected abstract IEnumerable<FhSetting> get();
+}
+
+public abstract class FhSettingRenderer<TSetting, TSettingUi>
+    where TSetting   : FhSetting
+    where TSettingUi : FhSettingsUi {
+
+    internal protected abstract Vector2 get_size();
+    internal protected abstract void render(TSettingUi ui, Rect max_bounds);
+    internal protected abstract void handle_input(TSettingUi ui);
 }
 
 /// <summary>
@@ -76,9 +88,9 @@ public sealed class FhSettingReference<T> : FhSetting where T : FhModule {
 ///     Carries out setting-related operations.
 /// </summary>
 internal sealed class FhSettings {
-    private readonly UserInterfaces _uis = [];
-
-    private readonly ConcurrentDictionary<Type, FhSettingData> _settings = [];
+    private readonly UserInterfaces   _uis = [];
+    private readonly ModuleSettings   _settings = [];
+    private readonly SettingRenderers _renderers = [];
 
     /// <summary>Get the settings UI associated with the given ID.</summary>
     /// <param name="id">The ID of the desired UI.</param>
@@ -94,11 +106,39 @@ internal sealed class FhSettings {
         _uis[ui.ModuleType] = ui;
     }
 
+    public bool get_setting_renderer<TSetting, TSettingsUi>(
+        [NotNullWhen(true)] out FhSettingRenderer<TSetting, TSettingsUi>? renderer
+    )
+        where TSetting    : FhSetting
+        where TSettingsUi : FhSettingsUi {
+
+        if (!_renderers.TryGetValue(typeof(TSetting), out SettingRenderer? generic_renderer)) {
+            renderer = null;
+            return false;
+        }
+
+        renderer = (FhSettingRenderer<TSetting, TSettingsUi>)(object)generic_renderer;
+        return true;
+    }
+
+    /// <summary>Registers the given renderer type.</summary>
+    /// <typeparam name="TSetting">The type of the setting the renderer is for.</typeparam>
+    /// <typeparam name="TRenderer">The type of the renderer for the setting.</typeparam>
+    public void register_setting_renderer<TSetting, TRenderer>()
+        where TSetting  : FhSetting
+        where TRenderer : FhSettingRenderer<TSetting, FhSettingsUi>, new() {
+
+        Type setting_type  = typeof(TSetting);
+        TRenderer renderer = new();
+
+        _renderers[setting_type] = (SettingRenderer)(object)renderer;
+    }
+
     /// <summary>
     ///     Registers a given module's settings for display.
     /// </summary>
     /// <param name="provider">The <see cref="FhSettingProvider{T}"/> for the module.</param>
-    internal void register<T>(FhSettingProvider<T> provider) where T : FhModule {
+    internal void register_provider<T>(FhSettingProvider<T> provider) where T : FhModule {
         if (FhEnvironment.get_execution_state() != FhExecState.CTOR) {
             throw new Exception($"{nameof(FhSettingProvider<T>)} may only be instantiated in a module constructor.");
         }
@@ -133,7 +173,7 @@ internal sealed class FhSettings {
     /// <summary>
     ///     Attempts to retrieve the settings of the given <paramref name="module"/>.
     /// </summary>
-    internal bool try_get(FhModule module, [NotNullWhen(true)] out FhSettingsCategory? settings) {
+    internal bool try_get_settings(FhModule module, [NotNullWhen(true)] out FhSettingsCategory? settings) {
         settings = null;
         if (!_settings.TryGetValue(module.GetType(), out FhSettingData? sd) || sd.ref_active)
             return false;

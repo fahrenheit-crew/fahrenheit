@@ -5,6 +5,8 @@
 
 namespace Fahrenheit.Runtime.Gui;
 
+using SettingRenderer = FhSettingRenderer<FhSetting, FhSettingsUiX>;
+
 [FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
 public partial class FhSettingsUiX : FhSettingsUi {
     /// <summary>Possible elements for the UI to focus on.</summary>
@@ -17,9 +19,6 @@ public partial class FhSettingsUiX : FhSettingsUi {
 
         /// <summary>The list of settings that appears when a module is hovered/selected.</summary>
         SETTINGS_LIST,
-
-        /// <summary>Inputting a setting took over input handling.</summary>
-        SETTING_INPUT,
     }
 
     private const string MENU_D3D11_DIR = "/FFX_Data/GameData/PS3Data/menu/D3D11/";
@@ -38,6 +37,9 @@ public partial class FhSettingsUiX : FhSettingsUi {
     private int _selected_mod_idx;
     private int _selected_module_idx;
     private FhSetting? _hovered_setting;
+
+    private ICapturingRenderer? _capturing_renderer;
+    private FhSetting?          _captured_setting;
 
     private FhSettingsCategory? _displayed_settings;
 
@@ -144,16 +146,6 @@ public partial class FhSettingsUiX : FhSettingsUi {
             && FhApi.Gui.mouse_clicked(rect, button, repeat);
     }
 
-    private string? get_input_help_text() {
-        Type setting_type = _hovered_setting!.GetType();
-        return setting_type switch {
-            _ when setting_type == typeof(FhSettingText)     => "Input desired text",
-            _ when setting_type == typeof(FhSettingNumber<>) => "Input desired number",
-
-            _ => null,
-        };
-    }
-
     private bool has_settings(FhModuleContext module_ctx) {
         return FhInternal.Settings.try_get_settings(module_ctx.Module, out _);
     }
@@ -167,9 +159,36 @@ public partial class FhSettingsUiX : FhSettingsUi {
         return false;
     }
 
+    public bool try_capture_setting(ICapturingRenderer renderer, FhSetting setting) {
+        if (_capturing_renderer != null) return false;
+
+        _capturing_renderer = renderer;
+        _captured_setting   = setting;
+
+        return true;
+    }
+
+    public bool try_release_setting(ICapturingRenderer renderer) {
+        if (_capturing_renderer != renderer) return false;
+
+        _capturing_renderer = null;
+        _captured_setting   = null;
+
+        return true;
+    }
+
     // Input handling
     private void handle_input() {
+        if (_captured_setting != null) {
+            if (!FhInternal.Settings.get_setting_renderer(_captured_setting, out SettingRenderer? renderer)) {
+                _capturing_renderer = null;
+                _captured_setting   = null;
+                return;
+            }
 
+            renderer.handle_input(this, _captured_setting);
+            return;
+        }
     }
 
     // Rendering
@@ -244,10 +263,13 @@ public partial class FhSettingsUiX : FhSettingsUi {
 
         //TODO: Add localization
         string text = _focus switch {
-            UiFocus.MOD_LIST      => "Select mod to configure",
-            UiFocus.MODULE_LIST   => "Select module to configure",
-            UiFocus.SETTINGS_LIST => FhApi.Localization.localize(_hovered_setting!.desc),
-            UiFocus.SETTING_INPUT => get_input_help_text() ?? FhApi.Localization.localize(_hovered_setting!.desc),
+            UiFocus.MOD_LIST    => FhApi.Localization.localize($"{typeof(FhSettingsUiBase).FullName}.help.mod_list"),
+            UiFocus.MODULE_LIST => FhApi.Localization.localize($"{typeof(FhSettingsUiBase).FullName}.help.module_list"),
+
+            UiFocus.SETTINGS_LIST when _capturing_renderer != null
+                => _capturing_renderer.get_input_help_text(),
+
+            UiFocus.SETTINGS_LIST => _hovered_setting!.desc,
 
             _ => throw new NotImplementedException(),
         };

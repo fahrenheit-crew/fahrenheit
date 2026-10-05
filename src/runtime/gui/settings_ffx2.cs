@@ -5,8 +5,10 @@
 
 namespace Fahrenheit.Runtime.Gui;
 
+using SettingRenderer = FhSettingRenderer<FhSetting, FhSettingsUiX2>;
+
 [FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
-public class FhSettingsUiX2 : FhSettingsUi {
+public partial class FhSettingsUiX2 : FhSettingsUi {
     /// <summary>Possible elements for the UI to focus on.</summary>
     private enum UiFocus {
         /// <summary>The scrollable list of mods with settings.</summary>
@@ -17,9 +19,6 @@ public class FhSettingsUiX2 : FhSettingsUi {
 
         /// <summary>The list of settings that appears when a module is hovered/selected.</summary>
         SETTINGS_LIST,
-
-        /// <summary>Inputting a setting took over input handling.</summary>
-        SETTING_INPUT,
     }
 
     private const string MENU_D3D11_DIR   = "/FFX-2_Data/GameData/PS3Data/menu/D3D11/";
@@ -40,6 +39,9 @@ public class FhSettingsUiX2 : FhSettingsUi {
     private int _selected_module_idx;
     private FhSetting? _hovered_setting;
 
+    private ICapturingRenderer? _capturing_renderer;
+    private FhSetting?          _captured_setting;
+
     private FhSettingsCategory? _displayed_settings;
 
     private Scrollable _scrollable_mods = new() {
@@ -57,19 +59,19 @@ public class FhSettingsUiX2 : FhSettingsUi {
     // Textures
     private bool _loaded_all_textures;
 
-    private readonly FhTexture _texture_menuback = new(Path.Join(MENU_D3D11_DIR,   "menuback.dds.phyre"),             FhTextureType.PHYRE);
-    private readonly FhTexture _texture_mahojin  = new(Path.Join(MENU_MAHOJIN_DIR, "14336_19_0_0_512_512.dds.phyre"), FhTextureType.PHYRE);
-    private readonly FhTexture _texture_black0   = new(Path.Join(MENU_PLATE_DIR,   "black0.dds.phyre"),               FhTextureType.PHYRE);
-    private readonly FhTexture _texture_bk_blue  = new(Path.Join(MENU_D3D11_DIR,   "bk_blue.dds.phyre"),              FhTextureType.PHYRE);
-    private readonly FhTexture _texture_freetex  = new(Path.Join(MENU_D3D11_DIR,   "freetex.dds.phyre"),              FhTextureType.PHYRE);
-    private readonly FhTexture _texture_plate    = new(Path.Join(MENU_PLATE_DIR,   "12288_19_0_0_256_256.dds.phyre"), FhTextureType.PHYRE);
+    public readonly FhTexture _texture_menuback = new(Path.Join(MENU_D3D11_DIR,   "menuback.dds.phyre"),             FhTextureType.PHYRE);
+    public readonly FhTexture _texture_mahojin  = new(Path.Join(MENU_MAHOJIN_DIR, "14336_19_0_0_512_512.dds.phyre"), FhTextureType.PHYRE);
+    public readonly FhTexture _texture_black0   = new(Path.Join(MENU_PLATE_DIR,   "black0.dds.phyre"),               FhTextureType.PHYRE);
+    public readonly FhTexture _texture_bk_blue  = new(Path.Join(MENU_D3D11_DIR,   "bk_blue.dds.phyre"),              FhTextureType.PHYRE);
+    public readonly FhTexture _texture_freetex  = new(Path.Join(MENU_D3D11_DIR,   "freetex.dds.phyre"),              FhTextureType.PHYRE);
+    public readonly FhTexture _texture_plate    = new(Path.Join(MENU_PLATE_DIR,   "12288_19_0_0_256_256.dds.phyre"), FhTextureType.PHYRE);
 
-    private readonly Vector2 _tex_menuback_size = new( 512f,  512f);
-    private readonly Vector2 _tex_mahojin_size  = new(2048f, 2048f);
-    private readonly Vector2 _tex_black0_size   = new(1024f, 1024f);
-    private readonly Vector2 _tex_bk_blue_size  = new( 512f,  512f);
-    private readonly Vector2 _tex_freetex_size  = new(1024f,  768f);
-    private readonly Vector2 _tex_plate_size    = new( 512f,  512f);
+    public readonly Vector2 _tex_menuback_size = new( 512f,  512f);
+    public readonly Vector2 _tex_mahojin_size  = new(2048f, 2048f);
+    public readonly Vector2 _tex_black0_size   = new(1024f, 1024f);
+    public readonly Vector2 _tex_bk_blue_size  = new( 512f,  512f);
+    public readonly Vector2 _tex_freetex_size  = new(1024f,  768f);
+    public readonly Vector2 _tex_plate_size    = new( 512f,  512f);
 
     private FhTexture[] _textures => [
         _texture_menuback,
@@ -133,7 +135,6 @@ public class FhSettingsUiX2 : FhSettingsUi {
         }
     }
 
-
     // Helper functions
     private void fade_out(Action action) {
         _fade.restart(
@@ -155,18 +156,8 @@ public class FhSettingsUiX2 : FhSettingsUi {
             && FhApi.Gui.mouse_clicked(rect, button, repeat);
     }
 
-    private string? get_input_help_text() {
-        Type setting_type = _hovered_setting!.GetType();
-        return setting_type switch {
-            _ when setting_type == typeof(FhSettingText) => "Input desired text",
-            _ when setting_type == typeof(FhSettingNumber<>) => "Input desired number",
-
-            _ => null,
-        };
-    }
-
     private bool has_settings(FhModuleContext module_ctx) {
-        return FhInternal.Settings.try_get(module_ctx.Module, out _);
+        return FhInternal.Settings.try_get_settings(module_ctx.Module, out _);
     }
 
     private bool has_settings(FhModContext mod_ctx) {
@@ -178,9 +169,36 @@ public class FhSettingsUiX2 : FhSettingsUi {
         return false;
     }
 
+    public bool try_capture_setting(ICapturingRenderer renderer, FhSetting setting) {
+        if (_capturing_renderer != null) return false;
+
+        _capturing_renderer = renderer;
+        _captured_setting = setting;
+
+        return true;
+    }
+
+    public bool try_release_setting(ICapturingRenderer renderer) {
+        if (_capturing_renderer != renderer) return false;
+
+        _capturing_renderer = null;
+        _captured_setting = null;
+
+        return true;
+    }
+
     // Input handling
     private void handle_input() {
+        if (_captured_setting != null) {
+            if (!FhInternal.Settings.get_setting_renderer(_captured_setting, out SettingRenderer? renderer)) {
+                _capturing_renderer = null;
+                _captured_setting = null;
+                return;
+            }
 
+            renderer.handle_input(this, _captured_setting);
+            return;
+        }
     }
 
     // Rendering
@@ -408,10 +426,13 @@ public class FhSettingsUiX2 : FhSettingsUi {
 
         //TODO: Add localization
         string text = _focus switch {
-            UiFocus.MOD_LIST      => "Select mod to configure",
-            UiFocus.MODULE_LIST   => "Select module to configure",
-            UiFocus.SETTINGS_LIST => FhApi.Localization.localize(_hovered_setting!.desc),
-            UiFocus.SETTING_INPUT => get_input_help_text() ?? FhApi.Localization.localize(_hovered_setting!.desc),
+            UiFocus.MOD_LIST    => FhApi.Localization.localize($"{typeof(FhSettingsUiBase).FullName}.help.mod_list"),
+            UiFocus.MODULE_LIST => FhApi.Localization.localize($"{typeof(FhSettingsUiBase).FullName}.help.module_list"),
+
+            UiFocus.SETTINGS_LIST when _capturing_renderer != null
+                => _capturing_renderer.get_input_help_text(),
+
+            UiFocus.SETTINGS_LIST => _hovered_setting!.desc,
 
             _ => throw new NotImplementedException(),
         };
@@ -718,7 +739,7 @@ public class FhSettingsUiX2 : FhSettingsUi {
         FhApi.Gui.draw_triangle_filled_multi_color(
             draw,
             scaled_triangle_top,
-            0,
+            Direction.UP,
             gradient_bottom,
             gradient_bottom,
             0xFFBEBEBE
@@ -727,7 +748,7 @@ public class FhSettingsUiX2 : FhSettingsUi {
         FhApi.Gui.draw_triangle_filled_multi_color(
             draw,
             scaled_triangle_bottom,
-            2,
+            Direction.DOWN,
             gradient_bottom,
             gradient_bottom,
             0xFFBEBEBE

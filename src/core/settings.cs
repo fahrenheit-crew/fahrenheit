@@ -107,18 +107,17 @@ internal sealed class FhSettings {
         _uis[ui.ModuleType] = ui;
     }
 
-    public bool get_setting_renderer<TSetting, TSettingsUi>(
-        [NotNullWhen(true)] out FhSettingRenderer<TSetting, TSettingsUi>? renderer
-    )
-        where TSetting    : FhSetting
-        where TSettingsUi : FhSettingsUi {
+    public bool get_setting_renderer<TSettingsUi>(
+        FhSetting setting,
+        [NotNullWhen(true)] out FhSettingRenderer<FhSetting, TSettingsUi>? renderer
+    ) where TSettingsUi : FhSettingsUi {
 
-        if (!_renderers.TryGetValue(typeof(TSetting), out SettingRenderer? generic_renderer)) {
+        if (!_renderers.TryGetValue(setting.GetType(), out SettingRenderer? generic_renderer)) {
             renderer = null;
             return false;
         }
 
-        renderer = (FhSettingRenderer<TSetting, TSettingsUi>)(object)generic_renderer;
+        renderer = (FhSettingRenderer<FhSetting, TSettingsUi>)(object)generic_renderer;
         return true;
     }
 

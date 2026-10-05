@@ -632,10 +632,8 @@ public sealed class FhSaveUiX2 : FhSaveUi {
         string text = _mode switch {
             UiMode.SET_SWAP => "Select save set",
 
-            // TODO: Make this a switch when different popups are added
-            UiMode.SAVE_POPUP => "",
-
-            UiMode.SAVE_LIST => system_mode switch {
+            UiMode.SAVE_LIST  or
+            UiMode.SAVE_POPUP => system_mode switch {
                 FhSaveSystemMode.SAVE => "Select save area",
                 FhSaveSystemMode.LOAD or
                 FhSaveSystemMode.ALBD => "Select save data",
@@ -1294,9 +1292,12 @@ public sealed class FhSaveUiX2 : FhSaveUi {
         );
 
         switch (FhGlobal.game_id) {
-            case FhGameId.FFX:                                             break; // TODO
+            //TODO: Support FFX save files.
+            case FhGameId.FFX:    /* ui_savefile_details_x(save_rect, save); */  break;
+            case FhGameId.FFX2:   ui_savefile_details_x2(save_rect, save); break;
             case FhGameId.FFX2LM: ui_savefile_details_lm(save_rect, save); break;
-            default:              ui_savefile_details_x2(save_rect, save); break;
+
+            default: throw new UnreachableException();
         }
 
         if (save.slot == 0 && is_saving) {

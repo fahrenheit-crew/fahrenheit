@@ -67,7 +67,7 @@ public unsafe sealed class FhMallocModule : FhModule {
          * the game normally uses, then failing here gives a clear indication of what is wrong.
          */
 
-        FhCall.FUN_005428A0_008771A0.fnptr!();
+        FhCall.FUN_005428a0_008771a0.fnptr!();
 
         /* [fkelava 06/08/26 23:51]
          * Be VERY careful. The pool size can't be _too small_ because it's reused as the upper
@@ -84,10 +84,10 @@ public unsafe sealed class FhMallocModule : FhModule {
         PInvoke.InitializeCriticalSection(&alloc_struct->crit_sec);
 
         FhUtil.set_at(FhUtil.select(0x8E901C, 0x9ECBE4, 0x9ECBE4), (uint)alloc_struct);
-        _ = FhCall.FUN_00542A40_00477340.fnptr!(&alloc_struct->data, pool_size, 0, uint.CreateChecked( pool_size - 0x100000 ));
+        _ = FhCall.FUN_00542a40_00477340.fnptr!(&alloc_struct->data, pool_size, 0, uint.CreateChecked( pool_size - 0x100000 ));
 
         PInvoke.EnterCriticalSection(&alloc_struct->crit_sec);
-        void* rv = FhCall.FUN_00542B60_00477460.fnptr!(&alloc_struct->data, 0x10);
+        void* rv = FhCall.FUN_00542b60_00477460.fnptr!(&alloc_struct->data, 0x10);
         PInvoke.LeaveCriticalSection(&alloc_struct->crit_sec);
 
         if (rv == null) {

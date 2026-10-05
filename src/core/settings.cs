@@ -60,12 +60,12 @@ public abstract class FhSettingRenderer<TSetting, TSettingUi>
 ///     This is used to present a unified settings panel for a number of disparate modules.
 ///     Only one reference can target any given module.
 /// </remarks>
-public sealed class FhSettingReference<T> : FhSetting where T : FhModule {
+public sealed class FhSettingReference<T> : FhSetting<FhSettingsCategory?> where T : FhModule {
     private static readonly ConcurrentDictionary<Type, byte> _s_refs = [];
 
     private FhSettingsCategory? _settings = null;
 
-    public FhSettingReference(string id) : base(id) {
+    public FhSettingReference(string id) : base(id, null) {
         Type module_type = typeof(T);
 
         if (!_s_refs.TryAdd(module_type, 0)) {
@@ -76,11 +76,12 @@ public sealed class FhSettingReference<T> : FhSetting where T : FhModule {
     internal override void save(Utf8JsonWriter writer) { }
     internal override void load(Utf8JsonReader reader) { }
 
-    internal override void render() {
-        if (_settings == null && !FhInternal.Settings.try_bind_reference<T>(out _settings))
-            return;
+    public override FhSettingsCategory? get() {
+        if (_settings == null) {
+            FhInternal.Settings.try_bind_reference<T>(out _settings);
+        }
 
-        _settings.render();
+        return _settings;
     }
 }
 
@@ -267,25 +268,6 @@ public abstract class FhSetting(string id) {
     ///     Reads the setting's value from disk through the provided <paramref name="reader"/>.
     /// </summary>
     internal abstract void load(Utf8JsonReader reader);
-
-    /// <summary>
-    ///     Displays the setting.
-    /// </summary>
-    internal abstract void render();
-
-    public virtual void render_name() {
-        ImGui.AlignTextToFramePadding();
-        ImGui.Text(name);
-    }
-
-    protected static void render_tooltip(string tooltip) {
-        if (!ImGui.BeginItemTooltip()) return;
-
-        ImGui.PushTextWrapPos(ImGui.GetFontSize() * 40);
-        ImGui.TextUnformatted(tooltip);
-        ImGui.PopTextWrapPos ();
-        ImGui.EndTooltip     ();
-    }
 }
 
 /// <summary>
@@ -295,26 +277,21 @@ public abstract class FhSetting(string id) {
 ///     Settings are automatically persisted to disk and exposed through the
 ///     mod settings UI when provided through an <see cref="FhSettingProvider{T}"/>.
 /// </remarks>
-public abstract class FhSetting<T>(string id, T defval) : FhSetting(id) where T : notnull {
+public abstract class FhSetting<T>(string id, T defval) : FhSetting(id) {
     protected bool _disabled = false;
 
     protected readonly T _default = defval;
     protected          T _value   = defval;
 
-    public           T    get()        => _value;
+    public   virtual T    get()        => _value;
     internal virtual void set(T value) => _value = value;
 
-    /* [fkelava 22/06/26 18:42]
-     * There are catches with these that make implementing them correctly non-trivial.
-     * Hence they are currently sealed, and we may unseal them at a later date.
-     */
-
-    internal sealed override void save(Utf8JsonWriter writer) {
+    internal override void save(Utf8JsonWriter writer) {
         writer.WritePropertyName(id);
         JsonSerializer.Serialize<T>(writer, _value, FhUtil.InternalJsonOpts);
     }
 
-    internal sealed override void load(Utf8JsonReader reader) {
+    internal override void load(Utf8JsonReader reader) {
         /* [fkelava 22/06/26 17:50]
          * A `Utf8JsonReader` is forward-only. Since `try_find_key_and_deserialize` will read
          * as far ahead as necessary to find the key, we need to copy the reader.
@@ -370,29 +347,6 @@ public sealed class FhSettingsCategory : FhSetting {
             setting.load(reader);
         }
     }
-
-    public override void render_name() {
-        //TODO: Render extra ArrowButton with Down/Right arrow for collapsing the category
-        ImGui.SeparatorText(name);
-        render_tooltip(desc);
-    }
-
-    internal override void render() {
-        ImGui.Dummy(Vector2.Zero); // Get rid of the SameLine from modconfig
-
-        if (collapsed)
-            return;
-
-        ImGui.Indent(ImGui.GetTreeNodeToLabelSpacing());
-
-        foreach (FhSetting setting in settings) {
-            setting.render_name();
-            ImGui.SameLine(300);
-            setting.render();
-        }
-
-        ImGui.Unindent(ImGui.GetTreeNodeToLabelSpacing());
-    }
 }
 
 /// <summary>A text input setting, with flags.</summary>
@@ -403,18 +357,7 @@ public sealed class FhSettingText(
     ImGuiInputTextFlags flags = ImGuiInputTextFlags.None
 ) : FhSetting<string>(id, def_value) {
 
-    internal const int MAX_LENGTH = 1024;
-
-    private readonly ImGuiInputTextFlags _flags = flags;
-
-    internal override void render() {
-        ImGui.InputText(
-            $"##setting.{id}",
-            ref _value,
-            MAX_LENGTH,
-            _disabled ? _flags | ImGuiInputTextFlags.ReadOnly : _flags
-        );
-    }
+    public const int MAX_LENGTH = 1024;
 }
 
 /// <summary>A numeric/spinbox input.</summary>
@@ -432,11 +375,11 @@ public class FhSettingNumber<T>(
     T?     step
 ) : FhSetting<T>(id, def_value) where T : unmanaged, INumber<T> {
 
-    private readonly ImGuiDataType _type = get_data_type(def_value);
+    public readonly ImGuiDataType _type = get_data_type(def_value);
 
-    private readonly T _step = step ?? T.One;
-    private readonly T _min  = min  ?? T.Zero;
-    private readonly T _max  = max  ?? T.One;
+    public readonly T _step = step ?? T.One;
+    public readonly T _min  = min  ?? T.Zero;
+    public readonly T _max  = max  ?? T.One;
 
     private static ImGuiDataType get_data_type(T value) {
         return value switch {
@@ -457,21 +400,6 @@ public class FhSettingNumber<T>(
     internal override void set(T value) {
         _value = T.Clamp(value, _min, _max);
     }
-
-    internal override void render() {
-        unsafe {
-            fixed (T* ptr_value = &_value)
-            fixed (T* ptr_step  = &_step) {
-                if (ImGui.InputScalar($"##setting.{id}", _type, ptr_value, ptr_step)) {
-                    set(_value);
-                }
-            }
-        }
-    }
 }
 
-public class FhSettingToggle(string id, bool def_value) : FhSetting<bool>(id, def_value) {
-    internal override void render() {
-        ImGui.Checkbox($"##setting.{id}", ref _value);
-    }
-}
+public class FhSettingToggle(string id, bool def_value) : FhSetting<bool>(id, def_value) { }

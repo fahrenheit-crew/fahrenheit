@@ -692,4 +692,42 @@ public unsafe class FhGui {
             default: throw new UnreachableException();
         }
     }
+
+    public void draw_quad_gradient(
+        ImDrawListPtr draw_list,
+        Vector2[] points,
+        uint[] colors
+    ) {
+        ArgumentOutOfRangeException.ThrowIfNotEqual(points.Length, 4);
+        ArgumentOutOfRangeException.ThrowIfNotEqual(colors.Length, 4);
+
+        // Return early if all colors are transparent
+        for (int i = 0; i < 4; i++) {
+            if ((colors[i] & 0xFF000000) != 0) break;
+            if (i == 3) return;
+        }
+
+        Vector2 uv = draw_list.Data.TexUvWhitePixel;
+
+        draw_list.PrimReserve(6, 4);
+
+        /*   0------1
+         *   |    / |
+         *   |  /   |
+         *   |/     |
+         *   2------3
+         */
+
+        draw_list.PrimWriteIdx((ushort)(draw_list.VtxCurrentIdx + 0));
+        draw_list.PrimWriteIdx((ushort)(draw_list.VtxCurrentIdx + 1));
+        draw_list.PrimWriteIdx((ushort)(draw_list.VtxCurrentIdx + 2));
+
+        draw_list.PrimWriteIdx((ushort)(draw_list.VtxCurrentIdx + 1));
+        draw_list.PrimWriteIdx((ushort)(draw_list.VtxCurrentIdx + 2));
+        draw_list.PrimWriteIdx((ushort)(draw_list.VtxCurrentIdx + 3));
+
+        for (int i = 0; i < 4; i++) {
+            draw_list.PrimWriteVtx(points[i], uv, colors[i]);
+        }
+    }
 }

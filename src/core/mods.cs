@@ -27,6 +27,8 @@ public sealed class FhMods {
         FhModPaths[] mod_paths = FhEnvironment.ModPaths;
         FhManifest[] manifests = FhEnvironment.Manifests;
 
+        FhInternal.Loader.prepare(manifests);
+
         for (int i = 0; i < manifests.Length; i++) {
             var mod_context = new FhModContext(
                 manifests[i],

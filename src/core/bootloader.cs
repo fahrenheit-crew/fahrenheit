@@ -207,14 +207,9 @@ internal sealed class FhLoader {
     ///     in a given session, and is shared among all of its users.
     /// </remarks>
     internal Assembly? get_shared_assembly(AssemblyName assembly_name) {
-        if (!_load_contexts.TryGetValue(assembly_name.Name ?? "", out FhLoadContext? load_context)) return null;
-
-        foreach (Assembly assembly in load_context.Assemblies) {
-            AssemblyName loaded_assembly_name = assembly.GetName();
-            if (loaded_assembly_name.FullName == assembly_name.FullName) return assembly;
-        }
-
-        return null;
+        return _load_contexts.TryGetValue(assembly_name.Name ?? "", out FhLoadContext? load_context)
+            ? load_context.load()
+            : null;
     }
 
     /// <summary>

@@ -8,25 +8,14 @@ namespace Fahrenheit.Runtime;
 /* [fkelava 06/08/26 14:02]
  * See generally issue #253.
  *
- * The game has a long-standing issue with "green screens" in FMVs and other crashes.
- * The band-aid fix is applying the '4GB' patch. But _why_ does it happen? Can we provide a better fix?
+ * The game used to ship without LAA flag enabled, and reserves 37.5% of <2GB address space
+ * (0x3000_0000 bytes) for its primary memory pool. This would lead to "green screens" in FMVs
+ * because they do not use the primary pool, and there was not enough contiguous free space
+ * under 2GB due to ASLR forcing DLLs to be loaded at random high address.
  *
- * The game reserves 37.5% of the default address space (0x3000_0000 bytes)
- * for its primary memory pool. It then commits things into it slowly over time.
- *
- * Reserved memory is considered used by the system regardless of how much of it is actually
- * _committed_. The problem is that the game does not service all memory requests from the pool.
- * For things like FMVs, there still has to be enough additional contiguous free memory to load them.
- *
- * This worked ten or so years ago when it was made, and it works on most other platforms
- * because the high reaches of the address space should be entirely empty.
- *
- * But in the decade since, ASLR started shipping on Windows, and is the default for anything
- * built today. The OS loads such DLLs at a random high address, breaking up the previously contiguous
- * free space into smaller chunks. No block large enough to fit an FMV remains.
- *
- * The true solution is to reserve less. By deferring the moment memory is considered 'used'
- * to the _actual point of usage_, the truth is revealed; there was never a shortage of memory.
+ * Even though the game now has LAA flag and "fixes" this, we still reduce primary
+ * pool size because it is empirically shown it is far oversized.
+ * The pool now begins at 0x800_0000 and expands in increments of 0x800_0000.
  */
 
 /// <summary>
@@ -99,12 +88,11 @@ public unsafe sealed class FhMallocModule : FhModule {
     }
 
     /* [fkelava 06/08/26 14:29]
-     * We previously experimented with allocating top-down. However, 'persistent' magic effects
-     * handled using the `op_*` system seem to exhibit some manner of pointer tagging/truncation bug
-     * which causes them to fail to terminate properly when assigned an address over 0x7FFF_FFFF.
+     * We previously tried allocating top-down. However, 'persistent' magic effects handled
+     * using the `op_*` system have a pointer tagging/truncation bug which makes them fail
+     * to terminate properly when assigned an address over 0x7FFF_FFFF.
      *
-     * This bug can occur regardless as long as the 4GB patch is applied, just less frequently.
-     * Therefore we must allocate bottom-up until the underlying bug has been resolved.
+     * Square then released a 4G patched version of the game without fixing this bug. "Bug fixes" indeed! Caveat emptor.
      */
 
     [UnmanagedCallConv(CallConvs = [ typeof(CallConvCdecl) ] )]

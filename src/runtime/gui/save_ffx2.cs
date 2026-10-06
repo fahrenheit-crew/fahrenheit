@@ -922,7 +922,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
 
         // Texture coordinates
         float slice_size  = 64f;
-        float plate_max_y = 512f - ((set_idx % 8) * slice_size);
+        float plate_max_y = 512f - (((set_idx + 1) % 8) * slice_size);
 
         UV plate_tuv = new Rect {
             pos  = new(  0f, plate_max_y - slice_size),
@@ -1205,7 +1205,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
 
         // Texture UV changes for each slot
         float slice_size = 64f;
-        float max_y = 512f - ((index % 8) * slice_size);
+        float max_y = 512f - (((index + 1) % 8) * slice_size);
 
         float uv_y_start = max_y;
         float uv_y_end   = max_y - slice_size;

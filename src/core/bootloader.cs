@@ -221,7 +221,7 @@ internal sealed class FhLoader {
     ///     Creates the <see cref="FhLoadContext"/>s for all mod DLLs for this session.
     /// </summary>
     internal void prepare(IEnumerable<FhManifest> manifests) {
-        foreach (var manifest in manifests) {
+        foreach (FhManifest manifest in manifests) {
             string dll_path = FhEnvironment.Finder.get_for_dll(manifest.Id);
 
             if (!File.Exists(dll_path))

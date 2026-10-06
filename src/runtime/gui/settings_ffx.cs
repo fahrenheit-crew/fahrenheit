@@ -532,19 +532,19 @@ public partial class FhSettingsUiX : FhSettingsUi {
             gradient_bottom
         );
 
-        FhApi.Gui.draw_triangle_filled_multi_color(
+        FhApi.Gui.draw_triangle_gradient(
             draw,
             scaled_triangle_top,
-            Direction.UP,
+            GradientDirection.UP,
             gradient_bottom,
             gradient_bottom,
             gradient_top
         );
 
-        FhApi.Gui.draw_triangle_filled_multi_color(
+        FhApi.Gui.draw_triangle_gradient(
             draw,
             scaled_triangle_bottom,
-            Direction.DOWN,
+            GradientDirection.DOWN,
             gradient_bottom,
             gradient_bottom,
             gradient_top

@@ -52,7 +52,6 @@
     "Version":"$(InformationalVersion)",
     "Link":"$(FhManifestHomePage)",
     "Dependencies":[],
-    "LoadAfter":[],
     "Flags":"$(FhManifestFlags)"
 }
             </__FhManifestLines>

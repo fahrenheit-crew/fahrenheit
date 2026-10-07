@@ -825,15 +825,15 @@ static BOOL s0_dbg_exception_filter(
      * making AV with all flags unset. We must honor that flag for .NET to avoid dumping on
      * 1st chance exceptions that will be handled by `try` block, but ignore it otherwise.
      *
-     * Per Passant (https://stackoverflow.com/a/12300563):
-     * > Exception codes with values less than 0x80000000 are
-     * > just informal and never an indicator of real trouble.
+     * See `ntstatus.h` from the Windows SDK. The high two bits of an exception code
+     * represent the severity of an exception, and they're both set if it is an error.
+     * Thus we capture any exception code above C000_0000.
      */
     DWORD code  = ptr_exception_record->ExceptionCode;
     DWORD flags = ptr_exception_record->ExceptionFlags;
 
     return (code == 0xE0434352 && (flags & EXCEPTION_NONCONTINUABLE) != 0)
-        || (code != 0xE0434352 && code > 0x80000000);
+        || (code != 0xE0434352 && code > 0xC0000000);
 }
 
 // Handles exception events, returning whether to continue or treat the exception as unhandled.

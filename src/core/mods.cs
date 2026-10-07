@@ -27,11 +27,14 @@ public sealed class FhMods {
         FhModPaths[] mod_paths = FhEnvironment.ModPaths;
         FhManifest[] manifests = FhEnvironment.Manifests;
 
+        FhInternal.Loader.prepare(manifests);
+
         for (int i = 0; i < manifests.Length; i++) {
-            var mod_context = new FhModContext(
+            FhModContext mod_context = new(
                 manifests[i],
                 mod_paths[i],
-                [ .. FhInternal.Loader.load_mod(manifests[i]) ]);
+                [ .. FhInternal.Loader.load_mod(manifests[i]) ]
+            );
 
             mods[i] = mod_context;
             modules.AddRange(mod_context.Modules);

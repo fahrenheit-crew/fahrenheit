@@ -12,6 +12,16 @@ namespace Fahrenheit.Runtime.Gui;
 public unsafe class FhModListDisplayModule : FhModule {
     private FhSettingsUiBase? _settings_ui;
 
+    private class Settings : FhSettingProvider<FhModListDisplayModule> {
+        public FhSettingToggle show_mod_count = new("mod_count", true);
+
+        internal protected override IEnumerable<FhSetting> get() {
+            return [ show_mod_count ];
+        }
+    }
+
+    private Settings _settings = new();
+
     public override bool init(FhModContext mod_context, FileStream global_state_file) {
         return new FhModuleHandle<FhSettingsUiBase>(this).try_get_module(out _settings_ui);
     }
@@ -35,10 +45,13 @@ public unsafe class FhModListDisplayModule : FhModule {
             ImGui.PushFont(FhApi.Gui.FONT_DEFAULT, 18f);
             FhModContext[] mods = [ .. FhApi.Mods.get_mods() ];
 
-            ImGui.Text($"{mods.Length} mods loaded");
+            if (_settings.show_mod_count.get())
+                ImGui.Text($"{mods.Length} mods loaded");
+
             foreach (FhModContext mod_ctx in mods) {
                 ImGui.Text($"{mod_ctx.Manifest.Name} v{mod_ctx.Manifest.Version}");
             }
+
             ImGui.PopFont();
         }
         ImGui.End();

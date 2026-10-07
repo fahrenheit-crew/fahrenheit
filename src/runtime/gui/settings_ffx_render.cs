@@ -36,11 +36,37 @@ public partial class FhSettingsUiX {
 
         internal protected override Vector2 get_size(FhSettingsUiX ui) {
             //TODO: Implement size calculation
-            return new Vector2(0f, 0f);
+            return new Vector2(0f, 65f);
         }
 
         internal protected override void render(FhSettingsUiX ui, FhSettingToggle toggle, Rect max_bounds) {
             //TODO: Implement rendering
+            if (!ui._texture_battle_kuang.try_use(out ImTextureRef battle_kuang, out _)) {
+                return;
+            }
+
+            Rect bg_bounds = max_bounds with {
+                size = max_bounds.size with {
+                    Y = 60f,
+                },
+            };
+
+            ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
+
+            GradientStep[] bg_steps = [
+                new(0.0f, 0x0070212A),
+                new(0.2f, 0xA070212A),
+                new(0.5f, 0xA070212A),
+                new(0.8f, 0xA0030303),
+                new(1.0f, 0x00030303),
+            ];
+
+            FhApi.Gui.draw_rectangle_gradient(
+                draw,
+                bg_bounds,
+                GradientDirection.RIGHT,
+                bg_steps
+            );
         }
 
         internal protected override void handle_input(FhSettingsUiX ui, FhSettingToggle toggle) {

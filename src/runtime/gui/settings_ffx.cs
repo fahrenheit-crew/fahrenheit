@@ -29,6 +29,8 @@ public partial class FhSettingsUiX : FhSettingsUi {
 
     private const float FADE_LENGTH = 0.35f;
 
+    public const float INDENT_SIZE = 20f;
+
     // Display
     private readonly FadeHelper _fade;
 
@@ -37,6 +39,8 @@ public partial class FhSettingsUiX : FhSettingsUi {
     private int _selected_mod_idx;
     private int _selected_module_idx;
     private FhSetting? _hovered_setting;
+
+    private int indent;
 
     private ICapturingRenderer? _capturing_renderer;
     private FhSetting?          _captured_setting;
@@ -58,18 +62,21 @@ public partial class FhSettingsUiX : FhSettingsUi {
     // Textures
     private bool _loaded_all_textures;
 
-    public readonly FhTexture _texture_help     = new(Path.Join(HIKU_D3D11_DIR, "0_0_512_448_0.dds.phyre"), FhTextureType.PHYRE);
-    public readonly FhTexture _texture_bg       = new(Path.Join(MENU_D3D11_DIR, "ffx_bg.dds.phyre"),        FhTextureType.PHYRE);
-    public readonly FhTexture _texture_menu_new = new(Path.Join(MENU_D3D11_DIR, "menu_new.dds.phyre"),      FhTextureType.PHYRE);
+    public readonly FhTexture _texture_help         = new(Path.Join(HIKU_D3D11_DIR, "0_0_512_448_0.dds.phyre"), FhTextureType.PHYRE);
+    public readonly FhTexture _texture_bg           = new(Path.Join(MENU_D3D11_DIR, "ffx_bg.dds.phyre"),        FhTextureType.PHYRE);
+    public readonly FhTexture _texture_menu_new     = new(Path.Join(MENU_D3D11_DIR, "menu_new.dds.phyre"),      FhTextureType.PHYRE);
+    public readonly FhTexture _texture_battle_kuang = new(Path.Join(MENU_D3D11_DIR, "battle_kuang.dds.phyre"),  FhTextureType.PHYRE);
 
-    public readonly Vector2 _tex_help_size     = new(2048f, 2048f);
-    public readonly Vector2 _tex_bg_size       = new(2048f, 1024f);
-    public readonly Vector2 _tex_menu_new_size = new(2048f, 1024f);
+    public readonly Vector2 _tex_help_size         = new(2048f, 2048f);
+    public readonly Vector2 _tex_bg_size           = new(2048f, 1024f);
+    public readonly Vector2 _tex_menu_new_size     = new(2048f, 1024f);
+    public readonly Vector2 _tex_battle_kuang_size = new(2048f, 1024f);
 
     private FhTexture[] _textures => [
         _texture_help,
         _texture_bg,
         _texture_menu_new,
+        _texture_battle_kuang,
     ];
 
     protected override Vector2 get_ref_size() => new(1920f, 1080f);
@@ -78,6 +85,8 @@ public partial class FhSettingsUiX : FhSettingsUi {
         _current_scrollable = null;
 
         _fade = new(0, 0, FADE_LENGTH);
+
+        FhInternal.Settings.register_setting_renderer<FhSettingToggle, FhSettingsUiXRenderer_Toggle>();
     }
 
     public override bool init(FhModContext context, FileStream global_state) {
@@ -211,6 +220,8 @@ public partial class FhSettingsUiX : FhSettingsUi {
             ui_list_mods();
         else
             ui_list_modules();
+
+        ui_settings();
 
         ui_scrollbars();
 
@@ -440,6 +451,35 @@ public partial class FhSettingsUiX : FhSettingsUi {
 
         for (int i = 1, module_i = _scrollable_modules.current; i < max_i + 1; i++, module_i++) {
             ui_module(modules[module_i], module_i, i);
+        }
+    }
+
+    private void ui_setting(FhSetting setting) {
+        if (!FhInternal.Settings.get_setting_renderer<FhSettingsUiX>(setting, out SettingRenderer? renderer)) {
+            _logger.Warning($"Renderer not found for setting {setting.GetType().FullName}");
+            return;
+        }
+
+        Rect bounds = new() {
+            pos  = new(610f, 202f),
+            size = renderer.get_size(this),
+        };
+
+        renderer.render(this, setting, bounds);
+    }
+
+    private void ui_settings() {
+        // Debugging
+        if (_displayed_settings == null) {
+            FhModule modlist = FhApi.Mods.get_module<FhModListDisplayModule>()!.Module;
+
+            FhInternal.Settings.try_get_settings(modlist, out _displayed_settings);
+        }
+
+        if (_displayed_settings == null) return;
+
+        foreach (FhSetting setting in _displayed_settings.settings) {
+            ui_setting(setting);
         }
     }
 

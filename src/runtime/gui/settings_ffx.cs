@@ -86,7 +86,7 @@ public partial class FhSettingsUiX : FhSettingsUi {
 
         _fade = new(0, 0, FADE_LENGTH);
 
-        FhInternal.Settings.register_setting_renderer<FhSettingToggle, FhSettingsUiXRenderer_Toggle>();
+        FhInternal.Settings.register_setting_renderer<FhSettingToggle, FhSettingsUiX, FhSettingsUiXRenderer_Toggle>();
     }
 
     public override bool init(FhModContext context, FileStream global_state) {
@@ -455,7 +455,7 @@ public partial class FhSettingsUiX : FhSettingsUi {
     }
 
     private void ui_setting(FhSetting setting) {
-        if (!FhInternal.Settings.get_setting_renderer<FhSettingsUiX>(setting, out SettingRenderer? renderer)) {
+        if (!FhInternal.Settings.get_setting_renderer(setting, out SettingRenderer? renderer)) {
             _logger.Warning($"Renderer not found for setting {setting.GetType().FullName}");
             return;
         }

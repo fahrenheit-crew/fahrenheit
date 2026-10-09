@@ -5,8 +5,6 @@
 
 namespace Fahrenheit.Runtime.Gui;
 
-using SettingRenderer = FhSettingRenderer<FhSetting, FhSettingsUiX2>;
-
 [FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
 public partial class FhSettingsUiX2 : FhSettingsUi {
     /// <summary>Possible elements for the UI to focus on.</summary>
@@ -30,6 +28,10 @@ public partial class FhSettingsUiX2 : FhSettingsUi {
 
     private const float FADE_LENGTH = 0.35f;
 
+    public const float INDENT_MAX       = 10;
+    public const float INDENT_SIZE      = 20f;
+    public const float MAX_SETTING_SIZE = 1100f;
+
     // Display
     private readonly FadeHelper _fade;
 
@@ -39,55 +41,74 @@ public partial class FhSettingsUiX2 : FhSettingsUi {
     private int _selected_module_idx;
     private FhSetting? _hovered_setting;
 
+    private int   _indent_level;
+    private float _setting_y;
+
     private ICapturingRenderer? _capturing_renderer;
     private FhSetting?          _captured_setting;
 
     private FhSettingsCategory? _displayed_settings;
 
-    private Scrollable _scrollable_mods = new() {
+    private readonly Scrollable _scrollable_mods = new() {
         visible = 11,
         max     = 50,
     };
 
-    private Scrollable _scrollable_modules = new(){
+    private readonly Scrollable _scrollable_modules = new(){
         visible = 10,
     };
     // private ContinuousScrollable _scrollable_settings;
 
     private Scrollable? _current_scrollable;
 
+    private readonly NineSliceHelper  _message_window;
+
     // Textures
     private bool _loaded_all_textures;
 
     public readonly FhTexture _texture_menuback = new(Path.Join(MENU_D3D11_DIR,   "menuback.dds.phyre"),             FhTextureType.PHYRE);
-    public readonly FhTexture _texture_mahojin  = new(Path.Join(MENU_MAHOJIN_DIR, "14336_19_0_0_512_512.dds.phyre"), FhTextureType.PHYRE);
     public readonly FhTexture _texture_black0   = new(Path.Join(MENU_PLATE_DIR,   "black0.dds.phyre"),               FhTextureType.PHYRE);
+    public readonly FhTexture _texture_mahojin  = new(Path.Join(MENU_MAHOJIN_DIR, "14336_19_0_0_512_512.dds.phyre"), FhTextureType.PHYRE);
     public readonly FhTexture _texture_bk_blue  = new(Path.Join(MENU_D3D11_DIR,   "bk_blue.dds.phyre"),              FhTextureType.PHYRE);
     public readonly FhTexture _texture_freetex  = new(Path.Join(MENU_D3D11_DIR,   "freetex.dds.phyre"),              FhTextureType.PHYRE);
     public readonly FhTexture _texture_plate    = new(Path.Join(MENU_PLATE_DIR,   "12288_19_0_0_256_256.dds.phyre"), FhTextureType.PHYRE);
+    public readonly FhTexture _texture_window   = new(Path.Join(MENU_D3D11_DIR,   "window.dds.phyre"),               FhTextureType.PHYRE);
+    public readonly FhTexture _texture_wave     = new(Path.Join(MENU_D3D11_DIR,   "texture.dds.phyre"),              FhTextureType.PHYRE);
 
     public readonly Vector2 _tex_menuback_size = new( 512f,  512f);
-    public readonly Vector2 _tex_mahojin_size  = new(2048f, 2048f);
     public readonly Vector2 _tex_black0_size   = new(1024f, 1024f);
+    public readonly Vector2 _tex_mahojin_size  = new(2048f, 2048f);
     public readonly Vector2 _tex_bk_blue_size  = new( 512f,  512f);
     public readonly Vector2 _tex_freetex_size  = new(1024f,  768f);
     public readonly Vector2 _tex_plate_size    = new( 512f,  512f);
+    public readonly Vector2 _tex_window_size   = new(1024f,  256f);
+    public readonly Vector2 _tex_wave_size     = new(1024f, 1024f);
 
     private FhTexture[] _textures => [
         _texture_menuback,
-        _texture_mahojin,
         _texture_black0,
+        _texture_mahojin,
         _texture_bk_blue,
         _texture_freetex,
         _texture_plate,
+        _texture_window,
+        _texture_wave,
     ];
 
     protected override Vector2 get_ref_size() => new(1920f, 1080f);
 
     public FhSettingsUiX2() {
         _current_scrollable = null;
+        _message_window = NineSliceHelper.create(
+            _tex_window_size,
+            new(   0f,   0f),
+            new(1024f, 256f),
+            new(   4f,   4f)
+        );
 
         _fade = new(0, 0, FADE_LENGTH);
+
+        FhInternal.Settings.register_setting_renderer<FhSettingToggle, FhSettingsUiX2, Renderer_Toggle>();
     }
 
     public override bool init(FhModContext context, FileStream global_state) {
@@ -169,6 +190,7 @@ public partial class FhSettingsUiX2 : FhSettingsUi {
         return false;
     }
 
+    // Functions for interfacing with renderers
     public bool try_capture_setting(ICapturingRenderer renderer, FhSetting setting) {
         if (_capturing_renderer != null) return false;
 
@@ -187,10 +209,18 @@ public partial class FhSettingsUiX2 : FhSettingsUi {
         return true;
     }
 
+    public void indent() {
+        _indent_level += 1;
+    }
+
+    public void unindent() {
+        _indent_level -= 1;
+    }
+
     // Input handling
     private void handle_input() {
         if (_captured_setting != null) {
-            if (!FhInternal.Settings.get_setting_renderer(_captured_setting, out SettingRenderer? renderer)) {
+            if (!FhInternal.Settings.get_setting_renderer<FhSettingsUiX2>(_captured_setting, out FhSettingRenderer? renderer)) {
                 _capturing_renderer = null;
                 _captured_setting = null;
                 return;
@@ -222,12 +252,17 @@ public partial class FhSettingsUiX2 : FhSettingsUi {
         else
             ui_list_modules();
 
+        ui_settings();
+
         ui_scrollbars();
 
         // ui_fade();
     }
 
-    /// <summary>Draws the highlights/shadows for the save slot texture.</summary>
+    // TODO: Add a direction param to move waves left/right/up/down
+    // DrawWaterWaveShapeX2(Rect bounds, float speed);
+
+    /// <summary>Draws the highlights/shadows for FFX-2's plate texture.</summary>
     private void draw_highlight_shadow(ImDrawListPtr draw, Rect bounds, float thickness, uint highlight, uint shadow) {
         // Top Highlight
         draw.AddRectFilled(
@@ -307,6 +342,19 @@ public partial class FhSettingsUiX2 : FhSettingsUi {
             0x40000000
         );
 
+        UV black0_tuv = new Rect {
+            pos  = new(   0f,    0f),
+            size = new(1024f, 1024f),
+        }.as_uv(_tex_black0_size);
+
+        draw.AddImage(
+            black0,
+            screen_uv.p0,
+            screen_uv.p1,
+            black0_tuv.p0,
+            black0_tuv.p1
+        );
+
         UV mahojin_tuv = new Rect {
             pos  = new(   6f,  529f),
             size = new(1508f, 1509f),
@@ -323,20 +371,8 @@ public partial class FhSettingsUiX2 : FhSettingsUi {
             mahojin_suv.p0,
             mahojin_suv.p1,
             mahojin_tuv.p0,
-            mahojin_tuv.p1
-        );
-
-        UV black0_tuv = new Rect {
-            pos  = new(   0f,    0f),
-            size = new(1024f, 1024f),
-        }.as_uv(_tex_black0_size);
-
-        draw.AddImage(
-            black0,
-            screen_uv.p0,
-            screen_uv.p1,
-            black0_tuv.p0,
-            black0_tuv.p1
+            mahojin_tuv.p1,
+            0x80FFFFFF
         );
 
         UV bk_blue_tuv = new Rect {
@@ -393,8 +429,8 @@ public partial class FhSettingsUiX2 : FhSettingsUi {
         uint accent_grad_r = 0x00006F6F; // transparent yellow
 
         UV accent_suv = new Rect {
-            pos  = new(   0f, 124f),
-            size = new(1920f,   4f),
+            pos  = new(   0f, 125f),
+            size = new(1920f,   3f),
         }.scale_to_aspect(aspect_helper).as_uv();
 
         draw.AddRectFilledMultiColor(
@@ -461,9 +497,8 @@ public partial class FhSettingsUiX2 : FhSettingsUi {
         }
 
         // Texture coordinates
-        int   tex_idx     = (local_index % 8) + 1;
         float slice_size  = 64f;
-        float plate_max_y = slice_size * tex_idx;
+        float plate_max_y = 512f - ((local_index % 8) * slice_size);
 
         Vector2 plate_screen_size = new(477f, 65f);
 
@@ -556,15 +591,12 @@ public partial class FhSettingsUiX2 : FhSettingsUi {
         }
 
         // Texture coordinates
-        int   tex_idx     = (global_index % 8) + 1;
         float slice_size  = 64f;
-        float plate_max_y = slice_size * tex_idx;
+        float plate_max_y = 512f - ((global_index % 8) * slice_size);
 
         Vector2 plate_screen_size = new(417f, 65f);
 
         float plate_screen_dy = plate_screen_size.Y + 12f;
-
-        uint plate_color_mult = 0xFFC6B1AF;
 
         UV plate_tuv = new Rect {
             pos  = new(  0f, plate_max_y - slice_size),
@@ -594,7 +626,7 @@ public partial class FhSettingsUiX2 : FhSettingsUi {
             plate_suv.p1,
             plate_tuv.p0,
             plate_tuv.p1,
-            plate_color_mult
+            0xFFC6B1AF
         );
 
         // Draw shading/edges on the plate texture for definition
@@ -644,6 +676,67 @@ public partial class FhSettingsUiX2 : FhSettingsUi {
 
         for (int i = 1, module_i = _scrollable_modules.current; i < max_i + 1; i++, module_i++) {
             ui_module(modules[module_i], module_i, i);
+        }
+    }
+
+    private void ui_setting(FhSetting setting) {
+        if (!FhInternal.Settings.get_setting_renderer<FhSettingsUiX2>(setting, out FhSettingRenderer? renderer)) {
+            Rect debug_bounds = new() {
+                pos  = new(610f, 202f + _setting_y),
+                size = new(MAX_SETTING_SIZE, 30f),
+            };
+
+            FhApi.Gui.draw_text(
+                ImGui.GetBackgroundDrawList(),
+                debug_bounds.scale_to_aspect(aspect_helper).center,
+                $"Renderer not found for {setting.GetType()}.",
+                22f * font_scale,
+                true,
+                new(Alignment.CENTER, Alignment.CENTER)
+            );
+
+            _setting_y += 30f;
+
+            return;
+        }
+
+        float indent_size = _indent_level * INDENT_SIZE;
+
+        Vector2 pos = new(610f, 202f);
+        pos.X += indent_size;
+        pos.Y += _setting_y;
+
+        Vector2 size = renderer.get_size(this);
+
+        if (size.X == 0f || size.X + pos.X > get_ref_size().X) {
+            size.X = MAX_SETTING_SIZE - indent_size;
+        }
+
+        Rect bounds = new() {
+            pos  = pos,
+            size = size,
+        };
+
+        renderer.render(this, setting, bounds);
+
+        _setting_y += size.Y;
+    }
+
+    private void ui_settings() {
+        // Debugging
+        if (_displayed_settings == null) {
+            FhModule modlist = FhApi.Mods.get_module<FhModListDisplayModule>()!.Module;
+
+            FhInternal.Settings.try_get_settings(modlist, out _displayed_settings);
+        }
+
+        if (_displayed_settings == null) return;
+
+        _indent_level = 0;
+        _setting_y    = 0f;
+
+        foreach (FhSetting setting in _displayed_settings.settings) {
+            ui_setting(setting);
         }
     }
 
@@ -736,19 +829,19 @@ public partial class FhSettingsUiX2 : FhSettingsUi {
             gradient_bottom
         );
 
-        FhApi.Gui.draw_triangle_filled_multi_color(
+        FhApi.Gui.draw_triangle_gradient(
             draw,
             scaled_triangle_top,
-            Direction.UP,
+            GradientDirection.UP,
             gradient_bottom,
             gradient_bottom,
             0xFFBEBEBE
         );
 
-        FhApi.Gui.draw_triangle_filled_multi_color(
+        FhApi.Gui.draw_triangle_gradient(
             draw,
             scaled_triangle_bottom,
-            Direction.DOWN,
+            GradientDirection.DOWN,
             gradient_bottom,
             gradient_bottom,
             0xFFBEBEBE

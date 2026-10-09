@@ -17,17 +17,15 @@
 
 #define WIN32_LEAN_AND_MEAN // Exclude rarely-used stuff from Windows headers
 
+#include <fhstage0.h>
+#include <fhstage1.h>
+
 // STL
 #include <stdexcept>
 #include <string>
 #include <set>
 #include <map>
 #include <vector>
-
-// Win32
-#include <windows.h>
-#include <strsafe.h>
-#include <pathcch.h>
 
 // Win32 debugging
 #include <dbghelp.h>
@@ -37,22 +35,11 @@
 #include <cordebug.h>
 #include <dbgshim.h>
 
-// Stage 1 Debug Bridge
-#include <fhstage1.h>
-
 enum S0_FRAME_TYPE {
     FRAME_UNKNOWN,
     FRAME_NATIVE,
     FRAME_MANAGED
 };
-
-wchar_t g_path_dir_cache[MAX_PATH] = { 0 }; // The full path to the 'cache' directory, used to store symbols.
-wchar_t g_path_dir_crash[MAX_PATH] = { 0 }; // The full path to the 'crash' directory, used to store core dumps.
-
-wchar_t g_path_coreclr     [MAX_PATH] = { 0 }; // The full path to the loaded CoreCLR.
-wchar_t g_path_mscordbi    [MAX_PATH] = { 0 }; // The full path to the `mscordbi` module for the given CoreCLR.
-wchar_t g_path_mscordacwks [MAX_PATH] = { 0 }; // The full path to the `mscordacwks` module for the given CoreCLR.
-wchar_t g_path_mscordaccore[MAX_PATH] = { 0 }; // The full path to the `mscordaccore` module for the given CoreCLR.
 
 std::map   <LPVOID, DLL_LOAD_DATA> g_modules;            // A map containing information about loaded modules.
 std::set   <std::wstring>          g_map_checked_symbol; // Whether we performed symbol file lookup for a given module.
@@ -295,15 +282,13 @@ static HRESULT s0_dbg_stack_walk_managed(
     HANDLE h_process, // A handle to the process the fault occurred in.
     DWORD  id_thread  // The ID of the faulting thread in the process that encountered an exception.
 ) {
-    ICLRDebugging*      ptr_ICLRDebugging      = nullptr;
-    ICorDebugProcess*   ptr_ICorDebugProcess   = nullptr;
-    ICorDebugThread*    ptr_ICorDebugThread    = nullptr;
-    ICorDebugThread3*   ptr_ICorDebugThread3   = nullptr;
-    ICorDebugStackWalk* ptr_ICorDebugStackWalk = nullptr;
-    ICorDebugFrame*     ptr_ICorDebugFrame     = nullptr;
-    ICorDebugFunction*  ptr_ICorDebugFunction  = nullptr;
-    ICorDebugModule*    ptr_ICorDebugModule    = nullptr;
-    IMetaDataImport*    ptr_IMetaDataImport    = nullptr;
+    ICLRDebugging*     ptr_ICLRDebugging      = nullptr;
+    ICorDebugProcess*  ptr_ICorDebugProcess   = nullptr;
+    ICorDebugThread*   ptr_ICorDebugThread    = nullptr;
+    ICorDebugThread2*  ptr_ICorDebugThread2   = nullptr;
+    ICorDebugFunction* ptr_ICorDebugFunction  = nullptr;
+    ICorDebugModule*   ptr_ICorDebugModule    = nullptr;
+    IMetaDataImport*   ptr_IMetaDataImport    = nullptr;
 
     HRESULT hr = CLRCreateInstance(CLSID_CLRDebugging, IID_ICLRDebugging, (LPVOID*) &ptr_ICLRDebugging);
     if (hr != S_OK) {
@@ -358,42 +343,41 @@ static HRESULT s0_dbg_stack_walk_managed(
         return hr;
     }
 
-    hr = ptr_ICorDebugThread->QueryInterface(IID_ICorDebugThread3, (LPVOID*) &ptr_ICorDebugThread3);
+    hr = ptr_ICorDebugThread->QueryInterface(IID_ICorDebugThread2, (LPVOID*) &ptr_ICorDebugThread2);
     if (hr != S_OK) {
-        fwprintf_s(stderr, L"[!] ICorDebugThread::QI(ICorDebugThread3) failed with code 0x%X.\n", hr);
+        fwprintf_s(stderr, L"[!] ICorDebugThread::QI(ICorDebugThread2) failed with code 0x%X.\n", hr);
         return hr;
     }
 
-    hr = ptr_ICorDebugThread3->CreateStackWalk(&ptr_ICorDebugStackWalk);
+    ULONG32 nb_active_funcs   = 0;
+    ULONG32 nb_active_funcs_2 = 0;
+
+    hr = ptr_ICorDebugThread2->GetActiveFunctions(0, &nb_active_funcs, nullptr);
     if (hr != S_OK) {
-        fwprintf_s(stderr, L"[!] ICorDebugThread3::CreateStackWalk failed with code 0x%X.\n", hr);
+        fwprintf_s(stderr, L"[!] ICorDebugThread2::GetActiveFunctions failed with code 0x%X.\n", hr);
         return hr;
     }
 
-    hr = ptr_ICorDebugStackWalk->Next();
-    if (hr != S_OK)
+    COR_ACTIVE_FUNCTION* active_funcs = (COR_ACTIVE_FUNCTION*) malloc(nb_active_funcs * sizeof(COR_ACTIVE_FUNCTION));
+
+    if (active_funcs == nullptr) {
+        fwprintf_s(stderr, L"[!] Failed to allocate memory for ICorDebugThread2::GetActiveFunctions.\n");
         return hr;
+    }
+
+    hr = ptr_ICorDebugThread2->GetActiveFunctions(nb_active_funcs, &nb_active_funcs_2, active_funcs);
+    if (hr != S_OK) {
+        fwprintf_s(stderr, L"[!] ICorDebugThread2::GetActiveFunctions failed with code 0x%X.\n", hr);
+        return hr;
+    }
 
     mdMethodDef method_token;
 
-    while (true) {
-        hr = ptr_ICorDebugStackWalk->GetFrame(&ptr_ICorDebugFrame);
+    for (ULONG32 i = 0; i < nb_active_funcs; i++) {
+        hr = active_funcs[i].pFunction->QueryInterface(IID_ICorDebugFunction, (LPVOID*) &ptr_ICorDebugFunction);
         if (hr != S_OK) {
-            fwprintf_s(stderr, L"[!] ICorDebugStackWalk::GetFrame failed with code 0x%X.\n", hr);
-            break;
-        }
-
-        hr = ptr_ICorDebugFrame->GetFunction(&ptr_ICorDebugFunction);
-        if (hr != S_OK) {
-            // TODO: https://github.com/dotnet/runtime/blob/b1e5bd9585e4463137ba03a63856461084e8d182/src/coreclr/debug/di/shimstackwalk.cpp
-            // to handle IL/native frames like P/Invoke stubs
-            g_frames_managed.emplace_back(L"Unknown managed frame.\n");
-
-            hr = ptr_ICorDebugStackWalk->Next();
-            if (hr != S_OK)
-                break;
-
-            continue;
+            fwprintf_s(stderr, L"[!] ICorDebugFunction2::QI(ICorDebugFunction) failed with code 0x%X.\n", hr);
+            return hr;
         }
 
         hr = ptr_ICorDebugFunction->GetModule(&ptr_ICorDebugModule);
@@ -405,20 +389,15 @@ static HRESULT s0_dbg_stack_walk_managed(
         wchar_t module_name[MAX_PATH] = { 0 };
         ULONG32 module_name_sz;
 
-        hr = ptr_ICorDebugModule->GetName(
-            MAX_PATH,
-            &module_name_sz,
-            module_name
-        );
+        hr = ptr_ICorDebugModule->GetName(MAX_PATH, &module_name_sz, module_name);
+        if (hr != S_OK) {
+            fwprintf_s(stderr, L"[!] ICorDebugModule::GetName failed with code 0x%X.\n", hr);
+            break;
+        }
 
         wchar_t* module_file_name = wcsrchr(module_name, L'\\');
         if (module_file_name == nullptr || PathCchRemoveExtension(module_file_name, MAX_PATH) != S_OK) {
             fwprintf_s(stderr, L"[!] Failed to get file name from full module path.\n");
-            break;
-        }
-
-        if (hr != S_OK) {
-            fwprintf_s(stderr, L"[!] ICorDebugModule::GetName failed with code 0x%X.\n", hr);
             break;
         }
 
@@ -459,7 +438,9 @@ static HRESULT s0_dbg_stack_walk_managed(
 
         if (hr != S_OK) {
             fwprintf_s(stderr, L"[!] IMetaDataImport::GetMethodProps failed with code 0x%X.\n", hr);
-            break;
+
+            g_frames_managed.emplace_back(L"Unknown managed frame.\n");
+            continue;
         }
 
         wchar_t type_name[MAX_SYM_NAME] = { 0 };
@@ -479,7 +460,9 @@ static HRESULT s0_dbg_stack_walk_managed(
 
         if (hr != S_OK) {
             fwprintf_s(stderr, L"[!] IMetaDataImport::GetTypeDefProps failed with code 0x%X.\n", hr);
-            break;
+
+            g_frames_managed.emplace_back(L"Unknown managed frame.\n");
+            continue;
         }
 
         wchar_t sym_managed[MAX_SYM_NAME] = { 0 };
@@ -494,10 +477,6 @@ static HRESULT s0_dbg_stack_walk_managed(
         );
 
         g_frames_managed.emplace_back(sym_managed);
-
-        hr = ptr_ICorDebugStackWalk->Next();
-        if (hr != S_OK)
-            break;
     }
 
     return hr;

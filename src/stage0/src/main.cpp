@@ -14,33 +14,15 @@
  * Stage 1 reverses that modification, then bootstraps .NET and Fahrenheit.
  */
 
-#define WIN32_LEAN_AND_MEAN // Exclude rarely-used stuff from Windows headers
+#include <fhstage0.h>
 
 // Win32
-#include <windows.h>
-#include <strsafe.h>
-#include <PathCch.h>
 #include <conio.h>
 
 // IAT patching
 #include <detours/detours.h>
 
-#ifdef _DEBUG
-#define MINHOOK_DLL "minhook.x32d.dll"
-#else
-#define MINHOOK_DLL "minhook.x32.dll"
-#endif
-
-extern wchar_t g_path_dir_cache[MAX_PATH]; // The full path to the 'cache' directory, used to store symbols.
-extern wchar_t g_path_dir_crash[MAX_PATH]; // The full path to the 'crash' directory, used to store core dumps.
-
 void s0_dbg_loop(); // Forward declaration of debugger loop function.
-
-wchar_t g_target     [MAX_PATH] = { 0 }; // The path to the target binary.
-wchar_t g_args_target[1024]     = { 0 }; // The command-line arguments to pass to the target.
-wchar_t g_args_self  [1024]     = { 0 }; // The command-line arguments to Stage 0.
-wchar_t g_dir_target [MAX_PATH] = { 0 }; // The directory the target binary is in.
-char    g_dir_self   [MAX_PATH] = { 0 }; // The directory `fhstage0` is in.
 
 // Separates Stage0 args from those which will be passed through to the target.
 static HRESULT s0_main_process_args(
@@ -48,9 +30,9 @@ static HRESULT s0_main_process_args(
     wchar_t* argv[] // The arguments passed to the executable.
 ) {
     /* [fkelava 17/09/26 15:29]
-     * Stage 0 args are separated from ones to be passed through to the target with a '--'.
+     * Stage 0 args are separated from target's args with a '--'.
      *
-     * We can't know whether the user passed a relative or absolute path to the target binary.
+     * The user could have passed a relative or absolute path to the target binary.
      * Methods from this point on expect an absolute path, so we normalize it here.
      */
     wchar_t target_rel_or_abs[MAX_PATH] = { 0 };
@@ -211,30 +193,6 @@ static BOOL s0_main_init() {
         return FALSE;
     }
 
-    /* [fkelava 21/09/26 13:24]
-     * Instead of maintaining our own core dumping machinery,
-     * we can ask .NET to handle it for us... in theory. I haven't been able to get it working yet.
-     *
-     * See generally https://github.com/dotnet/runtime/tree/35423f17d6ebe715711a907badda2a505633daf2/src/coreclr/debug/createdump.
-     */
-
-    //wchar_t dump_path[MAX_PATH] = { 0 };
-    //if (FAILED(StringCchCopyW(dump_path, MAX_PATH, g_path_dir_crash)) ||
-    //    FAILED(StringCchCatW (dump_path, MAX_PATH, L"\\%e.%p.%t.dmp"))
-    //) {
-    //    fwprintf_s(stderr, L"[!] Failed to prepare core dump path.\n");
-    //    return FALSE;
-    //}
-    //
-    //if (!SetEnvironmentVariableW(L"DOTNET_DbgEnableMiniDump",     L"1")      ||
-    //    !SetEnvironmentVariableW(L"DOTNET_DbgMiniDumpType",       L"2")      ||
-    //    !SetEnvironmentVariableW(L"DOTNET_DbgMiniDumpName",       dump_path) ||
-    //    !SetEnvironmentVariableW(L"DOTNET_CreateDumpDiagnostics", L"1")
-    //) {
-    //    fwprintf_s(stderr, L"[!] SetEnvironmentVariableW() failed with code 0x%X.\n", GetLastError());
-    //    return FALSE;
-    //}
-
     return TRUE;
 }
 
@@ -309,18 +267,13 @@ int __cdecl wmain(
     }
 
     /* [fkelava 17/09/26 17:11]
-     * We have to ensure that the target binary starts with the working directory set to
-     * its containing directory, so it can use relative path addressing without breaking.
+     * The target binary may use relative path addressing. It must therefore start with the
+     * working directory set to its own. However, Stage 1 has dependencies stored alongside
+     * itself, which isn't on the target binary's search path.
      *
-     * However, this creates a problem for us; Stage 1 has dependencies (nethost and MinHook),
-     * and they are stored alongside Stage 1- which is _not_ on the target binary's search path.
-     *
-     * So we have to make sure we've injected all of Stage 1's dependencies too. The order
-     * isn't incidental either; they have to be available by the time Stage 1 has run, to avoid
-     * a LoadLibrary call that would fail. So Stage 1 has to come last in the injection order.
-     *
-     * Note that if nethost and MinHook had any non-system dependencies (thankfully, they don't),
-     * you'd have to make sure those are loaded and properly ordered too.
+     * For loading to succeed, we inject all of its dependencies too. The order is not incidental;
+     * a DLL must be preceded by all its dependencies. nethost and MinHook thankfully only
+     * depend on system libraries, which are on the PATH.
      */
 
     char path_stage1 [MAX_PATH] = { 0 };

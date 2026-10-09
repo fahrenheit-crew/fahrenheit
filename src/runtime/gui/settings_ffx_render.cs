@@ -40,7 +40,6 @@ public partial class FhSettingsUiX {
         }
 
         internal protected override void render(FhSettingsUiX ui, FhSettingToggle toggle, Rect max_bounds) {
-            //TODO: Implement rendering
             if (!ui._texture_battle_kuang.try_use(out ImTextureRef battle_kuang, out _)) {
                 return;
             }
@@ -63,7 +62,7 @@ public partial class FhSettingsUiX {
 
             FhApi.Gui.draw_rectangle_gradient(
                 draw,
-                bg_bounds,
+                bg_bounds.scale_to_aspect(ui.aspect_helper),
                 GradientDirection.RIGHT,
                 bg_steps
             );

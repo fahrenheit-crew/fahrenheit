@@ -62,9 +62,6 @@ std::vector<S0_FRAME_TYPE>         g_frames_type;        // A list of frames, in
 
 LPVOID g_ptr_coreclr; // The pointer to `coreclr.dll` in memory.
 
-fn_s1_load g_fnptr_s1_bridge_load; // Call to signal a DLL load to Stage 1.
-fn_s1_free g_fnptr_s1_bridge_free; // Call to signal a DLL free to Stage 1.
-
 HANDLE g_bridge_pipe;         // A named pipe to communicate with Stage 1.
 BOOL   g_bridge_init = FALSE; // A flag marking pipe initialization as complete.
 
@@ -880,9 +877,6 @@ static DWORD WINAPI s0_dbg_bridge_proc(LPVOID lpvParam) {
         return FALSE;
     }
 
-    g_fnptr_s1_bridge_load = (fn_s1_load) *(int*)(message);
-    g_fnptr_s1_bridge_free = (fn_s1_free) *(int*)(message + 4);
-
     if (!HeapFree(h_process_heap, 0, message)) {
         fwprintf_s(stderr, L"[!] Failed to free memory for debug pipe message with code 0x%X.\n", GetLastError());
         return FALSE;
@@ -893,7 +887,7 @@ static DWORD WINAPI s0_dbg_bridge_proc(LPVOID lpvParam) {
         return FALSE;
     }
 
-    return g_fnptr_s1_bridge_load && g_fnptr_s1_bridge_free;
+    return TRUE;
 }
 
 // Kicks off a thread that communicates with the debug pipe in Stage 1.

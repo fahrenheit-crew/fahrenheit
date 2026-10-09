@@ -27,7 +27,9 @@ public partial class FhSettingsUiX : FhSettingsUi {
 
     private const float FADE_LENGTH = 0.35f;
 
-    public const float INDENT_SIZE = 20f;
+    public const float INDENT_MAX       = 10;
+    public const float INDENT_SIZE      = 20f;
+    public const float MAX_SETTING_SIZE = 1100f;
 
     // Display
     private readonly FadeHelper _fade;
@@ -38,7 +40,8 @@ public partial class FhSettingsUiX : FhSettingsUi {
     private int _selected_module_idx;
     private FhSetting? _hovered_setting;
 
-    private int indent;
+    private int   indent;
+    private float setting_y;
 
     private ICapturingRenderer? _capturing_renderer;
     private FhSetting?          _captured_setting;
@@ -458,12 +461,26 @@ public partial class FhSettingsUiX : FhSettingsUi {
             return;
         }
 
+        float indent_size = indent * INDENT_SIZE;
+
+        Vector2 pos = new(610f, 202f);
+        pos.X += indent_size;
+        pos.Y += setting_y;
+
+        Vector2 size = renderer.get_size(this);
+
+        if (size.X == 0f || size.X + pos.X > get_ref_size().X) {
+            size.X = MAX_SETTING_SIZE - indent_size;
+        }
+
         Rect bounds = new() {
-            pos  = new(610f, 202f),
-            size = renderer.get_size(this),
+            pos  = pos,
+            size = size,
         };
 
         renderer.render(this, setting, bounds);
+
+        setting_y += size.Y;
     }
 
     private void ui_settings() {
@@ -475,6 +492,9 @@ public partial class FhSettingsUiX : FhSettingsUi {
         }
 
         if (_displayed_settings == null) return;
+
+        indent    = 0;
+        setting_y = 0f;
 
         foreach (FhSetting setting in _displayed_settings.settings) {
             ui_setting(setting);

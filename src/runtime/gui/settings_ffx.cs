@@ -65,17 +65,20 @@ public partial class FhSettingsUiX : FhSettingsUi {
 
     public readonly FhTexture _texture_help         = new(Path.Join(HIKU_D3D11_DIR, "0_0_512_448_0.dds.phyre"), FhTextureType.PHYRE);
     public readonly FhTexture _texture_bg           = new(Path.Join(MENU_D3D11_DIR, "ffx_bg.dds.phyre"),        FhTextureType.PHYRE);
+    public readonly FhTexture _texture_meswin       = new(Path.Join(MENU_D3D11_DIR, "meswin.dds.phyre"),        FhTextureType.PHYRE);
     public readonly FhTexture _texture_menu_new     = new(Path.Join(MENU_D3D11_DIR, "menu_new.dds.phyre"),      FhTextureType.PHYRE);
     public readonly FhTexture _texture_battle_kuang = new(Path.Join(MENU_D3D11_DIR, "battle_kuang.dds.phyre"),  FhTextureType.PHYRE);
 
     public readonly Vector2 _tex_help_size         = new(2048f, 2048f);
     public readonly Vector2 _tex_bg_size           = new(2048f, 1024f);
+    public readonly Vector2 _tex_meswin_size       = new(1024f, 1024f);
     public readonly Vector2 _tex_menu_new_size     = new(2048f, 1024f);
     public readonly Vector2 _tex_battle_kuang_size = new(2048f, 1024f);
 
     private FhTexture[] _textures => [
         _texture_help,
         _texture_bg,
+        _texture_meswin,
         _texture_menu_new,
         _texture_battle_kuang,
     ];

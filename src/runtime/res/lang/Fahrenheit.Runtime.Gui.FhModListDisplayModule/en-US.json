@@ -1,0 +1,4 @@
+{
+  "mod_count.name": "Display mod count",
+  "mod_count.desc": "Whether the mod list should display the amount of mods loaded"
+}

@@ -6,5 +6,8 @@
   "help.module_list": "Select module to configure",
 
   "help.input.text": "Input desired text",
-  "help.input.number": "Input desired number"
+  "help.input.number": "Input desired number",
+
+  "input.on": "ON",
+  "input.off": "OFF"
 }

@@ -74,7 +74,7 @@ public partial class FhSettingsUiX {
 
             Rect separator_start = new() {
                 pos  = new(
-                    bg_bounds.pos.X + bg_bounds.size.X * 0.275f,
+                    bg_bounds.pos.X + bg_bounds.size.X * 0.32f,
                     bg_bounds.pos.Y + 2f
                 ),
                 size = new(88f, 57f),
@@ -131,6 +131,45 @@ public partial class FhSettingsUiX {
                 ]
             );
 
+            // Borders
+            GradientStep[] top_steps = [
+                new(0.0f, 0x00CCCCDD),
+                new(0.2f, 0xFFCCCCDD),
+                new(0.8f, 0xFFCCCCDD),
+                new(1.0f, 0x00CCCCDD),
+            ];
+
+            GradientStep[] bottom_steps = [
+                new(0.0f, 0x00000000),
+                new(0.2f, 0xFF000000),
+                new(0.8f, 0xFF000000),
+                new(1.0f, 0x00000000),
+            ];
+
+            Rect top_border = new() {
+                pos  = bg_bounds.pos  with { Y = bg_bounds.top.Y + 1f },
+                size = bg_bounds.size with { Y = 1f },
+            };
+
+            Rect bottom_border = new() {
+                pos  = bg_bounds.pos  with { Y = bg_bounds.bottom.Y - 1f },
+                size = bg_bounds.size with { Y = 1f },
+            };
+
+            FhApi.Gui.draw_rectangle_gradient(
+                draw,
+                top_border.scale_to_aspect(ui.aspect_helper),
+                GradientDirection.RIGHT,
+                top_steps
+            );
+
+            FhApi.Gui.draw_rectangle_gradient(
+                draw,
+                bottom_border.scale_to_aspect(ui.aspect_helper),
+                GradientDirection.RIGHT,
+                bottom_steps
+            );
+
             // Name
             float font_size = 36f * ui.font_scale;
 
@@ -147,10 +186,10 @@ public partial class FhSettingsUiX {
             );
 
             // Options
-            float post_separator_width = bg_bounds.right.X - separator_start.right.X;
+            float post_separator_width = bg_bounds.right.X - separator_start.left.X;
 
-            Vector2 on_pos  = separator_start.right;
-            Vector2 off_pos = separator_start.right;
+            Vector2 on_pos  = separator_start.left;
+            Vector2 off_pos = separator_start.left;
 
             on_pos.X  += post_separator_width * 1f/3f;
             off_pos.X += post_separator_width * 2f/3f;

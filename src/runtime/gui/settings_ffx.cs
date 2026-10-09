@@ -457,7 +457,22 @@ public partial class FhSettingsUiX : FhSettingsUi {
 
     private void ui_setting(FhSetting setting) {
         if (!FhInternal.Settings.get_setting_renderer<FhSettingsUiX>(setting, out FhSettingRenderer? renderer)) {
-            _logger.Warning($"Renderer not found for setting {setting.GetType().FullName}");
+            Rect debug_bounds = new() {
+                pos  = new(610f, 202f + setting_y),
+                size = new(MAX_SETTING_SIZE, 30f),
+            };
+
+            FhApi.Gui.draw_text(
+                ImGui.GetBackgroundDrawList(),
+                debug_bounds.scale_to_aspect(aspect_helper).center,
+                $"Renderer not found for {setting.GetType()}.",
+                22f * font_scale,
+                true,
+                new(Alignment.CENTER, Alignment.CENTER)
+            );
+
+            setting_y += 30f;
+
             return;
         }
 

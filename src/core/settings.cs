@@ -5,10 +5,9 @@
 
 namespace Fahrenheit;
 
-using SettingRenderer  = FhSettingRenderer<FhSetting, FhSettingsUi>;
 using UserInterfaces   = Dictionary<string, FhSettingsUi>;
 using ModuleSettings   = ConcurrentDictionary<Type, FhSettingData>;
-using SettingRenderers = ConcurrentDictionary<Type, FhSettingRenderer<FhSetting, FhSettingsUi>>;
+using SettingRenderers = ConcurrentDictionary<(Type, Type), FhSettingRenderer>;
 
 /// <summary>
 ///     Pairs a setting category with data
@@ -43,13 +42,31 @@ public abstract class FhSettingProvider<T> where T : FhModule {
     internal protected abstract IEnumerable<FhSetting> get();
 }
 
-public abstract class FhSettingRenderer<TSetting, TSettingUi>
-    where TSetting   : FhSetting
-    where TSettingUi : FhSettingsUi {
+public abstract class FhSettingRenderer {
+    internal protected abstract Vector2 get_size(FhSettingsUi ui);
+    internal protected abstract void render(FhSettingsUi ui, FhSetting setting, Rect max_bounds);
+    internal protected abstract void handle_input(FhSettingsUi ui, FhSetting setting);
+}
 
-    internal protected abstract Vector2 get_size(TSettingUi ui);
-    internal protected abstract void render(TSettingUi ui, TSetting setting, Rect max_bounds);
-    internal protected abstract void handle_input(TSettingUi ui, TSetting setting);
+public abstract class FhSettingRenderer<TSetting, TUi> : FhSettingRenderer
+    where TSetting : FhSetting
+    where TUi      : FhSettingsUi {
+
+    internal protected sealed override Vector2 get_size(FhSettingsUi ui) {
+        return get_size((TUi)ui);
+    }
+
+    internal protected sealed override void render(FhSettingsUi ui, FhSetting setting, Rect max_bounds) {
+        render((TUi)ui, (TSetting)setting, max_bounds);
+    }
+
+    internal protected sealed override void handle_input(FhSettingsUi ui, FhSetting setting) {
+        handle_input((TUi)ui, (TSetting)setting);
+    }
+
+    internal protected abstract Vector2 get_size(TUi ui);
+    internal protected abstract void render(TUi ui, TSetting setting, Rect max_bounds);
+    internal protected abstract void handle_input(TUi ui, TSetting setting);
 }
 
 /// <summary>
@@ -89,8 +106,8 @@ public sealed class FhSettingReference<T> : FhSetting<FhSettingsCategory?> where
 ///     Carries out setting-related operations.
 /// </summary>
 internal sealed class FhSettings {
-    private readonly UserInterfaces   _uis = [];
-    private readonly ModuleSettings   _settings = [];
+    private readonly UserInterfaces   _uis       = [];
+    private readonly ModuleSettings   _settings  = [];
     private readonly SettingRenderers _renderers = [];
 
     /// <summary>Get the settings UI associated with the given ID.</summary>
@@ -107,31 +124,27 @@ internal sealed class FhSettings {
         _uis[ui.ModuleType] = ui;
     }
 
-    public bool get_setting_renderer<TSettingsUi>(
+    public bool get_setting_renderer<TUi>(
         FhSetting setting,
-        [NotNullWhen(true)] out FhSettingRenderer<FhSetting, TSettingsUi>? renderer
-    ) where TSettingsUi : FhSettingsUi {
+        [NotNullWhen(true)] out FhSettingRenderer? renderer
+    )
+        where TUi      : FhSettingsUi {
 
-        if (!_renderers.TryGetValue(setting.GetType(), out SettingRenderer? generic_renderer)) {
-            renderer = null;
-            return false;
-        }
-
-        renderer = (FhSettingRenderer<FhSetting, TSettingsUi>)(object)generic_renderer;
-        return true;
+        return _renderers.TryGetValue((setting.GetType(), typeof(TUi)), out renderer);
     }
 
     /// <summary>Registers the given renderer type.</summary>
     /// <typeparam name="TSetting">The type of the setting the renderer is for.</typeparam>
+    /// <typeparam name="TUi">The type of the UI the renderer is for.</typeparam>
     /// <typeparam name="TRenderer">The type of the renderer for the setting.</typeparam>
-    public void register_setting_renderer<TSetting, TRenderer>()
+    public void register_setting_renderer<TSetting, TUi, TRenderer>()
         where TSetting  : FhSetting
-        where TRenderer : FhSettingRenderer<TSetting, FhSettingsUi>, new() {
+        where TUi       : FhSettingsUi
+        where TRenderer : FhSettingRenderer<TSetting, TUi>, new() {
 
-        Type setting_type  = typeof(TSetting);
-        TRenderer renderer = new();
+        FhInternal.Log.Info($"Registering renderer for {typeof(TSetting)} in {typeof(TUi)}");
 
-        _renderers[setting_type] = (SettingRenderer)(object)renderer;
+        _renderers[(typeof(TSetting), typeof(TUi))] = new TRenderer();
     }
 
     /// <summary>
@@ -140,7 +153,7 @@ internal sealed class FhSettings {
     /// <param name="provider">The <see cref="FhSettingProvider{T}"/> for the module.</param>
     internal void register_provider<T>(FhSettingProvider<T> provider) where T : FhModule {
         if (FhEnvironment.get_execution_state() != FhExecState.CTOR) {
-            throw new Exception($"{nameof(FhSettingProvider<T>)} may only be instantiated in a module constructor.");
+            throw new Exception($"{nameof(FhSettingProvider<>)} may only be instantiated in a module constructor.");
         }
 
         Type          module_type     = typeof(T);
@@ -213,7 +226,7 @@ internal sealed class FhSettings {
     internal void save_all() {
         JsonWriterOptions opts = new() {
             Indented   = true,
-            IndentSize = 4
+            IndentSize = 4,
         };
 
         foreach (FhSettingData sd in _settings.Values) {
@@ -224,7 +237,7 @@ internal sealed class FhSettings {
                 FileShare .None
             );
 
-            using Utf8JsonWriter writer = new Utf8JsonWriter(file, opts);
+            using Utf8JsonWriter writer = new(file, opts);
 
             writer.WriteStartObject();
             sd.settings.save(writer);
@@ -277,17 +290,17 @@ public abstract class FhSetting(string id) {
 ///     mod settings UI when provided through an <see cref="FhSettingProvider{T}"/>.
 /// </remarks>
 public abstract class FhSetting<T>(string id, T defval) : FhSetting(id) {
-    protected bool _disabled = false;
+    protected bool disabled = false;
 
-    protected readonly T _default = defval;
-    protected          T _value   = defval;
+    protected readonly T default_ = defval;
+    protected          T value    = defval;
 
-    public   virtual T    get()        => _value;
-    internal virtual void set(T value) => _value = value;
+    public   virtual T    get()            => value;
+    internal virtual void set(T new_value) => value = new_value;
 
     internal override void save(Utf8JsonWriter writer) {
         writer.WritePropertyName(id);
-        JsonSerializer.Serialize<T>(writer, _value, FhUtil.InternalJsonOpts);
+        JsonSerializer.Serialize(writer, value, FhUtil.InternalJsonOpts);
     }
 
     internal override void load(Utf8JsonReader reader) {
@@ -299,12 +312,12 @@ public abstract class FhSetting<T>(string id, T defval) : FhSetting(id) {
          * Read<TValue>(ref Utf8JsonReader, JsonTypeInfo<TValue>) in JsonSerializer.Read.Utf8JsonReader.cs.
          */
         Utf8JsonReader copy = reader;
-        if (!copy.try_find_key_and_deserialize(id, out T? value)) {
-            FhInternal.Log.Error($"failed to load setting {id}");
+        if (!copy.try_find_key_and_deserialize(id, out T? loaded_value)) {
+            FhInternal.Log.Warning($"failed to load setting {id}");
             return;
         }
 
-        _value = (value ?? _default);
+        value = loaded_value;
     }
 }
 
@@ -374,11 +387,11 @@ public class FhSettingNumber<T>(
     T?     step
 ) : FhSetting<T>(id, def_value) where T : unmanaged, INumber<T> {
 
-    public readonly ImGuiDataType _type = get_data_type(def_value);
+    public readonly ImGuiDataType type = get_data_type(def_value);
 
-    public readonly T _step = step ?? T.One;
-    public readonly T _min  = min  ?? T.Zero;
-    public readonly T _max  = max  ?? T.One;
+    public readonly T step = step ?? T.One;
+    public readonly T min  = min  ?? T.Zero;
+    public readonly T max  = max  ?? T.One;
 
     private static ImGuiDataType get_data_type(T value) {
         return value switch {
@@ -396,9 +409,9 @@ public class FhSettingNumber<T>(
         };
     }
 
-    internal override void set(T value) {
-        _value = T.Clamp(value, _min, _max);
+    internal override void set(T new_value) {
+        value = T.Clamp(new_value, min, max);
     }
 }
 
-public class FhSettingToggle(string id, bool def_value) : FhSetting<bool>(id, def_value) { }
+public class FhSettingToggle(string id, bool def_value) : FhSetting<bool>(id, def_value);

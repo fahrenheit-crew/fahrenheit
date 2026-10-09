@@ -711,11 +711,11 @@ public unsafe class FhGui {
 
         draw_list.PrimReserve(6, 4);
 
-        /*   0------1
-         *   |    / |
-         *   |  /   |
-         *   |/     |
-         *   2------3
+        /*       0 ----- 1
+         *      /       /
+         *     /       /
+         *    /       /
+         *   2 ----- 3
          */
 
         draw_list.PrimWriteIdx((ushort)(draw_list.VtxCurrentIdx + 0));

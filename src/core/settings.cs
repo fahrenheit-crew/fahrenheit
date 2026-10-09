@@ -42,15 +42,31 @@ public abstract class FhSettingProvider<T> where T : FhModule {
     internal protected abstract IEnumerable<FhSetting> get();
 }
 
-public abstract class FhSettingRenderer;
+public abstract class FhSettingRenderer {
+    internal protected abstract Vector2 get_size(FhSettingsUi ui);
+    internal protected abstract void render(FhSettingsUi ui, FhSetting setting, Rect max_bounds);
+    internal protected abstract void handle_input(FhSettingsUi ui, FhSetting setting);
+}
 
-public abstract class FhSettingRenderer<TSetting, TSettingUi> : FhSettingRenderer
-    where TSetting   : FhSetting
-    where TSettingUi : FhSettingsUi {
+public abstract class FhSettingRenderer<TSetting, TUi> : FhSettingRenderer
+    where TSetting : FhSetting
+    where TUi      : FhSettingsUi {
 
-    internal protected abstract Vector2 get_size(TSettingUi ui);
-    internal protected abstract void render(TSettingUi ui, TSetting setting, Rect max_bounds);
-    internal protected abstract void handle_input(TSettingUi ui, TSetting setting);
+    internal protected sealed override Vector2 get_size(FhSettingsUi ui) {
+        return get_size((TUi)ui);
+    }
+
+    internal protected sealed override void render(FhSettingsUi ui, FhSetting setting, Rect max_bounds) {
+        render((TUi)ui, (TSetting)setting, max_bounds);
+    }
+
+    internal protected sealed override void handle_input(FhSettingsUi ui, FhSetting setting) {
+        handle_input((TUi)ui, (TSetting)setting);
+    }
+
+    internal protected abstract Vector2 get_size(TUi ui);
+    internal protected abstract void render(TUi ui, TSetting setting, Rect max_bounds);
+    internal protected abstract void handle_input(TUi ui, TSetting setting);
 }
 
 /// <summary>
@@ -108,41 +124,29 @@ internal sealed class FhSettings {
         _uis[ui.ModuleType] = ui;
     }
 
-    public bool get_setting_renderer<TSetting, TSettingsUi>(
-        TSetting setting,
-        [NotNullWhen(true)] out FhSettingRenderer<TSetting, TSettingsUi>? renderer
+    public bool get_setting_renderer<TUi>(
+        FhSetting setting,
+        [NotNullWhen(true)] out FhSettingRenderer? renderer
     )
-        where TSetting    : FhSetting
-        where TSettingsUi : FhSettingsUi {
+        where TUi      : FhSettingsUi {
 
-        FhInternal.Log.Info($"Getting renderer for {setting.GetType()} in {typeof(TSettingsUi)}.");
+        FhInternal.Log.Info($"Getting renderer for {setting.GetType()} in {typeof(TUi)}");
 
-        if (!_renderers.TryGetValue((setting.GetType(), typeof(TSettingsUi)), out FhSettingRenderer? renderer1)) {
-            FhInternal.Log.Info($"  Renderer? {(renderer1 is not null ? "Yes" : "No")}");
-
-            renderer = null;
-            return false;
-        }
-
-        renderer = (FhSettingRenderer<TSetting, TSettingsUi>)renderer1;
-        return true;
+        return _renderers.TryGetValue((setting.GetType(), typeof(TUi)), out renderer);
     }
 
     /// <summary>Registers the given renderer type.</summary>
     /// <typeparam name="TSetting">The type of the setting the renderer is for.</typeparam>
-    /// <typeparam name="TSettingsUi">The type of the UI the renderer is for.</typeparam>
+    /// <typeparam name="TUi">The type of the UI the renderer is for.</typeparam>
     /// <typeparam name="TRenderer">The type of the renderer for the setting.</typeparam>
-    public void register_setting_renderer<TSetting, TSettingsUi, TRenderer>()
-        where TSetting    : FhSetting
-        where TSettingsUi : FhSettingsUi
-        where TRenderer   : FhSettingRenderer<TSetting, TSettingsUi>, new() {
+    public void register_setting_renderer<TSetting, TUi, TRenderer>()
+        where TSetting  : FhSetting
+        where TUi       : FhSettingsUi
+        where TRenderer : FhSettingRenderer<TSetting, TUi>, new() {
 
-        Type setting_type  = typeof(TSetting);
-        TRenderer renderer = new();
+        FhInternal.Log.Info($"Registering renderer for {typeof(TSetting)} in {typeof(TUi)}");
 
-        FhInternal.Log.Info($"Registering renderer {typeof(TRenderer)} for {setting_type} in {typeof(TSettingsUi)}.");
-
-        _renderers[(setting_type, typeof(TSettingsUi))] = renderer;
+        _renderers[(typeof(TSetting), typeof(TUi))] = new TRenderer();
     }
 
     /// <summary>

@@ -35,7 +35,7 @@ public partial class FhSettingsUiX {
         : FhSettingRenderer<FhSettingToggle, FhSettingsUiX> {
 
         internal protected override Vector2 get_size(FhSettingsUiX ui) {
-            return new Vector2(0f, 60f);
+            return new Vector2(0f, 65f);
         }
 
         internal protected override void render(FhSettingsUiX ui, FhSettingToggle toggle, Rect max_bounds) {
@@ -48,8 +48,30 @@ public partial class FhSettingsUiX {
 
             ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
+            // Shadow
+            float shadow_height = 5f;
+            Rect shadow = max_bounds with {
+                pos  = max_bounds.pos  with { Y = max_bounds.bottom_left.Y - shadow_height },
+                size = max_bounds.size with { Y = shadow_height },
+            };
+
+            GradientStep[] shadow_steps = [
+                new(0.0f, 0x00000000),
+                new(0.2f, 0x80000000),
+                new(0.8f, 0x80000000),
+                new(1.0f, 0x00000000),
+            ];
+
+            FhApi.Gui.draw_rectangle_gradient(
+                draw,
+                shadow.scale_to_aspect(ui.aspect_helper),
+                GradientDirection.RIGHT,
+                shadow_steps
+            );
+
             // Background
             Rect bg_bounds = max_bounds;
+            bg_bounds.size.Y -= shadow_height;
 
             GradientStep[] bg_steps = [
                 new(0.0f, 0x0070212A),
@@ -216,7 +238,7 @@ public partial class FhSettingsUiX {
             Vector2 enabled_pos = toggle.get() ? on_pos : off_pos;
 
             Vector2 underline_pos = enabled_pos with {
-                Y = enabled_pos.Y + font_size / 2f + 3f,
+                Y = enabled_pos.Y + 15f,
             };
 
             Vector2 underline_size = new(300f, 9f);

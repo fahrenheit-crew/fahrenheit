@@ -55,12 +55,14 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <AdditionalIncludeDirectories>inc;inc\nethost</AdditionalIncludeDirectories>
+      <CallingConvention>StdCall</CallingConvention>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>$(MSBuildProjectDirectory)\src\fhstage1.def</ModuleDefinitionFile>
       <AdditionalLibraryDirectories>inc\nethost</AdditionalLibraryDirectories>
+      <AdditionalDependencies>pathcch.lib;nethost.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -73,6 +75,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <AdditionalIncludeDirectories>inc;inc\nethost</AdditionalIncludeDirectories>
+      <CallingConvention>StdCall</CallingConvention>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -81,11 +84,13 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>$(MSBuildProjectDirectory)\src\fhstage1.def</ModuleDefinitionFile>
       <AdditionalLibraryDirectories>inc\nethost</AdditionalLibraryDirectories>
+      <AdditionalDependencies>pathcch.lib;nethost.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="inc\fhstage1.h" />
     <ClInclude Include="inc\resource.h" />
+    <ClCompile Include="src\bridge.cpp" />
     <ClCompile Include="src\eh.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ResourceCompile Include="inc\fhstage1.rc" />

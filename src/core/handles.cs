@@ -61,8 +61,46 @@ public readonly ref struct FhMethodLocation {
     // We cache module and export locations to avoid looking them up on every instantiation.
     private readonly static Dictionary<string,         nint> _s_modules = [];
     private readonly static Dictionary<(nint, string), nint> _s_exports = [];
+    private          static int                              _lock = 0;
 
     private readonly nint _ptr_target;
+
+    unsafe static FhMethodLocation() {
+        FhPInvoke.s1_bridge_register_load_cb(&s1_load);
+        FhPInvoke.s1_bridge_register_free_cb(&s1_free);
+    }
+
+    [UnmanagedCallersOnly(CallConvs = [ typeof(CallConvStdcall) ] )]
+    private unsafe static void s1_load(FhPInvoke.DLL_LOAD_DATA* ptr_load_data) {
+        Interlocked.Increment(ref _lock);
+        _s_modules[ new string(ptr_load_data->dll_name) ] = ptr_load_data->dll_base;
+        Interlocked.Decrement(ref _lock);
+    }
+
+    [UnmanagedCallersOnly(CallConvs = [ typeof(CallConvStdcall) ] )]
+    private unsafe static void s1_free(nint ptr_dll_base) {
+        Interlocked.Increment(ref _lock);
+
+        foreach ((string module_name, nint module_base) in _s_modules) {
+            if (module_base != ptr_dll_base) continue;
+
+            _s_modules.Remove(module_name);
+            break;
+        }
+
+        List<(nint, string)> exports_to_remove = new();
+        foreach ((nint module_base, string export_name) in _s_exports.Keys) {
+            if (module_base != ptr_dll_base) continue;
+
+            exports_to_remove.Add((module_base, export_name));
+        }
+
+        foreach ((nint, string) key in exports_to_remove) {
+            _s_exports.Remove(key);
+        }
+
+        Interlocked.Decrement(ref _lock);
+    }
 
     /// <summary>
     ///     Use this constructor for functions which are analogous between FF X and X-2.
@@ -111,9 +149,9 @@ public readonly ref struct FhMethodLocation {
     /// </summary>
     /// <returns>The address of the specified module, or zero if it is not loaded.</returns>
     private static nint get_module_addr(string module_name) {
-        return _s_modules.TryGetValue(module_name, out nint ptr_module)
-            ? ptr_module
-            : (_s_modules[module_name] = FhPInvoke.GetModuleHandle(module_name));
+        return _lock == 0 && _s_modules.TryGetValue(module_name, out nint module_addr)
+            ? module_addr
+            : FhPInvoke.GetModuleHandle(module_name);
     }
 
     /// <summary>
@@ -123,6 +161,10 @@ public readonly ref struct FhMethodLocation {
     /// <param name="ptr_fn">The pointer to the given export, or zero if it does not exist.</param>
     /// <returns>Whether the export exists.</returns>
     private static bool get_export(nint module_addr, string export, out nint ptr_fn) {
+        if (_lock != 0) {
+            return NativeLibrary.TryGetExport(module_addr, export, out ptr_fn);
+        }
+
         var key = (module_addr, export);
 
         if (_s_exports.TryGetValue(key, out ptr_fn))

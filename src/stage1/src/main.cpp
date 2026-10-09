@@ -11,11 +11,28 @@
  * For the HostFXR bits, see https://github.com/dotnet/samples/blob/main/core/hosting/src/NativeHost/nativehost.cpp.
  */
 
-#include "fhstage1.h"
+#define WIN32_LEAN_AND_MEAN // Exclude rarely-used stuff from Windows headers
 
-typedef void (CORECLR_DELEGATE_CALLTYPE* fh_init)(); // Function pointer to managed delegate with our own signature
+// Win32
+#include <windows.h>
+#include <strsafe.h>
+#include <PathCch.h>
 
-using main_fn = int(*)(void);
+// .NET hosting
+#include <nethost.h>
+#include <coreclr_delegates.h>
+#include <hostfxr.h>
+
+// IAT patching
+#include <detours/detours.h>
+
+// Hooking
+#include <MinHook.h>
+
+BOOL s1_bridge_init(); // Forward declaration of debug bridge initializer.
+
+using init_fn = void(CORECLR_DELEGATE_CALLTYPE*)();
+using main_fn = int (                         *)();
 
 main_fn g_fnptr_main_original = nullptr; // A function pointer to the game's original entrypoint.
 main_fn g_fnptr_main_target   = nullptr; // A function pointer to our modified Stage 1 entrypoint.
@@ -80,6 +97,11 @@ static int s1_main(void) {
      *
      * If that happens on your system, block here and attach with WinDbg.
      */
+
+    if (!s1_bridge_init()) {
+        fwprintf_s(stderr, L"Failed to initialize the Stage 1 debug bridge.\n");
+        return FALSE;
+    }
 
     // If necessary, suppress the game's SEH filters, so Stage 0
     // takes over exception handling and core dumping.
@@ -166,7 +188,7 @@ static int s1_main(void) {
     get_function_pointer_fn fnptr_hostfxr_get_function_pointer = (get_function_pointer_fn)ptr_hostfxr_get_function_pointer;
 
     // Load managed assembly and get function pointer to bootstrap function.
-    fh_init fnptr_fh_init = nullptr;
+    init_fn fnptr_fh_init = nullptr;
 
     rc = fnptr_hostfxr_load_assembly(
         path_fh_dll,

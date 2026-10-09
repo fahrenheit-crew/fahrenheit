@@ -10,12 +10,35 @@
  * Some systems, like Dalamud, implement this using a dedicated crash handler process.
  *
  * We go the other way around- Stage 0 is repurposed as a stub debugger that "handles"
- * exception events, triggers core dumping, and surfaces exception information to the end user.
+ * exception events, dumps core, and surfaces exception information to the end user.
  *
  * If a proper external debugger is connected, this functionality is disabled.
  */
 
-#include "fhstage0.h"
+#define WIN32_LEAN_AND_MEAN // Exclude rarely-used stuff from Windows headers
+
+// STL
+#include <stdexcept>
+#include <string>
+#include <set>
+#include <map>
+#include <vector>
+
+// Win32
+#include <windows.h>
+#include <strsafe.h>
+#include <pathcch.h>
+
+// Win32 debugging
+#include <dbghelp.h>
+
+// .NET debugging
+#include <cor.h>
+#include <cordebug.h>
+#include <dbgshim.h>
+
+// Stage 1 Debug Bridge
+#include <fhstage1.h>
 
 enum S0_FRAME_TYPE {
     FRAME_UNKNOWN,
@@ -31,12 +54,19 @@ wchar_t g_path_mscordbi    [MAX_PATH] = { 0 }; // The full path to the `mscordbi
 wchar_t g_path_mscordacwks [MAX_PATH] = { 0 }; // The full path to the `mscordacwks` module for the given CoreCLR.
 wchar_t g_path_mscordaccore[MAX_PATH] = { 0 }; // The full path to the `mscordaccore` module for the given CoreCLR.
 
-std::set   <std::wstring>  g_map_checked_symbol; // Whether we performed symbol file lookup for a given module.
-std::vector<std::wstring>  g_frames_managed;     // A list of managed frame strings. Used to fill the gaps in the native stack walk.
-std::vector<std::wstring>  g_frames_native;      // A list of native frame strings.
-std::vector<S0_FRAME_TYPE> g_frames_type;        // A list of frames, indicating the type of any given frame.
+std::map   <LPVOID, DLL_LOAD_DATA> g_modules;            // A map containing information about loaded modules.
+std::set   <std::wstring>          g_map_checked_symbol; // Whether we performed symbol file lookup for a given module.
+std::vector<std::wstring>          g_frames_managed;     // A list of managed frame strings. Used to fill the gaps in the native stack walk.
+std::vector<std::wstring>          g_frames_native;      // A list of native frame strings.
+std::vector<S0_FRAME_TYPE>         g_frames_type;        // A list of frames, indicating the type of any given frame.
 
 LPVOID g_ptr_coreclr; // The pointer to `coreclr.dll` in memory.
+
+fn_s1_load g_fnptr_s1_bridge_load; // Call to signal a DLL load to Stage 1.
+fn_s1_free g_fnptr_s1_bridge_free; // Call to signal a DLL free to Stage 1.
+
+HANDLE g_bridge_pipe;         // A named pipe to communicate with Stage 1.
+BOOL   g_bridge_init = FALSE; // A flag marking pipe initialization as complete.
 
 /* [fkelava 19/09/26 00:50]
  * Here we simultaneously borrow a bit and yet diverge from Dalamud.
@@ -816,6 +846,79 @@ static void s0_dbg_create_dump(
     CloseHandle(dump_handle);
 }
 
+// Communicates with Stage 1 using the debug pipe to obtain pointers to its functions.
+static DWORD WINAPI s0_dbg_bridge_proc(LPVOID lpvParam) {
+    if (!ConnectNamedPipe(g_bridge_pipe, NULL) && GetLastError() != ERROR_PIPE_CONNECTED) {
+        fwprintf_s(stderr, L"[!] Failed to connect to debug pipe with code 0x%X.\n", GetLastError());
+        return FALSE;
+    }
+
+    HANDLE h_process_heap = GetProcessHeap();
+    if (h_process_heap == nullptr || h_process_heap == INVALID_HANDLE_VALUE) {
+        fwprintf_s(stderr, L"[!] GetProcessHeap() failed with code 0x%X.\n", GetLastError());
+        return FALSE;
+    }
+
+    // TODO: Amend to include actual messaging type
+    DWORD          message_size = sizeof(LPVOID);
+    unsigned char* message      = (unsigned char*) HeapAlloc(h_process_heap, HEAP_ZERO_MEMORY, message_size);
+
+    if (message == nullptr) {
+        fwprintf_s(stderr, L"[!] Failed to allocate memory for debug pipe message.\n");
+        return FALSE;
+    }
+
+    DWORD bytes_read = 0;
+    if (!ReadFile(
+        g_bridge_pipe,
+        message,
+        message_size,
+        &bytes_read,
+        NULL
+    )) {
+        fwprintf_s(stderr, L"[!] Failed to read debug pipe message with code 0x%X.\n", GetLastError());
+        return FALSE;
+    }
+
+    g_fnptr_s1_bridge_load = (fn_s1_load) *(int*)(message);
+    g_fnptr_s1_bridge_free = (fn_s1_free) *(int*)(message + 4);
+
+    if (!HeapFree(h_process_heap, 0, message)) {
+        fwprintf_s(stderr, L"[!] Failed to free memory for debug pipe message with code 0x%X.\n", GetLastError());
+        return FALSE;
+    }
+
+    if (!CloseHandle(g_bridge_pipe)) {
+        fwprintf_s(stderr, L"[!] Failed to close debug pipe with code 0x%X.\n", GetLastError());
+        return FALSE;
+    }
+
+    return g_fnptr_s1_bridge_load && g_fnptr_s1_bridge_free;
+}
+
+// Kicks off a thread that communicates with the debug pipe in Stage 1.
+static void s0_dbg_bridge_init() {
+    DWORD  id_thread;
+    HANDLE h_thread = CreateThread(
+        nullptr,
+        0,
+        s0_dbg_bridge_proc,
+        nullptr,
+        0,
+        &id_thread
+    );
+
+    if (h_thread == nullptr || h_thread == INVALID_HANDLE_VALUE) {
+        fwprintf_s(stderr, L"[!] Failed to create debug pipe thread with code 0x%X.\n", GetLastError());
+        return;
+    }
+
+    if (!CloseHandle(h_thread)) {
+        fwprintf_s(stderr, L"[!] Failed to close debug pipe thread with code 0x%X.\n", GetLastError());
+        return;
+    }
+}
+
 // Returns whether to treat exception as fatal or not.
 static BOOL s0_dbg_exception_filter(
     EXCEPTION_RECORD* ptr_exception_record // The record of the thrown exception.
@@ -852,6 +955,24 @@ static DWORD s0_dbg_exception(
      */
     if (ptr_info_exception->dwFirstChance == 0)
         return DBG_EXCEPTION_NOT_HANDLED;
+
+    /* [fkelava 12/09/26 23:50]
+     * https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/initial-breakpoint
+     * > {...} an initial breakpoint automatically occurs after the main image and all
+     * > statically-linked DLLs are loaded before any DLL initialization routines are called.
+     *
+     * The process will begin execution when we handle the BP exception. Now we spin up
+     * a thread which awaits communication through the named pipe we prepared. Stage 1
+     * will connect to the pipe and send pointers to relevant functions, then the pipe is closed.
+     */
+    if (ptr_info_exception->ExceptionRecord.ExceptionCode == STATUS_BREAKPOINT) {
+        if (!g_bridge_init) {
+            g_bridge_init = TRUE;
+            s0_dbg_bridge_init();
+        }
+
+        return DBG_EXCEPTION_HANDLED;
+    }
 
     if (s0_dbg_exception_filter(&ptr_info_exception->ExceptionRecord)) {
         CONTEXT faulting_thread_context = { 0 };
@@ -937,11 +1058,10 @@ static BOOL s0_dbg_get_module_size(
 }
 
 // Loads a module's symbols.
-static BOOL s0_dbg_process_module(
-    HANDLE h_process,       //       The handle of the process the module is being loaded into.
-    HANDLE h_module_file,   //       The handle to the file of the module being loaded.
-    LPVOID ptr_module_base, //       A pointer to the base address of the module itself.
-    DWORD& error_code       // [out] The error code to terminate the process with on failure.
+static BOOL s0_dbg_process_module_load(
+    HANDLE h_process,      // The handle of the process the module is being loaded into.
+    HANDLE h_module_file,  // The handle to the file of the module being loaded.
+    LPVOID ptr_module_base // A pointer to the base address of the module itself.
 ) {
     if (h_module_file == nullptr || h_module_file == INVALID_HANDLE_VALUE) {
         fwprintf_s(stderr, L"[!] LOAD_DLL_DEBUG_EVENT: Invalid DLL handle.\n");
@@ -1024,6 +1144,23 @@ static BOOL s0_dbg_process_module(
         return FALSE;
     }
 
+    DLL_LOAD_DATA load_data = { 0 };
+    load_data.dll_base = ptr_module_base;
+    load_data.dll_size = module_size;
+
+    HRESULT hr = StringCchCopyW(
+        load_data.dll_name,
+        MAX_PATH,
+        module_path
+    );
+
+    g_modules[ptr_module_base] = load_data;
+
+    if (hr != S_OK) {
+        fwprintf_s(stderr, L"[!] StringCchCopyW() failed with code 0x%X.\n", hr);
+        return FALSE;
+    }
+
 #if _DEBUG
     fwprintf_s(stdout, L"Module loaded: %s\n", module_path);
 #endif
@@ -1037,6 +1174,27 @@ static BOOL s0_dbg_process_module(
     return TRUE;
 }
 
+// Unloads a module's symbols.
+static BOOL s0_dbg_process_module_unload(
+    HANDLE h_process,      // The handle of the process the module is being unloaded from.
+    LPVOID ptr_module_base // A pointer to the base address of the module itself.
+) {
+    if (!SymUnloadModule64(
+        h_process,
+        (DWORD64) ptr_module_base
+    )) {
+        fwprintf_s(stderr, L"[!] SymUnloadModule64() failed with code 0x%X.\n", GetLastError());
+        return FALSE;
+    }
+
+    if (g_modules.erase(ptr_module_base) != 1) {
+        fwprintf_s(stderr, L"[!] Failed to erase module record when unloading.\n");
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 // The main loop of the debugger. Handles incoming debug events.
 void s0_dbg_loop() {
     /* [fkelava 13/09/26 02:39]
@@ -1045,6 +1203,18 @@ void s0_dbg_loop() {
      *
      * The relevant passages are given in comments.
      */
+
+    g_bridge_pipe = CreateNamedPipeW(
+        FH_DBG_PIPE_NAME,
+        PIPE_ACCESS_INBOUND,
+        PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
+        2,
+        4096,
+        4096,
+        0,
+        nullptr
+    );
+
     HANDLE h_process  = { 0 };
     DWORD  error_code = ERROR_SUCCESS;
 
@@ -1061,6 +1231,13 @@ void s0_dbg_loop() {
         if (event_code == CREATE_PROCESS_DEBUG_EVENT) {
             h_process = event.u.CreateProcessInfo.hProcess;
 
+            if (g_bridge_pipe == nullptr || g_bridge_pipe == INVALID_HANDLE_VALUE) {
+                fwprintf_s(stderr, L"[!] Failed to initialize debug pipe.\n");
+                TerminateProcess(h_process, GetLastError());
+
+                return;
+            }
+
             wchar_t sym_search_path[1024] = { 0 };
             swprintf_s(
                 sym_search_path,
@@ -1074,19 +1251,18 @@ void s0_dbg_loop() {
               | SYMOPT_FAIL_CRITICAL_ERRORS); // Fail silently, without prompting.
 
             if (!SymInitializeW(h_process, sym_search_path, FALSE)) {
-                fwprintf_s(stderr, L"[!] SymInitializeW() failed\n");
+                fwprintf_s(stderr, L"[!] SymInitializeW() failed.\n");
                 TerminateProcess(h_process, GetLastError());
 
                 return;
             }
 
-            if (!s0_dbg_process_module(
+            if (!s0_dbg_process_module_load(
                 h_process,
                 event.u.CreateProcessInfo.hFile,
-                event.u.CreateProcessInfo.lpBaseOfImage,
-                error_code
+                event.u.CreateProcessInfo.lpBaseOfImage
             )) {
-                TerminateProcess(h_process, error_code);
+                TerminateProcess(h_process, GetLastError());
                 return;
             }
 
@@ -1114,15 +1290,17 @@ void s0_dbg_loop() {
          * The relevant parts are simplified slightly from https://github.com/jrfonseca/drmingw.
          */
         if (event_code == LOAD_DLL_DEBUG_EVENT) {
-            DWORD error_code;
-            if (!s0_dbg_process_module(h_process, event.u.LoadDll.hFile, event.u.LoadDll.lpBaseOfDll, error_code)) {
-                TerminateProcess(h_process, error_code);
+            if (!s0_dbg_process_module_load(h_process, event.u.LoadDll.hFile, event.u.LoadDll.lpBaseOfDll)) {
+                TerminateProcess(h_process, GetLastError());
                 return;
             }
         }
 
         if (event_code == UNLOAD_DLL_DEBUG_EVENT) {
-            SymUnloadModule64(h_process, (DWORD64) event.u.UnloadDll.lpBaseOfDll);
+            if (!s0_dbg_process_module_unload(h_process, event.u.UnloadDll.lpBaseOfDll)) {
+                TerminateProcess(h_process, GetLastError());
+                return;
+            }
         }
 
         if (event_code == EXIT_PROCESS_DEBUG_EVENT) {

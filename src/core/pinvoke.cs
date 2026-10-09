@@ -10,6 +10,24 @@ namespace Fahrenheit;
 /// </summary>
 internal static unsafe partial class FhPInvoke {
 
+    [StructLayout(LayoutKind.Sequential)]
+    internal readonly struct DLL_LOAD_DATA {
+        [InlineArray(260)]
+        internal struct DllName {
+            private char _c;
+        }
+
+        public readonly nint    dll_base;
+        public readonly uint    dll_size;
+        public readonly DllName dll_name;
+    }
+
+    [LibraryImport("fhstage1.dll", EntryPoint = "s1_bridge_register_load_cb")]
+    internal static partial void s1_bridge_register_load_cb(delegate* unmanaged[Stdcall]<DLL_LOAD_DATA*, void> fnptr_cb);
+
+    [LibraryImport("fhstage1.dll", EntryPoint = "s1_bridge_register_free_cb")]
+    internal static partial void s1_bridge_register_free_cb(delegate* unmanaged[Stdcall]<nint,           void> fnptr_cb);
+
     /* [fkelava 07/05/26 17:10]
      * https://github.com/TsudaKageyu/minhook/blob/master/include/MinHook.h
      */

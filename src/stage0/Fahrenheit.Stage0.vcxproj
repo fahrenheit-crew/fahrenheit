@@ -68,14 +68,15 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>inc;inc\dbgshim</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>inc;inc\dbgshim;..\stage1\inc</AdditionalIncludeDirectories>
       <CallingConvention>StdCall</CallingConvention>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(MSBuildProjectDirectory)\inc\dbgshim</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>inc\dbgshim</AdditionalLibraryDirectories>
+      <AdditionalDependencies>pathcch.lib;dbghelp.lib;dbgshim.lib;corguids.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -85,7 +86,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>inc;inc\dbgshim</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>inc;inc\dbgshim;..\stage1\inc</AdditionalIncludeDirectories>
       <CallingConvention>StdCall</CallingConvention>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
@@ -94,11 +95,11 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(MSBuildProjectDirectory)\inc\dbgshim</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>inc\dbgshim</AdditionalLibraryDirectories>
+      <AdditionalDependencies>pathcch.lib;dbghelp.lib;dbgshim.lib;corguids.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="inc\fhstage0.h" />
     <ClInclude Include="inc\resource.h" />
     <ClCompile Include="src\dbg.cpp" />
     <ClCompile Include="src\main.cpp" />

@@ -4,29 +4,43 @@
 // It is licensed to you under the GNU Lesser General Public License, version 3.0 or later. See COPYING, COPYING.LESSER.
 
 /* [fkelava 12/09/26 23:26]
- * One of Fahrenheit's primary design tenets is that it should apply no permanent
- * modifications to the game binary or folder whatsoever. In keeping with that,
- * instead of modifying one of the DLLs the game imports as UnX and ffgriever EFL do,
- * it has an explicit launcher system- the Stage 0 and 1 loaders. If the game is not
- * launched using it, you get a pristine, unmodified original game.
+ * Fahrenheit's design is to leave no trace on the game binary or folder whatsoever.
+ * To do so, instead of modifying one of the game's imports as UnX, ASI, ffgriever EFL etc.
+ * do, it has a launcher system- the Stage 0 and 1 loaders.
  *
- * The method of choice applied here is reversible IAT patching using MS Detours.
+ * The method of choice is reversible IAT patching using MS Detours.
  * Stage 0 creates the game process and rewrites the IAT to load Stage 1 first,
- * then serves as the standard output/error pipe for the game.
+ * then serves as a debugger, crash handler and standard I/O pipe for the target.
  * Stage 1 reverses that modification, then bootstraps .NET and Fahrenheit.
- *
- * Stage 0 also acts as a crash handler/debugger for the target binary. See `dbg.cpp`.
  */
 
-#include "fhstage0.h"
+#define WIN32_LEAN_AND_MEAN // Exclude rarely-used stuff from Windows headers
+
+// Win32
+#include <windows.h>
+#include <strsafe.h>
+#include <PathCch.h>
+#include <conio.h>
+
+// IAT patching
+#include <detours/detours.h>
+
+#ifdef _DEBUG
+#define MINHOOK_DLL "minhook.x32d.dll"
+#else
+#define MINHOOK_DLL "minhook.x32.dll"
+#endif
+
+extern wchar_t g_path_dir_cache[MAX_PATH]; // The full path to the 'cache' directory, used to store symbols.
+extern wchar_t g_path_dir_crash[MAX_PATH]; // The full path to the 'crash' directory, used to store core dumps.
 
 void s0_dbg_loop(); // Forward declaration of debugger loop function.
 
-wchar_t target     [MAX_PATH] = { 0 }; // The path to the target binary.
-wchar_t args_target[1024]     = { 0 }; // The command-line arguments to pass to the target.
-wchar_t args_self  [1024]     = { 0 }; // The command-line arguments to Stage 0.
-wchar_t dir_target [MAX_PATH] = { 0 }; // The directory the target binary is in.
-char    dir_self   [MAX_PATH] = { 0 }; // The directory `fhstage0` is in.
+wchar_t g_target     [MAX_PATH] = { 0 }; // The path to the target binary.
+wchar_t g_args_target[1024]     = { 0 }; // The command-line arguments to pass to the target.
+wchar_t g_args_self  [1024]     = { 0 }; // The command-line arguments to Stage 0.
+wchar_t g_dir_target [MAX_PATH] = { 0 }; // The directory the target binary is in.
+char    g_dir_self   [MAX_PATH] = { 0 }; // The directory `fhstage0` is in.
 
 // Separates Stage0 args from those which will be passed through to the target.
 static HRESULT s0_main_process_args(
@@ -47,7 +61,7 @@ static HRESULT s0_main_process_args(
         return hr;
     }
 
-    DWORD rc = GetFullPathNameW(target_rel_or_abs, MAX_PATH, target, nullptr);
+    DWORD rc = GetFullPathNameW(target_rel_or_abs, MAX_PATH, g_target, nullptr);
     if (rc == 0) {
         fwprintf_s(stderr, L"[!] GetFullPathNameW() failed with code 0x%X.\n", GetLastError());
         return E_FAIL;
@@ -58,14 +72,14 @@ static HRESULT s0_main_process_args(
         return E_FAIL;
     }
 
-    wchar_t* dest = args_self;
+    wchar_t* dest = g_args_self;
 
     for (int i = 2; i < argc; i++) {
         if (wcscmp(argv[i], L"--") == 0) {
-            dest = args_target;
+            dest = g_args_target;
 
             if (FAILED(StringCchCatW(dest, 1024, L"\"" )) ||
-                FAILED(StringCchCatW(dest, 1024, target)) ||
+                FAILED(StringCchCatW(dest, 1024, g_target)) ||
                 FAILED(StringCchCatW(dest, 1024, L"\"" ))
             ) {
                 fwprintf_s(stderr, L"[!] Failed to copy target process name.\n");
@@ -93,15 +107,15 @@ static HRESULT s0_main_process_args(
 
 // Gets the directory of the target binary. This will be used as its working directory.
 static HRESULT stage0_main_dir_target() {
-    HRESULT hr = StringCchCopyW(dir_target, MAX_PATH, target);
+    HRESULT hr = StringCchCopyW(g_dir_target, MAX_PATH, g_target);
     if (hr != S_OK) {
-        fwprintf_s(stderr, L"[!] StringCchCopyW(%s, %s) failed.\n", dir_target, target);
+        fwprintf_s(stderr, L"[!] StringCchCopyW(%s, %s) failed.\n", g_dir_target, g_target);
         return hr;
     }
 
-    hr = PathCchRemoveFileSpec(dir_target, MAX_PATH);
+    hr = PathCchRemoveFileSpec(g_dir_target, MAX_PATH);
     if (hr != S_OK) {
-        fwprintf_s(stderr, L"[!] PathCchRemoveFileSpec(%s) failed.\n", dir_target);
+        fwprintf_s(stderr, L"[!] PathCchRemoveFileSpec(%s) failed.\n", g_dir_target);
     }
 
     return hr;
@@ -115,9 +129,9 @@ static HRESULT stage0_main_dir_target() {
 
 // Gets the directory `fhstage0` was started in. This will be used to locate dependencies.
 static HRESULT s0_main_dir_self() {
-    size_t sz_self = sizeof(dir_self) / sizeof(char);
+    size_t sz_self = sizeof(g_dir_self) / sizeof(char);
 
-    DWORD rc = GetCurrentDirectoryA(sz_self, dir_self);
+    DWORD rc = GetCurrentDirectoryA(sz_self, g_dir_self);
 
     if (rc == 0) {
         fwprintf_s(stderr, L"[!] GetCurrentDirectoryA() failed with code 0x%X.\n", GetLastError());
@@ -129,9 +143,9 @@ static HRESULT s0_main_dir_self() {
         return E_FAIL;
     }
 
-    HRESULT hr = StringCchCatA(dir_self, sz_self, "\\");
+    HRESULT hr = StringCchCatA(g_dir_self, sz_self, "\\");
     if (hr != S_OK) {
-        fprintf_s(stderr, "[!] StringCchCatA(%s, %s) failed.\n", dir_self, "\\");
+        fprintf_s(stderr, "[!] StringCchCatA(%s, %s) failed.\n", g_dir_self, "\\");
     }
 
     return hr;
@@ -142,9 +156,9 @@ static HRESULT s0_main_get_dependency_path(
     LPSTR  dep_path, // A pointer to a buffer for the full path string.
     LPCSTR dep_name  // The file name of the DLL to obtain the full path of.
 ) {
-    HRESULT hr = StringCchCatA(dep_path, MAX_PATH, dir_self);
+    HRESULT hr = StringCchCatA(dep_path, MAX_PATH, g_dir_self);
     if (hr != S_OK) {
-        fprintf_s(stderr, "[!] StringCchCatA(%s, %s) failed.\n", dep_path, dir_self);
+        fprintf_s(stderr, "[!] StringCchCatA(%s, %s) failed.\n", dep_path, g_dir_self);
         return hr;
     }
 
@@ -259,8 +273,8 @@ int __cdecl wmain(
     if (hr != S_OK)
         return hr;
 
-    bool external_debug  = wcsstr(args_self, L"--extdbg") != nullptr;
-    bool wait_for_attach = wcsstr(args_self, L"--wait")   != nullptr;
+    bool external_debug  = wcsstr(g_args_self, L"--extdbg") != nullptr;
+    bool wait_for_attach = wcsstr(g_args_self, L"--wait")   != nullptr;
 
     DWORD creation_flags = external_debug
         ? CREATE_SUSPENDED
@@ -273,14 +287,14 @@ int __cdecl wmain(
 
     // Create target process in suspended or debugged state.
     if (!CreateProcessW(
-        target,
-        args_target,
+        g_target,
+        g_args_target,
         nullptr,
         nullptr,
         FALSE,
         creation_flags,
         nullptr,
-        dir_target,
+        g_dir_target,
         &si,
         &pi
     )) {

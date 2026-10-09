@@ -11,7 +11,14 @@
  * We therefore stub out the games' SEH filters, and Stage0 takes the role of crash handler and core dumper.
  */
 
-#include "fhstage1.h"
+#define WIN32_LEAN_AND_MEAN // Exclude rarely-used stuff from Windows headers
+
+// Win32
+#include <windows.h>
+#include <strsafe.h>
+
+// Hooking
+#include <MinHook.h>
 
 static LPTOP_LEVEL_EXCEPTION_FILTER WINAPI s1_eh_set_filter(LPTOP_LEVEL_EXCEPTION_FILTER fnptr_exception_filter) {
     return NULL;
@@ -58,7 +65,7 @@ BOOL s1_eh_suppress() {
      * https://github.com/TsudaKageyu/minhook/blob/8af6b4acae5a9388fd742b56fa79ece89d96f823/src/hook.c#L633
      */
     if (MH_CreateHookApi(L"kernel32.dll", "SetUnhandledExceptionFilter", &s1_eh_set_filter, NULL) != MH_OK ||
-        MH_EnableHook   (&SetUnhandledExceptionFilter)                                                != MH_OK
+        MH_EnableHook   (&SetUnhandledExceptionFilter)                                            != MH_OK
     ) {
         fwprintf_s(stderr, L"Failed to suppress SEH filter install for %s.\n", exe_name);
         return FALSE;

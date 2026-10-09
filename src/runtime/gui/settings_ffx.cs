@@ -84,7 +84,7 @@ public partial class FhSettingsUiX : FhSettingsUi {
 
         _fade = new(0, 0, FADE_LENGTH);
 
-        FhInternal.Settings.register_setting_renderer<FhSettingToggle, FhSettingsUiX, FhSettingsUiXRenderer_Toggle>();
+        FhInternal.Settings.register_setting_renderer<FhSettingToggle, FhSettingsUiX, Renderer_Toggle>();
     }
 
     public override bool init(FhModContext context, FileStream global_state) {

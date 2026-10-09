@@ -12,7 +12,7 @@ public partial class FhSettingsUiX {
         public string get_input_help_text();
     }
 
-    private class FhSettingsUiXRenderer_Category
+    private class Renderer_Category
         : FhSettingRenderer<FhSettingsCategory, FhSettingsUiX> {
 
         internal protected override Vector2 get_size(FhSettingsUiX ui) {
@@ -31,7 +31,7 @@ public partial class FhSettingsUiX {
         }
     }
 
-    private class FhSettingsUiXRenderer_Toggle
+    private class Renderer_Toggle
         : FhSettingRenderer<FhSettingToggle, FhSettingsUiX> {
 
         internal protected override Vector2 get_size(FhSettingsUiX ui) {
@@ -82,7 +82,7 @@ public partial class FhSettingsUiX {
         }
     }
 
-    private class FhSettingsUiXRenderer_Text
+    private class Renderer_Text
         : FhSettingRenderer<FhSettingText, FhSettingsUiX>,
           ICapturingRenderer {
 
@@ -149,7 +149,7 @@ public partial class FhSettingsUiX {
         }
     }
 
-    private class FhSettingsUiXRenderer_Number<T>
+    private class Renderer_Number<T>
         : FhSettingRenderer<FhSettingNumber<T>, FhSettingsUiX>
         where T : unmanaged, INumber<T> {
 

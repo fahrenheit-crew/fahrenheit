@@ -527,6 +527,30 @@ public partial class FhSettingsUiX : FhSettingsUi {
         foreach (FhSetting setting in _displayed_settings.settings) {
             ui_setting(setting);
         }
+
+        _indent_level += 1;
+
+        foreach (FhSetting setting in _displayed_settings.settings) {
+            ui_setting(setting);
+        }
+
+        _indent_level += 1;
+
+        foreach (FhSetting setting in _displayed_settings.settings) {
+            ui_setting(setting);
+        }
+
+        _indent_level += 1;
+
+        foreach (FhSetting setting in _displayed_settings.settings) {
+            ui_setting(setting);
+        }
+
+        _indent_level += 1;
+
+        foreach (FhSetting setting in _displayed_settings.settings) {
+            ui_setting(setting);
+        }
     }
 
     /// <summary>Renders a scrollbar.</summary>

@@ -40,20 +40,20 @@ public partial class FhSettingsUiX : FhSettingsUi {
     private int _selected_module_idx;
     private FhSetting? _hovered_setting;
 
-    private int   indent;
-    private float setting_y;
+    private int   _indent_level;
+    private float _setting_y;
 
     private ICapturingRenderer? _capturing_renderer;
     private FhSetting?          _captured_setting;
 
     private FhSettingsCategory? _displayed_settings;
 
-    private Scrollable _scrollable_mods = new() {
+    private readonly Scrollable _scrollable_mods = new() {
         visible = 11,
         max     = 50,
     };
 
-    private Scrollable _scrollable_modules = new(){
+    private readonly Scrollable _scrollable_modules = new(){
         visible = 10,
     };
     // private ContinuousScrollable _scrollable_settings;
@@ -169,6 +169,7 @@ public partial class FhSettingsUiX : FhSettingsUi {
         return false;
     }
 
+    // Functions for interfacing with renderers
     public bool try_capture_setting(ICapturingRenderer renderer, FhSetting setting) {
         if (_capturing_renderer != null) return false;
 
@@ -185,6 +186,14 @@ public partial class FhSettingsUiX : FhSettingsUi {
         _captured_setting   = null;
 
         return true;
+    }
+
+    public void indent() {
+        _indent_level += 1;
+    }
+
+    public void unindent() {
+        _indent_level -= 1;
     }
 
     // Input handling
@@ -458,7 +467,7 @@ public partial class FhSettingsUiX : FhSettingsUi {
     private void ui_setting(FhSetting setting) {
         if (!FhInternal.Settings.get_setting_renderer<FhSettingsUiX>(setting, out FhSettingRenderer? renderer)) {
             Rect debug_bounds = new() {
-                pos  = new(610f, 202f + setting_y),
+                pos  = new(610f, 202f + _setting_y),
                 size = new(MAX_SETTING_SIZE, 30f),
             };
 
@@ -471,16 +480,16 @@ public partial class FhSettingsUiX : FhSettingsUi {
                 new(Alignment.CENTER, Alignment.CENTER)
             );
 
-            setting_y += 30f;
+            _setting_y += 30f;
 
             return;
         }
 
-        float indent_size = indent * INDENT_SIZE;
+        float indent_size = _indent_level * INDENT_SIZE;
 
         Vector2 pos = new(610f, 202f);
         pos.X += indent_size;
-        pos.Y += setting_y;
+        pos.Y += _setting_y;
 
         Vector2 size = renderer.get_size(this);
 
@@ -495,7 +504,7 @@ public partial class FhSettingsUiX : FhSettingsUi {
 
         renderer.render(this, setting, bounds);
 
-        setting_y += size.Y;
+        _setting_y += size.Y;
     }
 
     private void ui_settings() {
@@ -508,8 +517,8 @@ public partial class FhSettingsUiX : FhSettingsUi {
 
         if (_displayed_settings == null) return;
 
-        indent    = 0;
-        setting_y = 0f;
+        _indent_level    = 0;
+        _setting_y = 0f;
 
         foreach (FhSetting setting in _displayed_settings.settings) {
             ui_setting(setting);

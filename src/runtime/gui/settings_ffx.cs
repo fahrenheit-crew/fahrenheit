@@ -27,9 +27,10 @@ public partial class FhSettingsUiX : FhSettingsUi {
 
     private const float FADE_LENGTH = 0.35f;
 
-    public const float INDENT_MAX       = 10;
-    public const float INDENT_SIZE      = 20f;
-    public const float MAX_SETTING_SIZE = 1100f;
+    public const float INDENT_MAX          = 10;
+    public const float INDENT_SIZE         = 40f;
+    public const float MAX_SETTING_SIZE    = 1100f;
+    public const float SETTING_MARGIN_SIZE = 22f;
 
     // Display
     private readonly FadeHelper _fade;
@@ -507,7 +508,7 @@ public partial class FhSettingsUiX : FhSettingsUi {
 
         renderer.render(this, setting, bounds);
 
-        _setting_y += size.Y;
+        _setting_y += size.Y + SETTING_MARGIN_SIZE;
     }
 
     private void ui_settings() {
@@ -520,8 +521,8 @@ public partial class FhSettingsUiX : FhSettingsUi {
 
         if (_displayed_settings == null) return;
 
-        _indent_level    = 0;
-        _setting_y = 0f;
+        _indent_level = 0;
+        _setting_y    = 0f;
 
         foreach (FhSetting setting in _displayed_settings.settings) {
             ui_setting(setting);

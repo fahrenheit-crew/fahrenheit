@@ -5,8 +5,6 @@
 
 namespace Fahrenheit.Runtime.Gui;
 
-using SettingRenderer = FhSettingRenderer<FhSetting, FhSettingsUiX>;
-
 [FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
 public partial class FhSettingsUiX : FhSettingsUi {
     /// <summary>Possible elements for the UI to focus on.</summary>
@@ -189,7 +187,7 @@ public partial class FhSettingsUiX : FhSettingsUi {
     // Input handling
     private void handle_input() {
         if (_captured_setting != null) {
-            if (!FhInternal.Settings.get_setting_renderer(_captured_setting, out SettingRenderer? renderer)) {
+            if (!FhInternal.Settings.get_setting_renderer<FhSettingsUiX>(_captured_setting, out FhSettingRenderer? renderer)) {
                 _capturing_renderer = null;
                 _captured_setting   = null;
                 return;
@@ -455,7 +453,7 @@ public partial class FhSettingsUiX : FhSettingsUi {
     }
 
     private void ui_setting(FhSetting setting) {
-        if (!FhInternal.Settings.get_setting_renderer(setting, out SettingRenderer? renderer)) {
+        if (!FhInternal.Settings.get_setting_renderer<FhSettingsUiX>(setting, out FhSettingRenderer? renderer)) {
             _logger.Warning($"Renderer not found for setting {setting.GetType().FullName}");
             return;
         }

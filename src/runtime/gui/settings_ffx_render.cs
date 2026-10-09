@@ -127,14 +127,14 @@ public partial class FhSettingsUiX {
                 X = separator_start.pos.X + separator_start.size.X,
             };
 
-            Vector2 separator_bl = ui.aspect_scale * (separator_start.pos + separator_start.size);
-
             Vector2 separator_tr = separator_tl with {
-                X = separator_tl.X + separator_width,
+                X = separator_tl.X + separator_width - separator_diff_width,
             };
 
+            Vector2 separator_bl = ui.aspect_scale * (separator_start.pos + separator_start.size);
+
             Vector2 separator_br = separator_bl with {
-                X = separator_bl.X + separator_width - separator_diff_width,
+                X = separator_bl.X + separator_width,
             };
 
             FhApi.Gui.draw_quad_gradient(
@@ -241,7 +241,7 @@ public partial class FhSettingsUiX {
                 Y = enabled_pos.Y + 15f,
             };
 
-            Vector2 underline_size = new(300f, 9f);
+            Vector2 underline_size = new(220f, 9f);
 
             underline_pos.X -= underline_size.X / 2f;
 

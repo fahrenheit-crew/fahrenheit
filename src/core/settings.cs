@@ -130,8 +130,6 @@ internal sealed class FhSettings {
     )
         where TUi      : FhSettingsUi {
 
-        FhInternal.Log.Info($"Getting renderer for {setting.GetType()} in {typeof(TUi)}");
-
         return _renderers.TryGetValue((setting.GetType(), typeof(TUi)), out renderer);
     }
 

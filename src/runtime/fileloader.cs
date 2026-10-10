@@ -6,7 +6,7 @@
 namespace Fahrenheit.Runtime;
 
 /* [fkelava 11/02/26 04:03]
- * The game typically loads all files from custom VBF archives, but it has completely unused
+ * The game typically loads all files from custom VBF archives, but it has, completely unused,
  * full support for native file I/O. In Win32 parlance, a file can be backed by the VBF or a plain HANDLE.
  *
  * As a bonus compared to the standalone EFL, we permit loading of assets from the currently inactive game.

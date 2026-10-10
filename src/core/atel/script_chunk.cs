@@ -20,7 +20,7 @@ public struct MapEntrance {
     public readonly Vector3 pos => new(x, y, z);
 }
 
-[StructLayout(LayoutKind.Sequential, Pack = 4, Size = 0x38)]
+[StructLayout(LayoutKind.Sequential, Size = 0x38)]
 public unsafe struct AtelScriptChunk {
     public  uint   code_length;
     public  uint   map_start;

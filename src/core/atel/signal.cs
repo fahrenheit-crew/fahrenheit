@@ -12,19 +12,29 @@ public enum AtelSignalState : byte {
     ACKNOWLEDGED = 0x3,
 }
 
-[StructLayout(LayoutKind.Sequential, Pack = 2, Size = 0x16)]
+[StructLayout(LayoutKind.Sequential, Size = 0x16)]
 public unsafe struct AtelSignal {
-    public  AtelSignal*     next;
-    public  AtelSignal*     prev;
-    public  ushort          entry_point;
-    public  ushort          src_work_idx;
-    public  ushort          tgt_work_idx;
-    public  byte            flags;
-    public  AtelSignalState state;
-    private short           __0x10;
-    private short           __0x12;
-    public  ushort          ctrl_idx;
 
-    public byte priority       { readonly get { return flags.get_bits(0, 4); } set { flags.set_bits(0, 4, value); } }
-    public byte process_status { readonly get { return flags.get_bits(4, 4); } set { flags.set_bits(4, 4, value); } }
+    [InlineArray(1)]
+    public struct AtelSignalFlags {
+        private byte e0;
+
+        public byte priority       { readonly get { return this[0].get_bits(0, 4); } set { this[0].set_bits(0, 4, value); } }
+        public byte process_status { readonly get { return this[0].get_bits(4, 4); } set { this[0].set_bits(4, 4, value); } }
+    }
+
+    public AtelSignal* ptr_next;
+    public AtelSignal* ptr_prev;
+
+    public ushort entry_point;
+    public ushort idx_work_src;
+    public ushort idx_work_tgt;
+
+    public AtelSignalFlags flags;
+    public AtelSignalState state;
+
+    private short __0x10;
+    private short __0x12;
+
+    public ushort idx_work_ctrl;
 }

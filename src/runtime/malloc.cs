@@ -8,14 +8,13 @@ namespace Fahrenheit.Runtime;
 /* [fkelava 06/08/26 14:02]
  * See generally issue #253.
  *
- * The game used to ship without LAA flag enabled, and reserves 37.5% of <2GB address space
- * (0x3000_0000 bytes) for its primary memory pool. This would lead to "green screens" in FMVs
- * because they do not use the primary pool, and there was not enough contiguous free space
- * under 2GB due to ASLR forcing DLLs to be loaded at random high address.
+ * Before Oct 1st '26 update, the game shipped without the Large Address Aware (LAA) flag enabled.
+ * It reserves 37.5% of <2GB address space (0x3000_0000 bytes) for its primary memory pool.
+ * This led to "green screens" in FMVs because they do not use the primary pool, and insufficient
+ * contiguous free space remained under 2GB due to ASLR forcing DLLs to load at random high address.
  *
- * Even though the game now has LAA flag and "fixes" this, we still reduce primary
- * pool size because it is empirically shown it is far oversized.
- * The pool now begins at 0x800_0000 and expands in increments of 0x800_0000.
+ * Though the game now has LAA flag, we still reduce primary pool size because it is empirically
+ * shown to be oversized. The pool now begins at 0x800_0000 and expands in increments of 0x800_0000.
  */
 
 /// <summary>
@@ -59,10 +58,9 @@ public unsafe sealed class FhMallocModule : FhModule {
         FhCall.FUN_005428a0_008771a0.fnptr!();
 
         /* [fkelava 06/08/26 23:51]
-         * Be VERY careful. The pool size can't be _too small_ because it's reused as the upper
-         * bound of any future allocation through the primary allocator. If that size is too small
-         * for whatever the game has in mind, the allocator will spiral out of control reserving
-         * {POOL_SIZE} in a loop until it exhausts the entire address space, killing the process.
+         * Be VERY careful. The pool size is also the upper bound of any future allocation
+         * through the primary allocator. If it is too small, the allocator will reserve {POOL_SIZE}
+         * in a loop until it exhausts the entire address space, killing the process.
          *
          * Maybe one day we'll fix that latent bug, but today ain't the one.
          */
@@ -92,7 +90,7 @@ public unsafe sealed class FhMallocModule : FhModule {
      * using the `op_*` system have a pointer tagging/truncation bug which makes them fail
      * to terminate properly when assigned an address over 0x7FFF_FFFF.
      *
-     * Square then released a 4G patched version of the game without fixing this bug. "Bug fixes" indeed! Caveat emptor.
+     * The Oct 1st, '26 update does not fix this bug. Caveat emptor.
      */
 
     [UnmanagedCallConv(CallConvs = [ typeof(CallConvCdecl) ] )]

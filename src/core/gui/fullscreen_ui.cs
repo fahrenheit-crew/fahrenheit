@@ -37,7 +37,7 @@ public abstract class FhFullscreenUi : FhModule {
     /// <summary>The scale for font sizes at the game's forced 16:9 aspect ratio.</summary>
     protected float font_scale => float.Min(aspect_scale.X, aspect_scale.Y);
 
-    internal void post_open_menu(EventArgs e) {
+    internal virtual void post_open_menu(EventArgs e) {
         /*
          * NOTE:
          *   Fahrenheit does not allow you to open the Escape menu,

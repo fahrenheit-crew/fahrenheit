@@ -39,6 +39,11 @@ public partial class FhSettingsUiX : FhSettingsUi {
 
     private int _selected_mod_idx;
     private int _selected_module_idx;
+
+    private FhModContext          _selected_mod     => settings_map.GetAt(_selected_mod_idx).Key;
+    private FhModuleContext       _selected_module  => settings_map.GetAt(_selected_mod_idx).Value[_selected_module_idx];
+    private List<FhModuleContext> _selected_modules => settings_map.GetAt(_selected_mod_idx).Value;
+
     private FhSetting? _hovered_setting;
 
     private int   _indent_level;
@@ -51,7 +56,6 @@ public partial class FhSettingsUiX : FhSettingsUi {
 
     private readonly Scrollable _scrollable_mods = new() {
         visible = 11,
-        max     = 50,
     };
 
     private readonly Scrollable _scrollable_modules = new(){
@@ -96,16 +100,18 @@ public partial class FhSettingsUiX : FhSettingsUi {
 
     public override bool init(FhModContext context, FileStream global_state) {
         return base.init(context, global_state)
-            && FhApi.Events.Common.GameLoop.PostOpenSettingsMenu.subscribe(post_open)
+            && FhApi.Events.Common.GameLoop.PostOpenSettingsMenu .subscribe(post_open)
             && FhApi.Events.Common.GameLoop.PostCloseSettingsMenu.subscribe(post_close);
     }
 
     private void post_open(EventArgs e) {
-        _focus = UiFocus.MODULE_LIST;
+        _focus = UiFocus.MOD_LIST;
 
         try_load_textures();
 
         _fade.restart(COLOR_BLACK, COLOR_TRANS, FADE_LENGTH);
+
+        _scrollable_mods.max = settings_map.Count;
     }
 
     private void post_close(EventArgs e) {
@@ -150,27 +156,11 @@ public partial class FhSettingsUiX : FhSettingsUi {
     }
 
     private bool mouse_hovered(Rect rect) {
-        return !ImGui.GetIO().WantCaptureMouse
-            && ImGui.GetIO().MouseDelta.LengthSquared() > 0
-            && FhApi.Gui.mouse_hovering(rect);
+        return FhApi.Gui.mouse_hovering(rect, true);
     }
 
     private bool mouse_clicked(Rect rect, ImGuiMouseButton button = ImGuiMouseButton.Left, bool repeat = false) {
-        return !ImGui.GetIO().WantCaptureMouse
-            && FhApi.Gui.mouse_clicked(rect, button, repeat);
-    }
-
-    private bool has_settings(FhModuleContext module_ctx) {
-        return FhInternal.Settings.try_get_settings(module_ctx.Module, out _);
-    }
-
-    private bool has_settings(FhModContext mod_ctx) {
-        foreach (FhModuleContext module_ctx in mod_ctx.Modules) {
-            if(has_settings(module_ctx))
-                return true;
-        }
-
-        return false;
+        return  FhApi.Gui.mouse_clicked(rect, button, repeat);
     }
 
     // Functions for interfacing with renderers
@@ -365,22 +355,12 @@ public partial class FhSettingsUiX : FhSettingsUi {
         );
     }
 
-    private static FhModContext? _dbg_mod_ctx;
     /// <summary>Renders all mod plates.</summary>
     private void ui_list_mods() {
-        if (_dbg_mod_ctx is null) {
-            foreach (FhModContext ctx in FhApi.Mods.get_mods()) {
-                if (ctx.Manifest.Id != "fhr") continue;
-
-                _dbg_mod_ctx = ctx;
-                break;
-            }
-        }
-
         int max_i = int.Min(_scrollable_mods.max, _scrollable_mods.visible);
 
         for (int i = 0, mod_i = _scrollable_mods.current; i < max_i; i++, mod_i++) {
-            ui_mod(_dbg_mod_ctx!, mod_i, i);
+            ui_mod(settings_map.GetAt(mod_i).Key, mod_i, i);
         }
     }
 
@@ -447,24 +427,15 @@ public partial class FhSettingsUiX : FhSettingsUi {
 
     /// <summary>Renders all module plates.</summary>
     private void ui_list_modules() {
-        if (_dbg_mod_ctx is null) {
-            foreach (FhModContext ctx in FhApi.Mods.get_mods()) {
-                if (ctx.Manifest.Id != "fhr") continue;
+        ui_mod(_selected_mod, _selected_mod_idx, 0);
 
-                _dbg_mod_ctx = ctx;
-                break;
-            }
-        }
-
-        ui_mod(_dbg_mod_ctx!, _selected_mod_idx, 0);
-
-        _scrollable_modules.max = _dbg_mod_ctx!.Modules.Count;
+        //TODO: Move this line to when a mod is selected
+        _scrollable_modules.max = _selected_modules.Count;
 
         int max_i = int.Min(_scrollable_modules.max, _scrollable_modules.visible);
-        List<FhModuleContext> modules = _dbg_mod_ctx.Modules;
 
         for (int i = 1, module_i = _scrollable_modules.current; i < max_i + 1; i++, module_i++) {
-            ui_module(modules[module_i], module_i, i);
+            ui_module(_selected_modules[module_i], module_i, i);
         }
     }
 
@@ -514,9 +485,7 @@ public partial class FhSettingsUiX : FhSettingsUi {
     private void ui_settings() {
         // Debugging
         if (_displayed_settings == null) {
-            FhModule modlist = FhApi.Mods.get_module<FhModListDisplayModule>()!.Module;
-
-            FhInternal.Settings.try_get_settings(modlist, out _displayed_settings);
+            FhInternal.Settings.try_get_settings(_selected_module.Module, out _displayed_settings);
         }
 
         if (_displayed_settings == null) return;

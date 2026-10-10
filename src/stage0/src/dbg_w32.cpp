@@ -26,6 +26,8 @@
 std::map<LPVOID, DLL_LOAD_DATA> g_modules;         // A map containing information about loaded modules.
 std::map<LPVOID, bool>          g_checked_symbols; // Whether we performed symbol file lookup for a given module.
 
+LPVOID g_addr_except; // The originating address of the last handled exception. Used to suppress dumping as it is rethrown during unwind.
+
 // Processes a stack frame, returning its type and preparing its symbol, if native.
 static S0_FRAME_DATA s0_dbg_w32_stack_frame(
     HANDLE       h_process,  // A handle to the process the stack frame belongs to.
@@ -361,17 +363,17 @@ static DWORD s0_dbg_w32_exception(
     DWORD                 id_thread,         // The ID of the faulting thread in the process that encountered an exception.
     EXCEPTION_DEBUG_INFO* ptr_info_exception // A pointer to information about the exception.
 ) {
+    EXCEPTION_RECORD* ptr_exception_record = &ptr_info_exception->ExceptionRecord;
+
     /* [fkelava 12/09/26 23:50]
      * https://learn.microsoft.com/en-us/windows/win32/api/minwinbase/ns-minwinbase-exception_debug_info#members
      * > If this member is zero, the debugger has previously encountered the exception.
      *
-     * We only "handle" exceptions (i.e. dump core) in the first instance.
-     * Note that we intentionally return DBG_EXCEPTION_NOT_HANDLED so WER, .NET EH et al. function unimpeded.
+     * We return NOT_HANDLED so other EH (WER, .NET) can proceed. We don't want to override user WER options.
+     * Checking the address is required because the same exception may be rethrown as it unwinds.
      */
-    if (ptr_info_exception->dwFirstChance == 0)
+    if (ptr_info_exception->dwFirstChance == 0 || ptr_exception_record->ExceptionAddress == g_addr_except)
         return DBG_EXCEPTION_NOT_HANDLED;
-
-    EXCEPTION_RECORD* ptr_exception_record = &ptr_info_exception->ExceptionRecord;
 
     /* [fkelava 12/09/26 23:50]
      * https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/initial-breakpoint
@@ -391,6 +393,8 @@ static DWORD s0_dbg_w32_exception(
     }
 
     if (s0_dbg_w32_exception_filter(ptr_exception_record)) {
+        g_addr_except = ptr_exception_record->ExceptionAddress;
+
         CONTEXT faulting_thread_context = { 0 };
         faulting_thread_context.ContextFlags = CONTEXT_ALL;
 
@@ -437,8 +441,7 @@ static DWORD s0_dbg_w32_exception(
 
         s0_dbg_w32_print_stack_trace();
 
-        TerminateProcess(h_process, ptr_exception_record->ExceptionCode);
-        return DBG_EXCEPTION_HANDLED;
+        return DBG_EXCEPTION_NOT_HANDLED;
     }
 
     return DBG_CONTINUE;

@@ -26,13 +26,11 @@ wchar_t g_path_mscordaccore[MAX_PATH] = { 0 };   // The full path to the `mscord
 LPVOID  g_ptr_coreclr                 = nullptr; // The pointer to `coreclr.dll` in memory.
 
 /* [fkelava 19/09/26 00:50]
- * Here we simultaneously borrow a bit and yet diverge from Dalamud.
- * The different choice of interface seems more cosmetic than anything, though.
+ * There is almost no practical reference for using the unmanaged .NET API.
+ * We take a slightly different approach to Dalamud, avoid the IX* interfaces,
+ * and stick to the "official" API surface. Which you choose is a matter of taste.
  *
- * https://github.com/goatcorp/Dalamud/blob/e81744f6aea94bb6781affdd0d0b9319592f95d9/DalamudCrashHandler/DalamudCrashHandler.cpp#L306
- *
- * Due to the almost _nonexistent_ documentation, any difference in approach is to be taken
- * as the unfortunate result of a goat and a donkey having to stumble around in the dark.
+ * See generally https://github.com/goatcorp/Dalamud/blob/master/DalamudCrashHandler/DalamudCrashHandler.cpp.
  */
 
 // https://learn.microsoft.com/en-us/dotnet/framework/unmanaged-api/debugging/iclrdebugginglibraryprovider-interface

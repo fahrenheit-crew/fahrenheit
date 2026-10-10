@@ -23,10 +23,9 @@
 // Win32 debugging
 #include <dbghelp.h>
 
-std::map<LPVOID, DLL_LOAD_DATA> g_modules;         // A map containing information about loaded modules.
-std::map<LPVOID, bool>          g_checked_symbols; // Whether we performed symbol file lookup for a given module.
-
-LPVOID g_addr_except; // The originating address of the last handled exception. Used to suppress dumping as it is rethrown during unwind.
+std::map<LPVOID, DLL_LOAD_DATA> g_modules;          // A map containing information about loaded modules.
+std::map<LPVOID, bool>          g_checked_symbols;  // Whether we performed symbol file lookup for a given module.
+LPVOID                          g_addr_excep_fatal; // The originating address of the last fatal/noncontinuable exception.
 
 // Processes a stack frame, returning its type and preparing its symbol, if native.
 static S0_FRAME_DATA s0_dbg_w32_stack_frame(
@@ -41,8 +40,8 @@ static S0_FRAME_DATA s0_dbg_w32_stack_frame(
 
     if (!SymGetModuleInfoW64(h_process, frame_addr, &module)) {
         /* [fkelava 21/09/26 16:08]
-         * We use a very primitive heuristic here. We assume that if a given IP
-         * can't be mapped to a module, it must be JITted code and therefore managed.
+         * We use a very primitive heuristic here. If a given IP can't be mapped
+         * to a module, we assume it is managed/JITted code.
          *
          * We will therefore fill that frame out with data from the managed stack walk.
          */
@@ -372,7 +371,7 @@ static DWORD s0_dbg_w32_exception(
      * We return NOT_HANDLED so other EH (WER, .NET) can proceed. We don't want to override user WER options.
      * Checking the address is required because the same exception may be rethrown as it unwinds.
      */
-    if (ptr_info_exception->dwFirstChance == 0 || ptr_exception_record->ExceptionAddress == g_addr_except)
+    if (ptr_info_exception->dwFirstChance == 0 || ptr_exception_record->ExceptionAddress == g_addr_excep_fatal)
         return DBG_EXCEPTION_NOT_HANDLED;
 
     /* [fkelava 12/09/26 23:50]
@@ -393,7 +392,7 @@ static DWORD s0_dbg_w32_exception(
     }
 
     if (s0_dbg_w32_exception_filter(ptr_exception_record)) {
-        g_addr_except = ptr_exception_record->ExceptionAddress;
+        g_addr_excep_fatal = ptr_exception_record->ExceptionAddress;
 
         CONTEXT faulting_thread_context = { 0 };
         faulting_thread_context.ContextFlags = CONTEXT_ALL;

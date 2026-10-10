@@ -18,18 +18,22 @@ fn_s1_free g_fnptr_free_cb; // A pointer to a callback to invoke when unloading 
 HANDLE g_lock_cb;     // A event blocking access to the load/unload functions while callbacks are executing.
 HANDLE g_bridge_pipe; // A named pipe to communicate with Stage 0.
 
+/* [fkelava 11/10/26 01:03]
+ * https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-createnamedpipea
+ * Read this thoroughly. Comments throughout quote from this article.
+ */
+
 // Prepares for communication with Stage 0 through the debug pipe.
 BOOL s1_bridge_init() {
+
+    /* [fkelava 08/10/26 23:08]
+     * > If no instances of the specified named pipe exist, {...} returns immediately regardless of time-out.
+     * If the pipe doesn't exist, we can assume we're in --extdbg mode and the debug bridge should not be enabled.
+     */
     if (!WaitNamedPipeW(
         FH_DBG_PIPE_NAME,
         NMPWAIT_WAIT_FOREVER
     )) {
-        /* [fkelava 08/10/26 23:08]
-         * https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-waitnamedpipea#remarks
-         * > If no instances of the specified named pipe exist, {...} returns immediately regardless of time-out.
-         *
-         * If there is no such pipe, we can assume we're in --extdbg mode and the debug bridge should not be enabled.
-         */
         return TRUE;
     }
 
@@ -40,9 +44,14 @@ BOOL s1_bridge_init() {
         return FALSE;
     }
 
+    /* [fkelava 11/10/26 00:57]
+     * This is a duplex pipe. Therefore:
+     * > The client can specify GENERIC_READ or GENERIC_WRITE, or both,
+     * > when it connects to the pipe using the CreateFile function.
+     */
     g_bridge_pipe = CreateFileW(
         FH_DBG_PIPE_NAME,
-        GENERIC_WRITE,
+        GENERIC_READ | GENERIC_WRITE,
         0,
         nullptr,
         OPEN_EXISTING,
@@ -55,6 +64,10 @@ BOOL s1_bridge_init() {
         return FALSE;
     }
 
+    /* [fkelava 11/10/26 01:02]
+     * > The client side of a named pipe starts out in byte mode, even if the server side
+     * > is in message mode. To avoid problems receiving data, set the client side to message mode as well.
+     */
     DWORD pipe_mode = PIPE_READMODE_MESSAGE;
     if (!SetNamedPipeHandleState(
         g_bridge_pipe,
@@ -73,7 +86,7 @@ BOOL s1_bridge_init() {
     }
 
     // TODO: Amend to include actual messaging type.
-    DWORD          message_size = sizeof(LPVOID);
+    DWORD          message_size = sizeof(FH_DBG_COMM_MSG);
     unsigned char* message      = (unsigned char*) HeapAlloc(h_process_heap, HEAP_ZERO_MEMORY, message_size);
 
     if (message == nullptr) {
@@ -132,7 +145,7 @@ void s1_bridge_free(
 void s1_bridge_register_load_cb(
     fn_s1_load fnptr_cb // A pointer to the callback to invoke.
 ) {
-    // The user could be in --extdbg mode. Do not proceed.
+    // In --extdbg mode. Do not proceed.
     if (g_lock_cb == nullptr || g_lock_cb == INVALID_HANDLE_VALUE)
         return;
 
@@ -153,7 +166,7 @@ void s1_bridge_register_load_cb(
 void s1_bridge_register_free_cb(
     fn_s1_free fnptr_cb // A pointer to the callback to invoke.
 ) {
-    // The user could be in --extdbg mode. Do not proceed.
+    // In --extdbg mode. Do not proceed.
     if (g_lock_cb == nullptr || g_lock_cb == INVALID_HANDLE_VALUE)
         return;
 

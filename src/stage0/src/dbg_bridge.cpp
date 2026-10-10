@@ -14,7 +14,7 @@
 #include <fhstage1.h>
 
 HANDLE g_bridge_pipe = nullptr; // A named pipe to communicate with Stage 1.
-BOOL   g_bridge_init = FALSE;   // A flag marking pipe initialization as complete.
+BOOL   g_bridge_init = FALSE;   // Whether the pipe was initialized.
 
 // Communicates with Stage 1 using the debug pipe to obtain pointers to its functions.
 static DWORD WINAPI s0_dbg_bridge_proc(LPVOID lpvParam) {
@@ -29,9 +29,8 @@ static DWORD WINAPI s0_dbg_bridge_proc(LPVOID lpvParam) {
         return FALSE;
     }
 
-    // TODO: Amend to include actual messaging type
-    DWORD          message_size = sizeof(LPVOID);
-    unsigned char* message = (unsigned char*)HeapAlloc(h_process_heap, HEAP_ZERO_MEMORY, message_size);
+    DWORD          message_size = sizeof(FH_DBG_COMM_MSG);
+    unsigned char* message      = (unsigned char*) HeapAlloc(h_process_heap, HEAP_ZERO_MEMORY, message_size);
 
     if (message == nullptr) {
         fwprintf_s(stderr, L"[!] Failed to allocate memory for debug pipe message.\n");
@@ -71,7 +70,7 @@ BOOL s0_dbg_bridge_init() {
     g_bridge_init = TRUE;
     g_bridge_pipe = CreateNamedPipeW(
         FH_DBG_PIPE_NAME,
-        PIPE_ACCESS_INBOUND,
+        PIPE_ACCESS_DUPLEX,
         PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
         2,
         4096,

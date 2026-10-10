@@ -6,6 +6,7 @@
 #pragma once
 
 #define WIN32_LEAN_AND_MEAN // Exclude rarely-used stuff from Windows headers
+#define MAX_SYM_NAME 2000   // From <dbghelp.h>, to avoid including the whole header.
 
 // Win32
 #include <windows.h>
@@ -14,9 +15,6 @@
 
 // STL
 #include <vector>
-
-// From <dbghelp.h>, to avoid including the whole header.
-#define MAX_SYM_NAME 2000
 
 // Determines the type of a given stack frame.
 enum S0_FRAME_TYPE {
@@ -30,22 +28,17 @@ struct S0_FRAME_DATA {
     wchar_t       frame_name[MAX_SYM_NAME] = L"Unknown frame.\n";
 };
 
-// Prepares the necessary DLL paths for CLR debugging.
 BOOL s0_dbg_cor_init(
-    LPVOID ptr_coreclr, // The pointer to the image base of the `coreclr.dll` for this session.
-    LPWSTR path_coreclr // The full path to `coreclr.dll` for this session.
+    LPVOID ptr_coreclr,
+    LPWSTR path_coreclr
 );
 
-// Performs a managed stack walk, gathering any available symbols.
 HRESULT s0_dbg_cor_stack_walk(
-    HANDLE h_process, // A handle to the process the fault occurred in.
-    DWORD  id_thread  // The ID of the faulting thread in the process that encountered an exception.
+    HANDLE h_process,
+    DWORD  id_thread
 );
 
-// Kicks off a thread that communicates with the debug pipe in Stage 1.
 BOOL s0_dbg_bridge_init();
-
-// Debugger main loop.
 void s0_dbg_w32_main();
 
 // Global variables

@@ -18,14 +18,13 @@
 #include <fhstage1.h>
 
 // STL
-#include <string>
 #include <map>
 
 // Win32 debugging
 #include <dbghelp.h>
 
 std::map<LPVOID, DLL_LOAD_DATA> g_modules;         // A map containing information about loaded modules.
-std::map<std::wstring, bool>    g_checked_symbols; // Whether we performed symbol file lookup for a given module.
+std::map<LPVOID, bool>          g_checked_symbols; // Whether we performed symbol file lookup for a given module.
 
 // Processes a stack frame, returning its type and preparing its symbol, if native.
 static S0_FRAME_DATA s0_dbg_w32_stack_frame(
@@ -55,10 +54,10 @@ static S0_FRAME_DATA s0_dbg_w32_stack_frame(
         return frame;
     }
 
-    bool checked_symbols = g_checked_symbols.contains(module.ImageName);
+    LPVOID ptr_module_base = (LPVOID) module.BaseOfImage;
 
-    if (!g_checked_symbols.contains(module.ImageName)) {
-        g_checked_symbols[module.ImageName] = true;
+    if (!g_checked_symbols.contains(ptr_module_base)) {
+        g_checked_symbols[ptr_module_base] = true;
 
         SYMSRV_INDEX_INFOW symsrv_info = { 0 };
         symsrv_info.sizeofstruct = sizeof(SYMSRV_INDEX_INFOW);
@@ -571,7 +570,8 @@ static BOOL s0_dbg_w32_module_load(
         module_path
     );
 
-    g_modules[ptr_module_base] = load_data;
+    g_modules        [ptr_module_base] = load_data;
+    g_checked_symbols[ptr_module_base] = false;
 
     if (hr != S_OK) {
         fwprintf_s(stderr, L"[!] StringCchCopyW() failed with code 0x%X.\n", hr);
@@ -604,8 +604,9 @@ static BOOL s0_dbg_w32_module_unload(
         return FALSE;
     }
 
-    if (g_modules.erase(ptr_module_base) != 1) {
-        fwprintf_s(stderr, L"[!] Failed to erase module record when unloading.\n");
+    if (g_checked_symbols.erase(ptr_module_base) != 1 ||
+        g_modules        .erase(ptr_module_base) != 1) {
+        fwprintf_s(stderr, L"[!] Failed to erase module records during unload.\n");
         return FALSE;
     }
 

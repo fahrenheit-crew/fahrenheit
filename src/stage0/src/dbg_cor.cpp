@@ -14,9 +14,6 @@
 #include <fhstage0.h>
 #include <fhstage1.h>
 
-// From <dbghelp.h>, to avoid including the whole header.
-#define MAX_SYM_NAME 2000
-
 // .NET debugging
 #include <cor.h>
 #include <cordebug.h>

@@ -15,6 +15,9 @@
 // STL
 #include <vector>
 
+// From <dbghelp.h>, to avoid including the whole header.
+#define MAX_SYM_NAME 2000
+
 // Determines the type of a given stack frame.
 enum S0_FRAME_TYPE {
     FRAME_NATIVE  = 1,
@@ -23,8 +26,8 @@ enum S0_FRAME_TYPE {
 
 // Describes a unique stack frame.
 struct S0_FRAME_DATA {
-    S0_FRAME_TYPE frame_type       = FRAME_NATIVE;
-    wchar_t       frame_name[2000] = L"Unknown frame.\n";
+    S0_FRAME_TYPE frame_type               = FRAME_NATIVE;
+    wchar_t       frame_name[MAX_SYM_NAME] = L"Unknown frame.\n";
 };
 
 // Prepares the necessary DLL paths for CLR debugging.

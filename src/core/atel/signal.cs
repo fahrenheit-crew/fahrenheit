@@ -21,7 +21,7 @@ public unsafe struct AtelSignal {
     public ushort idx_work_src;
     public ushort idx_work_tgt;
 
-    public byte flags;
+    private byte _flags;
 
     public AtelSignalState state;
 
@@ -30,6 +30,6 @@ public unsafe struct AtelSignal {
 
     public ushort idx_work_ctrl;
 
-    public byte priority       { readonly get { return flags.get_bits(0, 4); } set { flags.set_bits(0, 4, value); } }
-    public byte process_status { readonly get { return flags.get_bits(4, 4); } set { flags.set_bits(4, 4, value); } }
+    public byte priority       { readonly get { return _flags.get_bits(0, 4); } set { _flags.set_bits(0, 4, value); } }
+    public byte process_status { readonly get { return _flags.get_bits(4, 4); } set { _flags.set_bits(4, 4, value); } }
 }

@@ -27,10 +27,12 @@ public partial class FhSettingsUiX : FhSettingsUi {
 
     private const float FADE_LENGTH = 0.35f;
 
-    public const float INDENT_MAX          = 10;
-    public const float INDENT_SIZE         = 40f;
-    public const float MAX_SETTING_SIZE    = 1100f;
-    public const float SETTING_MARGIN_SIZE = 22f;
+    public const int   INDENT_MAX  = 5;
+    public const float INDENT_SIZE = 40f;
+
+    public const float MAX_SETTING_SIZE     = 1100f;
+    public const float SETTING_MARGIN_SIZE  = 22f;
+    public const float CATEGORY_MARGIN_SIZE = 10f;
 
     // Display
     private readonly FadeHelper _fade;
@@ -70,12 +72,14 @@ public partial class FhSettingsUiX : FhSettingsUi {
 
     public readonly FhTexture _texture_help         = new(Path.Join(HIKU_D3D11_DIR, "0_0_512_448_0.dds.phyre"), FhTextureType.PHYRE);
     public readonly FhTexture _texture_bg           = new(Path.Join(MENU_D3D11_DIR, "ffx_bg.dds.phyre"),        FhTextureType.PHYRE);
+    public readonly FhTexture _texture_battle       = new(Path.Join(MENU_D3D11_DIR, "battle.dds.phyre"),        FhTextureType.PHYRE);
     public readonly FhTexture _texture_meswin       = new(Path.Join(MENU_D3D11_DIR, "meswin.dds.phyre"),        FhTextureType.PHYRE);
     public readonly FhTexture _texture_menu_new     = new(Path.Join(MENU_D3D11_DIR, "menu_new.dds.phyre"),      FhTextureType.PHYRE);
     public readonly FhTexture _texture_battle_kuang = new(Path.Join(MENU_D3D11_DIR, "battle_kuang.dds.phyre"),  FhTextureType.PHYRE);
 
     public readonly Vector2 _tex_help_size         = new(2048f, 2048f);
     public readonly Vector2 _tex_bg_size           = new(2048f, 1024f);
+    public readonly Vector2 _tex_battle_size       = new(1024f, 1024f);
     public readonly Vector2 _tex_meswin_size       = new(1024f, 1024f);
     public readonly Vector2 _tex_menu_new_size     = new(2048f, 1024f);
     public readonly Vector2 _tex_battle_kuang_size = new(2048f, 1024f);
@@ -83,6 +87,7 @@ public partial class FhSettingsUiX : FhSettingsUi {
     private FhTexture[] _textures => [
         _texture_help,
         _texture_bg,
+        _texture_battle,
         _texture_meswin,
         _texture_menu_new,
         _texture_battle_kuang,
@@ -95,6 +100,7 @@ public partial class FhSettingsUiX : FhSettingsUi {
 
         _fade = new(0, 0, FADE_LENGTH);
 
+        FhInternal.Settings.register_setting_renderer<FhSettingsCategory, FhSettingsUiX, Renderer_Category>();
         FhInternal.Settings.register_setting_renderer<FhSettingToggle, FhSettingsUiX, Renderer_Toggle>();
     }
 
@@ -276,7 +282,6 @@ public partial class FhSettingsUiX : FhSettingsUi {
 
         draw.AddImage(help, bg_suv.p0, bg_suv.p1, bg_tuv.p0, bg_tuv.p1);
 
-        //TODO: Add localization
         string text = _focus switch {
             UiFocus.MOD_LIST    => FhApi.Localization.localize($"{typeof(FhSettingsUiBase).FullName}.help.mod_list"),
             UiFocus.MODULE_LIST => FhApi.Localization.localize($"{typeof(FhSettingsUiBase).FullName}.help.module_list"),
@@ -443,24 +448,24 @@ public partial class FhSettingsUiX : FhSettingsUi {
         if (!FhInternal.Settings.get_setting_renderer<FhSettingsUiX>(setting, out FhSettingRenderer? renderer)) {
             Rect debug_bounds = new() {
                 pos  = new(610f, 202f + _setting_y),
-                size = new(MAX_SETTING_SIZE, 30f),
+                size = new(MAX_SETTING_SIZE, 40f),
             };
 
             FhApi.Gui.draw_text(
                 ImGui.GetBackgroundDrawList(),
                 debug_bounds.scale_to_aspect(aspect_helper).center,
                 $"Renderer not found for {setting.GetType()}.",
-                22f * font_scale,
+                30f * font_scale,
                 true,
-                new(Alignment.CENTER, Alignment.CENTER)
+                new(Alignment.BEGIN, Alignment.CENTER)
             );
 
-            _setting_y += 30f;
+            _setting_y += 40f;
 
             return;
         }
 
-        float indent_size = _indent_level * INDENT_SIZE;
+        float indent_size = int.Min(_indent_level, INDENT_MAX) * INDENT_SIZE;
 
         Vector2 pos = new(610f, 202f);
         pos.X += indent_size;
@@ -480,6 +485,18 @@ public partial class FhSettingsUiX : FhSettingsUi {
         renderer.render(this, setting, bounds);
 
         _setting_y += size.Y + SETTING_MARGIN_SIZE;
+
+        if (setting is FhSettingsCategory category && !category.collapsed) {
+            indent();
+
+            foreach (FhSetting inner_setting in category.settings) {
+                ui_setting(inner_setting);
+            }
+
+            unindent();
+
+            _setting_y += CATEGORY_MARGIN_SIZE;
+        }
     }
 
     private void ui_settings() {

@@ -16,7 +16,11 @@ public unsafe class FhModListDisplayModule : FhModule {
         public FhSettingToggle show_mod_count = new("mod_count", true);
 
         internal protected override IEnumerable<FhSetting> get() {
-            return [ show_mod_count ];
+            FhSettingsCategory main_category = new("main", [
+                show_mod_count,
+            ]);
+
+            return [ main_category ];
         }
     }
 

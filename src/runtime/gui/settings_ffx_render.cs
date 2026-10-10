@@ -16,12 +16,143 @@ public partial class FhSettingsUiX {
         : FhSettingRenderer<FhSettingsCategory, FhSettingsUiX> {
 
         internal protected override Vector2 get_size(FhSettingsUiX ui) {
-            //TODO: Implement size calculation
-            return new Vector2(0f, 0f);
+            return new Vector2(0f, 45f);
+        }
+
+        private GradientStep[] make_gradient(uint color) {
+            return [
+                new(0.0f,  color & 0x00FFFFFF),
+                new(0.05f, color),
+                new(0.3f,  color),
+                new(1.0f,  color & 0x00FFFFFF),
+            ];
         }
 
         internal protected override void render(FhSettingsUiX ui, FhSettingsCategory category, Rect max_bounds) {
-            //TODO: Implement rendering
+            if (!ui._texture_battle.try_use(out ImTextureRef battle, out _)) {
+                return;
+            }
+
+            ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
+
+            // Shadow
+            float shadow_height = 5f;
+            Rect shadow = max_bounds with {
+                pos  = max_bounds.pos  with { Y = max_bounds.bottom_left.Y - shadow_height },
+                size = max_bounds.size with { Y = shadow_height },
+            };
+
+            GradientStep[] shadow_steps = make_gradient(0x80000000);
+
+            FhApi.Gui.draw_rectangle_gradient(
+                draw,
+                shadow.scale_to_aspect(ui.aspect_helper),
+                GradientDirection.RIGHT,
+                shadow_steps
+            );
+
+            // Background
+            Rect bg_bounds = max_bounds;
+            bg_bounds.size.Y -= shadow_height;
+
+            GradientStep[] bg_steps = make_gradient(0xA070212A);
+
+            FhApi.Gui.draw_rectangle_gradient(
+                draw,
+                bg_bounds.scale_to_aspect(ui.aspect_helper),
+                GradientDirection.RIGHT,
+                bg_steps
+            );
+
+            // Separator
+            Rect sep_bounds = (bg_bounds with {
+                pos = bg_bounds.pos with {
+                    Y = bg_bounds.pos.Y + bg_bounds.size.Y - 2f,
+                },
+
+                size = bg_bounds.size with {
+                    Y = 1f,
+                },
+            }).scale_to_aspect(ui.aspect_helper, new(1f));
+
+            GradientStep[] sep_steps = make_gradient(0xFFCCCCDD);
+
+            FhApi.Gui.draw_rectangle_gradient(
+                draw,
+                sep_bounds,
+                GradientDirection.RIGHT,
+                sep_steps
+            );
+
+            // Arrow
+            Rect arrow_tuv = new Rect {
+                pos  = new(706f, 376f),
+                size = new(49f, 49f),
+            }.scale_raw(Vector2.One / ui._tex_battle_size);
+
+            // We do some shenanigans for the various corner accessors
+            // to work like we want them to
+            arrow_tuv.pos.Y  += arrow_tuv.size.Y;
+            arrow_tuv.size.Y *= -1f;
+
+            Rect arrow_bounds = new() {
+                pos = bg_bounds.left with {
+                    X = bg_bounds.left.X + 35f,
+                },
+                size = new(36f, 36f),
+            };
+
+            arrow_bounds.pos.Y -= arrow_bounds.size.Y / 2f;
+
+            Rect arrow_suv = arrow_bounds.scale_to_aspect(ui.aspect_helper);
+
+            if (category.collapsed) {
+                // Upside-right
+                draw.AddImageQuad(
+                    battle,
+
+                    arrow_suv.top_right,
+                    arrow_suv.bottom_right,
+                    arrow_suv.bottom_left,
+                    arrow_suv.top_left,
+
+                    arrow_tuv.top_left,
+                    arrow_tuv.top_right,
+                    arrow_tuv.bottom_right,
+                    arrow_tuv.bottom_left
+                );
+            }
+            else {
+                // Upside-down
+                draw.AddImageQuad(
+                    battle,
+
+                    arrow_suv.bottom_left,
+                    arrow_suv.bottom_right,
+                    arrow_suv.top_right,
+                    arrow_suv.top_left,
+
+                    arrow_tuv.top_left,
+                    arrow_tuv.top_right,
+                    arrow_tuv.bottom_right,
+                    arrow_tuv.bottom_left
+                );
+            }
+
+            // Name
+            float font_size = 36f * ui.font_scale;
+
+            Vector2 name_pos = arrow_bounds.right;
+            name_pos.X += 30f;
+
+            FhApi.Gui.draw_text(
+                draw,
+                name_pos * ui.aspect_scale,
+                category.name,
+                font_size,
+                true,
+                new(Alignment.BEGIN, Alignment.CENTER)
+            );
         }
 
         internal protected override void handle_input(FhSettingsUiX ui, FhSettingsCategory category) {

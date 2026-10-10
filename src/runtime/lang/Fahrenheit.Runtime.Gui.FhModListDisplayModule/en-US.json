@@ -1,4 +1,7 @@
 {
-  "mod_count.name": "Display mod count",
-  "mod_count.desc": "Whether the mod list should display the amount of mods loaded"
+  "main.name": "Category Example",
+  "main.desc": "An example of a category",
+
+  "main.main.mod_count.name": "Display mod count",
+  "main.main.mod_count.desc": "Whether the mod list should display the amount of mods loaded"
 }

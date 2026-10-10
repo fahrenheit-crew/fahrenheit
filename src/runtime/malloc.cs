@@ -8,12 +8,12 @@ namespace Fahrenheit.Runtime;
 /* [fkelava 06/08/26 14:02]
  * See generally issue #253.
  *
- * Before Oct 1st '26 update, the game shipped without the Large Address Aware (LAA) flag enabled.
+ * Before the Oct 1st '26 update, the game shipped without the Large Address Aware (LAA) flag enabled.
  * It reserves 37.5% of <2GB address space (0x3000_0000 bytes) for its primary memory pool.
  * This led to "green screens" in FMVs because they do not use the primary pool, and insufficient
  * contiguous free space remained under 2GB due to ASLR forcing DLLs to load at random high address.
  *
- * Though the game now has LAA flag, we still reduce primary pool size because it is empirically
+ * Though the game now has the LAA flag set, we still reduce primary pool size because it is empirically
  * shown to be oversized. The pool now begins at 0x800_0000 and expands in increments of 0x800_0000.
  */
 
@@ -90,7 +90,7 @@ public unsafe sealed class FhMallocModule : FhModule {
      * using the `op_*` system have a pointer tagging/truncation bug which makes them fail
      * to terminate properly when assigned an address over 0x7FFF_FFFF.
      *
-     * The Oct 1st, '26 update does not fix this bug. Caveat emptor.
+     * The Oct 1st '26 update does not fix this bug. Caveat emptor.
      */
 
     [UnmanagedCallConv(CallConvs = [ typeof(CallConvCdecl) ] )]

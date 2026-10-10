@@ -7,7 +7,7 @@ namespace Fahrenheit.Runtime;
 
 /* [fkelava 11/02/26 04:19]
  * One of the essential features of any mod framework is the ability to display custom UI
- * to the user. For this, we offer the Dear ImGui toolkit (https://github.com/ocornut/imgui),
+ * to the user. We offer the Dear ImGui toolkit (https://github.com/ocornut/imgui),
  * exposed through the Hexa.NET.ImGui bindings (https://github.com/HexaEngine/Hexa.NET.ImGui).
  *
  * On every frame presentation, a callback is invoked in every module that adds ImGui primitives

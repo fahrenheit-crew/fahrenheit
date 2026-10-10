@@ -5,23 +5,29 @@
 
 namespace Fahrenheit.Atel;
 
-[StructLayout(LayoutKind.Sequential, Pack = 1, Size = 0x4C)]
+[StructLayout(LayoutKind.Sequential, Size = 0x4C)]
 public unsafe struct AtelWorkThread {
-    public  InlineArray4<int>     script_offset_stack;
-    public  InlineArray4<short>   script_idx_stack;
-    public  byte*                 pc;
-    private byte                  __0x1C;
-    public  byte                  stack_depth;
-    private byte                  __0x1E;
-    public  byte                  wait_state;
-    public  int                   reg_x;
-    public  int                   reg_y;
-    public  float                 reg_a;
-    public  AtelWorkThreadStorage thread_local_storage;
-    public  ushort                ctrl_idx;
-    private ushort                _0x42;
-    public  void*                 motion;
-    public  void*                 rotation;
+    public InlineArray4<int>   script_offset_stack;
+    public InlineArray4<short> script_idx_stack;
+
+    public byte* pc;
+
+    private byte __0x1C;
+    public  byte stack_depth;
+    private byte __0x1E;
+    public  byte wait_state;
+
+    public int   reg_x;
+    public int   reg_y;
+    public float reg_a;
+
+    public AtelWorkThreadStorage thread_local_storage;
+
+    public  ushort ctrl_idx;
+    private ushort _0x42;
+
+    public void* motion;
+    public void* rotation;
 }
 
 [StructLayout(LayoutKind.Explicit, Pack = 1, Size = 0x14)]

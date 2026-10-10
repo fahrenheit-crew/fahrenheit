@@ -6,10 +6,7 @@
 namespace Fahrenheit.Runtime;
 
 /* [fkelava 11/02/26 04:19]
- * The game has two main file load paths. Most files are looked up by name, and their sizes are
- * checked dynamically. The EFL can replace these trivially.
- *
- * Assets from the original PS2 releases are instead loaded using PS2 'CD' I/O semantics, in which
+ * Some assets from the original PS2 release are loaded using special PS2 'CD' semantics, in which
  * files are addressed by a numeric ID which indexes into tables that describe the CD's layout and
  * file attributes such as their name, size, and sector location.
  *
@@ -18,12 +15,11 @@ namespace Fahrenheit.Runtime;
  * - ffx_ps2\ffx\proj\battle\jp\cddata\cdrom.fnd
  * - ffx_ps2\ffx\proj\prog\cdidx\jp\sizetbl.vita.bin
  *
- * When the game loads a PS2 asset, it will look up these fixed tables and allocate a buffer according
- * to the file's original size. The EFL will correctly intercept the file open call and replace the file,
- * but if it differs in size from the original, the game will crash.
+ * When the game loads such asset, it will allocate a buffer according to the file's size in these tables.
+ * The EFL will intercept and replace the file; if the size differs from the original, the game will crash.
  *
- * While users can create fixed-up size tables, that won't work if mods want to coexist.
- * This module bypasses the lookup, so the game properly falls through to disk I/O to query size.
+ * Manually fixed-up size tables are not acceptable if mods want to coexist.
+ * This module forces the game to query the size from disk, enabling proper co-existence.
  */
 
 [StructLayout(LayoutKind.Explicit, Size = 0x94)]

@@ -8,25 +8,13 @@ namespace Fahrenheit.Runtime;
 /* [fkelava 06/08/26 14:02]
  * See generally issue #253.
  *
- * The game has a long-standing issue with "green screens" in FMVs and other crashes.
- * The band-aid fix is applying the '4GB' patch. But _why_ does it happen? Can we provide a better fix?
+ * Before the Oct 1st '26 update, the game shipped without the Large Address Aware (LAA) flag enabled.
+ * It reserves 37.5% of <2GB address space (0x3000_0000 bytes) for its primary memory pool.
+ * This led to "green screens" in FMVs because they do not use the primary pool, and insufficient
+ * contiguous free space remained under 2GB due to ASLR forcing DLLs to load at random high address.
  *
- * The game reserves 37.5% of the default address space (0x3000_0000 bytes)
- * for its primary memory pool. It then commits things into it slowly over time.
- *
- * Reserved memory is considered used by the system regardless of how much of it is actually
- * _committed_. The problem is that the game does not service all memory requests from the pool.
- * For things like FMVs, there still has to be enough additional contiguous free memory to load them.
- *
- * This worked ten or so years ago when it was made, and it works on most other platforms
- * because the high reaches of the address space should be entirely empty.
- *
- * But in the decade since, ASLR started shipping on Windows, and is the default for anything
- * built today. The OS loads such DLLs at a random high address, breaking up the previously contiguous
- * free space into smaller chunks. No block large enough to fit an FMV remains.
- *
- * The true solution is to reserve less. By deferring the moment memory is considered 'used'
- * to the _actual point of usage_, the truth is revealed; there was never a shortage of memory.
+ * Though the game now has the LAA flag set, we still reduce primary pool size because it is empirically
+ * shown to be oversized. The pool now begins at 0x800_0000 and expands in increments of 0x800_0000.
  */
 
 /// <summary>
@@ -70,10 +58,9 @@ public unsafe sealed class FhMallocModule : FhModule {
         FhCall.FUN_005428a0_008771a0.fnptr!();
 
         /* [fkelava 06/08/26 23:51]
-         * Be VERY careful. The pool size can't be _too small_ because it's reused as the upper
-         * bound of any future allocation through the primary allocator. If that size is too small
-         * for whatever the game has in mind, the allocator will spiral out of control reserving
-         * {POOL_SIZE} in a loop until it exhausts the entire address space, killing the process.
+         * Be VERY careful. The pool size is also the upper bound of any future allocation
+         * through the primary allocator. If it is too small, the allocator will reserve {POOL_SIZE}
+         * in a loop until it exhausts the entire address space, killing the process.
          *
          * Maybe one day we'll fix that latent bug, but today ain't the one.
          */
@@ -99,12 +86,11 @@ public unsafe sealed class FhMallocModule : FhModule {
     }
 
     /* [fkelava 06/08/26 14:29]
-     * We previously experimented with allocating top-down. However, 'persistent' magic effects
-     * handled using the `op_*` system seem to exhibit some manner of pointer tagging/truncation bug
-     * which causes them to fail to terminate properly when assigned an address over 0x7FFF_FFFF.
+     * We previously tried allocating top-down. However, 'persistent' magic effects handled
+     * using the `op_*` system have a pointer tagging/truncation bug which makes them fail
+     * to terminate properly when assigned an address over 0x7FFF_FFFF.
      *
-     * This bug can occur regardless as long as the 4GB patch is applied, just less frequently.
-     * Therefore we must allocate bottom-up until the underlying bug has been resolved.
+     * The Oct 1st '26 update does not fix this bug. Caveat emptor.
      */
 
     [UnmanagedCallConv(CallConvs = [ typeof(CallConvCdecl) ] )]

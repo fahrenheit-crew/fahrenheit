@@ -6,13 +6,10 @@
 namespace Fahrenheit.Runtime;
 
 /* [fkelava 11/02/26 04:03]
- * By default, the game only probes its VBF data archives for files and fails if it cannot find them.
- * Repacking the archives is tiresome, so we want to permit direct loading of modded files from disk.
+ * The game typically loads all files from custom VBF archives, but it has, completely unused,
+ * full support for native file I/O. In Win32 parlance, a file can be backed by the VBF or a plain HANDLE.
  *
- * While the game never uses it, it has full support for native file I/O. On Windows, this manifests as HANDLEs.
- * Thus, at file load time, we can give the game a HANDLE to a file on disk, and it will do the book-keeping for us.
- *
- * As a bonus, we permit the user to load assets from the currently inactive game.
+ * As a bonus compared to the standalone EFL, we permit loading of assets from the currently inactive game.
  *
  * Some files load under slightly different rules and need different handling. See `cd.cs`.
  */

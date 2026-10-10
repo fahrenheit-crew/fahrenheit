@@ -168,22 +168,15 @@ public partial class FhSettingsUiX {
                 new(1.0f, 0x00000000),
             ];
 
-            Rect top_border = new() {
+            Rect top_border = new Rect {
                 pos  = bg_bounds.pos  with { Y = bg_bounds.top.Y + 1f },
                 size = bg_bounds.size with { Y = 1f },
-            };
+            }.scale_to_aspect(ui.aspect_helper, new(1f));
 
-            Rect bottom_border = new() {
+            Rect bottom_border = new Rect {
                 pos  = bg_bounds.pos  with { Y = bg_bounds.bottom.Y - 1f },
                 size = bg_bounds.size with { Y = 1f },
-            };
-
-            top_border    = top_border   .scale_to_aspect(ui.aspect_helper);
-            bottom_border = bottom_border.scale_to_aspect(ui.aspect_helper);
-
-            // Ensure that the border size doesn't fall to 0px after scaling
-            top_border.size.Y    = float.Max(top_border.size.Y,    1f);
-            bottom_border.size.Y = float.Max(bottom_border.size.Y, 1f);
+            }.scale_to_aspect(ui.aspect_helper, new(1f));
 
             FhApi.Gui.draw_rectangle_gradient(
                 draw,

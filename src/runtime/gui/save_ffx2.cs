@@ -467,16 +467,13 @@ public sealed class FhSaveUiX2 : FhSaveUi {
         }
     }
 
-    private bool mouse_hovered(Rect rect) {
+    private bool mouse_hovered(Rect rect, bool require_movement = true) {
         return should_handle_input
-            && !ImGui.GetIO().WantCaptureMouse
-            && ImGui.GetIO().MouseDelta.LengthSquared() > 0
-            && FhApi.Gui.mouse_hovering(rect);
+            && FhApi.Gui.mouse_hovering(rect, require_movement);
     }
 
     private bool mouse_clicked(Rect rect, ImGuiMouseButton button = ImGuiMouseButton.Left, bool repeat = false) {
         return should_handle_input
-            && !ImGui.GetIO().WantCaptureMouse
             && FhApi.Gui.mouse_clicked(rect, button, repeat);
     }
 

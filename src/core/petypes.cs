@@ -4,17 +4,15 @@
 // It is licensed to you under the GNU Lesser General Public License, version 3.0 or later. See COPYING, COPYING.LESSER.
 
 /* [fkelava 23/03/26 00:41]
- * The game's remasters all utilize the cross-platform Phyre game engine. All assets have been processed
- * in some way, resulting in ``*.phyre`` files which are not inspectable or loadable using standard tooling.
+ * The game's remasters all utilize the cross-platform Phyre game engine.
+ * All modern assets have been pre-processed into platform-specific ``*.phyre`` files.
  *
- * Fahrenheit allows custom textures to be used in ImGui flows. It would be desirable to use game assets as well,
- * but we can't directly load Phyre-processed assets. While tools such as Roelin's Asset Converter
- * (https://www.nexusmods.com/finalfantasy12/mods/288) can 'un-Phyre' files, it is ABSOLUTELY PROHIBITED
- * to distribute them with mods. However, we _can_ ask the game to load them for us at runtime! These types exist to enable this.
+ * We would like to use game assets in mods and ImGui, but it is strictly prohibited to distribute
+ * them with mods. To avoid the need for this, these types enable us to load them at runtime through the game.
  *
- * Phyre types are generally self-describing. That is to say, Phyre classes have 'class descriptors', which
- * contain information about the type such as its name and layout. Their constructors, destructors, and vftables
- * all remain in the executable's RTTI metadata, and that information was used to construct these interop types.
+ * Phyre types are self-describing. That is to say, Phyre classes have 'class descriptors', which
+ * provide their names and layouts. Their constructors, destructors, and vftables remain in the
+ * executable's RTTI metadata, and that information was used to construct these types.
  *
  * Once the basic set of types was reversed sufficiently, the 'global' Phyre namespace was queried for all of its class
  * descriptors, and the information they yielded was used to reconstruct the rest of the type graph. See `petypes.g.cs`.
@@ -396,7 +394,7 @@ internal struct PNamedSemanticDescriptor {
     public PSimpleDoubleListElement<PUnknown> base_PSimpleDoubleListElement;
 }
 
-/// <summary>A stub that corresponds to no Phyre type.</summary> 
+/// <summary>A stub that corresponds to no Phyre type.</summary>
 /// <remarks>Used when a target Phyre type is not known, as a placeholder.</remarks>
 [StructLayout(LayoutKind.Sequential, Size = 0x80, Pack = 4)]
 public struct PUnknown {

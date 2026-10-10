@@ -102,7 +102,9 @@
   <ItemGroup>
     <ClInclude Include="inc\fhstage0.h" />
     <ClInclude Include="inc\resource.h" />
-    <ClCompile Include="src\dbg.cpp" />
+    <ClCompile Include="src\dbg_w32.cpp" />
+    <ClCompile Include="src\dbg_bridge.cpp" />
+    <ClCompile Include="src\dbg_cor.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ResourceCompile Include="inc\fhstage0.rc" />
   </ItemGroup>

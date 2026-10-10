@@ -22,7 +22,11 @@
 // IAT patching
 #include <detours/detours.h>
 
-void s0_dbg_loop(); // Forward declaration of debugger loop function.
+wchar_t g_target     [MAX_PATH] = { 0 }; // The path to the target binary.
+wchar_t g_args_target[1024]     = { 0 }; // The command-line arguments to pass to the target.
+wchar_t g_args_self  [1024]     = { 0 }; // The command-line arguments to Stage 0.
+wchar_t g_dir_target [MAX_PATH] = { 0 }; // The directory the target binary is in.
+char    g_dir_self   [MAX_PATH] = { 0 }; // The directory `fhstage0` is in.
 
 // Separates Stage0 args from those which will be passed through to the target.
 static HRESULT s0_main_process_args(
@@ -88,7 +92,7 @@ static HRESULT s0_main_process_args(
 }
 
 // Gets the directory of the target binary. This will be used as its working directory.
-static HRESULT stage0_main_dir_target() {
+static HRESULT s0_main_get_dir_target() {
     HRESULT hr = StringCchCopyW(g_dir_target, MAX_PATH, g_target);
     if (hr != S_OK) {
         fwprintf_s(stderr, L"[!] StringCchCopyW(%s, %s) failed.\n", g_dir_target, g_target);
@@ -110,7 +114,7 @@ static HRESULT stage0_main_dir_target() {
  */
 
 // Gets the directory `fhstage0` was started in. This will be used to locate dependencies.
-static HRESULT s0_main_dir_self() {
+static HRESULT s0_main_get_dir_self() {
     size_t sz_self = sizeof(g_dir_self) / sizeof(char);
 
     DWORD rc = GetCurrentDirectoryA(sz_self, g_dir_self);
@@ -223,11 +227,11 @@ int __cdecl wmain(
     if (hr != S_OK)
         return hr;
 
-    hr = stage0_main_dir_target();
+    hr = s0_main_get_dir_target();
     if (hr != S_OK)
         return hr;
 
-    hr = s0_main_dir_self();
+    hr = s0_main_get_dir_self();
     if (hr != S_OK)
         return hr;
 
@@ -281,16 +285,27 @@ int __cdecl wmain(
     char path_minhook[MAX_PATH] = { 0 };
 
     hr = s0_main_get_dependency_path(path_stage1, "fhstage1.dll");
-    if (hr != S_OK)
+    if (hr != S_OK) {
+        TerminateProcess(pi.hProcess, hr);
         return hr;
+    }
 
     hr = s0_main_get_dependency_path(path_nethost, "nethost.dll");
-    if (hr != S_OK)
+    if (hr != S_OK) {
+        TerminateProcess(pi.hProcess, hr);
         return hr;
+    }
 
-    hr = s0_main_get_dependency_path(path_minhook, MINHOOK_DLL);
-    if (hr != S_OK)
+#ifdef _DEBUG
+    hr = s0_main_get_dependency_path(path_minhook, "minhook.x32d.dll");
+#else
+    hr = s0_main_get_dependency_path(path_minhook, "minhook.x32.dll");
+#endif
+
+    if (hr != S_OK) {
+        TerminateProcess(pi.hProcess, hr);
         return hr;
+    }
 
     LPCSTR deps[3] = {
         path_nethost,
@@ -320,7 +335,7 @@ int __cdecl wmain(
         WaitForSingleObject(pi.hProcess, INFINITE);
     }
     else {
-        s0_dbg_loop();
+        s0_dbg_w32_main();
     }
 
     DWORD exit_code;

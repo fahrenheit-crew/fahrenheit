@@ -18,7 +18,13 @@
     <ClCompile Include="src\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\dbg.cpp">
+    <ClCompile Include="src\dbg_w32.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\dbg_bridge.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\dbg_cor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

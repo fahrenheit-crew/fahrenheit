@@ -12,22 +12,40 @@
 #include <strsafe.h>
 #include <pathcch.h>
 
-#ifdef _DEBUG
-constexpr auto MINHOOK_DLL = "minhook.x32d.dll";
-#else
-constexpr auto MINHOOK_DLL = "minhook.x32.dll";
-#endif
+// STL
+#include <vector>
 
-inline wchar_t g_path_dir_cache[MAX_PATH] = { 0 }; // The full path to the 'cache' directory, used to store symbols.
-inline wchar_t g_path_dir_crash[MAX_PATH] = { 0 }; // The full path to the 'crash' directory, used to store core dumps.
+// Determines the type of a given stack frame.
+enum S0_FRAME_TYPE {
+    FRAME_NATIVE  = 1,
+    FRAME_MANAGED = 2
+};
 
-inline wchar_t g_path_coreclr     [MAX_PATH] = { 0 }; // The full path to the loaded CoreCLR.
-inline wchar_t g_path_mscordbi    [MAX_PATH] = { 0 }; // The full path to the `mscordbi` module for the given CoreCLR.
-inline wchar_t g_path_mscordacwks [MAX_PATH] = { 0 }; // The full path to the `mscordacwks` module for the given CoreCLR.
-inline wchar_t g_path_mscordaccore[MAX_PATH] = { 0 }; // The full path to the `mscordaccore` module for the given CoreCLR.
+// Describes a unique stack frame.
+struct S0_FRAME_DATA {
+    S0_FRAME_TYPE frame_type       = FRAME_NATIVE;
+    wchar_t       frame_name[2000] = L"Unknown frame.\n";
+};
 
-inline wchar_t g_target     [MAX_PATH] = { 0 }; // The path to the target binary.
-inline wchar_t g_args_target[1024]     = { 0 }; // The command-line arguments to pass to the target.
-inline wchar_t g_args_self  [1024]     = { 0 }; // The command-line arguments to Stage 0.
-inline wchar_t g_dir_target [MAX_PATH] = { 0 }; // The directory the target binary is in.
-inline char    g_dir_self   [MAX_PATH] = { 0 }; // The directory `fhstage0` is in.
+// Prepares the necessary DLL paths for CLR debugging.
+BOOL s0_dbg_cor_init(
+    LPVOID ptr_coreclr, // The pointer to the image base of the `coreclr.dll` for this session.
+    LPWSTR path_coreclr // The full path to `coreclr.dll` for this session.
+);
+
+// Performs a managed stack walk, gathering any available symbols.
+HRESULT s0_dbg_cor_stack_walk(
+    HANDLE h_process, // A handle to the process the fault occurred in.
+    DWORD  id_thread  // The ID of the faulting thread in the process that encountered an exception.
+);
+
+// Kicks off a thread that communicates with the debug pipe in Stage 1.
+BOOL s0_dbg_bridge_init();
+
+// Debugger main loop.
+void s0_dbg_w32_main();
+
+// Global variables
+inline wchar_t                    g_path_dir_cache[MAX_PATH] = { 0 }; // The full path to the 'cache' directory, used to store symbols.
+inline wchar_t                    g_path_dir_crash[MAX_PATH] = { 0 }; // The full path to the 'crash' directory, used to store core dumps.
+inline std::vector<S0_FRAME_DATA> g_frames;                           // The frames on the stack at the time of exception.

@@ -65,15 +65,15 @@ public readonly ref struct FhMethodLocation {
     private readonly nint _ptr_target;
 
     unsafe static FhMethodLocation() {
-        FhPInvoke.s1_bridge_register_load_cb(&s1_load);
-        FhPInvoke.s1_bridge_register_free_cb(&s1_free);
+        FhPInvoke.s1_bridge_set_load_cb  (&s1_load);
+        FhPInvoke.s1_bridge_set_unload_cb(&s1_unload);
     }
 
     [UnmanagedCallersOnly(CallConvs = [ typeof(CallConvStdcall) ] )]
-    private unsafe static void s1_load(FhPInvoke.DLL_LOAD_DATA* ptr_load_data) { }
+    private unsafe static void s1_load(FhPInvoke.DBG_MODULE_LOAD* ptr_data_load) { }
 
     [UnmanagedCallersOnly(CallConvs = [ typeof(CallConvStdcall) ] )]
-    private unsafe static void s1_free(nint ptr_dll_base) { }
+    private unsafe static void s1_unload(FhPInvoke.DBG_MODULE_UNLOAD* ptr_data_unload) { }
 
     /// <summary>
     ///     Use this constructor for functions which are analogous between FF X and X-2.

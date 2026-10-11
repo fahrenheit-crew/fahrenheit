@@ -15,7 +15,6 @@
 */
 
 #include <fhstage0.h>
-#include <fhstage1.h>
 
 // STL
 #include <map>
@@ -23,9 +22,9 @@
 // Win32 debugging
 #include <dbghelp.h>
 
-std::map<LPVOID, DLL_LOAD_DATA> g_modules;          // A map containing information about loaded modules.
-std::map<LPVOID, bool>          g_checked_symbols;  // Whether we performed symbol file lookup for a given module.
-LPVOID                          g_addr_excep_fatal; // The originating address of the last fatal/noncontinuable exception.
+std::map<LPVOID, FH_DBG_MOD_LOAD> g_modules;          // A map containing information about loaded modules.
+std::map<LPVOID, bool>            g_checked_symbols;  // Whether we performed symbol file lookup for a given module.
+LPVOID                            g_addr_excep_fatal; // The originating address of the last fatal/noncontinuable exception.
 
 // Processes a stack frame, returning its type and preparing its symbol, if native.
 static S0_FRAME_DATA s0_dbg_w32_stack_frame(
@@ -562,18 +561,20 @@ static BOOL s0_dbg_w32_module_load(
         return FALSE;
     }
 
-    DLL_LOAD_DATA load_data = { 0 };
-    load_data.dll_base = ptr_module_base;
-    load_data.dll_size = module_size;
+    FH_DBG_MOD_LOAD load_data = { 0 };
+    load_data.module_base = ptr_module_base;
+    load_data.module_size = module_size;
 
     HRESULT hr = StringCchCopyW(
-        load_data.dll_name,
+        load_data.module_name,
         MAX_PATH,
         module_path
     );
 
     g_modules        [ptr_module_base] = load_data;
     g_checked_symbols[ptr_module_base] = false;
+
+    s0_dbg_bridge_send(load_data);
 
     if (hr != S_OK) {
         fwprintf_s(stderr, L"[!] StringCchCopyW() failed with code 0x%X.\n", hr);
@@ -598,6 +599,11 @@ static BOOL s0_dbg_w32_module_unload(
     HANDLE h_process,      // The handle of the process the module is being unloaded from.
     LPVOID ptr_module_base // A pointer to the base address of the module itself.
 ) {
+    FH_DBG_MOD_UNLOAD data_unload = { };
+    data_unload.module_base = ptr_module_base;
+
+    s0_dbg_bridge_send(data_unload);
+
     if (!SymUnloadModule64(
         h_process,
         (DWORD64) ptr_module_base

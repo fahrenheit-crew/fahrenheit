@@ -16,6 +16,9 @@
 // STL
 #include <vector>
 
+// Stage 1 Debug Bridge defs
+#include <fhstage1.h>
+
 // Determines the type of a given stack frame.
 enum S0_FRAME_TYPE {
     FRAME_NATIVE  = 1,
@@ -39,6 +42,9 @@ HRESULT s0_dbg_cor_stack_walk(
 );
 
 BOOL s0_dbg_bridge_init();
+void s0_dbg_bridge_send(FH_DBG_MOD_LOAD   mod_load);
+void s0_dbg_bridge_send(FH_DBG_MOD_UNLOAD mod_unload);
+
 void s0_dbg_w32_main();
 
 // Global variables

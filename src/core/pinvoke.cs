@@ -11,7 +11,7 @@ namespace Fahrenheit;
 internal static unsafe partial class FhPInvoke {
 
     [StructLayout(LayoutKind.Sequential)]
-    internal readonly struct DLL_LOAD_DATA {
+    internal readonly struct DBG_MODULE_LOAD {
         [InlineArray(260)]
         internal struct DllName {
             private char _c;
@@ -22,11 +22,16 @@ internal static unsafe partial class FhPInvoke {
         public readonly DllName dll_name;
     }
 
-    [LibraryImport("fhstage1.dll", EntryPoint = "s1_bridge_register_load_cb")]
-    internal static partial void s1_bridge_register_load_cb(delegate* unmanaged[Stdcall]<DLL_LOAD_DATA*, void> fnptr_cb);
+    [StructLayout(LayoutKind.Sequential)]
+    internal readonly struct DBG_MODULE_UNLOAD {
+        public readonly nint dll_base;
+    }
 
-    [LibraryImport("fhstage1.dll", EntryPoint = "s1_bridge_register_free_cb")]
-    internal static partial void s1_bridge_register_free_cb(delegate* unmanaged[Stdcall]<nint,           void> fnptr_cb);
+    [LibraryImport("fhstage1.dll", EntryPoint = "s1_bridge_set_load_cb")]
+    internal static partial void s1_bridge_set_load_cb  (delegate* unmanaged[Stdcall]<DBG_MODULE_LOAD*,   void> fnptr_cb);
+
+    [LibraryImport("fhstage1.dll", EntryPoint = "s1_bridge_set_unload_cb")]
+    internal static partial void s1_bridge_set_unload_cb(delegate* unmanaged[Stdcall]<DBG_MODULE_UNLOAD*, void> fnptr_cb);
 
     /* [fkelava 07/05/26 17:10]
      * https://github.com/TsudaKageyu/minhook/blob/master/include/MinHook.h

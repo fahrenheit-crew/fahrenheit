@@ -12,7 +12,6 @@
  */
 
 #include <fhstage0.h>
-#include <fhstage1.h>
 
 // .NET debugging
 #include <cor.h>

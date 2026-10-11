@@ -9,16 +9,90 @@
 #include <windows.h>
 #include <strsafe.h>
 
+// STL
+#include <queue>
+
 // This file implements the Stage 1 Debug Bridge.
 #include <fhstage1.h>
 
-fn_s1_load g_fnptr_load_cb; // A pointer to a callback to invoke when loading a DLL.
-fn_s1_free g_fnptr_free_cb; // A pointer to a callback to invoke when unloading a DLL.
+fn_s1_load   g_fnptr_load_cb;   // A pointer to a callback to invoke when loading a DLL.
+fn_s1_unload g_fnptr_unload_cb; // A pointer to a callback to invoke when unloading a DLL.
 
-HANDLE g_lock_cb;     // An event blocking access to the load/unload functions while callbacks are executing.
 HANDLE g_bridge_pipe; // A named pipe to communicate with Stage 0.
 
-FH_DBG_COMM_MSG g_bridge_msg;
+std::queue<FH_DBG_MSG> g_msgs;
+
+HANDLE g_lock_cb; // Serializes access to the callback pointers.
+
+// Drains the queue of as-yet unprocessed messages.
+static void s1_bridge_drain_queue() {
+    /* [fkelava 11/10/26 21:45]
+     * `g_lock_cb` must be held here.
+     */
+    if (g_fnptr_load_cb == nullptr || g_fnptr_unload_cb == nullptr)
+        return;
+
+    while (!g_msgs.empty()) {
+        FH_DBG_MSG msg = g_msgs.front();
+
+        switch (msg.type) {
+            case MSG_LOAD: {
+                g_fnptr_load_cb  (&msg.data.mod_load);
+                break;
+            }
+            case MSG_UNLOAD: {
+                g_fnptr_unload_cb(&msg.data.mod_unload);
+                break;
+            }
+        }
+
+        g_msgs.pop();
+    }
+}
+
+// Sets the function to be invoked when a library is loaded.
+void s1_bridge_set_load_cb(
+    fn_s1_load fnptr_cb // A pointer to the callback to invoke.
+) {
+    if (g_lock_cb == nullptr || g_lock_cb == INVALID_HANDLE_VALUE) {
+        fwprintf_s(stderr, L"[!] Load callbacks do not execute in --extdbg mode.\n");
+        return;
+    }
+
+    if (WaitForSingleObject(g_lock_cb, INFINITE) != WAIT_OBJECT_0) {
+        fwprintf_s(stderr, L"[!] WaitForSingleObject failed with code 0x%X.\n", GetLastError());
+        return;
+    }
+
+    g_fnptr_load_cb = fnptr_cb;
+
+    if (!SetEvent(g_lock_cb)) {
+        fwprintf_s(stderr, L"SetEvent() failed with code 0x%X - callback aborted.\n", GetLastError());
+        return;
+    }
+}
+
+// Sets the function to be invoked when a library is freed.
+void s1_bridge_set_unload_cb(
+    fn_s1_unload fnptr_cb // A pointer to the callback to invoke.
+) {
+    if (g_lock_cb == nullptr || g_lock_cb == INVALID_HANDLE_VALUE) {
+        fwprintf_s(stderr, L"[!] Unload callbacks do not execute in --extdbg mode.\n");
+        return;
+    }
+
+    if (WaitForSingleObject(g_lock_cb, INFINITE) != WAIT_OBJECT_0) {
+        fwprintf_s(stderr, L"[!] WaitForSingleObject failed with code 0x%X.\n", GetLastError());
+        return;
+    }
+
+    g_fnptr_unload_cb = fnptr_cb;
+
+    if (!SetEvent(g_lock_cb)) {
+        fwprintf_s(stderr, L"SetEvent() failed with code 0x%X - callback aborted.\n", GetLastError());
+        return;
+    }
+}
 
 /* [fkelava 11/10/26 01:03]
  * https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-createnamedpipea
@@ -34,12 +108,13 @@ static DWORD WINAPI s1_dbg_bridge_proc(LPVOID lpvParam) {
          * > When the pipe handle is specified in {...} ReadFile {...} the operations are not
          * > completed until there is data to read, all data is written, or a client is connected.
          */
+        FH_DBG_MSG msg        = { };
+        DWORD      bytes_read = 0;
 
-        DWORD bytes_read = 0;
         if (!ReadFile(
             g_bridge_pipe,
-            &g_bridge_msg,
-            sizeof(g_bridge_msg),
+            &msg,
+            sizeof(FH_DBG_MSG),
             &bytes_read,
             NULL
         )) {
@@ -47,7 +122,19 @@ static DWORD WINAPI s1_dbg_bridge_proc(LPVOID lpvParam) {
             break;
         }
 
-        // TODO: Switch on message type and do shit
+        g_msgs.emplace(msg);
+
+        if (WaitForSingleObject(g_lock_cb, INFINITE) != WAIT_OBJECT_0) {
+            fwprintf_s(stderr, L"[!] Debug pipe client aborting. WaitForSingleObject failed with code 0x%X.\n", GetLastError());
+            break;
+        }
+
+        s1_bridge_drain_queue();
+
+        if (!SetEvent(g_lock_cb)) {
+            fwprintf_s(stderr, L"[!] Debug pipe client aborting. SetEvent failed with code 0x%X.\n", GetLastError());
+            break;
+        }
     }
 
     if (!CloseHandle(g_bridge_pipe)) {
@@ -60,7 +147,6 @@ static DWORD WINAPI s1_dbg_bridge_proc(LPVOID lpvParam) {
 
 // Prepares for communication with Stage 0 through the debug pipe.
 BOOL s1_bridge_init() {
-
     /* [fkelava 08/10/26 23:08]
      * > If no instances of the specified named pipe exist, {...} returns immediately regardless of time-out.
      * If the pipe doesn't exist, we can assume we're in --extdbg mode and the debug bridge should not be enabled.
@@ -72,7 +158,7 @@ BOOL s1_bridge_init() {
         return TRUE;
     }
 
-    g_lock_cb = CreateEventW(NULL, TRUE, TRUE, NULL);
+    g_lock_cb = CreateEventW(NULL, FALSE, TRUE, NULL);
 
     if (g_lock_cb == nullptr) {
         fwprintf_s(stderr, L"[!] CreateEventW() failed with code 0x%X.\n", GetLastError());
@@ -136,74 +222,4 @@ BOOL s1_bridge_init() {
     }
 
     return TRUE;
-}
-
-// Invoked in response to a Stage 0 module load message.
-void s1_bridge_load(
-    DLL_LOAD_DATA* ptr_load_data // A pointer to a structure describing the loaded module.
-) {
-    if (WaitForSingleObject(g_lock_cb, INFINITE) != WAIT_OBJECT_0) {
-        fwprintf_s(stderr, L"[!] WaitForSingleObject failed with code 0x%X - load message dropped.\n", GetLastError());
-        return;
-    }
-
-    if (g_fnptr_load_cb != nullptr) {
-        g_fnptr_load_cb(ptr_load_data);
-    }
-}
-
-// Invoked in response to a Stage 0 module unload message.
-void s1_bridge_free(
-    void* ptr_dll_base // The base address of the module being unloaded.
-) {
-    if (WaitForSingleObject(g_lock_cb, INFINITE) != WAIT_OBJECT_0) {
-        fwprintf_s(stderr, L"[!] WaitForSingleObject failed with code 0x%X - free message dropped.\n", GetLastError());
-        return;
-    }
-
-    if (g_fnptr_free_cb != nullptr) {
-        g_fnptr_free_cb(ptr_dll_base);
-    }
-}
-
-// Registers a function to be invoked when a library is loaded.
-void s1_bridge_register_load_cb(
-    fn_s1_load fnptr_cb // A pointer to the callback to invoke.
-) {
-    // In --extdbg mode. Do not proceed.
-    if (g_lock_cb == nullptr || g_lock_cb == INVALID_HANDLE_VALUE)
-        return;
-
-    if (!ResetEvent(g_lock_cb)) {
-        fwprintf_s(stderr, L"ResetEvent() failed with code 0x%X - callback aborted.\n", GetLastError());
-        return;
-    }
-
-    g_fnptr_load_cb = fnptr_cb;
-
-    if (!SetEvent(g_lock_cb)) {
-        fwprintf_s(stderr, L"SetEvent() failed with code 0x%X - callback aborted.\n", GetLastError());
-        return;
-    }
-}
-
-// Registers a function to be invoked when a library is freed.
-void s1_bridge_register_free_cb(
-    fn_s1_free fnptr_cb // A pointer to the callback to invoke.
-) {
-    // In --extdbg mode. Do not proceed.
-    if (g_lock_cb == nullptr || g_lock_cb == INVALID_HANDLE_VALUE)
-        return;
-
-    if (!ResetEvent(g_lock_cb)) {
-        fwprintf_s(stderr, L"ResetEvent() failed with code 0x%X - callback aborted.\n", GetLastError());
-        return;
-    }
-
-    g_fnptr_free_cb = fnptr_cb;
-
-    if (!SetEvent(g_lock_cb)) {
-        fwprintf_s(stderr, L"SetEvent() failed with code 0x%X - callback aborted.\n", GetLastError());
-        return;
-    }
 }

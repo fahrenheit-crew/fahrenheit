@@ -11,13 +11,38 @@
  */
 
 #include <fhstage0.h>
-#include <fhstage1.h>
+
+// STL
+#include <queue>
 
 HANDLE g_bridge_pipe = nullptr; // A named pipe to communicate with Stage 1.
 BOOL   g_bridge_init = FALSE;   // Whether the pipe was initialized.
 
-FH_DBG_COMM_MSG g_bridge_msg;
-HANDLE          g_bridge_lock;
+std::queue<FH_DBG_MSG> g_msgs;
+
+HANDLE g_lock_send = nullptr; // Serializes message sending.
+
+// Drains the pending message queue.
+static BOOL s0_dbg_bridge_drain_queue() {
+    while (!g_msgs.empty()) {
+        FH_DBG_MSG msg           = g_msgs.front();
+        DWORD      bytes_written = 0;
+
+        if (!WriteFile(
+            g_bridge_pipe,
+            &msg,
+            sizeof(FH_DBG_MSG),
+            &bytes_written,
+            NULL
+        )) {
+            return FALSE;
+        }
+
+        g_msgs.pop();
+    }
+
+    return TRUE;
+}
 
 // Communicates with Stage 1 using the debug pipe to obtain pointers to its functions.
 static DWORD WINAPI s0_dbg_bridge_proc(LPVOID lpvParam) {
@@ -26,43 +51,27 @@ static DWORD WINAPI s0_dbg_bridge_proc(LPVOID lpvParam) {
         return FALSE;
     }
 
-    g_bridge_lock = CreateEventW(NULL, TRUE, FALSE, NULL);
-
-    if (g_bridge_lock == nullptr) {
-        fwprintf_s(stderr, L"[!] CreateEventW() failed with code 0x%X.\n", GetLastError());
-        return FALSE;
-    }
-
     while (true) {
-        if (WaitForSingleObject(g_bridge_lock, INFINITE) != WAIT_OBJECT_0) {
+        /* [fkelava 11/10/26 17:01]
+         * https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-createeventw
+         * > {...} system automatically resets the event state to nonsignaled after a single waiting thread has been released.
+         */
+        if (WaitForSingleObject(g_lock_send, INFINITE) != WAIT_OBJECT_0) {
             fwprintf_s(stderr, L"[!] Debug pipe server aborting. WaitForSingleObject failed with code 0x%X.\n", GetLastError());
             break;
         }
 
-        DWORD bytes_written = 0;
-        if (!WriteFile(
-            g_bridge_pipe,
-            &g_bridge_msg,
-            sizeof(g_bridge_msg),
-            &bytes_written,
-            NULL
-        )) {
+        if (!s0_dbg_bridge_drain_queue()) {
             fwprintf_s(stderr, L"[!] Debug pipe server aborting. WriteFile failed with code 0x%X.\n", GetLastError());
-            break;
-        }
-
-        if (!ResetEvent(g_bridge_lock)) {
-            fwprintf_s(stderr, L"[!] Debug pipe server aborting. ResetEvent failed with code 0x%X.\n", GetLastError());
             break;
         }
     }
 
     if (!CloseHandle(g_bridge_pipe)) {
-        fwprintf_s(stderr, L"[!] Failed to close debug pipe with code 0x%X.\n", GetLastError());
-        return FALSE;
+        fwprintf_s(stderr, L"[!] Failed to close debug pipe client handle with code 0x%X.\n", GetLastError());
     }
 
-    return TRUE;
+    return FALSE;
 }
 
 // Kicks off a thread that communicates with the debug pipe in Stage 1.
@@ -84,6 +93,13 @@ BOOL s0_dbg_bridge_init() {
 
     if (g_bridge_pipe == nullptr || g_bridge_pipe == INVALID_HANDLE_VALUE) {
         fwprintf_s(stderr, L"[!] Failed to create debug pipe.\n");
+        return FALSE;
+    }
+
+    g_lock_send = CreateEventW(NULL, FALSE, FALSE, NULL);
+
+    if (g_lock_send == nullptr || g_lock_send == INVALID_HANDLE_VALUE) {
+        fwprintf_s(stderr, L"[!] CreateEventW() failed with code 0x%X.\n", GetLastError());
         return FALSE;
     }
 
@@ -109,9 +125,47 @@ BOOL s0_dbg_bridge_init() {
     }
 
     if (!CloseHandle(h_thread)) {
-        fwprintf_s(stderr, L"[!] Failed to close debug pipe thread with code 0x%X.\n", GetLastError());
+        fwprintf_s(stderr, L"[!] Failed to close debug pipe thread handle with code 0x%X.\n", GetLastError());
         return FALSE;
     }
 
     return TRUE;
+}
+
+// Sends a module load message through the debug pipe.
+void s0_dbg_bridge_send(FH_DBG_MOD_LOAD data_load) {
+    FH_DBG_MSG msg = { };
+    msg.type          = MSG_LOAD;
+    msg.data.mod_load = data_load;
+
+    g_msgs.emplace(msg);
+
+    if (g_lock_send == nullptr || g_lock_send == INVALID_HANDLE_VALUE) {
+        fwprintf_s(stderr, L"[!] Debug pipe not yet ready. Deferring message.\n");
+        return;
+    }
+
+    if (!SetEvent(g_lock_send)) {
+        fwprintf_s(stderr, L"[!] Failed to signal debug pipe thread with code 0x%X.\n", GetLastError());
+        return;
+    }
+}
+
+// Sends a module unload message through the debug pipe.
+void s0_dbg_bridge_send(FH_DBG_MOD_UNLOAD data_unload) {
+    FH_DBG_MSG msg = { };
+    msg.type            = MSG_LOAD;
+    msg.data.mod_unload = data_unload;
+
+    g_msgs.emplace(msg);
+
+    if (g_lock_send == nullptr || g_lock_send == INVALID_HANDLE_VALUE) {
+        fwprintf_s(stderr, L"[!] Debug pipe not yet ready. Deferring message.\n");
+        return;
+    }
+
+    if (!SetEvent(g_lock_send)) {
+        fwprintf_s(stderr, L"[!] Failed to signal debug pipe thread with code 0x%X.\n", GetLastError());
+        return;
+    }
 }

@@ -242,6 +242,54 @@ int __cdecl wmain(
         ? CREATE_SUSPENDED
         : DEBUG_ONLY_THIS_PROCESS; // A debugged process is implicitly suspended until debug events are handled/pumped.
 
+    /* [fkelava 11/10/26 14:24]
+     * We previously had a bug where killing Stage 0 while waiting for
+     * external debugger attach would leak the suspended target process.
+     *
+     * This is fixed by tying them into a job object with JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE set.
+     *
+     * https://learn.microsoft.com/en-us/windows/win32/procthread/job-objects
+     * > After a process is associated with a job, by default any child processes
+     * > it creates using CreateProcess are also associated with the job.
+     *
+     * https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-jobobject_basic_limit_information
+     * > Causes all processes associated with the job to terminate when the last handle to the job is closed.
+     *
+     * The target does not inherit handles from Stage 0. It holds the only handle to the job.
+     * If it is terminated, the handle closes, and the target is killed.
+     */
+
+    HANDLE h_job = CreateJobObjectW(
+        NULL,
+        L"FHSTAGE0_PROCESS_GROUP"
+    );
+
+    if (h_job == nullptr || h_job == INVALID_HANDLE_VALUE) {
+        fwprintf_s(stderr, L"CreateJobObjectW failed with code 0x%X.\n", GetLastError());
+        return 1;
+    }
+
+    if (!AssignProcessToJobObject(
+        h_job,
+        GetCurrentProcess()
+    )) {
+        fwprintf_s(stderr, L"AssignProcessToJobObject failed with code 0x%X.\n", GetLastError());
+        return 1;
+    }
+
+    JOBOBJECT_EXTENDED_LIMIT_INFORMATION job_limits = { 0 };
+    job_limits.BasicLimitInformation.LimitFlags |= JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+
+    if (!SetInformationJobObject(
+        h_job,
+        JobObjectExtendedLimitInformation,
+        &job_limits,
+        sizeof(JOBOBJECT_EXTENDED_LIMIT_INFORMATION)
+    )) {
+        fwprintf_s(stderr, L"SetInformationJobObject failed with code 0x%X.\n", GetLastError());
+        return 1;
+    }
+
     PROCESS_INFORMATION pi;
     STARTUPINFOW        si = { 0 };
 

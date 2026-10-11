@@ -30,7 +30,6 @@ public partial class FhSettingsUiX : FhSettingsUi {
     public const int   INDENT_MAX  = 5;
     public const float INDENT_SIZE = 40f;
 
-    public const float MAX_SETTING_SIZE     = 1100f;
     public const float SETTING_MARGIN_SIZE  = 22f;
     public const float CATEGORY_MARGIN_SIZE = 10f;
 
@@ -599,11 +598,11 @@ public partial class FhSettingsUiX : FhSettingsUi {
         }
     }
 
-    private void ui_setting(FhSetting setting) {
+    private void ui_setting(FhSetting setting, Rect outer_bounds) {
         if (!FhInternal.Settings.get_setting_renderer<FhSettingsUiX>(setting, out FhSettingRenderer? renderer)) {
             Rect debug_bounds = new() {
                 pos  = new(610f, 202f + _setting_y),
-                size = new(MAX_SETTING_SIZE, 40f),
+                size = new(outer_bounds.size.X, 40f),
             };
 
             FhApi.Gui.draw_text(
@@ -626,10 +625,14 @@ public partial class FhSettingsUiX : FhSettingsUi {
         pos.X += indent_size;
         pos.Y += _setting_y;
 
+        if (pos.Y > outer_bounds.bottom.Y) {
+            return;
+        }
+
         Vector2 size = renderer.get_size(this);
 
-        if (size.X == 0f || size.X + pos.X > get_ref_size().X) {
-            size.X = MAX_SETTING_SIZE - indent_size;
+        if (size.X == 0f || size.X + pos.X > outer_bounds.right.X) {
+            size.X = outer_bounds.size.X - indent_size;
         }
 
         Rect bounds = new() {
@@ -637,7 +640,17 @@ public partial class FhSettingsUiX : FhSettingsUi {
             size = size,
         };
 
-        renderer.render(this, setting, bounds);
+        if (bounds.bottom.Y > outer_bounds.top.Y) {
+            ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
+
+            Rect scaled_bounds = bounds.scale_to_aspect(aspect_helper);
+
+            draw.PushClipRect(scaled_bounds.top_left, scaled_bounds.bottom_right);
+
+            renderer.render(this, setting, bounds);
+
+            draw.PopClipRect();
+        }
 
         _setting_y += size.Y + SETTING_MARGIN_SIZE;
 
@@ -645,7 +658,7 @@ public partial class FhSettingsUiX : FhSettingsUi {
             indent();
 
             foreach (FhSetting inner_setting in category.settings) {
-                ui_setting(inner_setting);
+                ui_setting(inner_setting, outer_bounds);
             }
 
             unindent();
@@ -665,33 +678,52 @@ public partial class FhSettingsUiX : FhSettingsUi {
         _indent_level = 0;
         _setting_y    = 0f;
 
+        ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
+
+        Rect bounds = new() {
+            pos  = new( 610f, 202f),
+            size = new(1100f, 769f),
+        };
+
+        Rect scaled_bounds = bounds.scale_to_aspect(aspect_helper);
+
+        draw.PushClipRect(scaled_bounds.top_left, scaled_bounds.bottom_right);
+
         foreach (FhSetting setting in _displayed_settings.settings) {
-            ui_setting(setting);
+            ui_setting(setting, bounds);
         }
 
         _indent_level += 1;
 
         foreach (FhSetting setting in _displayed_settings.settings) {
-            ui_setting(setting);
+            ui_setting(setting, bounds);
         }
 
         _indent_level += 1;
 
         foreach (FhSetting setting in _displayed_settings.settings) {
-            ui_setting(setting);
+            ui_setting(setting, bounds);
+        }
+
+        _indent_level -= 2;
+
+        foreach (FhSetting setting in _displayed_settings.settings) {
+            ui_setting(setting, bounds);
         }
 
         _indent_level += 1;
 
         foreach (FhSetting setting in _displayed_settings.settings) {
-            ui_setting(setting);
+            ui_setting(setting, bounds);
         }
 
         _indent_level += 1;
 
         foreach (FhSetting setting in _displayed_settings.settings) {
-            ui_setting(setting);
+            ui_setting(setting, bounds);
         }
+
+        draw.PopClipRect();
     }
 
     /// <summary>Renders a scrollbar.</summary>

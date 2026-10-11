@@ -5,8 +5,8 @@
 
 /* [fkelava 12/09/26 23:26]
  * Fahrenheit's design is to leave no trace on the game binary or folder whatsoever.
- * To do so, instead of modifying one of the game's imports like ffgriever EFL,
- * Ultimate ASI Loader, etc., it has a launcher system- the Stage 0 and 1 loaders.
+ * To do so, instead of modifying one of the game's imports like ffgriever's EFL,
+ * Ultimate ASI Loader, etc., it has a launcher system - the Stage 0 and 1 loaders.
  *
  * Our method of choice is reversible IAT patching using MS Detours.
  * Stage 0 creates the game process and rewrites the IAT to load Stage 1 first,

@@ -252,20 +252,20 @@ static BOOL s1_init(
 
     // Override the program entrypoint. We need to run Fahrenheit initialization first.
     HMODULE h_target        = GetModuleHandleW(nullptr);
-    LPBYTE  ptr_target_base = reinterpret_cast<LPBYTE>(h_target);
+    LPBYTE  ptr_target_base = (LPBYTE) h_target;
 
-    PIMAGE_DOS_HEADER ptr_dos_headers = reinterpret_cast<PIMAGE_DOS_HEADER>(h_target);
+    PIMAGE_DOS_HEADER ptr_dos_headers = (PIMAGE_DOS_HEADER) h_target;
     if (ptr_dos_headers->e_magic != IMAGE_DOS_SIGNATURE)
         return FALSE;
 
-    PIMAGE_NT_HEADERS ptr_nt_headers  = reinterpret_cast<PIMAGE_NT_HEADERS>((ptr_target_base + ptr_dos_headers->e_lfanew));
+    PIMAGE_NT_HEADERS ptr_nt_headers  = (PIMAGE_NT_HEADERS) (ptr_target_base + ptr_dos_headers->e_lfanew);
     if (ptr_nt_headers->Signature != IMAGE_NT_SIGNATURE)
         return FALSE;
 
-    g_fnptr_main_target = reinterpret_cast<main_fn>(ptr_target_base + ptr_nt_headers->OptionalHeader.AddressOfEntryPoint);
+    g_fnptr_main_target = (main_fn) (ptr_target_base + ptr_nt_headers->OptionalHeader.AddressOfEntryPoint);
 
     if (MH_Initialize() != MH_OK
-    ||  MH_CreateHook(g_fnptr_main_target, &s1_main, reinterpret_cast<void**>(&g_fnptr_main_original)) != MH_OK
+    ||  MH_CreateHook(g_fnptr_main_target, &s1_main, (LPVOID*) &g_fnptr_main_original) != MH_OK
     ||  MH_EnableHook(g_fnptr_main_target) != MH_OK)
         return FALSE;
 

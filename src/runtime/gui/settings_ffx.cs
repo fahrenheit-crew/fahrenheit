@@ -308,6 +308,51 @@ public partial class FhSettingsUiX : FhSettingsUi {
         );
     }
 
+
+    /// <summary>Render the cursor.</summary>
+    /// <param name="target_pos">The position the cursor should point at.</param>
+    /// <param name="overlap">Whether the cursor should overlap the target like the vanilla game.</param>
+    private void ui_cursor(Vector2 target_pos, bool overlap = true) {
+        if (!_texture_meswin.try_use(out ImTextureRef meswin, out _)) {
+            return;
+        }
+
+        ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
+
+        UV cursor_tuv = new UV(
+            new(157f, 244f),
+            new( 90f, 200f)
+        ).map_to(_tex_meswin_size);
+
+        Vector2 cursor_size = new Vector2(76f, 51f) * aspect_scale;
+
+        float max_offset   = 13f * aspect_scale.X;
+        float cycle_length = 0.38f;
+
+        // Multiply by pi so cycle_length can be expressed in seconds.
+        float cycle_t = MathF.Sin((float)ImGui.GetTime() * MathF.PI / cycle_length) / 2f + 0.5f;
+        float offset  = -(max_offset * cycle_t);
+
+        float overlap_amount = overlap ? cursor_size.X * 0.1f : 0f;
+
+        Vector2 cursor_center = new(
+            target_pos.X - cursor_size.X / 2f + overlap_amount - offset,
+            target_pos.Y
+        );
+
+        UV cursor_suv = new Rect { pos = cursor_center }
+            .expand(cursor_size, new(Alignment.CENTER, Alignment.CENTER))
+            .as_uv();
+
+        draw.AddImage(
+            meswin,
+            cursor_suv.p0,
+            cursor_suv.p1,
+            cursor_tuv.p0,
+            cursor_tuv.p1
+        );
+    }
+
     /// <summary>Renders a mod plate.</summary>
     /// <param name="mod_ctx">The context of the mod to render the plate for.</param>
     /// <param name="global_index">The index of the mod in the mod list.</param>
@@ -350,7 +395,7 @@ public partial class FhSettingsUiX : FhSettingsUi {
 
         float font_size = 36f * font_scale;
 
-        FhApi.Gui.draw_text(
+        Vector2 text_size = FhApi.Gui.draw_text(
             draw,
             text_pos,
             mod_ctx.Manifest.Name,
@@ -358,6 +403,18 @@ public partial class FhSettingsUiX : FhSettingsUi {
             true,
             new(Alignment.CENTER, Alignment.CENTER)
         );
+
+        if (global_index == _scrollable_mods.hovered) {
+            Vector2 cursor_target = text_pos;
+            cursor_target.X -= text_size.X / 2f;
+            cursor_target.X -= 10f * aspect_scale.X;
+
+            if (cursor_target.X < 60f * aspect_scale.X) {
+                cursor_target.X = 60f * aspect_scale.X;
+            }
+
+            ui_cursor(cursor_target, false);
+        }
     }
 
     /// <summary>Renders all mod plates.</summary>
@@ -420,7 +477,7 @@ public partial class FhSettingsUiX : FhSettingsUi {
 
         float font_size = 36f * font_scale;
 
-        FhApi.Gui.draw_text(
+        Vector2 text_size = FhApi.Gui.draw_text(
             draw,
             text_pos,
             module_ctx.Module.ModuleType.Split('.')[^1],
@@ -428,6 +485,18 @@ public partial class FhSettingsUiX : FhSettingsUi {
             true,
             new(Alignment.CENTER, Alignment.CENTER)
         );
+
+        if (global_index == _scrollable_mods.hovered) {
+            Vector2 cursor_target = text_pos;
+            cursor_target.X -= text_size.X / 2f;
+            cursor_target.X -= 10f * aspect_scale.X;
+
+            if (cursor_target.X < 60f * aspect_scale.X) {
+                cursor_target.X = 60f * aspect_scale.X;
+            }
+
+            ui_cursor(cursor_target, false);
+        }
     }
 
     /// <summary>Renders all module plates.</summary>

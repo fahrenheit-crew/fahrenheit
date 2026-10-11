@@ -89,15 +89,10 @@ public sealed class FhSaveUiX2 : FhSaveUi {
 
     private bool is_saving => FhApi.Saves.get_system_mode(out FhSaveSystemMode? system_mode) && system_mode is FhSaveSystemMode.SAVE;
 
-    private readonly Scrollable _scrollable_saves = new() {
-        visible = 5,
-    };
+    private readonly SteppedScrollable _scrollable_saves = new(visible: 5);
+    private readonly SteppedScrollable _scrollable_sets  = new(visible: 9);
 
-    private readonly Scrollable _scrollable_sets = new() {
-        visible = 9,
-    };
-
-    private Scrollable _current_scrollable;
+    private SteppedScrollable _current_scrollable;
 
     private bool     _scrollbar_dragging;
     private Vector2? _scrollbar_held_pos;

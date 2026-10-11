@@ -329,16 +329,16 @@ public sealed class FhSettingsCategory : FhSetting {
 
     public FhSettingsCategory(string id, FhSetting[] settings) : base(id) {
         this.settings = settings;
-        update_ids();
+        update_ids(id);
     }
 
     /// <summary>Prepends the category's ID to all subordinate settings.</summary>
-    private void update_ids() {
+    private void update_ids(string new_prefix) {
         foreach (FhSetting setting in settings) {
-            setting.id = $"{id}.{setting.id}";
+            setting.id = $"{new_prefix}.{setting.id}";
 
             if (setting is FhSettingsCategory category)
-                category.update_ids();
+                category.update_ids(new_prefix);
         }
     }
 

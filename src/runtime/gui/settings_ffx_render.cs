@@ -23,7 +23,7 @@ public partial class FhSettingsUiX {
             return [
                 new(0.0f,  color & 0x00FFFFFF),
                 new(0.05f, color),
-                new(0.3f,  color),
+                new(0.6f,  color),
                 new(1.0f,  color & 0x00FFFFFF),
             ];
         }
@@ -42,7 +42,7 @@ public partial class FhSettingsUiX {
                 size = max_bounds.size with { Y = shadow_height },
             };
 
-            GradientStep[] shadow_steps = make_gradient(0x80000000);
+            GradientStep[] shadow_steps = make_gradient(0x60000000);
 
             FhApi.Gui.draw_rectangle_gradient(
                 draw,
@@ -169,6 +169,15 @@ public partial class FhSettingsUiX {
             return new Vector2(0f, 65f);
         }
 
+        private GradientStep[] make_gradient(uint color) {
+            return [
+                new(0.0f, color & 0x00FFFFFF),
+                new(0.2f, color),
+                new(0.8f, color),
+                new(1.0f, color & 0x00FFFFFF),
+            ];
+        }
+
         internal protected override void render(FhSettingsUiX ui, FhSettingToggle toggle, Rect max_bounds) {
             if (
                 !ui._texture_battle_kuang.try_use(out ImTextureRef battle_kuang, out _)
@@ -186,12 +195,7 @@ public partial class FhSettingsUiX {
                 size = max_bounds.size with { Y = shadow_height },
             };
 
-            GradientStep[] shadow_steps = [
-                new(0.0f, 0x00000000),
-                new(0.2f, 0x80000000),
-                new(0.8f, 0x80000000),
-                new(1.0f, 0x00000000),
-            ];
+            GradientStep[] shadow_steps = make_gradient(0x60000000);
 
             FhApi.Gui.draw_rectangle_gradient(
                 draw,
@@ -285,19 +289,8 @@ public partial class FhSettingsUiX {
             );
 
             // Borders
-            GradientStep[] top_steps = [
-                new(0.0f, 0x00CCCCDD),
-                new(0.2f, 0xFFCCCCDD),
-                new(0.8f, 0xFFCCCCDD),
-                new(1.0f, 0x00CCCCDD),
-            ];
-
-            GradientStep[] bottom_steps = [
-                new(0.0f, 0x00000000),
-                new(0.2f, 0xFF000000),
-                new(0.8f, 0xFF000000),
-                new(1.0f, 0x00000000),
-            ];
+            GradientStep[] top_steps    = make_gradient(0xFFCCCCDD);
+            GradientStep[] bottom_steps = make_gradient(0xFF000000);
 
             Rect top_border = new Rect {
                 pos  = bg_bounds.pos  with { Y = bg_bounds.top.Y + 1f },

@@ -10,13 +10,13 @@ public partial class FhSettingsUiX : FhSettingsUi {
     /// <summary>Possible elements for the UI to focus on.</summary>
     private enum UiFocus {
         /// <summary>The scrollable list of mods with settings.</summary>
-        MOD_LIST,
+        MODS,
 
         /// <summary>The list of modules that scrolls out when a mod is selected.</summary>
-        MODULE_LIST,
+        MODULES,
 
         /// <summary>The list of settings that appears when a module is hovered/selected.</summary>
-        SETTINGS_LIST,
+        SETTINGS,
     }
 
     private const string MENU_D3D11_DIR = "/FFX_Data/GameData/PS3Data/menu/D3D11/";
@@ -111,7 +111,7 @@ public partial class FhSettingsUiX : FhSettingsUi {
     }
 
     private void post_open(EventArgs e) {
-        _focus = UiFocus.MOD_LIST;
+        _focus = UiFocus.MODS;
 
         try_load_textures();
 
@@ -169,6 +169,28 @@ public partial class FhSettingsUiX : FhSettingsUi {
         return  FhApi.Gui.mouse_clicked(rect, button, repeat);
     }
 
+    private void select_mod(int mod_idx) {
+        _focus = UiFocus.MODULES;
+
+        _selected_mod_idx        = mod_idx;
+        _scrollable_mods.hovered = mod_idx;
+    }
+
+    private void hover_module(int module_idx) {
+        FhModule hovered_module = _selected_modules[module_idx].Module;
+
+        FhInternal.Settings.try_get_settings(hovered_module, out _displayed_settings);
+    }
+
+    private void select_module(int module_idx) {
+        _focus = UiFocus.SETTINGS;
+
+        _selected_module_idx        = module_idx;
+        _scrollable_modules.hovered = module_idx;
+
+        FhInternal.Settings.try_get_settings(_selected_module.Module, out _displayed_settings);
+    }
+
     // Functions for interfacing with renderers
     public bool try_capture_setting(ICapturingRenderer renderer, FhSetting setting) {
         if (_capturing_renderer != null) return false;
@@ -197,6 +219,47 @@ public partial class FhSettingsUiX : FhSettingsUi {
     }
 
     // Input handling
+    private void handle_input_mods() {
+        if (_scrollable_mods.handle_input())
+            return;
+
+        if (FhApi.Gui.is_any_pressed(FhApi.Gui.keys_confirm)) {
+            select_mod(_scrollable_mods.hovered);
+            return;
+        }
+
+        if (FhApi.Gui.is_any_pressed(FhApi.Gui.keys_cancel)) {
+            //TODO: Close from here
+            return;
+        }
+    }
+
+    private void handle_input_modules() {
+        int old_hovered = _scrollable_modules.hovered;
+
+        if (_scrollable_modules.handle_input()) {
+            if (_scrollable_modules.hovered != old_hovered)
+                hover_module(_scrollable_modules.hovered);
+
+            return;
+        }
+
+        if (FhApi.Gui.is_any_pressed(FhApi.Gui.keys_confirm)) {
+            select_module(_scrollable_modules.hovered);
+            return;
+        }
+
+        if (FhApi.Gui.is_any_pressed(FhApi.Gui.keys_cancel)) {
+            _focus = UiFocus.MODS;
+            _selected_module_idx = 0;
+            return;
+        }
+    }
+
+    private void handle_input_settings() {
+
+    }
+
     private void handle_input() {
         if (_captured_setting != null) {
             if (!FhInternal.Settings.get_setting_renderer<FhSettingsUiX>(_captured_setting, out FhSettingRenderer? renderer)) {
@@ -208,13 +271,19 @@ public partial class FhSettingsUiX : FhSettingsUi {
             renderer.handle_input(this, _captured_setting);
             return;
         }
+
+        switch (_focus) {
+            case UiFocus.MODS:     handle_input_mods();     break;
+            case UiFocus.MODULES:  handle_input_modules();  break;
+            case UiFocus.SETTINGS: handle_input_settings(); break;
+        }
     }
 
     // Rendering
     internal protected override void render_ui() {
         _current_scrollable = _focus switch {
-            UiFocus.MOD_LIST    => _scrollable_mods,
-            UiFocus.MODULE_LIST => _scrollable_modules,
+            UiFocus.MODS    => _scrollable_mods,
+            UiFocus.MODULES => _scrollable_modules,
 
             _ => null,
         };
@@ -226,12 +295,13 @@ public partial class FhSettingsUiX : FhSettingsUi {
         ui_background();
         ui_help();
 
-        if (_focus == UiFocus.MOD_LIST)
+        if (_focus == UiFocus.MODS) {
             ui_list_mods();
-        else
+        }
+        else {
             ui_list_modules();
-
-        ui_settings();
+            ui_settings();
+        }
 
         ui_scrollbars();
 
@@ -283,13 +353,13 @@ public partial class FhSettingsUiX : FhSettingsUi {
         draw.AddImage(help, bg_suv.p0, bg_suv.p1, bg_tuv.p0, bg_tuv.p1);
 
         string text = _focus switch {
-            UiFocus.MOD_LIST    => FhApi.Localization.localize($"{typeof(FhSettingsUiBase).FullName}.help.mod_list"),
-            UiFocus.MODULE_LIST => FhApi.Localization.localize($"{typeof(FhSettingsUiBase).FullName}.help.module_list"),
+            UiFocus.MODS    => FhApi.Localization.localize($"{typeof(FhSettingsUiBase).FullName}.help.mod_list"),
+            UiFocus.MODULES => FhApi.Localization.localize($"{typeof(FhSettingsUiBase).FullName}.help.module_list"),
 
-            UiFocus.SETTINGS_LIST when _capturing_renderer != null
+            UiFocus.SETTINGS when _capturing_renderer != null
                 => _capturing_renderer.get_input_help_text(),
 
-            UiFocus.SETTINGS_LIST => _hovered_setting!.desc,
+            UiFocus.SETTINGS => _hovered_setting!.desc,
 
             _ => throw new NotImplementedException(),
         };
@@ -404,6 +474,10 @@ public partial class FhSettingsUiX : FhSettingsUi {
             new(Alignment.CENTER, Alignment.CENTER)
         );
 
+        if (mouse_hovered(plate_screen)) {
+            _scrollable_mods.hovered = global_index;
+        }
+
         if (global_index == _scrollable_mods.hovered) {
             Vector2 cursor_target = text_pos;
             cursor_target.X -= text_size.X / 2f;
@@ -414,6 +488,10 @@ public partial class FhSettingsUiX : FhSettingsUi {
             }
 
             ui_cursor(cursor_target, false);
+        }
+
+        if (mouse_clicked(plate_screen)) {
+            select_mod(global_index);
         }
     }
 
@@ -486,7 +564,11 @@ public partial class FhSettingsUiX : FhSettingsUi {
             new(Alignment.CENTER, Alignment.CENTER)
         );
 
-        if (global_index == _scrollable_mods.hovered) {
+        if (mouse_hovered(plate_screen)) {
+            _scrollable_modules.hovered = global_index;
+        }
+
+        if (global_index == _scrollable_modules.hovered) {
             Vector2 cursor_target = text_pos;
             cursor_target.X -= text_size.X / 2f;
             cursor_target.X -= 10f * aspect_scale.X;
@@ -496,6 +578,10 @@ public partial class FhSettingsUiX : FhSettingsUi {
             }
 
             ui_cursor(cursor_target, false);
+        }
+
+        if (mouse_clicked(plate_screen)) {
+            select_module(global_index);
         }
     }
 

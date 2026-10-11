@@ -30,6 +30,7 @@
 #include <MinHook.h>
 
 BOOL s1_bridge_init(); // Forward declaration of debug bridge initializer.
+BOOL s1_eh_suppress(); // Forward declaration of EH suppressor function
 
 using init_fn = void(CORECLR_DELEGATE_CALLTYPE*)();
 using main_fn = int (                         *)();
@@ -46,8 +47,6 @@ hostfxr_close_fn                         g_fnptr_hostfxr_close;
 
 FILE* g_stdout;
 FILE* g_stderr;
-
-BOOL s1_eh_suppress(); // Forward declaration of EH suppressor function
 
 // Uses the `nethost` library to discover the location of the .NET hosting library,
 // `hostfxr`, and obtains the necessary function pointers from it.

@@ -33,24 +33,24 @@ public abstract class BaseScrollable<T> : BaseScrollable
     /// <summary>The maximum position of the top of the visible range of the scrollable.</summary>
     protected T max_current => max - visible;
 
-    protected ImGuiKey[] keys_pg_up = [
+    protected ImGuiKey[] keys_pg_up => [
         ImGuiKey.PageUp,
         ImGuiKey.GamepadL1,
         .. FhApi.Gui.keys_left,
     ];
 
-    protected ImGuiKey[] keys_pg_dn = [
+    protected ImGuiKey[] keys_pg_dn => [
         ImGuiKey.PageDown,
         ImGuiKey.GamepadR1,
         .. FhApi.Gui.keys_right,
     ];
 
-    protected ImGuiKey[] keys_home = [
+    protected ImGuiKey[] keys_home => [
         ImGuiKey.Home,
         ImGuiKey.GamepadL2,
     ];
 
-    protected ImGuiKey[] keys_end = [
+    protected ImGuiKey[] keys_end => [
         ImGuiKey.End,
         ImGuiKey.GamepadR2,
     ];

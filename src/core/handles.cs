@@ -122,9 +122,9 @@ public readonly ref struct FhMethodLocation {
     /// </summary>
     /// <returns>The address of the specified module, or zero if it is not loaded.</returns>
     private static nint get_module_addr(string module_name) {
-        return _s_modules.TryGetValue(module_name, out nint module_addr)
-            ? module_addr
-            : FhPInvoke.GetModuleHandle(module_name);
+        return _s_modules.TryGetValue(module_name, out nint ptr_module)
+            ? ptr_module
+            : (_s_modules[module_name] = FhPInvoke.GetModuleHandle(module_name));
     }
 
     /// <summary>

@@ -389,11 +389,11 @@ public class SteppedScrollable : BaseScrollable<int> {
     /// <returns>Whether Scrollable input was held, even if it was not used.</returns>
     public override bool handle_input() {
         // Various scrolling methods
-        ImGuiKey[] up_keys   = FhApi.Gui.keys_up;
-        ImGuiKey[] down_keys = FhApi.Gui.keys_down;
+        ImGuiKey[] keys_up   = FhApi.Gui.keys_up;
+        ImGuiKey[] keys_down = FhApi.Gui.keys_down;
 
-        bool hover_up   = FhApi.Gui.is_any_pressed(up_keys,   true);
-        bool hover_down = FhApi.Gui.is_any_pressed(down_keys, true);
+        bool hover_up   = FhApi.Gui.is_any_pressed(keys_up,   true);
+        bool hover_down = FhApi.Gui.is_any_pressed(keys_down, true);
         int  hover      = (hover_up ? 1 : 0) - (hover_down ? 1 : 0);
 
         ImGui.GetIO().WantCaptureKeyboard |= hover_up || hover_down;
@@ -409,8 +409,8 @@ public class SteppedScrollable : BaseScrollable<int> {
         bool handled_base = base.handle_input();
 
         return handled_base || FhApi.Gui.is_any_down([
-            .. up_keys,
-            .. down_keys,
+            .. keys_up,
+            .. keys_down,
         ]);
     }
 }

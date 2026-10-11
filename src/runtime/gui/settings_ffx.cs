@@ -55,16 +55,11 @@ public partial class FhSettingsUiX : FhSettingsUi {
 
     private FhSettingsCategory? _displayed_settings;
 
-    private readonly Scrollable _scrollable_mods = new() {
-        visible = 11,
-    };
+    private readonly SteppedScrollable _scrollable_mods     = new(visible: 11);
+    private readonly SteppedScrollable _scrollable_modules  = new(visible: 10);
+    private readonly Scrollable        _scrollable_settings = new();
 
-    private readonly Scrollable _scrollable_modules = new(){
-        visible = 10,
-    };
-    // private ContinuousScrollable _scrollable_settings;
-
-    private Scrollable? _current_scrollable;
+    private BaseScrollable? _current_scrollable;
 
     // Textures
     private bool _loaded_all_textures;
@@ -729,14 +724,17 @@ public partial class FhSettingsUiX : FhSettingsUi {
     /// <summary>Renders a scrollbar.</summary>
     /// <param name="scrollable">The scrollable to draw the scrollbar for.</param>
     /// <param name="track_bounds">The bounding rectangle of the scrollbar's track.</param>
-    private void ui_scrollbar(Scrollable scrollable, Rect track_bounds) {
+    private void ui_scrollbar<T>(BaseScrollable<T> scrollable, Rect track_bounds)
+        where T : INumber<T> {
+
         if (scrollable.max <= scrollable.visible) {
             return;
         }
 
         float progress = scrollable.get_progress();
 
-        float visible_percentage = scrollable.visible / (float)scrollable.max;
+        float visible_percentage = float.CreateChecked(scrollable.visible)
+            / float.CreateChecked(scrollable.max);
 
         float thumb_margin = 2f * aspect_scale.X;
 
@@ -865,12 +863,23 @@ public partial class FhSettingsUiX : FhSettingsUi {
         //     return;
         // }
 
-        if (mouse_clicked(triangle_top, repeat: true)) {
-            scrollable.move_hover(-1);
-        }
+        if (scrollable is SteppedScrollable stepped) {
+            if (mouse_clicked(triangle_top, repeat: true)) {
+                stepped.move_hover(-1);
+            }
 
-        if (mouse_clicked(triangle_bottom, repeat: true)) {
-            scrollable.move_hover(1);
+            if (mouse_clicked(triangle_bottom, repeat: true)) {
+                stepped.move_hover(1);
+            }
+        }
+        else {
+            if (mouse_clicked(triangle_top, repeat: true)) {
+                scrollable.scroll(-scrollable.scroll_step_size);
+            }
+
+            if (mouse_clicked(triangle_bottom, repeat: true)) {
+                scrollable.scroll(scrollable.scroll_step_size);
+            }
         }
     }
 
@@ -881,6 +890,9 @@ public partial class FhSettingsUiX : FhSettingsUi {
             size = new( 17f, 777f),
         };
 
-        ui_scrollbar(_scrollable_mods, scrollbar_mods);
+        if (_focus == UiFocus.MODS)
+            ui_scrollbar(_scrollable_mods, scrollbar_mods);
+        else
+            ui_scrollbar(_scrollable_modules, scrollbar_mods);
     }
 }

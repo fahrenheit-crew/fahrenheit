@@ -18,10 +18,45 @@ fn_s1_free g_fnptr_free_cb; // A pointer to a callback to invoke when unloading 
 HANDLE g_lock_cb;     // A event blocking access to the load/unload functions while callbacks are executing.
 HANDLE g_bridge_pipe; // A named pipe to communicate with Stage 0.
 
+FH_DBG_COMM_MSG g_bridge_msg;
+
 /* [fkelava 11/10/26 01:03]
  * https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-createnamedpipea
  * Read this thoroughly. Comments throughout quote from this article.
  */
+
+// The debug pipe thread procedure.
+static DWORD WINAPI s1_dbg_bridge_proc(LPVOID lpvParam) {
+    while (true) {
+        /* [fkelava 11/10/26 03:00]
+         * The pipe is created in blocking (PIPE_WAIT) mode by Stage 0. Thus:
+         *
+         * > When the pipe handle is specified in {...} ReadFile {...} the operations are not
+         * > completed until there is data to read, all data is written, or a client is connected.
+         */
+
+        DWORD bytes_read = 0;
+        if (!ReadFile(
+            g_bridge_pipe,
+            &g_bridge_msg,
+            sizeof(g_bridge_msg),
+            &bytes_read,
+            NULL
+        )) {
+            fwprintf_s(stderr, L"[!] Debug pipe client aborting. ReadFile failed with code 0x%X.\n", GetLastError());
+            break;
+        }
+
+        // TODO: Switch on message type and do shit
+    }
+
+    if (!CloseHandle(g_bridge_pipe)) {
+        fwprintf_s(stderr, L"[!] Failed to close debug pipe with code 0x%X.\n", GetLastError());
+        return FALSE;
+    }
+
+    return TRUE;
+}
 
 // Prepares for communication with Stage 0 through the debug pipe.
 BOOL s1_bridge_init() {
@@ -79,40 +114,24 @@ BOOL s1_bridge_init() {
         return FALSE;
     }
 
-    HANDLE h_process_heap = GetProcessHeap();
-    if (h_process_heap == nullptr || h_process_heap == INVALID_HANDLE_VALUE) {
-        fwprintf_s(stderr, L"[!] GetProcessHeap() failed with code 0x%X.\n", GetLastError());
+    DWORD  id_thread;
+    HANDLE h_thread = CreateThread(
+        nullptr,
+        0,
+        s1_dbg_bridge_proc,
+        nullptr,
+        0,
+        &id_thread
+    );
+
+    if (h_thread == nullptr || h_thread == INVALID_HANDLE_VALUE) {
+        fwprintf_s(stderr, L"[!] Failed to create debug pipe thread with code 0x%X.\n", GetLastError());
         return FALSE;
     }
 
-    // TODO: Amend to include actual messaging type.
-    DWORD          message_size = sizeof(FH_DBG_COMM_MSG);
-    unsigned char* message      = (unsigned char*) HeapAlloc(h_process_heap, HEAP_ZERO_MEMORY, message_size);
-
-    if (message == nullptr) {
-        fwprintf_s(stderr, L"[!] Failed to allocate memory for debug pipe message.\n");
-        return FALSE;
-    }
-
-    DWORD bytes_written = 0;
-    if (!WriteFile(
-        g_bridge_pipe,
-        message,
-        message_size,
-        &bytes_written,
-        NULL
-    )) {
-        fwprintf_s(stderr, L"[!] Failed to write through the debug pipe with code 0x%X.\n", GetLastError());
-        return FALSE;
-    }
-
-    if (!HeapFree(h_process_heap, 0, message)) {
-        fwprintf_s(stderr, L"[!] Failed to free memory for debug pipe message with code 0x%X.\n", GetLastError());
-        return FALSE;
-    }
-
-    if (!CloseHandle(g_bridge_pipe)) {
-        fwprintf_s(stderr, L"[!] Failed to close debug pipe with code 0x%X.\n", GetLastError());
+    HRESULT hr = SetThreadDescription(h_thread, L"Stage 1 - Debug Pipe Client");
+    if (FAILED(hr)) {
+        fwprintf_s(stderr, L"[!] Failed to set debug pipe thread name with code 0x%X.\n", hr);
         return FALSE;
     }
 

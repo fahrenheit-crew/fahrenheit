@@ -16,6 +16,9 @@
 HANDLE g_bridge_pipe = nullptr; // A named pipe to communicate with Stage 1.
 BOOL   g_bridge_init = FALSE;   // Whether the pipe was initialized.
 
+FH_DBG_COMM_MSG g_bridge_msg;
+HANDLE          g_bridge_lock;
+
 // Communicates with Stage 1 using the debug pipe to obtain pointers to its functions.
 static DWORD WINAPI s0_dbg_bridge_proc(LPVOID lpvParam) {
     if (!ConnectNamedPipe(g_bridge_pipe, NULL) && GetLastError() != ERROR_PIPE_CONNECTED) {
@@ -23,35 +26,35 @@ static DWORD WINAPI s0_dbg_bridge_proc(LPVOID lpvParam) {
         return FALSE;
     }
 
-    HANDLE h_process_heap = GetProcessHeap();
-    if (h_process_heap == nullptr || h_process_heap == INVALID_HANDLE_VALUE) {
-        fwprintf_s(stderr, L"[!] GetProcessHeap() failed with code 0x%X.\n", GetLastError());
+    g_bridge_lock = CreateEventW(NULL, TRUE, FALSE, NULL);
+
+    if (g_bridge_lock == nullptr) {
+        fwprintf_s(stderr, L"[!] CreateEventW() failed with code 0x%X.\n", GetLastError());
         return FALSE;
     }
 
-    DWORD          message_size = sizeof(FH_DBG_COMM_MSG);
-    unsigned char* message      = (unsigned char*) HeapAlloc(h_process_heap, HEAP_ZERO_MEMORY, message_size);
+    while (true) {
+        if (WaitForSingleObject(g_bridge_lock, INFINITE) != WAIT_OBJECT_0) {
+            fwprintf_s(stderr, L"[!] Debug pipe server aborting. WaitForSingleObject failed with code 0x%X.\n", GetLastError());
+            break;
+        }
 
-    if (message == nullptr) {
-        fwprintf_s(stderr, L"[!] Failed to allocate memory for debug pipe message.\n");
-        return FALSE;
-    }
+        DWORD bytes_written = 0;
+        if (!WriteFile(
+            g_bridge_pipe,
+            &g_bridge_msg,
+            sizeof(g_bridge_msg),
+            &bytes_written,
+            NULL
+        )) {
+            fwprintf_s(stderr, L"[!] Debug pipe server aborting. WriteFile failed with code 0x%X.\n", GetLastError());
+            break;
+        }
 
-    DWORD bytes_read = 0;
-    if (!ReadFile(
-        g_bridge_pipe,
-        message,
-        message_size,
-        &bytes_read,
-        NULL
-    )) {
-        fwprintf_s(stderr, L"[!] Failed to read debug pipe message with code 0x%X.\n", GetLastError());
-        return FALSE;
-    }
-
-    if (!HeapFree(h_process_heap, 0, message)) {
-        fwprintf_s(stderr, L"[!] Failed to free memory for debug pipe message with code 0x%X.\n", GetLastError());
-        return FALSE;
+        if (!ResetEvent(g_bridge_lock)) {
+            fwprintf_s(stderr, L"[!] Debug pipe server aborting. ResetEvent failed with code 0x%X.\n", GetLastError());
+            break;
+        }
     }
 
     if (!CloseHandle(g_bridge_pipe)) {
@@ -96,6 +99,12 @@ BOOL s0_dbg_bridge_init() {
 
     if (h_thread == nullptr || h_thread == INVALID_HANDLE_VALUE) {
         fwprintf_s(stderr, L"[!] Failed to create debug pipe thread with code 0x%X.\n", GetLastError());
+        return FALSE;
+    }
+
+    HRESULT hr = SetThreadDescription(h_thread, L"Stage 0 - Debug Pipe Server");
+    if (FAILED(hr)) {
+        fwprintf_s(stderr, L"[!] Failed to set debug pipe thread name with code 0x%X.\n", hr);
         return FALSE;
     }
 

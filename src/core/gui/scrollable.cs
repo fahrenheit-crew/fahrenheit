@@ -90,7 +90,7 @@ public abstract class BaseScrollable<T> : BaseScrollable
         if (current > max) return 1f;
 
         float f_current = float.CreateChecked(current);
-        float f_max     = float.CreateChecked(max);
+        float f_max     = float.CreateChecked(max_current);
 
         float progress = f_current / float.Max(1f, f_max);
 

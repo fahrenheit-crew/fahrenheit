@@ -138,22 +138,28 @@ BOOL s1_bridge_init() {
     return TRUE;
 }
 
-// Invoked by Stage 0 when a library is loaded.
+// Invoked in response to a Stage 0 module load message.
 void s1_bridge_load(
     DLL_LOAD_DATA* ptr_load_data
 ) {
-    WaitForSingleObject(g_lock_cb, INFINITE);
+    if (WaitForSingleObject(g_lock_cb, INFINITE) != WAIT_OBJECT_0) {
+        fwprintf_s(stderr, L"[!] WaitForSingleObject failed with code 0x%X - load message dropped.\n", GetLastError());
+        return;
+    }
 
     if (g_fnptr_load_cb != nullptr) {
         g_fnptr_load_cb(ptr_load_data);
     }
 }
 
-// Invoked by Stage 0 when a library is freed.
+// Invoked in response to a Stage 0 module unload message.
 void s1_bridge_free(
     void* ptr_dll_base //
 ) {
-    WaitForSingleObject(g_lock_cb, INFINITE);
+    if (WaitForSingleObject(g_lock_cb, INFINITE) != WAIT_OBJECT_0) {
+        fwprintf_s(stderr, L"[!] WaitForSingleObject failed with code 0x%X - free message dropped.\n", GetLastError());
+        return;
+    }
 
     if (g_fnptr_free_cb != nullptr) {
         g_fnptr_free_cb(ptr_dll_base);

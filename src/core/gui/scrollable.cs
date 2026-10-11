@@ -87,10 +87,12 @@ public abstract class BaseScrollable<T> : BaseScrollable
     public virtual float get_progress() {
         if (max <= visible) return 0;
 
+        if (current > max) return 1f;
+
         float f_current = float.CreateChecked(current);
         float f_max     = float.CreateChecked(max);
 
-        float progress = f_current / float.Max(0.0001f, f_max);
+        float progress = f_current / float.Max(1f, f_max);
 
         // When debugging, a visual glitch in the scrollbar may be useful for identifying an issue,
         // so we only clamp in release.

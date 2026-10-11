@@ -5,12 +5,12 @@
 
 /* [fkelava 12/09/26 23:26]
  * Fahrenheit's design is to leave no trace on the game binary or folder whatsoever.
- * To do so, instead of modifying one of the game's imports as UnX, ASI, ffgriever EFL etc.
- * do, it has a launcher system- the Stage 0 and 1 loaders.
+ * To do so, instead of modifying one of the game's imports like ffgriever EFL,
+ * Ultimate ASI Loader, etc., it has a launcher system- the Stage 0 and 1 loaders.
  *
- * The method of choice is reversible IAT patching using MS Detours.
+ * Our method of choice is reversible IAT patching using MS Detours.
  * Stage 0 creates the game process and rewrites the IAT to load Stage 1 first,
- * then serves as a debugger, crash handler and standard I/O pipe for the target.
+ * then serves as a debugger, crash handler, and standard output pipe for the target.
  * Stage 1 reverses that modification, then bootstraps .NET and Fahrenheit.
  */
 
@@ -34,7 +34,7 @@ static HRESULT s0_main_process_args(
     wchar_t* argv[] // The arguments passed to the executable.
 ) {
     /* [fkelava 17/09/26 15:29]
-     * Stage 0 args are separated from target's args with a '--'.
+     * Stage 0 args are separated from the target's with a '--'.
      *
      * The user could have passed a relative or absolute path to the target binary.
      * Methods from this point on expect an absolute path, so we normalize it here.
@@ -333,16 +333,13 @@ int __cdecl wmain(
     char path_minhook[MAX_PATH] = { 0 };
 
     hr = s0_main_get_dependency_path(path_stage1, "fhstage1.dll");
-    if (hr != S_OK) {
-        TerminateProcess(pi.hProcess, hr);
+    if (hr != S_OK)
         return hr;
-    }
+
 
     hr = s0_main_get_dependency_path(path_nethost, "nethost.dll");
-    if (hr != S_OK) {
-        TerminateProcess(pi.hProcess, hr);
+    if (hr != S_OK)
         return hr;
-    }
 
 #ifdef _DEBUG
     hr = s0_main_get_dependency_path(path_minhook, "minhook.x32d.dll");
@@ -350,10 +347,8 @@ int __cdecl wmain(
     hr = s0_main_get_dependency_path(path_minhook, "minhook.x32.dll");
 #endif
 
-    if (hr != S_OK) {
-        TerminateProcess(pi.hProcess, hr);
+    if (hr != S_OK)
         return hr;
-    }
 
     LPCSTR deps[3] = {
         path_nethost,
@@ -364,8 +359,6 @@ int __cdecl wmain(
     // Patch IAT of suspended process to inject Stage 1 and dependencies.
     if (!DetourUpdateProcessWithDll(pi.hProcess, deps, 3)) {
         fwprintf_s(stderr, L"Failed to inject Stage 1 into the target.\n");
-        TerminateProcess(pi.hProcess, 1U);
-
         return 1;
     }
 

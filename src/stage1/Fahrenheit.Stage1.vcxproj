@@ -91,7 +91,6 @@
     <ClInclude Include="inc\fhstage1.h" />
     <ClInclude Include="inc\resource.h" />
     <ClCompile Include="src\bridge.cpp" />
-    <ClCompile Include="src\eh.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ResourceCompile Include="inc\fhstage1.rc" />
   </ItemGroup>

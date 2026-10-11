@@ -7,7 +7,7 @@
  * Not every game has a high quality error reporting system. When using Fahrenheit,
  * we want to provide a consistent baseline across all systems.
  *
- * Some systems, like Dalamud, have a dedicated crash handler. We do it differently-
+ * Some systems, like Dalamud, have a dedicated crash handler. We do it differently:
  * Stage 0 is a tiny Win32 "debugger" that handles exception events, dumps core,
  * and surfaces error information to the end user.
  *

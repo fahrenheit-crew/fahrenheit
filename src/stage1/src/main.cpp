@@ -29,8 +29,8 @@
 // Hooking
 #include <MinHook.h>
 
-BOOL s1_bridge_init(); // Forward declaration of debug bridge initializer.
-BOOL s1_eh_suppress(); // Forward declaration of EH suppressor function
+// Forward declarations
+BOOL s1_bridge_init(); // Debug bridge initializer.
 
 using init_fn = void(CORECLR_DELEGATE_CALLTYPE*)();
 using main_fn = int (                         *)();
@@ -100,13 +100,6 @@ static int s1_main(void) {
     if (!s1_bridge_init()) {
         fwprintf_s(stderr, L"Failed to initialize the Stage 1 debug bridge.\n");
         return FALSE;
-    }
-
-    // If necessary, suppress the game's SEH filters, so Stage 0
-    // takes over exception handling and core dumping.
-    if (!s1_eh_suppress()) {
-        fwprintf_s(stderr, L"Failed to suppress SEH filter.\n");
-        return 1;
     }
 
     // Declare the name, type, and location of the bootstrap method to invoke.

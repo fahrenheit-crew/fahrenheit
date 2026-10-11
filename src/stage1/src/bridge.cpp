@@ -15,7 +15,7 @@
 fn_s1_load g_fnptr_load_cb; // A pointer to a callback to invoke when loading a DLL.
 fn_s1_free g_fnptr_free_cb; // A pointer to a callback to invoke when unloading a DLL.
 
-HANDLE g_lock_cb;     // A event blocking access to the load/unload functions while callbacks are executing.
+HANDLE g_lock_cb;     // An event blocking access to the load/unload functions while callbacks are executing.
 HANDLE g_bridge_pipe; // A named pipe to communicate with Stage 0.
 
 FH_DBG_COMM_MSG g_bridge_msg;
@@ -140,7 +140,7 @@ BOOL s1_bridge_init() {
 
 // Invoked in response to a Stage 0 module load message.
 void s1_bridge_load(
-    DLL_LOAD_DATA* ptr_load_data
+    DLL_LOAD_DATA* ptr_load_data // A pointer to a structure describing the loaded module.
 ) {
     if (WaitForSingleObject(g_lock_cb, INFINITE) != WAIT_OBJECT_0) {
         fwprintf_s(stderr, L"[!] WaitForSingleObject failed with code 0x%X - load message dropped.\n", GetLastError());
@@ -154,7 +154,7 @@ void s1_bridge_load(
 
 // Invoked in response to a Stage 0 module unload message.
 void s1_bridge_free(
-    void* ptr_dll_base //
+    void* ptr_dll_base // The base address of the module being unloaded.
 ) {
     if (WaitForSingleObject(g_lock_cb, INFINITE) != WAIT_OBJECT_0) {
         fwprintf_s(stderr, L"[!] WaitForSingleObject failed with code 0x%X - free message dropped.\n", GetLastError());

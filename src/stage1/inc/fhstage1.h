@@ -33,4 +33,4 @@ struct FH_DBG_COMM_MSG {
     } u;
 };
 
-#define FH_DBG_PIPE_NAME L"\\\\.\\pipe\\fahrenheit-crew.fahrenheit.DBG_COMM"
+constexpr const wchar_t* FH_DBG_PIPE_NAME = LR"(\\.\pipe\fahrenheit-crew.fahrenheit.DBG_COMM)";

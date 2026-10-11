@@ -17,15 +17,14 @@
 
 fn_s1_load   g_fnptr_load_cb;   // A pointer to a callback to invoke when loading a DLL.
 fn_s1_unload g_fnptr_unload_cb; // A pointer to a callback to invoke when unloading a DLL.
+HANDLE       g_lock_cb;         // Serializes access to the callback pointers.
 
-HANDLE g_bridge_pipe; // A named pipe to communicate with Stage 0.
+HANDLE g_link_pipe; // A named pipe to communicate with Stage 0.
 
 std::queue<FH_DBG_MSG> g_msgs;
 
-HANDLE g_lock_cb; // Serializes access to the callback pointers.
-
 // Drains the queue of as-yet unprocessed messages.
-static void s1_bridge_drain_queue() {
+static void s1_dbg_link_drain_queue() {
     /* [fkelava 11/10/26 21:45]
      * `g_lock_cb` must be held here.
      */
@@ -51,7 +50,7 @@ static void s1_bridge_drain_queue() {
 }
 
 // Sets the function to be invoked when a library is loaded.
-void s1_bridge_set_load_cb(
+void s1_dbg_link_set_load_cb(
     fn_s1_load fnptr_cb // A pointer to the callback to invoke.
 ) {
     if (g_lock_cb == nullptr || g_lock_cb == INVALID_HANDLE_VALUE) {
@@ -67,13 +66,13 @@ void s1_bridge_set_load_cb(
     g_fnptr_load_cb = fnptr_cb;
 
     if (!SetEvent(g_lock_cb)) {
-        fwprintf_s(stderr, L"SetEvent() failed with code 0x%X - callback aborted.\n", GetLastError());
+        fwprintf_s(stderr, L"SetEvent() failed with code 0x%X while setting load callback.\n", GetLastError());
         return;
     }
 }
 
 // Sets the function to be invoked when a library is freed.
-void s1_bridge_set_unload_cb(
+void s1_dbg_link_set_unload_cb(
     fn_s1_unload fnptr_cb // A pointer to the callback to invoke.
 ) {
     if (g_lock_cb == nullptr || g_lock_cb == INVALID_HANDLE_VALUE) {
@@ -89,7 +88,7 @@ void s1_bridge_set_unload_cb(
     g_fnptr_unload_cb = fnptr_cb;
 
     if (!SetEvent(g_lock_cb)) {
-        fwprintf_s(stderr, L"SetEvent() failed with code 0x%X - callback aborted.\n", GetLastError());
+        fwprintf_s(stderr, L"SetEvent() failed with code 0x%X while setting unload callback.\n", GetLastError());
         return;
     }
 }
@@ -100,7 +99,7 @@ void s1_bridge_set_unload_cb(
  */
 
 // The debug pipe thread procedure.
-static DWORD WINAPI s1_dbg_bridge_proc(LPVOID lpvParam) {
+static DWORD WINAPI s1_dbg_link_proc(LPVOID lpvParam) {
     while (true) {
         /* [fkelava 11/10/26 03:00]
          * The pipe is created in blocking (PIPE_WAIT) mode by Stage 0. Thus:
@@ -112,33 +111,33 @@ static DWORD WINAPI s1_dbg_bridge_proc(LPVOID lpvParam) {
         DWORD      bytes_read = 0;
 
         if (!ReadFile(
-            g_bridge_pipe,
+            g_link_pipe,
             &msg,
             sizeof(FH_DBG_MSG),
             &bytes_read,
             NULL
         )) {
-            fwprintf_s(stderr, L"[!] Debug pipe client aborting. ReadFile failed with code 0x%X.\n", GetLastError());
+            fwprintf_s(stderr, L"[!] Debug link client aborting. ReadFile failed with code 0x%X.\n", GetLastError());
             break;
         }
 
         g_msgs.emplace(msg);
 
         if (WaitForSingleObject(g_lock_cb, INFINITE) != WAIT_OBJECT_0) {
-            fwprintf_s(stderr, L"[!] Debug pipe client aborting. WaitForSingleObject failed with code 0x%X.\n", GetLastError());
+            fwprintf_s(stderr, L"[!] Debug link client aborting. WaitForSingleObject failed with code 0x%X.\n", GetLastError());
             break;
         }
 
-        s1_bridge_drain_queue();
+        s1_dbg_link_drain_queue();
 
         if (!SetEvent(g_lock_cb)) {
-            fwprintf_s(stderr, L"[!] Debug pipe client aborting. SetEvent failed with code 0x%X.\n", GetLastError());
+            fwprintf_s(stderr, L"[!] Debug link client aborting. SetEvent failed with code 0x%X.\n", GetLastError());
             break;
         }
     }
 
-    if (!CloseHandle(g_bridge_pipe)) {
-        fwprintf_s(stderr, L"[!] Failed to close debug pipe with code 0x%X.\n", GetLastError());
+    if (!CloseHandle(g_link_pipe)) {
+        fwprintf_s(stderr, L"[!] Failed to close debug link with code 0x%X.\n", GetLastError());
         return FALSE;
     }
 
@@ -146,13 +145,13 @@ static DWORD WINAPI s1_dbg_bridge_proc(LPVOID lpvParam) {
 }
 
 // Prepares for communication with Stage 0 through the debug pipe.
-BOOL s1_bridge_init() {
+BOOL s1_dbg_link_init() {
     /* [fkelava 08/10/26 23:08]
      * > If no instances of the specified named pipe exist, {...} returns immediately regardless of time-out.
      * If the pipe doesn't exist, we can assume we're in --extdbg mode and the debug bridge should not be enabled.
      */
     if (!WaitNamedPipeW(
-        FH_DBG_PIPE_NAME,
+        FH_DBG_LINK_NAME,
         NMPWAIT_WAIT_FOREVER
     )) {
         return TRUE;
@@ -170,8 +169,8 @@ BOOL s1_bridge_init() {
      * > The client can specify GENERIC_READ or GENERIC_WRITE, or both,
      * > when it connects to the pipe using the CreateFile function.
      */
-    g_bridge_pipe = CreateFileW(
-        FH_DBG_PIPE_NAME,
+    g_link_pipe = CreateFileW(
+        FH_DBG_LINK_NAME,
         GENERIC_READ | GENERIC_WRITE,
         0,
         nullptr,
@@ -180,7 +179,7 @@ BOOL s1_bridge_init() {
         nullptr
     );
 
-    if (g_bridge_pipe == nullptr || g_bridge_pipe == INVALID_HANDLE_VALUE) {
+    if (g_link_pipe == nullptr || g_link_pipe == INVALID_HANDLE_VALUE) {
         fwprintf_s(stderr, L"[!] CreateFileW() failed with code 0x%X.\n", GetLastError());
         return FALSE;
     }
@@ -191,7 +190,7 @@ BOOL s1_bridge_init() {
      */
     DWORD pipe_mode = PIPE_READMODE_MESSAGE;
     if (!SetNamedPipeHandleState(
-        g_bridge_pipe,
+        g_link_pipe,
         &pipe_mode,
         nullptr,
         nullptr)
@@ -204,20 +203,20 @@ BOOL s1_bridge_init() {
     HANDLE h_thread = CreateThread(
         nullptr,
         0,
-        s1_dbg_bridge_proc,
+        s1_dbg_link_proc,
         nullptr,
         0,
         &id_thread
     );
 
     if (h_thread == nullptr || h_thread == INVALID_HANDLE_VALUE) {
-        fwprintf_s(stderr, L"[!] Failed to create debug pipe thread with code 0x%X.\n", GetLastError());
+        fwprintf_s(stderr, L"[!] Failed to create debug link thread with code 0x%X.\n", GetLastError());
         return FALSE;
     }
 
-    HRESULT hr = SetThreadDescription(h_thread, L"Stage 1 - Debug Pipe Client");
+    HRESULT hr = SetThreadDescription(h_thread, L"Stage 1 - Debug Link Client");
     if (FAILED(hr)) {
-        fwprintf_s(stderr, L"[!] Failed to set debug pipe thread name with code 0x%X.\n", hr);
+        fwprintf_s(stderr, L"[!] Failed to set debug link thread name with code 0x%X.\n", hr);
         return FALSE;
     }
 

@@ -26,7 +26,7 @@
     <ClCompile Include="src\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\bridge.cpp">
+    <ClCompile Include="src\dbg_link.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

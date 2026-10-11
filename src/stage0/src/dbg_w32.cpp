@@ -382,7 +382,7 @@ static DWORD s0_dbg_w32_exception(
      * prepares the debug pipe for Stage 1 to connect to. The function is a no-op on subsequent BPs.
      */
     if (ptr_exception_record->ExceptionCode == STATUS_BREAKPOINT) {
-        if (!s0_dbg_bridge_init()) {
+        if (!s0_dbg_link_init()) {
             fwprintf_s(stderr, L"[!] Failed to initialize debug bridge.\n");
             TerminateProcess(h_process, 1);
         }
@@ -574,7 +574,7 @@ static BOOL s0_dbg_w32_module_load(
     g_modules        [ptr_module_base] = load_data;
     g_checked_symbols[ptr_module_base] = false;
 
-    s0_dbg_bridge_send(load_data);
+    s0_dbg_link_send(load_data);
 
     if (hr != S_OK) {
         fwprintf_s(stderr, L"[!] StringCchCopyW() failed with code 0x%X.\n", hr);
@@ -602,7 +602,7 @@ static BOOL s0_dbg_w32_module_unload(
     FH_DBG_MOD_UNLOAD data_unload = { };
     data_unload.module_base = ptr_module_base;
 
-    s0_dbg_bridge_send(data_unload);
+    s0_dbg_link_send(data_unload);
 
     if (!SymUnloadModule64(
         h_process,

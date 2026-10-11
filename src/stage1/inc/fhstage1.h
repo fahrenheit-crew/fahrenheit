@@ -21,8 +21,8 @@ using fn_s1_load   = void (__stdcall*) (FH_DBG_MOD_LOAD*   ptr_data_load);
 using fn_s1_unload = void (__stdcall*) (FH_DBG_MOD_UNLOAD* ptr_data_unload);
 
 extern "C" {
-    __declspec(dllexport) void s1_bridge_set_load_cb  (fn_s1_load   fnptr_cb);
-    __declspec(dllexport) void s1_bridge_set_unload_cb(fn_s1_unload fnptr_cb);
+    __declspec(dllexport) void s1_dbg_link_set_load_cb  (fn_s1_load   fnptr_cb);
+    __declspec(dllexport) void s1_dbg_link_set_unload_cb(fn_s1_unload fnptr_cb);
 }
 
 enum FH_DBG_MSG_TYPE {
@@ -39,4 +39,4 @@ struct FH_DBG_MSG {
     } data;
 };
 
-constexpr const wchar_t* FH_DBG_PIPE_NAME = LR"(\\.\pipe\fahrenheit-crew.fahrenheit.DBG_COMM)";
+constexpr const wchar_t* FH_DBG_LINK_NAME = LR"(\\.\pipe\fahrenheit-crew.fahrenheit.DBG_LINK)";

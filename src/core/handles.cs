@@ -58,15 +58,20 @@ internal sealed class FhRuntimeHandle<T> {
 /// </summary>
 public readonly ref struct FhMethodLocation {
 
-    // We cache module and export locations to avoid looking them up on every instantiation.
+    /* [fkelava 11/10/26 22:05]
+     * When Stage 0 is active (not in `--extdbg` mode), it uses the debug link
+     * to communicate module (un)load information to Stage 1, which Fahrenheit
+     * then probes from. This allows us to cache module and export locations safely.
+     */
+
     private readonly static Dictionary<string,         nint> _s_modules = [];
     private readonly static Dictionary<(nint, string), nint> _s_exports = [];
 
     private readonly nint _ptr_target;
 
     unsafe static FhMethodLocation() {
-        FhPInvoke.s1_bridge_set_load_cb  (&s1_load);
-        FhPInvoke.s1_bridge_set_unload_cb(&s1_unload);
+        FhPInvoke.s1_dbg_link_set_load_cb  (&s1_load);
+        FhPInvoke.s1_dbg_link_set_unload_cb(&s1_unload);
     }
 
     [UnmanagedCallersOnly(CallConvs = [ typeof(CallConvStdcall) ] )]

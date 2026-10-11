@@ -30,7 +30,7 @@
 #include <MinHook.h>
 
 // Forward declarations
-BOOL s1_bridge_init(); // Debug bridge initializer.
+BOOL s1_dbg_link_init(); // Debug bridge initializer.
 
 using init_fn = void(CORECLR_DELEGATE_CALLTYPE*)();
 using main_fn = int (                         *)();
@@ -97,7 +97,7 @@ static int s1_main(void) {
      * If that happens on your system, block here and attach with WinDbg.
      */
 
-    if (!s1_bridge_init()) {
+    if (!s1_dbg_link_init()) {
         fwprintf_s(stderr, L"Failed to initialize the Stage 1 debug bridge.\n");
         return FALSE;
     }

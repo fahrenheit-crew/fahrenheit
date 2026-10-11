@@ -41,9 +41,9 @@ HRESULT s0_dbg_cor_stack_walk(
     DWORD  id_thread
 );
 
-BOOL s0_dbg_bridge_init();
-void s0_dbg_bridge_send(FH_DBG_MOD_LOAD   mod_load);
-void s0_dbg_bridge_send(FH_DBG_MOD_UNLOAD mod_unload);
+BOOL s0_dbg_link_init();
+void s0_dbg_link_send(FH_DBG_MOD_LOAD   mod_load);
+void s0_dbg_link_send(FH_DBG_MOD_UNLOAD mod_unload);
 
 void s0_dbg_w32_main();
 

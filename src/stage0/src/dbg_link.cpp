@@ -153,7 +153,7 @@ void s0_dbg_link_send(FH_DBG_MOD_LOAD data_load) {
 // Sends a module unload message through the debug link.
 void s0_dbg_link_send(FH_DBG_MOD_UNLOAD data_unload) {
     FH_DBG_MSG msg = { };
-    msg.type            = MSG_LOAD;
+    msg.type            = MSG_UNLOAD;
     msg.data.mod_unload = data_unload;
 
     g_msgs.emplace(msg);

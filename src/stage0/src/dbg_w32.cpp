@@ -561,7 +561,7 @@ static BOOL s0_dbg_w32_module_load(
         return FALSE;
     }
 
-    FH_DBG_MOD_LOAD load_data = { 0 };
+    FH_DBG_MOD_LOAD load_data = { };
     load_data.module_base = ptr_module_base;
     load_data.module_size = module_size;
 

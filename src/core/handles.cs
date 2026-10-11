@@ -66,6 +66,7 @@ public readonly ref struct FhMethodLocation {
 
     private readonly static Dictionary<string,         nint> _s_modules = [];
     private readonly static Dictionary<(nint, string), nint> _s_exports = [];
+    private          static int                              _lock      = 0;
 
     private readonly nint _ptr_target;
 
@@ -74,11 +75,48 @@ public readonly ref struct FhMethodLocation {
         FhPInvoke.s1_dbg_link_set_unload_cb(&s1_unload);
     }
 
-    [UnmanagedCallersOnly(CallConvs = [ typeof(CallConvStdcall) ] )]
-    private unsafe static void s1_load(FhPInvoke.DBG_MODULE_LOAD* ptr_data_load) { }
+    /* [fkelava 11/10/26 22:05]
+     * Callback invokes are serialized by Stage 1, so we only need
+     * to lock with respect to `get_module_addr` and `get_export`.
+     */
 
     [UnmanagedCallersOnly(CallConvs = [ typeof(CallConvStdcall) ] )]
-    private unsafe static void s1_unload(FhPInvoke.DBG_MODULE_UNLOAD* ptr_data_unload) { }
+    private unsafe static void s1_load(FhPInvoke.DBG_MODULE_LOAD* ptr_data_load) {
+        Interlocked.Increment(ref _lock);
+
+        string dll_full_path = new(ptr_data_load->dll_name);
+        string dll_name      = Path.GetFileName(dll_full_path);
+
+        _s_modules[dll_name] = ptr_data_load->dll_base;
+
+        Interlocked.Decrement(ref _lock);
+    }
+
+    [UnmanagedCallersOnly(CallConvs = [ typeof(CallConvStdcall) ] )]
+    private unsafe static void s1_unload(FhPInvoke.DBG_MODULE_UNLOAD* ptr_data_unload) {
+        Interlocked.Increment(ref _lock);
+
+        nint unloaded_module_base = ptr_data_unload->dll_base;
+        foreach ((string module_name, nint module_base) in _s_modules) {
+            if (module_base != unloaded_module_base) continue;
+
+            _s_modules.Remove(module_name);
+            break;
+        }
+
+        List<(nint, string)> exports_to_remove = [];
+        foreach ((nint module_base, string export_name) in _s_exports.Keys) {
+            if (module_base != unloaded_module_base) continue;
+
+            exports_to_remove.Add((module_base, export_name));
+        }
+
+        foreach ((nint, string) export in exports_to_remove) {
+            _s_exports.Remove(export);
+        }
+
+        Interlocked.Decrement(ref _lock);
+    }
 
     /// <summary>
     ///     Use this constructor for functions which are analogous between FF X and X-2.
@@ -127,9 +165,9 @@ public readonly ref struct FhMethodLocation {
     /// </summary>
     /// <returns>The address of the specified module, or zero if it is not loaded.</returns>
     private static nint get_module_addr(string module_name) {
-        return _s_modules.TryGetValue(module_name, out nint ptr_module)
+        return _lock == 0 && _s_modules.TryGetValue(module_name, out nint ptr_module)
             ? ptr_module
-            : (_s_modules[module_name] = FhPInvoke.GetModuleHandle(module_name));
+            : FhPInvoke.GetModuleHandle(module_name);
     }
 
     /// <summary>
@@ -139,6 +177,10 @@ public readonly ref struct FhMethodLocation {
     /// <param name="ptr_fn">The pointer to the given export, or zero if it does not exist.</param>
     /// <returns>Whether the export exists.</returns>
     private static bool get_export(nint module_addr, string export, out nint ptr_fn) {
+        if (_lock != 0) {
+            return NativeLibrary.TryGetExport(module_addr, export, out ptr_fn);
+        }
+
         var key = (module_addr, export);
 
         if (_s_exports.TryGetValue(key, out ptr_fn))

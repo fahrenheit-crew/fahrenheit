@@ -27,8 +27,8 @@ public abstract class BaseScrollable<T> : BaseScrollable
     /// <summary>The length of the range of positions the scrollable can display at once.</summary>
     public T visible { get; set; } = T.Zero;
 
-    /// <summary>The amount of T the scroll wheel should scroll</summary>
-    public float wheel_scroll_multiplier { get; set; } = 3f;
+    /// <summary>The amount a single-step scroll input should scroll.</summary>
+    public T scroll_step_size { get; set; } = T.One;
 
     /// <summary>The maximum position of the top of the visible range of the scrollable.</summary>
     protected T max_current => max - visible;
@@ -173,13 +173,11 @@ public abstract class BaseScrollable<T> : BaseScrollable
             || scroll_to_end;
 
         if (mouse_wheel > 0) {
-            float scroll_amount = -float.CreateChecked(T.One) * wheel_scroll_multiplier;
-            scroll(T.CreateChecked(scroll_amount));
+            scroll(-scroll_step_size);
         }
 
         if (mouse_wheel < 0) {
-            float scroll_amount = -float.CreateChecked(T.One) * wheel_scroll_multiplier;
-            scroll(T.CreateChecked(scroll_amount));
+            scroll(scroll_step_size);
         }
 
         if (scroll_pg_up || scroll_pg_up_held) {
@@ -233,8 +231,6 @@ public class SteppedScrollable : BaseScrollable<int> {
     public SteppedScrollable(int max = 0, int visible = 0) {
         this.max     = max;
         this.visible = visible;
-
-        wheel_scroll_multiplier = 1f;
     }
 
     /// <summary>The currently hovered position in the scrollable.</summary>

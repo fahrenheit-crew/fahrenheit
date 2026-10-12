@@ -15,7 +15,6 @@
     <File Path="README.md" />
     <File Path="THIRD-PARTY-NOTICES" />
   </Folder>
-  <Project Path="src/atelier/Fahrenheit.Tools.Atelier.csproj" />
   <Project Path="src/core/Fahrenheit.csproj" />
   <Project Path="src/dedit/Fahrenheit.Tools.DEdit.csproj" />
   <Project Path="src/eedit/Fahrenheit.Tools.EEdit.csproj" />

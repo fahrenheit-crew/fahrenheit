@@ -5,8 +5,6 @@
 
 namespace Fahrenheit.Runtime.Gui;
 
-using SettingRenderer = FhSettingRenderer<FhSetting, FhSettingsUiX>;
-
 public partial class FhSettingsUiX {
     public interface ICapturingRenderer {
         public string get_input_help_text();

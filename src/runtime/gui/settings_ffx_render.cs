@@ -12,6 +12,208 @@ public partial class FhSettingsUiX {
         public string get_input_help_text();
     }
 
+    private abstract class Renderer_Base<T> : FhSettingRenderer<T, FhSettingsUiX>
+        where T : FhSetting {
+
+        internal protected override Vector2 get_size(FhSettingsUiX ui) {
+            return new Vector2(0f, 65f);
+        }
+
+        protected bool render_background(
+            FhSettingsUiX ui,
+
+            Rect max_bounds,
+
+            [NotNullWhen(true)] out Rect? name_bounds,
+            [NotNullWhen(true)] out Rect? value_bounds
+        ) {
+            if (!ui._texture_battle_kuang.try_use(out ImTextureRef battle_kuang, out _)) {
+                name_bounds  = null;
+                value_bounds = null;
+                return false;
+            }
+
+            GradientStep[] make_gradient(uint color) {
+                return [
+                    new(0.0f, color & 0x00FFFFFF),
+                    new(0.2f, color),
+                    new(0.8f, color),
+                    new(1.0f, color & 0x00FFFFFF),
+                ];
+            }
+
+            ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
+
+            // Shadow
+            float shadow_height = 5f;
+            Rect shadow = max_bounds with {
+                pos  = max_bounds.pos  with { Y = max_bounds.bottom_left.Y - shadow_height },
+                size = max_bounds.size with { Y = shadow_height },
+            };
+
+            GradientStep[] shadow_steps = make_gradient(0x60000000);
+
+            FhApi.Gui.draw_rectangle_gradient(
+                draw,
+                shadow.scale_to_aspect(ui.aspect_helper),
+                GradientDirection.RIGHT,
+                shadow_steps
+            );
+
+            // Background
+            Rect bg_bounds = max_bounds;
+            bg_bounds.size.Y -= shadow_height;
+
+            GradientStep[] bg_steps = [
+                new(0.0f, 0x0070212A),
+                new(0.2f, 0xA070212A),
+                new(0.5f, 0xA070212A),
+                new(0.8f, 0xA0030303),
+                new(1.0f, 0x00030303),
+            ];
+
+            FhApi.Gui.draw_rectangle_gradient(
+                draw,
+                bg_bounds.scale_to_aspect(ui.aspect_helper),
+                GradientDirection.RIGHT,
+                bg_steps
+            );
+
+            // Separator
+            UV separator_tuv = new Rect {
+                pos  = new(1515f, 797f),
+                size = new(88f, 57f),
+            }.as_uv(ui._tex_battle_kuang_size);
+
+            Rect separator_start = new() {
+                pos  = new(
+                    bg_bounds.pos.X + bg_bounds.size.X * 0.32f,
+                    bg_bounds.pos.Y + 2f
+                ),
+                size = new(88f, 57f),
+            };
+
+            UV separator_suv = separator_start
+                .scale_to_aspect(ui.aspect_helper)
+                .as_uv();
+
+            draw.AddImage(
+                battle_kuang,
+                separator_suv.p0,
+                separator_suv.p1,
+                separator_tuv.p0,
+                separator_tuv.p1,
+                0x80FFFFFF
+            );
+
+            // Separator Fade
+            uint color_separator_l = 0x70FFFFFF;
+            uint color_separator_r = 0x00FFFFFF;
+
+            float separator_width = 245f;
+
+            float separator_diff_width = separator_start.size.Y;
+
+            Vector2 separator_tl = separator_start.pos with {
+                X = separator_start.pos.X + separator_start.size.X,
+            };
+
+            Vector2 separator_tr = separator_tl with {
+                X = separator_tl.X + separator_width - separator_diff_width,
+            };
+
+            Vector2 separator_bl = separator_start.pos + separator_start.size;
+
+            Vector2 separator_br = separator_bl with {
+                X = separator_bl.X + separator_width,
+            };
+
+            separator_tl *= ui.aspect_scale;
+            separator_tr *= ui.aspect_scale;
+            separator_bl *= ui.aspect_scale;
+            separator_br *= ui.aspect_scale;
+
+            FhApi.Gui.draw_quad_gradient(
+                draw,
+                [
+                    separator_tl,
+                    separator_tr,
+                    separator_bl,
+                    separator_br,
+                ],
+                [
+                    color_separator_l,
+                    color_separator_r,
+                    color_separator_l,
+                    color_separator_r,
+                ]
+            );
+
+            // Borders
+            GradientStep[] top_steps    = make_gradient(0xFFCCCCDD);
+            GradientStep[] bottom_steps = make_gradient(0xFF000000);
+
+            Rect top_border = new Rect {
+                pos  = bg_bounds.pos  with { Y = bg_bounds.top.Y + 1f },
+                size = bg_bounds.size with { Y = 1f },
+            }.scale_to_aspect(ui.aspect_helper, new(1f));
+
+            Rect bottom_border = new Rect {
+                pos  = bg_bounds.pos  with { Y = bg_bounds.bottom.Y - 1f },
+                size = bg_bounds.size with { Y = 1f },
+            }.scale_to_aspect(ui.aspect_helper, new(1f));
+
+            FhApi.Gui.draw_rectangle_gradient(
+                draw,
+                top_border,
+                GradientDirection.RIGHT,
+                top_steps
+            );
+
+            FhApi.Gui.draw_rectangle_gradient(
+                draw,
+                bottom_border,
+                GradientDirection.RIGHT,
+                bottom_steps
+            );
+
+            name_bounds = new Rect {
+                pos  = bg_bounds.top_left,
+                size = bg_bounds.size with {
+                    X = separator_start.left.X - bg_bounds.left.X + 5f,
+                },
+            };
+
+            float separator_right = separator_start.right.X + 10f;
+
+            value_bounds = new Rect {
+                pos  = separator_start.top_right with {
+                    X = separator_right,
+                },
+                size = bg_bounds.size with {
+                    X = bg_bounds.right.X - separator_right,
+                },
+            };
+
+            return true;
+        }
+
+        protected void render_name(FhSettingsUiX ui, Rect name_bounds, string name) {
+            ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
+
+            float font_size = 36f * ui.font_scale;
+
+            FhApi.Gui.draw_text(
+                draw,
+                name_bounds.right * ui.aspect_scale,
+                name,
+                font_size,
+                true,
+                new(Alignment.END, Alignment.CENTER)
+            );
+        }
+    }
+
     private class Renderer_Category
         : FhSettingRenderer<FhSettingsCategory, FhSettingsUiX> {
 
@@ -162,189 +364,29 @@ public partial class FhSettingsUiX {
         }
     }
 
-    private class Renderer_Toggle
-        : FhSettingRenderer<FhSettingToggle, FhSettingsUiX> {
+    private class Renderer_Toggle : Renderer_Base<FhSettingToggle> {
+        private static string _text_on  => FhApi.Localization.localize($"{typeof(FhSettingsUiBase)}.input.on");
+        private static string _text_off => FhApi.Localization.localize($"{typeof(FhSettingsUiBase)}.input.off");
 
-        internal protected override Vector2 get_size(FhSettingsUiX ui) {
-            return new Vector2(0f, 65f);
-        }
-
-        private GradientStep[] make_gradient(uint color) {
-            return [
-                new(0.0f, color & 0x00FFFFFF),
-                new(0.2f, color),
-                new(0.8f, color),
-                new(1.0f, color & 0x00FFFFFF),
-            ];
-        }
-
-        internal protected override void render(FhSettingsUiX ui, FhSettingToggle toggle, Rect max_bounds) {
-            if (
-                !ui._texture_battle_kuang.try_use(out ImTextureRef battle_kuang, out _)
-                || !ui._texture_meswin   .try_use(out ImTextureRef meswin, out _)
-            ) {
+        protected void render_options(FhSettingsUiX ui, FhSettingToggle toggle, Rect value_bounds) {
+            if (!ui._texture_meswin.try_use(out ImTextureRef meswin, out _)) {
                 return;
             }
 
             ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
-            // Shadow
-            float shadow_height = 5f;
-            Rect shadow = max_bounds with {
-                pos  = max_bounds.pos  with { Y = max_bounds.bottom_left.Y - shadow_height },
-                size = max_bounds.size with { Y = shadow_height },
-            };
-
-            GradientStep[] shadow_steps = make_gradient(0x60000000);
-
-            FhApi.Gui.draw_rectangle_gradient(
-                draw,
-                shadow.scale_to_aspect(ui.aspect_helper),
-                GradientDirection.RIGHT,
-                shadow_steps
-            );
-
-            // Background
-            Rect bg_bounds = max_bounds;
-            bg_bounds.size.Y -= shadow_height;
-
-            GradientStep[] bg_steps = [
-                new(0.0f, 0x0070212A),
-                new(0.2f, 0xA070212A),
-                new(0.5f, 0xA070212A),
-                new(0.8f, 0xA0030303),
-                new(1.0f, 0x00030303),
-            ];
-
-            FhApi.Gui.draw_rectangle_gradient(
-                draw,
-                bg_bounds.scale_to_aspect(ui.aspect_helper),
-                GradientDirection.RIGHT,
-                bg_steps
-            );
-
-            // Separator
-            UV separator_tuv = new Rect {
-                pos  = new(1515f, 797f),
-                size = new(88f, 57f),
-            }.as_uv(ui._tex_battle_kuang_size);
-
-            Rect separator_start = new() {
-                pos  = new(
-                    bg_bounds.pos.X + bg_bounds.size.X * 0.32f,
-                    bg_bounds.pos.Y + 2f
-                ),
-                size = new(88f, 57f),
-            };
-
-            UV separator_suv = separator_start
-                .scale_to_aspect(ui.aspect_helper)
-                .as_uv();
-
-            draw.AddImage(
-                battle_kuang,
-                separator_suv.p0,
-                separator_suv.p1,
-                separator_tuv.p0,
-                separator_tuv.p1,
-                0x80FFFFFF
-            );
-
-            // Separator Fade
-            uint color_separator_l = 0x70FFFFFF;
-            uint color_separator_r = 0x00FFFFFF;
-
-            float separator_width = 245f * ui.aspect_scale.X;
-
-            float separator_diff_width = separator_start.size.Y;
-
-            Vector2 separator_tl = ui.aspect_scale * separator_start.pos with {
-                X = separator_start.pos.X + separator_start.size.X,
-            };
-
-            Vector2 separator_tr = separator_tl with {
-                X = separator_tl.X + separator_width - separator_diff_width,
-            };
-
-            Vector2 separator_bl = ui.aspect_scale * (separator_start.pos + separator_start.size);
-
-            Vector2 separator_br = separator_bl with {
-                X = separator_bl.X + separator_width,
-            };
-
-            FhApi.Gui.draw_quad_gradient(
-                draw,
-                [
-                    separator_tl,
-                    separator_tr,
-                    separator_bl,
-                    separator_br,
-                ],
-                [
-                    color_separator_l,
-                    color_separator_r,
-                    color_separator_l,
-                    color_separator_r,
-                ]
-            );
-
-            // Borders
-            GradientStep[] top_steps    = make_gradient(0xFFCCCCDD);
-            GradientStep[] bottom_steps = make_gradient(0xFF000000);
-
-            Rect top_border = new Rect {
-                pos  = bg_bounds.pos  with { Y = bg_bounds.top.Y + 1f },
-                size = bg_bounds.size with { Y = 1f },
-            }.scale_to_aspect(ui.aspect_helper, new(1f));
-
-            Rect bottom_border = new Rect {
-                pos  = bg_bounds.pos  with { Y = bg_bounds.bottom.Y - 1f },
-                size = bg_bounds.size with { Y = 1f },
-            }.scale_to_aspect(ui.aspect_helper, new(1f));
-
-            FhApi.Gui.draw_rectangle_gradient(
-                draw,
-                top_border,
-                GradientDirection.RIGHT,
-                top_steps
-            );
-
-            FhApi.Gui.draw_rectangle_gradient(
-                draw,
-                bottom_border,
-                GradientDirection.RIGHT,
-                bottom_steps
-            );
-
-            // Name
-            float font_size = 36f * ui.font_scale;
-
-            Vector2 name_pos = separator_start.left;
-            name_pos.X += 5f;
-
-            FhApi.Gui.draw_text(
-                draw,
-                name_pos * ui.aspect_scale,
-                toggle.name,
-                font_size,
-                true,
-                new(Alignment.END, Alignment.CENTER)
-            );
-
             // Options
-            float post_separator_width = bg_bounds.right.X - separator_start.left.X;
+            Vector2 on_pos  = value_bounds.left;
+            Vector2 off_pos = value_bounds.left;
 
-            Vector2 on_pos  = separator_start.left;
-            Vector2 off_pos = separator_start.left;
-
-            on_pos.X  += post_separator_width * 1f/3f;
-            off_pos.X += post_separator_width * 2f/3f;
+            on_pos.X  += value_bounds.size.X * 3f/12f;
+            off_pos.X += value_bounds.size.X * 8f/12f;
 
             FhApi.Gui.draw_text(
                 draw,
                 on_pos * ui.aspect_scale,
-                FhApi.Localization.localize($"{typeof(FhSettingsUiBase)}.input.on"),
-                font_size,
+                _text_on,
+                ui.font_size,
                 true,
                 new(Alignment.CENTER, Alignment.CENTER)
             );
@@ -352,32 +394,42 @@ public partial class FhSettingsUiX {
             FhApi.Gui.draw_text(
                 draw,
                 off_pos * ui.aspect_scale,
-                FhApi.Localization.localize($"{typeof(FhSettingsUiBase)}.input.off"),
-                font_size,
+                _text_off,
+                ui.font_size,
                 true,
                 new(Alignment.CENTER, Alignment.CENTER)
             );
 
             // Underline
-            Vector2 enabled_pos = toggle.get() ? on_pos : off_pos;
-
-            Vector2 underline_pos = enabled_pos with {
-                Y = enabled_pos.Y + 15f,
-            };
-
             Vector2 underline_size = new(220f, 9f);
 
-            underline_pos.X -= underline_size.X / 2f;
+            Rect underline_on = new Rect {
+                pos = new() {
+                    X = on_pos.X - underline_size.X / 2f,
+                    Y = on_pos.Y + 15f,
+                },
+                size = underline_size,
+            }.scale_to_aspect(ui.aspect_helper);
+
+            Rect underline_off = new Rect {
+                pos = new() {
+                    X = off_pos.X - underline_size.X / 2f,
+                    Y = off_pos.Y + 15f,
+                },
+                size = underline_size,
+            }.scale_to_aspect(ui.aspect_helper);
+
+            (Rect underline_active, Rect underline_inactive) =
+                toggle.get()
+                    ? (underline_on,  underline_off)
+                    : (underline_off, underline_on);
 
             UV underline_tuv = new Rect {
                 pos  = new(0f, 582f),
                 size = new(300f, 9f),
             }.as_uv(ui._tex_meswin_size);
 
-            UV underline_suv = new Rect {
-                pos  = underline_pos,
-                size = underline_size,
-            }.scale_to_aspect(ui.aspect_helper).as_uv();
+            UV underline_suv = underline_active.as_uv();
 
             draw.AddImage(
                 meswin,
@@ -386,6 +438,58 @@ public partial class FhSettingsUiX {
                 underline_tuv.p0,
                 underline_tuv.p1
             );
+
+            Rect hitbox_inactive = new Rect {
+                pos  = (toggle.get() ? off_pos : on_pos) with {
+                    Y = value_bounds.top.Y,
+                },
+                size = new() {
+                    Y = value_bounds.size.Y,
+                },
+            }.expand(
+                new(off_pos.X - on_pos.X, 0f),
+                new(Alignment.CENTER, Alignment.BEGIN)
+            ).scale_to_aspect(ui.aspect_helper);
+
+            // Extra underline on hover
+            if (ui.mouse_hovered(hitbox_inactive, false)) {
+                underline_suv = underline_inactive.as_uv();
+
+                draw.AddImage(
+                    meswin,
+                    underline_suv.p0,
+                    underline_suv.p1,
+                    underline_tuv.p0,
+                    underline_tuv.p1,
+                    0x80FFFFFF
+                );
+            }
+
+            if (ui.mouse_clicked(hitbox_inactive)) {
+                toggle.set(!toggle.get());
+            }
+        }
+
+        internal protected override void render(FhSettingsUiX ui, FhSettingToggle toggle, Rect max_bounds) {
+            if (
+                !ui._texture_battle_kuang.try_use(out ImTextureRef battle_kuang, out _)
+                || !ui._texture_meswin   .try_use(out ImTextureRef meswin,       out _)
+            ) {
+                return;
+            }
+
+            if (!render_background(
+                ui,
+                max_bounds,
+                out Rect? name_bounds,
+                out Rect? value_bounds
+            )) {
+                return;
+            }
+
+            render_name(ui, (Rect)name_bounds, toggle.name);
+
+            render_options(ui, toggle, (Rect)value_bounds);
         }
 
         internal protected override void handle_input(FhSettingsUiX ui, FhSettingToggle toggle) {

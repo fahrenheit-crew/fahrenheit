@@ -61,6 +61,8 @@ public partial class FhSettingsUiX : FhSettingsUi {
 
     private BaseScrollable? _current_scrollable;
 
+    public float font_size => 36f * font_scale;
+
     // Textures
     private bool _loaded_all_textures;
 
@@ -155,8 +157,8 @@ public partial class FhSettingsUiX : FhSettingsUi {
         );
     }
 
-    private bool mouse_hovered(Rect rect) {
-        return FhApi.Gui.mouse_hovering(rect, true);
+    private bool mouse_hovered(Rect rect, bool require_movement = true) {
+        return FhApi.Gui.mouse_hovering(rect, require_movement);
     }
 
     private bool mouse_clicked(Rect rect, ImGuiMouseButton button = ImGuiMouseButton.Left, bool repeat = false) {
@@ -360,8 +362,6 @@ public partial class FhSettingsUiX : FhSettingsUi {
 
         Vector2 text_pos = bg_screen.left + new Vector2(24f, 5f) * aspect_scale;
 
-        float font_size = 36f * font_scale;
-
         FhApi.Gui.draw_text(
             draw,
             text_pos,
@@ -457,8 +457,6 @@ public partial class FhSettingsUiX : FhSettingsUi {
         text_pos.Y -= plate_shadow_height;
         text_pos.Y += 1f * aspect_scale.Y;
 
-        float font_size = 36f * font_scale;
-
         Vector2 text_size = FhApi.Gui.draw_text(
             draw,
             text_pos,
@@ -546,8 +544,6 @@ public partial class FhSettingsUiX : FhSettingsUi {
         Vector2 text_pos = plate_screen.center;
         text_pos.Y -= plate_shadow_height;
         text_pos.Y += 1f * aspect_scale.Y;
-
-        float font_size = 36f * font_scale;
 
         Vector2 text_size = FhApi.Gui.draw_text(
             draw,

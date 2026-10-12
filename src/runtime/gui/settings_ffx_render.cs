@@ -308,6 +308,17 @@ public partial class FhSettingsUiX {
 
             Rect arrow_suv = arrow_bounds.scale_to_aspect(ui.aspect_helper);
 
+            Rect arrow_hitbox = arrow_bounds.expand(
+                new(
+                    25f,
+                    (max_bounds.size.Y - shadow_height - arrow_bounds.size.Y) / 2f
+                ),
+                new(Alignment.BEGIN, Alignment.CENTER)
+            ).scale_to_aspect(ui.aspect_helper);
+
+            bool hovering_arrow = ui.mouse_hovered(arrow_hitbox, false);
+            uint arrow_color = hovering_arrow ? 0xFFA0F0FF : 0xFFFFFFFF;
+
             if (category.collapsed) {
                 // Upside-right
                 draw.AddImageQuad(
@@ -321,7 +332,9 @@ public partial class FhSettingsUiX {
                     arrow_tuv.top_left,
                     arrow_tuv.top_right,
                     arrow_tuv.bottom_right,
-                    arrow_tuv.bottom_left
+                    arrow_tuv.bottom_left,
+
+                    arrow_color
                 );
             }
             else {
@@ -337,7 +350,9 @@ public partial class FhSettingsUiX {
                     arrow_tuv.top_left,
                     arrow_tuv.top_right,
                     arrow_tuv.bottom_right,
-                    arrow_tuv.bottom_left
+                    arrow_tuv.bottom_left,
+
+                    arrow_color
                 );
             }
 
@@ -355,6 +370,11 @@ public partial class FhSettingsUiX {
                 true,
                 new(Alignment.BEGIN, Alignment.CENTER)
             );
+
+            // Input handling
+            if (ui.mouse_clicked(arrow_hitbox)) {
+                category.collapsed ^= true;
+            }
         }
 
         internal protected override void handle_input(FhSettingsUiX ui, FhSettingsCategory category) {

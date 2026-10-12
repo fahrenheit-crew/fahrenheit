@@ -18,7 +18,6 @@
   <Project Path="src/atelier/Fahrenheit.Tools.Atelier.csproj" />
   <Project Path="src/core/Fahrenheit.csproj" />
   <Project Path="src/dedit/Fahrenheit.Tools.DEdit.csproj" />
-  <Project Path="src/eedit/Fahrenheit.Tools.EEdit.csproj" />
   <Project Path="src/modmgr/Fahrenheit.Tools.ModManager.csproj" />
   <Project Path="src/runtime/Fahrenheit.Runtime.csproj" />
   <Project Path="src/sdk/Fahrenheit.Sdk.csproj" />

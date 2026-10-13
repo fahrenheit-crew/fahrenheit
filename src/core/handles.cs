@@ -91,7 +91,7 @@ public readonly ref struct FhMethodLocation {
 
         _s_modules[module_name] = module_base;
         _s_sizes  [module_base] = ptr_data_load->module_size;
-        FhInternal.Log.Info($"Module cached: {module_name} @ {module_base:X8}");
+        FhInternal.Log.Info($"Module cached: {module_name} @ 0x{module_base:X8}");
 
         Interlocked.Decrement(ref _lock);
     }

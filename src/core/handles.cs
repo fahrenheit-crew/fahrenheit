@@ -336,6 +336,7 @@ internal sealed class FhMethods {
             foreach (FhHookContext stack_entry in method_context.stack) {
                 if (!_chain.Remove(stack_entry.fnptr, out nint fnptr) || !_fnptrs.Remove(fnptr)) {
                     throw new Exception($"Failed to purge chain entry during invalidation pass.");
+                }
             }
 
             invalidated_addrs.Add(method_addr);
@@ -344,6 +345,7 @@ internal sealed class FhMethods {
         foreach (nint method_addr in invalidated_addrs) {
             if (!_methods.Remove(method_addr, out FhMethodContext? method_context)) {
                 throw new Exception($"Failed to purge method during invalidation pass.");
+            }
         }
 
         List<nint> invalidated_fnptrs = [];
@@ -357,6 +359,7 @@ internal sealed class FhMethods {
         foreach (nint fnptr in invalidated_fnptrs) {
             if (!_fnptrs.Remove(fnptr)) {
                 throw new Exception($"Failed to purge method during invalidation pass.");
+            }
         }
 
         _lock_chains.Set();

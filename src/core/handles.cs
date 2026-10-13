@@ -374,9 +374,9 @@ internal sealed class FhMethods {
     }
 
     /// <summary>
-    ///     Caches a delegate for the function of type <typeparamref name="T"/>
-    ///     at <paramref name="ptr_target"/>, or returns the cached one if it already exists.
+    ///     Caches a delegate for the function of type <typeparamref name="T"/> at <paramref name="ptr_target"/>.
     /// </summary>
+    /// <returns>A newly generated or cached delegate for the target function.</returns>
     public T get_fnptr<T>(nint ptr_target) where T : Delegate {
         _lock_chains.WaitOne();
 
@@ -414,22 +414,21 @@ internal sealed class FhMethods {
     }
 
     /* [fkelava 02/06/26 18:55]
-     * MinHook creates a problem for us here; it will not install two hooks for the same function.
+     * MinHook will not install two hooks for the same function.
      *
-     * Given MH_CreateHook(pTarget, pDetour, &ppOriginal), we can sequence `h1`, `h2` and `h3` over a function `f` as such:
+     * Given MH_CreateHook(pTarget, pDetour, &ppOriginal), we can order `h1`, `h2` and `h3` over a function `f` as such:
      * > MH_CreateHook(&f,             &h1, &trampoline_f);
      * > MH_CreateHook(&trampoline_f,  &h2, &trampoline_h1);
      * > MH_CreateHook(&trampoline_h1, &h3, &trampoline_h2);
      *
-     * Execution follows insertion order. Earlier hooks can pre-empt later ones.
-     * This goes directly against _our_ LIFO load order where we want subsequent hooks to take priority.
+     * Execution follows insertion order. We want it to go in load order (LIFO).
      *
-     * One way of proceeding would be to unwind and reapply the entire hook chain, but I could not get it to work.
-     * I assume this is due to https://github.com/TsudaKageyu/minhook/issues/78#issuecomment-485101354.
+     * We could unwind and reapply the entire hook chain, but I did not succeed,
+     * presumably due to https://github.com/TsudaKageyu/minhook/issues/78#issuecomment-485101354.
      *
      * Thus we impose the following rules:
      * - Hooks inserted at `init` time are queued for application.
-     * - Hooks are inserted in the proper order after all modules have initialized.
+     * - Hooks are inserted in load order after all modules have initialized.
      * - Hook insertion after `init` is prohibited over a function that already has any.
      * - Hooks inserted after `init` revert to executing in insertion order.
      */
@@ -438,7 +437,6 @@ internal sealed class FhMethods {
     ///     Attempts to insert a given <paramref name="hook"/>
     ///     into the chain of the function at <paramref name="ptr_target"/>.
     /// </summary>
-    /// <remarks><see cref="_lock_chains" /> must be held by the caller.</remarks>
     private bool fnptr_chain_insert<T>(nint ptr_target, T hook) where T : Delegate {
         // _lock_chains must be held by this method's caller.
         nint ptr_hook;
@@ -525,8 +523,7 @@ internal sealed class FhMethods {
     }
 
     /// <summary>
-    ///     Applies all hooks registered at the time of calling and
-    ///     prohibits further insertion over functions with any hooks registered.
+    ///     Applies all queued hooks and prohibits further hooking of already-hooked functions.
     /// </summary>
     public bool commit() {
         if (Interlocked.CompareExchange(ref _lock_commit, 1, 0) == 1)

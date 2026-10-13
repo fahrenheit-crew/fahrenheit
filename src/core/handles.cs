@@ -85,11 +85,13 @@ public readonly ref struct FhMethodLocation {
     private unsafe static void s1_load(FhPInvoke.DBG_MODULE_LOAD* ptr_data_load) {
         Interlocked.Increment(ref _lock);
 
-        string dll_name = Path.GetFileName( new(ptr_data_load->dll_name) );
-        nint   dll_base = ptr_data_load->dll_base;
+        // The char* cast is to call the null-terminated string ctor. ROS<char> ctor would copy the \0s.
+        string module_name = Path.GetFileName( new ((char*) &ptr_data_load->module_name) );
+        nint   module_base = ptr_data_load->module_base;
 
-        _s_modules[dll_name] = dll_base;
-        _s_sizes  [dll_base] = ptr_data_load->dll_size;
+        _s_modules[module_name] = module_base;
+        _s_sizes  [module_base] = ptr_data_load->module_size;
+        FhInternal.Log.Info($"[MODULE+] {module_name}:{module_base:X}");
 
         Interlocked.Decrement(ref _lock);
     }
@@ -97,6 +99,11 @@ public readonly ref struct FhMethodLocation {
     [UnmanagedCallersOnly(CallConvs = [ typeof(CallConvStdcall) ] )]
     private unsafe static void s1_unload(FhPInvoke.DBG_MODULE_UNLOAD* ptr_data_unload) {
         Interlocked.Increment(ref _lock);
+
+        /* [fkelava 13/10/26 13:05]
+         * https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.dictionary-2.getenumerator?view=net-10.0#remarks
+         * > The only mutating methods which do not invalidate enumerators are Remove and Clear.
+         */
 
         nint unloaded_module_base = ptr_data_unload->dll_base;
         uint unloaded_module_size = 0;
@@ -106,30 +113,29 @@ public readonly ref struct FhMethodLocation {
 
             if (!_s_modules.Remove(module_name)
             ||  !_s_sizes  .Remove(module_base, out unloaded_module_size)) {
-                throw new Exception("Failed to invalidate module records.");
+                throw new Exception($"Failed to invalidate module {module_name}.");
             }
+
+            FhInternal.Log.Info($"[MODULE-] {module_name}:{module_base:X}");
             break;
         }
 
-        List<(nint, string)> invalidated_exports = [];
         foreach ((nint module_base, string export_name) in _s_exports.Keys) {
             if (module_base != unloaded_module_base) continue;
 
-            invalidated_exports.Add((module_base, export_name));
-        }
-
-        foreach ((nint, string) export in invalidated_exports) {
-            if (!_s_exports.Remove(export)) {
-                throw new Exception("Failed to invalidate module exports.");
+            if (!_s_exports.Remove((module_base, export_name), out nint export_addr)) {
+                throw new Exception($"Failed to invalidate export {export_name} in module at {module_base:X}.");
             }
-        }
 
-        Interlocked.Decrement(ref _lock);
+            FhInternal.Log.Info($"[EXPORT-] {export_name}:{export_addr:X}");
+        }
 
         FhInternal.Methods.invalidate_chains(
             unloaded_module_base,
             unloaded_module_size
         );
+
+        Interlocked.Decrement(ref _lock);
     }
 
     /// <summary>
@@ -202,9 +208,10 @@ public readonly ref struct FhMethodLocation {
 
         // out-parameter is 0 if no export was found
         if (!NativeLibrary.TryGetExport(module_addr, export, out ptr_fn)) {
-            FhInternal.Log.Error($"no export {export} in module at 0x{module_addr:X}");
+            FhInternal.Log.Error($"No export {export} in module at {module_addr:X}.");
         }
 
+        FhInternal.Log.Info($"[EXPORT+] {export}:{ptr_fn:X}");
         return (_s_exports[key] = ptr_fn) != 0;
     }
 
@@ -313,6 +320,7 @@ internal sealed class FhMethods {
     private readonly static Dictionary<nint,     Delegate>        _fnptrs  = []; // Function -> Cached delegate
     private readonly static Dictionary<nint,     FhMethodContext> _methods = []; // Original -> Context
     private readonly static Dictionary<Delegate, nint>            _chain   = []; // Hook     -> Next function in chain
+    private readonly static HashSet   <nint>                      _inval   = []; // Invalidated methods that need cleaning
 
     private          int            _lock_commit = 0;
     private readonly AutoResetEvent _lock_chains = new AutoResetEvent(true);
@@ -328,37 +336,37 @@ internal sealed class FhMethods {
 
         nint module_end = nint.CreateChecked( module_base + module_size );
 
-        List<nint> invalidated_addrs = [];
         foreach ((nint method_addr, FhMethodContext method_context) in _methods) {
             if (method_addr < module_base || method_addr > module_end)
                 continue;
 
+            bool first_in_stack = true;
             foreach (FhHookContext stack_entry in method_context.stack) {
                 if (!_chain.Remove(stack_entry.fnptr, out nint fnptr) || !_fnptrs.Remove(fnptr)) {
-                    throw new Exception($"Failed to purge chain entry during invalidation pass.");
+                    throw new Exception($"Failed to invalidate chain entry {stack_entry.fnptr.Method.Name}.");
                 }
+
+                if (!first_in_stack) {
+                    FhPInvoke.MH_STATUS rm_res = FhPInvoke.MH_RemoveHook(fnptr);
+                    if (rm_res != FhPInvoke.MH_STATUS.MH_OK) {
+                        throw new Exception($"Failed to unwind chain entry {stack_entry.fnptr.Method.Name} - {rm_res}.");
+                    }
+                }
+
+                first_in_stack = false;
             }
 
-            invalidated_addrs.Add(method_addr);
-        }
-
-        foreach (nint method_addr in invalidated_addrs) {
-            if (!_methods.Remove(method_addr, out FhMethodContext? method_context)) {
-                throw new Exception($"Failed to purge method during invalidation pass.");
+            if (!_methods.Remove(method_addr) || !_inval.Add(method_addr)) {
+                throw new Exception($"Failed to invalidate method at {method_addr:X}.");
             }
         }
 
-        List<nint> invalidated_fnptrs = [];
-        foreach ((nint method_addr, Delegate method_ptr) in _fnptrs) {
-            if (method_addr < module_base || method_addr > module_end)
+        foreach ((nint fnptr_addr, _) in _fnptrs) {
+            if (fnptr_addr < module_base || fnptr_addr > module_end)
                 continue;
 
-            invalidated_fnptrs.Add(method_addr);
-        }
-
-        foreach (nint fnptr in invalidated_fnptrs) {
-            if (!_fnptrs.Remove(fnptr)) {
-                throw new Exception($"Failed to purge method during invalidation pass.");
+            if (!_fnptrs.Remove(fnptr_addr)) {
+                throw new Exception($"Failed to invalidate delegate at {fnptr_addr:X}.");
             }
         }
 
@@ -433,26 +441,47 @@ internal sealed class FhMethods {
     /// <remarks><see cref="_lock_chains" /> must be held by the caller.</remarks>
     private bool fnptr_chain_insert<T>(nint ptr_target, T hook) where T : Delegate {
         // _lock_chains must be held by this method's caller.
-        nint ptr_detour;
+        nint ptr_hook;
         nint ptr_insert   = get_ptr_insert(ptr_target);
         nint ptr_original = 0;
 
         try {
-            ptr_detour = Marshal.GetFunctionPointerForDelegate(hook);
+            ptr_hook = Marshal.GetFunctionPointerForDelegate(hook);
         }
         catch (Exception e) {
             FhInternal.Log.Error(e.ToString());
             return false;
         }
 
+        /* [fkelava 13/10/26 15:09]
+         * A problem exists when a hook exists in a subsequently unloaded DLL.
+         * Even though Stage 0 will signal the unload, the DLL is already gone by the time
+         * we invalidate chains. MinHook still has the entry for the hook in its tables,
+         * can't remove it because it would take a memory protection error, and refuses
+         * to insert a hook when the DLL is reloaded because of that extant entry.
+         *
+         * We have to clean that up when the DLL is reloaded.
+         */
+
+        if (_inval.Remove(ptr_insert)) {
+            FhPInvoke.MH_STATUS rv_remove = FhPInvoke.MH_RemoveHook(ptr_insert);
+
+            if (rv_remove != FhPInvoke.MH_STATUS.MH_OK) {
+                FhInternal.Log.Error($"MH_RemoveHook() failed while inserting {hook.Method.Name} - {rv_remove}");
+                return false;
+            }
+        }
+
         // SAFETY: &ppOriginal is used as an out parameter and stack allocated
         unsafe {
-            FhPInvoke.MH_STATUS rv_create = FhPInvoke.MH_CreateHook(ptr_insert, ptr_detour, &ptr_original);
+            FhPInvoke.MH_STATUS rv_create = FhPInvoke.MH_CreateHook(ptr_insert, ptr_hook, &ptr_original);
 
             if (rv_create != FhPInvoke.MH_STATUS.MH_OK) {
                 FhInternal.Log.Error($"MH_CreateHook() failed for {hook.Method.Name} - {rv_create}");
                 return false;
             }
+
+            FhInternal.Log.Debug($"{ptr_insert:X} -> {ptr_original:X} ({hook.Method.Name})");
         }
 
         FhPInvoke.MH_STATUS rv_enable = FhPInvoke.MH_EnableHook(ptr_insert);
@@ -465,7 +494,6 @@ internal sealed class FhMethods {
         _methods[ptr_target].ptr_insert = ptr_original;
         _chain  [hook]                  = ptr_original;
 
-        FhInternal.Log.Info($"(0x{ptr_target:X}) -> {hook.Method.Name}");
         return true;
     }
 
@@ -475,7 +503,7 @@ internal sealed class FhMethods {
 
         if (_methods.TryGetValue(ptr_target, out FhMethodContext? target)) {
             if (target.tainted) {
-                FhInternal.Log.Error($"(0x{ptr_target:X}) - rejected late insertion of {hook.fnptr.Method.Name}");
+                FhInternal.Log.Error($"Late insertion rejected. ({ptr_target:X}, {hook.fnptr.Method.Name})");
 
                 _lock_chains.Set();
                 return false;

@@ -17,9 +17,9 @@ internal static unsafe partial class FhPInvoke {
             private char _c;
         }
 
-        public readonly nint    dll_base;
-        public readonly uint    dll_size;
-        public readonly DllName dll_name;
+        public readonly nint    module_base;
+        public readonly uint    module_size;
+        public readonly DllName module_name;
     }
 
     [StructLayout(LayoutKind.Sequential)]

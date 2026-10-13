@@ -86,12 +86,12 @@ public readonly ref struct FhMethodLocation {
         Interlocked.Increment(ref _lock);
 
         // The char* cast is to call the null-terminated string ctor. ROS<char> ctor would copy the \0s.
-        string module_name = Path.GetFileName( new ((char*) &ptr_data_load->module_name) );
+        string module_name = Path.GetFileName( new((char*) &ptr_data_load->module_name) );
         nint   module_base = ptr_data_load->module_base;
 
         _s_modules[module_name] = module_base;
         _s_sizes  [module_base] = ptr_data_load->module_size;
-        FhInternal.Log.Info($"[MODULE+] {module_name}:{module_base:X}");
+        FhInternal.Log.Info($"Module cached: {module_name} @ {module_base:X8}");
 
         Interlocked.Decrement(ref _lock);
     }
@@ -113,10 +113,10 @@ public readonly ref struct FhMethodLocation {
 
             if (!_s_modules.Remove(module_name)
             ||  !_s_sizes  .Remove(module_base, out unloaded_module_size)) {
-                throw new Exception($"Failed to invalidate module {module_name}.");
+                throw new Exception($"Failed to invalidate module '{module_name}'.");
             }
 
-            FhInternal.Log.Info($"[MODULE-] {module_name}:{module_base:X}");
+            FhInternal.Log.Info($"Module invalidated: {module_name} @ 0x{module_base:X8}");
             break;
         }
 
@@ -124,10 +124,10 @@ public readonly ref struct FhMethodLocation {
             if (module_base != unloaded_module_base) continue;
 
             if (!_s_exports.Remove((module_base, export_name), out nint export_addr)) {
-                throw new Exception($"Failed to invalidate export {export_name} in module at {module_base:X}.");
+                throw new Exception($"Failed to invalidate export '{export_name}' in module @ 0x{module_base:X8}.");
             }
 
-            FhInternal.Log.Info($"[EXPORT-] {export_name}:{export_addr:X}");
+            FhInternal.Log.Info($"Export invalidated: {export_name} @ 0x{export_addr:X8}");
         }
 
         FhInternal.Methods.invalidate_chains(
@@ -208,10 +208,10 @@ public readonly ref struct FhMethodLocation {
 
         // out-parameter is 0 if no export was found
         if (!NativeLibrary.TryGetExport(module_addr, export, out ptr_fn)) {
-            FhInternal.Log.Error($"No export {export} in module at {module_addr:X}.");
+            FhInternal.Log.Error($"No export '{export}' in module at 0x{module_addr:X8}.");
         }
 
-        FhInternal.Log.Info($"[EXPORT+] {export}:{ptr_fn:X}");
+        FhInternal.Log.Info($"Export cached: {export} @ 0x{ptr_fn:X8}");
         return (_s_exports[key] = ptr_fn) != 0;
     }
 
@@ -343,13 +343,13 @@ internal sealed class FhMethods {
             bool first_in_stack = true;
             foreach (FhHookContext stack_entry in method_context.stack) {
                 if (!_chain.Remove(stack_entry.fnptr, out nint fnptr) || !_fnptrs.Remove(fnptr)) {
-                    throw new Exception($"Failed to invalidate chain entry {stack_entry.fnptr.Method.Name}.");
+                    throw new Exception($"Failed to invalidate chain entry '{stack_entry.fnptr.Method.Name}'.");
                 }
 
                 if (!first_in_stack) {
                     FhPInvoke.MH_STATUS rm_res = FhPInvoke.MH_RemoveHook(fnptr);
                     if (rm_res != FhPInvoke.MH_STATUS.MH_OK) {
-                        throw new Exception($"Failed to unwind chain entry {stack_entry.fnptr.Method.Name} - {rm_res}.");
+                        throw new Exception($"Failed to unwind chain entry '{stack_entry.fnptr.Method.Name}' - {rm_res}.");
                     }
                 }
 
@@ -357,7 +357,7 @@ internal sealed class FhMethods {
             }
 
             if (!_methods.Remove(method_addr) || !_inval.Add(method_addr)) {
-                throw new Exception($"Failed to invalidate method at {method_addr:X}.");
+                throw new Exception($"Failed to invalidate method at 0x{method_addr:X8}.");
             }
         }
 
@@ -366,7 +366,7 @@ internal sealed class FhMethods {
                 continue;
 
             if (!_fnptrs.Remove(fnptr_addr)) {
-                throw new Exception($"Failed to invalidate delegate at {fnptr_addr:X}.");
+                throw new Exception($"Failed to invalidate delegate at 0x{fnptr_addr:X8}.");
             }
         }
 
@@ -416,12 +416,12 @@ internal sealed class FhMethods {
     /* [fkelava 02/06/26 18:55]
      * MinHook will not install two hooks for the same function.
      *
-     * Given MH_CreateHook(pTarget, pDetour, &ppOriginal), we can order `h1`, `h2` and `h3` over a function `f` as such:
+     * `h1`, `h2` and `h3` over a function `f` must therefore be ordered as such:
      * > MH_CreateHook(&f,             &h1, &trampoline_f);
      * > MH_CreateHook(&trampoline_f,  &h2, &trampoline_h1);
      * > MH_CreateHook(&trampoline_h1, &h3, &trampoline_h2);
      *
-     * Execution follows insertion order. We want it to go in load order (LIFO).
+     * Execution then follows insertion order (FIFO), while we want it to go in load order (LIFO).
      *
      * We could unwind and reapply the entire hook chain, but I did not succeed,
      * presumably due to https://github.com/TsudaKageyu/minhook/issues/78#issuecomment-485101354.
@@ -479,7 +479,7 @@ internal sealed class FhMethods {
                 return false;
             }
 
-            FhInternal.Log.Debug($"{ptr_insert:X} -> {ptr_original:X} ({hook.Method.Name})");
+            FhInternal.Log.Debug($"0x{ptr_insert:X8} -> 0x{ptr_original:X8} ({hook.Method.Name})");
         }
 
         FhPInvoke.MH_STATUS rv_enable = FhPInvoke.MH_EnableHook(ptr_insert);
@@ -501,7 +501,7 @@ internal sealed class FhMethods {
 
         if (_methods.TryGetValue(ptr_target, out FhMethodContext? target)) {
             if (target.tainted) {
-                FhInternal.Log.Error($"Late insertion rejected. ({ptr_target:X}, {hook.fnptr.Method.Name})");
+                FhInternal.Log.Error($"Late insertion rejected. (0x{ptr_target:X8}, {hook.fnptr.Method.Name})");
 
                 _lock_chains.Set();
                 return false;

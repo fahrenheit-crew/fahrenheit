@@ -64,6 +64,7 @@ public readonly ref struct FhMethodLocation {
      * then probes from. This allows us to cache module and export locations safely.
      */
 
+    private readonly static Dictionary<nint,           uint> _s_sizes   = [];
     private readonly static Dictionary<string,         nint> _s_modules = [];
     private readonly static Dictionary<(nint, string), nint> _s_exports = [];
     private          static int                              _lock      = 0;
@@ -84,10 +85,11 @@ public readonly ref struct FhMethodLocation {
     private unsafe static void s1_load(FhPInvoke.DBG_MODULE_LOAD* ptr_data_load) {
         Interlocked.Increment(ref _lock);
 
-        string dll_full_path = new(ptr_data_load->dll_name);
-        string dll_name      = Path.GetFileName(dll_full_path);
+        string dll_name = Path.GetFileName( new(ptr_data_load->dll_name) );
+        nint   dll_base = ptr_data_load->dll_base;
 
-        _s_modules[dll_name] = ptr_data_load->dll_base;
+        _s_modules[dll_name] = dll_base;
+        _s_sizes  [dll_base] = ptr_data_load->dll_size;
 
         Interlocked.Decrement(ref _lock);
     }
@@ -97,25 +99,37 @@ public readonly ref struct FhMethodLocation {
         Interlocked.Increment(ref _lock);
 
         nint unloaded_module_base = ptr_data_unload->dll_base;
+        uint unloaded_module_size = 0;
+
         foreach ((string module_name, nint module_base) in _s_modules) {
             if (module_base != unloaded_module_base) continue;
 
-            _s_modules.Remove(module_name);
+            if (!_s_modules.Remove(module_name)
+            ||  !_s_sizes  .Remove(module_base, out unloaded_module_size)) {
+                throw new Exception("Failed to invalidate module records.");
+            }
             break;
         }
 
-        List<(nint, string)> exports_to_remove = [];
+        List<(nint, string)> invalidated_exports = [];
         foreach ((nint module_base, string export_name) in _s_exports.Keys) {
             if (module_base != unloaded_module_base) continue;
 
-            exports_to_remove.Add((module_base, export_name));
+            invalidated_exports.Add((module_base, export_name));
         }
 
-        foreach ((nint, string) export in exports_to_remove) {
-            _s_exports.Remove(export);
+        foreach ((nint, string) export in invalidated_exports) {
+            if (!_s_exports.Remove(export)) {
+                throw new Exception("Failed to invalidate module exports.");
+            }
         }
 
         Interlocked.Decrement(ref _lock);
+
+        FhInternal.Methods.invalidate_chains(
+            unloaded_module_base,
+            unloaded_module_size
+        );
     }
 
     /// <summary>
@@ -276,11 +290,19 @@ internal sealed record FhHookContext(
     Delegate fnptr);
 
 /// <summary>
-///     Pairs an original game method with its hook stack and auxiliary data required to track hook insertion.
+///     The state of a given game method. Used to track hook insertion.
 /// </summary>
 internal sealed class FhMethodContext {
-    internal readonly Stack<FhHookContext> stack   = [];
-    internal          bool                 tainted = false; // The target is locked for further modification.
+
+    internal readonly Stack<FhHookContext> stack;      // The stack of hooks inserted over this method.
+    internal          nint                 ptr_insert; // The address at which the next hook in the chain is to be inserted.
+    internal          bool                 tainted;    // No more hooks may be inserted.
+
+    public FhMethodContext(nint ptr_target) {
+        stack      = [];
+        ptr_insert = ptr_target;
+    }
+
 }
 
 /// <summary>
@@ -288,40 +310,85 @@ internal sealed class FhMethodContext {
 /// </summary>
 internal sealed class FhMethods {
 
-    private readonly static Dictionary<nint,     Delegate>        _fnptrs  = []; // Any function -> Cached delegate
-    private readonly static Dictionary<nint,     FhMethodContext> _methods = []; // Original     -> All hooks (for keep-alive)
-    private readonly static Dictionary<nint,     nint>            _insert  = []; // Original     -> Insertion address for next hook
-    private readonly static Dictionary<Delegate, nint>            _chain   = []; // Hook         -> Next function in chain
+    private readonly static Dictionary<nint,     Delegate>        _fnptrs  = []; // Function -> Cached delegate
+    private readonly static Dictionary<nint,     FhMethodContext> _methods = []; // Original -> Context
+    private readonly static Dictionary<Delegate, nint>            _chain   = []; // Hook     -> Next function in chain
 
-    private          int  _lock_commit = 0;
-    private readonly Lock _lock_chains = new Lock();
+    private          int            _lock_commit = 0;
+    private readonly AutoResetEvent _lock_chains = new AutoResetEvent(true);
+
+    /// <summary>
+    ///     Invalidates all method information in a given module.
+    /// </summary>
+    internal void invalidate_chains(
+        nint module_base,
+        uint module_size
+    ) {
+        _lock_chains.WaitOne();
+
+        nint module_end = nint.CreateChecked( module_base + module_size );
+
+        List<nint> invalidated_addrs = [];
+        foreach ((nint method_addr, FhMethodContext method_context) in _methods) {
+            if (method_addr < module_base || method_addr > module_end)
+                continue;
+
+            foreach (FhHookContext stack_entry in method_context.stack) {
+                if (!_chain.Remove(stack_entry.fnptr, out nint fnptr) || !_fnptrs.Remove(fnptr)) {
+                    throw new Exception($"Failed to purge chain entry during invalidation pass.");
+            }
+
+            invalidated_addrs.Add(method_addr);
+        }
+
+        foreach (nint method_addr in invalidated_addrs) {
+            if (!_methods.Remove(method_addr, out FhMethodContext? method_context)) {
+                throw new Exception($"Failed to purge method during invalidation pass.");
+        }
+
+        List<nint> invalidated_fnptrs = [];
+        foreach ((nint method_addr, Delegate method_ptr) in _fnptrs) {
+            if (method_addr < module_base || method_addr > module_end)
+                continue;
+
+            invalidated_fnptrs.Add(method_addr);
+        }
+
+        foreach (nint fnptr in invalidated_fnptrs) {
+            if (!_fnptrs.Remove(fnptr)) {
+                throw new Exception($"Failed to purge method during invalidation pass.");
+        }
+
+        _lock_chains.Set();
+    }
 
     /// <summary>
     ///     Caches a delegate for the function of type <typeparamref name="T"/>
     ///     at <paramref name="ptr_target"/>, or returns the cached one if it already exists.
     /// </summary>
     public T get_fnptr<T>(nint ptr_target) where T : Delegate {
-        if (_fnptrs.TryGetValue(ptr_target, out Delegate? fnptr) && fnptr is T t_fnptr)
+        _lock_chains.WaitOne();
+
+        if (_fnptrs.TryGetValue(ptr_target, out Delegate? fnptr) && fnptr is T t_fnptr) {
+            _lock_chains.Set();
             return t_fnptr;
+        }
 
         t_fnptr = Marshal.GetDelegateForFunctionPointer<T>(ptr_target);
         _fnptrs[ptr_target] = t_fnptr;
+
+        _lock_chains.Set();
         return t_fnptr;
     }
-
-    /* [fkelava 04/06/26 23:28]
-     * Locking should not be required because _insert is only manipulated
-     * in a function under lock, and chain_from() which reads _chain is only
-     * valid in contexts where no further hooks may be inserted.
-     */
 
     /// <summary>
     ///     For the function at <paramref name="ptr_target"/>, obtains the address at which
     ///     the next function in the chain must be inserted.
     /// </summary>
     public nint get_ptr_insert(nint ptr_target) {
-        return _insert.TryGetValue(ptr_target, out nint ptr_insert)
-            ? ptr_insert
+        // _lock_chains must be held by this method's caller.
+        return _methods.TryGetValue(ptr_target, out FhMethodContext? method_context)
+            ? method_context.ptr_insert
             : ptr_target;
     }
 
@@ -329,6 +396,7 @@ internal sealed class FhMethods {
     ///     For a given <paramref name="hook"/>, obtains the next link in its hook chain (if any exists).
     /// </summary>
     public T? get_fnptr_chain<T>(T hook) where T : Delegate {
+        // _lock_chains must be held by this method's caller.
         return _chain.TryGetValue(hook, out nint ptr_chain)
             ? get_fnptr<T>(ptr_chain)
             : null;
@@ -362,12 +430,12 @@ internal sealed class FhMethods {
     /// <remarks><see cref="_lock_chains" /> must be held by the caller.</remarks>
     private bool fnptr_chain_insert<T>(nint ptr_target, T hook) where T : Delegate {
         // _lock_chains must be held by this method's caller.
-        nint pDetour;
-        nint pTarget    = get_ptr_insert(ptr_target);
-        nint ppOriginal = 0;
+        nint ptr_detour;
+        nint ptr_insert   = get_ptr_insert(ptr_target);
+        nint ptr_original = 0;
 
         try {
-            pDetour = Marshal.GetFunctionPointerForDelegate(hook);
+            ptr_detour = Marshal.GetFunctionPointerForDelegate(hook);
         }
         catch (Exception e) {
             FhInternal.Log.Error(e.ToString());
@@ -376,7 +444,7 @@ internal sealed class FhMethods {
 
         // SAFETY: &ppOriginal is used as an out parameter and stack allocated
         unsafe {
-            FhPInvoke.MH_STATUS rv_create = FhPInvoke.MH_CreateHook(pTarget, pDetour, &ppOriginal);
+            FhPInvoke.MH_STATUS rv_create = FhPInvoke.MH_CreateHook(ptr_insert, ptr_detour, &ptr_original);
 
             if (rv_create != FhPInvoke.MH_STATUS.MH_OK) {
                 FhInternal.Log.Error($"MH_CreateHook() failed for {hook.Method.Name} - {rv_create}");
@@ -384,15 +452,15 @@ internal sealed class FhMethods {
             }
         }
 
-        FhPInvoke.MH_STATUS rv_enable = FhPInvoke.MH_EnableHook(pTarget);
+        FhPInvoke.MH_STATUS rv_enable = FhPInvoke.MH_EnableHook(ptr_insert);
 
         if (rv_enable != FhPInvoke.MH_STATUS.MH_OK) {
             FhInternal.Log.Error($"MH_EnableHook() failed for {hook.Method.Name} - {rv_enable}");
             return false;
         }
 
-        _insert[ptr_target] = ppOriginal;
-        _chain [hook]       = ppOriginal;
+        _methods[ptr_target].ptr_insert = ptr_original;
+        _chain  [hook]                  = ptr_original;
 
         FhInternal.Log.Info($"(0x{ptr_target:X}) -> {hook.Method.Name}");
         return true;
@@ -400,23 +468,29 @@ internal sealed class FhMethods {
 
     /// <inheritdoc cref="fnptr_chain_insert{T}(nint, T)" />
     public bool fnptr_chain_add<T>(nint ptr_target, FhHookContext hook) where T : Delegate {
-        lock (_lock_chains) {
-            if (_methods.TryGetValue(ptr_target, out FhMethodContext? target)) {
-                if (target.tainted) {
-                    FhInternal.Log.Error($"(0x{ptr_target:X}) - rejected late insertion of {hook.fnptr.Method.Name}");
-                    return false;
-                }
+        _lock_chains.WaitOne();
 
-                target.stack.Push(hook);
-                return Interlocked.CompareExchange(ref _lock_commit, 0, 0) == 0 || fnptr_chain_insert(ptr_target, hook.fnptr);
+        if (_methods.TryGetValue(ptr_target, out FhMethodContext? target)) {
+            if (target.tainted) {
+                FhInternal.Log.Error($"(0x{ptr_target:X}) - rejected late insertion of {hook.fnptr.Method.Name}");
+
+                _lock_chains.Set();
+                return false;
             }
 
-            target = new();
             target.stack.Push(hook);
+            _lock_chains.Set();
 
-            _methods[ptr_target] = target;
-            return Interlocked.CompareExchange(ref _lock_commit, 0, 0) == 0 || fnptr_chain_insert(ptr_target, hook.fnptr);
+            return _lock_commit == 0 || fnptr_chain_insert(ptr_target, hook.fnptr);
         }
+
+        target = new(ptr_target);
+        target.stack.Push(hook);
+
+        _methods[ptr_target] = target;
+        _lock_chains.Set();
+
+        return _lock_commit == 0 || fnptr_chain_insert(ptr_target, hook.fnptr);
     }
 
     /// <summary>
@@ -424,23 +498,25 @@ internal sealed class FhMethods {
     ///     prohibits further insertion over functions with any hooks registered.
     /// </summary>
     public bool commit() {
-        lock (_lock_chains) {
-            if (Interlocked.CompareExchange(ref _lock_commit, 1, 0) == 1)
-                return true; // reject repeat calls
+        if (Interlocked.CompareExchange(ref _lock_commit, 1, 0) == 1)
+            return true; // reject repeat calls
 
-            foreach ((nint ptr_target, FhMethodContext target) in _methods) {
-                Stack<FhHookContext> target_stack = target.stack;
+        _lock_chains.WaitOne();
 
-                foreach (FhHookContext hook in target_stack) {
-                    if (!fnptr_chain_insert(ptr_target, hook.fnptr))
-                        return false;
+        foreach ((nint ptr_target, FhMethodContext target) in _methods) {
+            Stack<FhHookContext> target_stack = target.stack;
+
+            foreach (FhHookContext hook in target_stack) {
+                if (!fnptr_chain_insert(ptr_target, hook.fnptr)) {
+                    _lock_chains.Set();
+                    return false;
                 }
-
-                target.tainted = true;
             }
+
+            target.tainted = true;
         }
 
-        return true;
+        return _lock_chains.Set();
     }
 
 }

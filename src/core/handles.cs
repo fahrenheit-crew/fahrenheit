@@ -243,7 +243,7 @@ public readonly ref struct FhCallLocation {
 }
 
 /// <summary>
-///     Represents a method with signature <typeparamref name="T"/>. It may then be invoked or hooked.
+///     Represents a call with signature <typeparamref name="T"/>. It may then be invoked or hooked.
 /// </summary>
 public ref struct FhCallHandle<T> where T : Delegate {
 
@@ -280,7 +280,7 @@ public ref struct FhCallHandle<T> where T : Delegate {
     }
 
     /// <summary>
-    ///     Attempts to insert the given <paramref name="hook"/> into the hook chain of the target method.
+    ///     Attempts to insert the given <paramref name="hook"/> into the hook chain of the target call.
     /// </summary>
     public readonly bool hook(FhModule owner, T hook) {
         FhHookContext hook_info = new(owner, hook);
@@ -290,18 +290,18 @@ public ref struct FhCallHandle<T> where T : Delegate {
 }
 
 /// <summary>
-///     Pairs a hook with its owner. A stack of these constitutes the complete hook chain of a method.
+///     Pairs a hook with its owner. A stack of these constitutes the complete hook chain of a call.
 /// </summary>
 internal sealed record FhHookContext(
     FhModule owner,
     Delegate fnptr);
 
 /// <summary>
-///     The state of a given game method. Used to track hook insertion.
+///     The state of a given call. Used to track hook insertion.
 /// </summary>
 internal sealed class FhCallContext {
 
-    internal readonly Stack<FhHookContext> stack;      // The stack of hooks inserted over this method.
+    internal readonly Stack<FhHookContext> stack;      // The stack of hooks inserted over this call.
     internal          nint                 ptr_insert; // The address at which the next hook in the chain is to be inserted.
     internal          bool                 tainted;    // No more hooks may be inserted.
 
@@ -320,13 +320,13 @@ internal sealed class FhCalls {
     private readonly static Dictionary<nint,     Delegate>      _fnptrs = []; // Function -> Cached delegate
     private readonly static Dictionary<nint,     FhCallContext> _calls  = []; // Original -> Context
     private readonly static Dictionary<Delegate, nint>          _chain  = []; // Hook     -> Next function in chain
-    private readonly static HashSet   <nint>                    _inval  = []; // Invalidated methods that need cleaning
+    private readonly static HashSet   <nint>                    _inval  = []; // Invalidated calls that need cleaning
 
     private          int            _lock_commit = 0;
     private readonly AutoResetEvent _lock_chains = new AutoResetEvent(true);
 
     /// <summary>
-    ///     Invalidates all method information in a given module.
+    ///     Invalidates all call information in a given module.
     /// </summary>
     internal void invalidate_chains(
         nint module_base,
@@ -398,8 +398,8 @@ internal sealed class FhCalls {
     /// </summary>
     public nint get_ptr_insert(nint ptr_target) {
         // _lock_chains must be held by this method's caller.
-        return _calls.TryGetValue(ptr_target, out FhCallContext? method_context)
-            ? method_context.ptr_insert
+        return _calls.TryGetValue(ptr_target, out FhCallContext? call_context)
+            ? call_context.ptr_insert
             : ptr_target;
     }
 

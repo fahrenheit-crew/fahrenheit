@@ -30,14 +30,14 @@ public static unsafe partial class FhCall {
     // INTERNAL/RESTRICTED - BEGIN
 
     /* [fkelava 28/05/26 13:40]
-     * Some methods are `restricted` - only meant to be overridden by the runtime.
+     * Some calls are `restricted` - only meant to be overridden by the runtime.
      * We neither permit nor support any other mod tampering with them.
      *
      * Since the runtime (and only the runtime) has IVT into the core,
-     * we provide for this by marking such methods' delegates `internal`.
+     * we provide for this by marking such calls' delegates `internal`.
      *
-     * Attempting to actively prohibit method handles being constructed
-     * over `restricted` methods is pointless; the user always has a means to
+     * Attempting to actively prohibit call handles being constructed
+     * over `restricted` calls is pointless; the user always has a means to
      * circumvent it. We simply refuse to support any such scenario.
      */
 
@@ -586,7 +586,7 @@ public static unsafe partial class FhCall {
     public static FhCallHandle<d_SndSepPlaySimple> SndSepPlaySimple
         => new( new FhCallLocation(0x486E80, 0x344710) );
 
-    // `printf` and similar methods for use by the debug mod
+    // `printf` and similar calls for use by the debug mod
 
     /* [fkelava 17/7/25 02:33]
      * For vararg functions the delegate signature should have an argument count >=

@@ -313,14 +313,14 @@ internal sealed class FhCallContext {
 }
 
 /// <summary>
-///     Keeps track of the global hook state of functions.
+///     Keeps track of the global state of all callables.
 /// </summary>
-internal sealed class FhCalls {
+internal sealed class FhCallRegistry {
 
-    private readonly static Dictionary<nint,     Delegate>      _fnptrs = []; // Function -> Cached delegate
-    private readonly static Dictionary<nint,     FhCallContext> _calls  = []; // Original -> Context
-    private readonly static Dictionary<Delegate, nint>          _chain  = []; // Hook     -> Next function in chain
-    private readonly static HashSet   <nint>                    _inval  = []; // Invalidated calls that need cleaning
+    private readonly static Dictionary<nint,     Delegate>      _fnptrs   = []; // Function -> Cached delegate
+    private readonly static Dictionary<nint,     FhCallContext> _contexts = []; // Original -> Context
+    private readonly static Dictionary<Delegate, nint>          _chain    = []; // Hook     -> Next function in chain
+    private readonly static HashSet   <nint>                    _inval    = []; // Invalidated calls that need cleaning
 
     private          int            _lock_commit = 0;
     private readonly AutoResetEvent _lock_chains = new AutoResetEvent(true);
@@ -336,7 +336,7 @@ internal sealed class FhCalls {
 
         nint module_end = nint.CreateChecked( module_base + module_size );
 
-        foreach ((nint call_addr, FhCallContext call_context) in _calls) {
+        foreach ((nint call_addr, FhCallContext call_context) in _contexts) {
             if (call_addr < module_base || call_addr > module_end)
                 continue;
 
@@ -356,7 +356,7 @@ internal sealed class FhCalls {
                 first_in_stack = false;
             }
 
-            if (!_calls.Remove(call_addr) || !_inval.Add(call_addr)) {
+            if (!_contexts.Remove(call_addr) || !_inval.Add(call_addr)) {
                 throw new Exception($"Failed to invalidate call at 0x{call_addr:X8}.");
             }
         }
@@ -398,7 +398,7 @@ internal sealed class FhCalls {
     /// </summary>
     public nint get_ptr_insert(nint ptr_target) {
         // _lock_chains must be held by this method's caller.
-        return _calls.TryGetValue(ptr_target, out FhCallContext? call_context)
+        return _contexts.TryGetValue(ptr_target, out FhCallContext? call_context)
             ? call_context.ptr_insert
             : ptr_target;
     }
@@ -489,7 +489,7 @@ internal sealed class FhCalls {
             return false;
         }
 
-        _calls[ptr_target].ptr_insert = ptr_original;
+        _contexts[ptr_target].ptr_insert = ptr_original;
         _chain[hook]                  = ptr_original;
 
         return true;
@@ -499,7 +499,7 @@ internal sealed class FhCalls {
     public bool fnptr_chain_add<T>(nint ptr_target, FhHookContext hook) where T : Delegate {
         _lock_chains.WaitOne();
 
-        if (_calls.TryGetValue(ptr_target, out FhCallContext? target)) {
+        if (_contexts.TryGetValue(ptr_target, out FhCallContext? target)) {
             if (target.tainted) {
                 FhInternal.Log.Error($"Late insertion rejected. (0x{ptr_target:X8}, {hook.fnptr.Method.Name})");
 
@@ -516,7 +516,7 @@ internal sealed class FhCalls {
         target = new(ptr_target);
         target.stack.Push(hook);
 
-        _calls[ptr_target] = target;
+        _contexts[ptr_target] = target;
         _lock_chains.Set();
 
         return _lock_commit == 0 || fnptr_chain_insert(ptr_target, hook.fnptr);
@@ -531,7 +531,7 @@ internal sealed class FhCalls {
 
         _lock_chains.WaitOne();
 
-        foreach ((nint ptr_target, FhCallContext target) in _calls) {
+        foreach ((nint ptr_target, FhCallContext target) in _contexts) {
             Stack<FhHookContext> target_stack = target.stack;
 
             foreach (FhHookContext hook in target_stack) {

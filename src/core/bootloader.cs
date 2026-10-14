@@ -70,7 +70,7 @@ internal static class FhEnvironment {
         FhApi     .Mods        .initialize();
 
         // post-init - may require later editing
-        FhInternal.Methods.commit();
+        FhInternal.Calls.commit();
     }
 
     /* [fkelava 28/09/26 23:12]

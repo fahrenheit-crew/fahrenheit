@@ -18,8 +18,11 @@ internal sealed class FhHasher {
     }
 
     /// <summary>
-    ///     Computes a hash which uniquely identifies the current mod set, accounting for load order.
+    ///     Computes a hash which uniquely identifies the current mod set.
     /// </summary>
+    /// <remarks>
+    ///     The hash is sensitive to load order.
+    /// </remarks>
     private static string _init_mod_set_hash() {
         StringBuilder mods = new();
 
@@ -40,9 +43,12 @@ internal sealed class FhHasher {
     }
 
     /// <summary>
-    ///     Computes the hash which uniquely identifies the current save set. That is,
-    ///     mods that do not define <see cref="FhManifestFlags.SEPARATE_SAVES"/> are disregarded.
+    ///     Computes the hash which uniquely identifies the current save set.
     /// </summary>
+    /// <remarks>
+    ///     The hash ignores mods that do not define <see cref="FhManifestFlags.SEPARATE_SAVES"/>.
+    ///     In all other respects, it is identical to the mod set hash.
+    /// </remarks>
     private static string _init_save_set_hash() {
         StringBuilder stateful_mods = new();
 

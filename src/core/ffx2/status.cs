@@ -244,7 +244,7 @@ public struct StatusDurationMap2 {
     private sbyte unused6;
 }
 
-/// <remarks> 
+/// <remarks>
 ///     These flags are used in Auto Ability and MonStats structures to toggle an Auto-Status flag.
 ///     They are NOT used for checking whether a character currently has the status or not; that is
 ///     done by checking if the StatusDurationMap2 remaining is greater than 0.

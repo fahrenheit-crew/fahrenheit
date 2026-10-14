@@ -223,7 +223,7 @@ public struct LimitAbilityMap {
     public bool has_vitality             { readonly get { return this[ 5].get_bit(13); } set { this[ 5].set_bit(13, value); } }
     public bool has_mega_vitality        { readonly get { return this[ 5].get_bit(14); } set { this[ 5].set_bit(14, value); } }
     public bool has_hyper_vitality       { readonly get { return this[ 5].get_bit(15); } set { this[ 5].set_bit(15, value); } }
-    
+
     public bool has_mana                 { readonly get { return this[ 6].get_bit( 0); } set { this[ 6].set_bit( 0, value); } }
     public bool has_mega_mana            { readonly get { return this[ 6].get_bit( 1); } set { this[ 6].set_bit( 1, value); } }
     public bool has_hyper_mana           { readonly get { return this[ 6].get_bit( 2); } set { this[ 6].set_bit( 2, value); } }

@@ -29,7 +29,7 @@ public record struct AtelInst(byte instruction, ushort? operand) {
  * - `P` ("Player") to send the reqeuest to a specific Chr in combat
  * The Branching prefix may be combined with the Force and Tagged prefixes.
  * Other prefixes cannot be combined
- * 
+ *
  * Additionally, REQ opcodes can be suffixed with:
  * - `SW` ("Start Wait") to await the start of the requested function before continuing execution of the script
  * - `EW` ("End Wait") to await the end of the requested function before continuing execution of the script

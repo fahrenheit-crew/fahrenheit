@@ -116,60 +116,70 @@ public sealed class FhSaves {
         _ = Directory.CreateDirectory(_sm_path_default_set);
     }
 
+    private async Task _sm_index_save_file(string save_file) {
+        FhSaveDisplayData  display_data = new();
+        ReadOnlySpan<char> slot_str     = save_file[ (save_file.LastIndexOf('_') + 1) .. ];
+
+        if (!int.TryParse(slot_str, out int slot))
+            return;
+
+        using (FileStream save_file_stream = File.OpenRead(save_file)) {
+            save_file_stream.ReadExactly(display_data.header);
+        }
+
+        FhSavePal.pal_get_location   (display_data.header, display_data.location);
+        FhSavePal.pal_get_icon_map   (display_data.header, display_data.icon_map);
+        FhSavePal.pal_get_player_name(display_data.header, display_data.player_name);
+        FhSavePal.pal_get_playtime   (display_data.header, display_data.play_time);
+        FhSavePal.pal_get_chapter    (display_data.header, display_data.chapter);
+        FhSavePal.pal_get_completion (display_data.header, display_data.completion);
+        FhSavePal.pal_get_lm_job     (display_data.header, display_data.lm_job);
+        FhSavePal.pal_get_lm_level   (display_data.header, display_data.lm_level);
+
+        display_data.slot        = slot;
+        display_data.slot_str    = slot.ToString();
+        display_data.create_time = File.GetLastWriteTime(save_file);
+
+        _sm_occupied_slots.Add(slot);
+        _sm_display_data  .Add(display_data);
+    }
+
     /// <summary>
     ///     Indexes the active save set's directory. This function must be called under lock.
     /// </summary>
     private void _sm_index_active_set() {
+        Stopwatch sw = Stopwatch.StartNew();
+
         _sm_display_data  .Clear();
         _sm_occupied_slots.Clear();
-
-        /* [fkelava 08/02/26 15:00]
-         * Save sets mirror the base game save directory's structure, i.e. the subfolders
-         * 'FINAL FANTASY X', 'FINAL FANTASY X-2', 'FINAL FANTASY X-2 LAST MISSION' exist.
-         *
-         * When the user creates a set manually (not through the Fh API or mod manager),
-         * it is possible they forgot to create these subdirectories. When loading this fails
-         * safely because the saves will simply never be found. When saving this is lethal
-         * because SMM assumes the path it is writing to exists for simplicity.
-         *
-         * In this case we silently correct their error. I/O faults are still propagated
-         * because that is not something we can gracefully handle.
-         */
 
         string path_set_folder = Path.Join(
             _sm_path_base,
             _sm_active_set,
             FhSavePal.pal_get_save_subfolder());
 
+        /* [fkelava 08/02/26 15:00]
+         * Save sets mirror the base game save directory's structure, i.e. the subfolders
+         * 'FINAL FANTASY X', 'FINAL FANTASY X-2', 'FINAL FANTASY X-2 LAST MISSION' exist.
+         *
+         * When the user creates a set manually, they may forget to create these subdirectories.
+         * When loading, this fails safely. When saving this is lethal because we assume
+         * the path exists for simplicity. In this case we silently correct the error.
+         */
         _ = Directory.CreateDirectory(path_set_folder);
 
-        foreach (string save_file in Directory.EnumerateFiles(path_set_folder, FhSavePal.pal_get_save_name_glob())) {
-            FhSaveDisplayData  display_data = new();
-            ReadOnlySpan<char> slot_str     = save_file[ (save_file.LastIndexOf('_') + 1) .. ];
+        string[] files = [ .. Directory.EnumerateFiles(path_set_folder, FhSavePal.pal_get_save_name_glob()) ];
+        Task  [] tasks = new Task[files.Length];
 
-            if (!int.TryParse(slot_str, out int slot))
-                continue;
-
-            using (FileStream save_file_stream = File.OpenRead(save_file)) {
-                save_file_stream.ReadExactly(display_data.header);
-            }
-
-            FhSavePal.pal_get_location   (display_data.header, display_data.location);
-            FhSavePal.pal_get_icon_map   (display_data.header, display_data.icon_map);
-            FhSavePal.pal_get_player_name(display_data.header, display_data.player_name);
-            FhSavePal.pal_get_playtime   (display_data.header, display_data.play_time);
-            FhSavePal.pal_get_chapter    (display_data.header, display_data.chapter);
-            FhSavePal.pal_get_completion (display_data.header, display_data.completion);
-            FhSavePal.pal_get_lm_job     (display_data.header, display_data.lm_job);
-            FhSavePal.pal_get_lm_level   (display_data.header, display_data.lm_level);
-
-            display_data.slot        = slot;
-            display_data.slot_str    = slot.ToString();
-            display_data.create_time = File.GetLastWriteTimeUtc(save_file);
-
-            _sm_occupied_slots.Add(slot);
-            _sm_display_data  .Add(display_data);
+        for (int i = 0; i < files.Length; i++) {
+            tasks[i] = _sm_index_save_file(files[i]);
         }
+
+        Task.WaitAll(tasks);
+
+        _sm_display_data.Sort(FhSaveTimeComparer.Instance);
+
+        FhInternal.Log.Info($"{sw.Elapsed}");
     }
 
     /// <summary>
@@ -186,7 +196,7 @@ public sealed class FhSaves {
 
             _sm_sets.Add(set_name);
 
-            if (File.Exists(get_save_path_for_slot(set_name, 0))) {
+            if (File.Exists(get_save_path_for_slot(0, set_name))) {
                 _sm_sets_with_autosaves.Add(set_name);
             }
 
@@ -232,23 +242,13 @@ public sealed class FhSaves {
     }
 
     /// <summary>
-    ///     For a given <paramref name="slot"/> in the given <paramref name="set"/>, gets the full path of the corresponding save file.
+    ///     For a given <paramref name="slot"/> in the given <paramref name="set"/>,
+    ///     gets the full path of the corresponding save file.
     /// </summary>
-    internal string get_save_path_for_slot(string set, int slot) {
+    internal string get_save_path_for_slot(int slot, string? set = null) {
         return Path.Join(
             _sm_path_base,
-            set,
-            FhSavePal.pal_get_save_subfolder(),
-            FhSavePal.pal_get_save_name_for_slot(slot));
-    }
-
-    /// <summary>
-    ///     For a given <paramref name="slot"/>, gets the full path of the corresponding save file.
-    /// </summary>
-    internal string get_save_path_for_slot(int slot) {
-        return Path.Join(
-            _sm_path_base,
-            _sm_active_set,
+            set ?? _sm_active_set,
             FhSavePal.pal_get_save_subfolder(),
             FhSavePal.pal_get_save_name_for_slot(slot));
     }

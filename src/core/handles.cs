@@ -56,7 +56,7 @@ internal sealed class FhRuntimeHandle<T> {
 /// <summary>
 ///     A helper to obtain the absolute address of a given function.
 /// </summary>
-public readonly ref struct FhMethodLocation {
+public readonly ref struct FhCallLocation {
 
     /* [fkelava 11/10/26 22:05]
      * When Stage 0 is active (not in `--extdbg` mode), it uses the debug link
@@ -71,7 +71,7 @@ public readonly ref struct FhMethodLocation {
 
     private readonly nint _ptr_target;
 
-    unsafe static FhMethodLocation() {
+    unsafe static FhCallLocation() {
         FhPInvoke.s1_dbg_link_set_load_cb  (&s1_load);
         FhPInvoke.s1_dbg_link_set_unload_cb(&s1_unload);
     }
@@ -130,7 +130,7 @@ public readonly ref struct FhMethodLocation {
             FhInternal.Log.Info($"Export invalidated: {export_name} @ 0x{export_addr:X8}");
         }
 
-        FhInternal.Methods.invalidate_chains(
+        FhInternal.Calls.invalidate_chains(
             unloaded_module_base,
             unloaded_module_size
         );
@@ -142,7 +142,7 @@ public readonly ref struct FhMethodLocation {
     ///     Use this constructor for functions which are analogous between FF X and X-2.
     ///     The handle implicitly targets the currently running game and selects the appropriate offset.
     /// </summary>
-    public FhMethodLocation(nint offset_x, nint offset_x2) {
+    public FhCallLocation(nint offset_x, nint offset_x2) {
         bool is_ffx = FhGlobal.game_id == FhGameId.FFX;
 
         string module_name = is_ffx ? "FFX.exe" : "FFX-2.exe";
@@ -154,7 +154,7 @@ public readonly ref struct FhMethodLocation {
     /// <summary>
     ///     Use this constructor for exported functions in external modules, such as D3D11.dll.
     /// </summary>
-    public FhMethodLocation(string module_name, string fn_name) {
+    public FhCallLocation(string module_name, string fn_name) {
         _ptr_target = calc_addr(module_name, fn_name);
     }
 
@@ -162,7 +162,7 @@ public readonly ref struct FhMethodLocation {
     ///     Use this constructor for private/non-exported functions in external modules,
     ///     such as D3D11.dll, or functions exclusive to either FF X or X-2.
     /// </summary>
-    public FhMethodLocation(string module_name, nint offset) {
+    public FhCallLocation(string module_name, nint offset) {
         _ptr_target = calc_addr(module_name, offset);
     }
 
@@ -171,12 +171,12 @@ public readonly ref struct FhMethodLocation {
     ///     <see cref="IDXGISwapChain.Present(uint, DXGI_PRESENT)"/>.
     /// </summary>
     /// <remarks>Unlike other constructors, no validation is performed on the input address.</remarks>
-    public FhMethodLocation(nint abs_addr) {
+    public FhCallLocation(nint abs_addr) {
         _ptr_target = abs_addr;
     }
 
-    /// <inheritdoc cref="FhMethodLocation(nint)" />
-    unsafe public FhMethodLocation(void* abs_addr) {
+    /// <inheritdoc cref="FhCallLocation(nint)" />
+    unsafe public FhCallLocation(void* abs_addr) {
         _ptr_target = (nint)abs_addr;
     }
 
@@ -243,9 +243,9 @@ public readonly ref struct FhMethodLocation {
 }
 
 /// <summary>
-///     Represents a method with signature <typeparamref name="T"/>. It may then be invoked or hooked.
+///     Represents a call with signature <typeparamref name="T"/>. It may then be invoked or hooked.
 /// </summary>
-public ref struct FhMethodHandle<T> where T : Delegate {
+public ref struct FhCallHandle<T> where T : Delegate {
 
     private readonly nint _ptr_target;
 
@@ -257,7 +257,7 @@ public ref struct FhMethodHandle<T> where T : Delegate {
     public T? fnptr {
         get {
             if (FhEnvironment.get_execution_state() != FhExecState.EXEC) {
-                throw new Exception("You cannot invoke game methods until all module initializers have completed.");
+                throw new Exception("You cannot invoke calls until all module initializers have completed.");
             }
 
             return field;
@@ -265,47 +265,47 @@ public ref struct FhMethodHandle<T> where T : Delegate {
         private set;
     }
 
-    public FhMethodHandle(FhMethodLocation location) {
+    public FhCallHandle(FhCallLocation location) {
         if (location.try_resolve(out _ptr_target)) {
-            fnptr = FhInternal.Methods.get_fnptr<T>(_ptr_target);
+            fnptr = FhInternal.Calls.get_fnptr<T>(_ptr_target);
         }
     }
 
     /// <summary>
     ///     Retargets the handle to only execute hooks subsequent to the given <paramref name="hook"/>.
     /// </summary>
-    public FhMethodHandle<T> chain_from(T hook) {
-        fnptr = FhInternal.Methods.get_fnptr_chain(hook);
+    public FhCallHandle<T> chain_from(T hook) {
+        fnptr = FhInternal.Calls.get_fnptr_chain(hook);
         return this;
     }
 
     /// <summary>
-    ///     Attempts to insert the given <paramref name="hook"/> into the hook chain of the target method.
+    ///     Attempts to insert the given <paramref name="hook"/> into the hook chain of the target call.
     /// </summary>
     public readonly bool hook(FhModule owner, T hook) {
         FhHookContext hook_info = new(owner, hook);
 
-        return _ptr_target != 0 && FhInternal.Methods.fnptr_chain_add<T>(_ptr_target, hook_info);
+        return _ptr_target != 0 && FhInternal.Calls.fnptr_chain_add<T>(_ptr_target, hook_info);
     }
 }
 
 /// <summary>
-///     Pairs a hook with its owner. A stack of these constitutes the complete hook chain of a method.
+///     Pairs a hook with its owner. A stack of these constitutes the complete hook chain of a call.
 /// </summary>
 internal sealed record FhHookContext(
     FhModule owner,
     Delegate fnptr);
 
 /// <summary>
-///     The state of a given game method. Used to track hook insertion.
+///     The state of a given call. Used to track hook insertion.
 /// </summary>
-internal sealed class FhMethodContext {
+internal sealed class FhCallContext {
 
-    internal readonly Stack<FhHookContext> stack;      // The stack of hooks inserted over this method.
+    internal readonly Stack<FhHookContext> stack;      // The stack of hooks inserted over this call.
     internal          nint                 ptr_insert; // The address at which the next hook in the chain is to be inserted.
     internal          bool                 tainted;    // No more hooks may be inserted.
 
-    public FhMethodContext(nint ptr_target) {
+    public FhCallContext(nint ptr_target) {
         stack      = [];
         ptr_insert = ptr_target;
     }
@@ -313,20 +313,20 @@ internal sealed class FhMethodContext {
 }
 
 /// <summary>
-///     Keeps track of the global hook state of functions.
+///     Keeps track of the global state of all callables.
 /// </summary>
-internal sealed class FhMethods {
+internal sealed class FhCallRegistry {
 
-    private readonly static Dictionary<nint,     Delegate>        _fnptrs  = []; // Function -> Cached delegate
-    private readonly static Dictionary<nint,     FhMethodContext> _methods = []; // Original -> Context
-    private readonly static Dictionary<Delegate, nint>            _chain   = []; // Hook     -> Next function in chain
-    private readonly static HashSet   <nint>                      _inval   = []; // Invalidated methods that need cleaning
+    private readonly static Dictionary<nint,     Delegate>      _fnptrs   = []; // Function -> Cached delegate
+    private readonly static Dictionary<nint,     FhCallContext> _contexts = []; // Original -> Context
+    private readonly static Dictionary<Delegate, nint>          _chain    = []; // Hook     -> Next function in chain
+    private readonly static HashSet   <nint>                    _inval    = []; // Invalidated calls that need cleaning
 
     private          int            _lock_commit = 0;
     private readonly AutoResetEvent _lock_chains = new AutoResetEvent(true);
 
     /// <summary>
-    ///     Invalidates all method information in a given module.
+    ///     Invalidates all call information in a given module.
     /// </summary>
     internal void invalidate_chains(
         nint module_base,
@@ -336,12 +336,12 @@ internal sealed class FhMethods {
 
         nint module_end = nint.CreateChecked( module_base + module_size );
 
-        foreach ((nint method_addr, FhMethodContext method_context) in _methods) {
-            if (method_addr < module_base || method_addr > module_end)
+        foreach ((nint call_addr, FhCallContext call_context) in _contexts) {
+            if (call_addr < module_base || call_addr > module_end)
                 continue;
 
             bool first_in_stack = true;
-            foreach (FhHookContext stack_entry in method_context.stack) {
+            foreach (FhHookContext stack_entry in call_context.stack) {
                 if (!_chain.Remove(stack_entry.fnptr, out nint fnptr) || !_fnptrs.Remove(fnptr)) {
                     throw new Exception($"Failed to invalidate chain entry '{stack_entry.fnptr.Method.Name}'.");
                 }
@@ -356,8 +356,8 @@ internal sealed class FhMethods {
                 first_in_stack = false;
             }
 
-            if (!_methods.Remove(method_addr) || !_inval.Add(method_addr)) {
-                throw new Exception($"Failed to invalidate method at 0x{method_addr:X8}.");
+            if (!_contexts.Remove(call_addr) || !_inval.Add(call_addr)) {
+                throw new Exception($"Failed to invalidate call at 0x{call_addr:X8}.");
             }
         }
 
@@ -398,8 +398,8 @@ internal sealed class FhMethods {
     /// </summary>
     public nint get_ptr_insert(nint ptr_target) {
         // _lock_chains must be held by this method's caller.
-        return _methods.TryGetValue(ptr_target, out FhMethodContext? method_context)
-            ? method_context.ptr_insert
+        return _contexts.TryGetValue(ptr_target, out FhCallContext? call_context)
+            ? call_context.ptr_insert
             : ptr_target;
     }
 
@@ -489,8 +489,8 @@ internal sealed class FhMethods {
             return false;
         }
 
-        _methods[ptr_target].ptr_insert = ptr_original;
-        _chain  [hook]                  = ptr_original;
+        _contexts[ptr_target].ptr_insert = ptr_original;
+        _chain[hook]                  = ptr_original;
 
         return true;
     }
@@ -499,7 +499,7 @@ internal sealed class FhMethods {
     public bool fnptr_chain_add<T>(nint ptr_target, FhHookContext hook) where T : Delegate {
         _lock_chains.WaitOne();
 
-        if (_methods.TryGetValue(ptr_target, out FhMethodContext? target)) {
+        if (_contexts.TryGetValue(ptr_target, out FhCallContext? target)) {
             if (target.tainted) {
                 FhInternal.Log.Error($"Late insertion rejected. (0x{ptr_target:X8}, {hook.fnptr.Method.Name})");
 
@@ -516,7 +516,7 @@ internal sealed class FhMethods {
         target = new(ptr_target);
         target.stack.Push(hook);
 
-        _methods[ptr_target] = target;
+        _contexts[ptr_target] = target;
         _lock_chains.Set();
 
         return _lock_commit == 0 || fnptr_chain_insert(ptr_target, hook.fnptr);
@@ -531,7 +531,7 @@ internal sealed class FhMethods {
 
         _lock_chains.WaitOne();
 
-        foreach ((nint ptr_target, FhMethodContext target) in _methods) {
+        foreach ((nint ptr_target, FhCallContext target) in _contexts) {
             Stack<FhHookContext> target_stack = target.stack;
 
             foreach (FhHookContext hook in target_stack) {

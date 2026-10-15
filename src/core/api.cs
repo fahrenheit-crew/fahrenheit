@@ -34,8 +34,9 @@ internal static class FhInternal {
     // The initialization order here is not incidental. Objects higher in the list may not rely on objects below them in their constructor.
     public static readonly FhLogger   Log      = new("core.log");
     public static readonly FhLoader   Loader   = new();
-    public static readonly FhMethods  Methods  = new();
     public static readonly FhHasher   Hasher   = new();
     public static readonly FhState    State    = new();
     public static readonly FhSettings Settings = new();
+
+    public static readonly FhCallRegistry Calls = new();
 }

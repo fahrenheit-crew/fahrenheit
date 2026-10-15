@@ -96,8 +96,8 @@ internal struct PClassDataMember {
 
 [StructLayout(LayoutKind.Sequential, Size = 0x8, Pack = 4)]
 internal struct PAnnotationSemantic {
-    public nint _0x00;
-    public nint _0x04;
+    public nint __0x00;
+    public nint __0x04;
 }
 
 /* [fkelava 19/03/26 03:01]
@@ -112,9 +112,9 @@ internal struct PAnnotationSemantic {
 internal unsafe struct PAnnotation {
     public nint                                  vftable;
     public PSimpleDoubleListElement<PAnnotation> base_PSimpleDoubleListElement;
-    public PAnnotationSemantic*                  _0x0C;
-    public PType*                                _0x10_type;
-    public nint                                  _0x14;
+    public PAnnotationSemantic*                  __0x0C;
+    public PType*                                __0x10_type;
+    public nint                                  __0x14;
 }
 
 /* [fkelava 17/03/26 04:13]
@@ -128,7 +128,7 @@ internal unsafe struct PAnnotation {
 /// </summary>
 [StructLayout(LayoutKind.Sequential, Size = 0x8, Pack = 4)]
 internal struct PAnnotatable {
-    public PSimpleDoubleListElement<PAnnotation> _0x00;
+    public PSimpleDoubleListElement<PAnnotation> __0x00;
 }
 
 /* [fkelava 25/03/26 14:49]
@@ -139,8 +139,8 @@ internal struct PAnnotatable {
 
 [StructLayout(LayoutKind.Sequential, Size = 0x8, Pack = 4)]
 internal struct PHashEntryConstKey {
-    public nint _0x00;
-    public nint _0x04;
+    public nint __0x00;
+    public nint __0x04;
 }
 
 /* [fkelava 25/03/26 14:49]
@@ -170,9 +170,9 @@ internal unsafe struct PRedBlackTreeNode<T> where T : unmanaged {
      * but which is which is unknown.
      */
 
-    public PRedBlackTreeNode<T>* _0x00;
-    public PRedBlackTreeNode<T>* _0x04;
-    public PRedBlackTreeNode<T>* _0x08;
+    public PRedBlackTreeNode<T>* __0x00;
+    public PRedBlackTreeNode<T>* __0x04;
+    public PRedBlackTreeNode<T>* __0x08;
 }
 
 /* [fkelava 13/03/26 21:49]
@@ -215,17 +215,17 @@ internal struct PType {
 [StructLayout(LayoutKind.Sequential, Size = 0x4C, Pack = 4)]
 internal unsafe struct PInstanceList {
     public PSimpleDoubleListElement<PInstanceList> base_PSimpleDoubleListElement;
-    public PFreeList<PUnknown>                     _0x08_free_list;
-    public PSimpleDoubleListElement<PUnknown>      _0x20;
+    public PFreeList<PUnknown>                     __0x08_free_list;
+    public PSimpleDoubleListElement<PUnknown>      __0x20;
     public PCluster*                               ptr_cluster;          // 0x28
     public PClassDescriptor*                       ptr_class_descriptor; // 0x2C
-    public nint                                    _0x30;
-    public nint                                    _0x34;
-    public nint                                    _0x38;
-    public nint                                    _0x3C;
-    public nint                                    _0x40;
-    public nint                                    _0x44;
-    public nint                                    _0x48;
+    public nint                                    __0x30;
+    public nint                                    __0x34;
+    public nint                                    __0x38;
+    public nint                                    __0x3C;
+    public nint                                    __0x40;
+    public nint                                    __0x44;
+    public nint                                    __0x48;
 
     public override string ToString() {
         return $"{nameof(PInstanceList)}<{(*ptr_class_descriptor).base_PType}>";
@@ -258,22 +258,22 @@ internal unsafe struct PClassDescriptor {
     public PAnnotatable                               base_PAnnotatable;
     public PNamespace*                                ptr_namespace;
     public PClassDescriptor*                          m_parent;                      // 0x40 - name: +70FB5C -> +47F02
-    public PSimpleDoubleListElement<PClassDataMember> _0x44;                         // seems to be used for field members?
-    public PSimpleDoubleListElement<PClassMember>     _0x4C;                         // seems to be used for function members?
-    public PSimpleDoubleListElement<PClassMember>     _0x54;                         // seems to be used for function members?
-    public PSimpleDoubleListElement<PClassDataMember> _0x5C;                         // seems to be used for field members?
+    public PSimpleDoubleListElement<PClassDataMember> __0x44;                        // seems to be used for field members?
+    public PSimpleDoubleListElement<PClassMember>     __0x4C;                        // seems to be used for function members?
+    public PSimpleDoubleListElement<PClassMember>     __0x54;                        // seems to be used for function members?
+    public PSimpleDoubleListElement<PClassDataMember> __0x5C;                        // seems to be used for field members?
     public nint                                       ptr_buffer_default;            // 0x64 - name: +3D600 (Phyre::PClassDescriptor::setDefaultBuffer)
     public nint                                       ptr_buffer_validation;         // 0x68 - name: +3D6A0 (Phyre::PClassDescriptor::setValidationBuffer)
     public nint                                       ptr_buffer_write_mask;         // 0x6C - name: +3D6B0 (Phyre::PClassDescriptor::setWriteMaskBuffer)
-    public nint                                       _0x70;
-    public nint                                       _0x74;
-    public nint                                       _0x78;
-    public nint                                       _0x7C;
-    public nint                                       _0x80;
+    public nint                                       __0x70;
+    public nint                                       __0x74;
+    public nint                                       __0x78;
+    public nint                                       __0x7C;
+    public nint                                       __0x80;
     public nint                                       m_offsetToParent;               // 0x84 - name: +70FB68 -> +47F50
     public nint                                       m_offsetToBase;                 // 0x88 - name: +70FB7C -> +47F9F
     public nint                                       m_offsetToBaseInAllocatedBlock; // 0x8C - name: +70FB8C -> +47FEE
-    public nint                                       _0x90_flags;                    // 0x90
+    public nint                                       __0x90_flags;                   // 0x90
 
     public override string ToString() {
         return $"{nameof(PClassDescriptor)}<{base_PType}>";
@@ -288,7 +288,7 @@ internal unsafe struct PClassDescriptor {
 [StructLayout(LayoutKind.Sequential, Size = 0xB8, Pack = 4)]
 internal struct PClassDescriptorDynamic {
     public PClassDescriptor base_PClassDescriptor;     // 0x0
-    public ushort           _0x94;
+    public ushort           __0x94;
     public ushort           m_currentMemberCount;      // 0x96
     public nint             m_actualSize;              // 0x98 - name: +70FBC4, +4808C
     public PArray<byte>     m_defaultBufferStorage;    // 0x9C
@@ -334,15 +334,15 @@ internal unsafe readonly struct PSimpleDoubleListElement<T> where T : unmanaged 
 /// </summary>
 [StructLayout(LayoutKind.Sequential, Size = 0x18, Pack = 4)]
 internal unsafe struct PFreeList<T> where T : unmanaged {
-    public T*   _0x00_head;       // inferred from various iterator methods
-    public nint _0x04_size;
-    public nint _0x08_block_size;
-    public nint _0x0C_alignment;
-    public nint _0x10_name;       // null-terminated ANSI/UTF-8 string
-    public nint _0x14;
+    public T*   __0x00_head;      // inferred from various iterator methods
+    public nint __0x04_size;
+    public nint __0x08_block_size;
+    public nint __0x0C_alignment;
+    public nint __0x10_name;      // null-terminated ANSI/UTF-8 string
+    public nint __0x14;
 
     public override string ToString() {
-        return $"{nameof(PFreeList<>)}<{Marshal.PtrToStringAnsi(_0x10_name)}>";
+        return $"{nameof(PFreeList<>)}<{Marshal.PtrToStringAnsi(__0x10_name)}>";
     }
 }
 
@@ -356,9 +356,9 @@ internal unsafe struct PFreeList<T> where T : unmanaged {
 [StructLayout(LayoutKind.Sequential, Size = 0x1C, Pack = 4)]
 internal struct PNamespace {
     public PSimpleDoubleListElement<PNamespace>       base_PSimpleDoubleListElement;
-    public PSimpleDoubleListElement<PClassDescriptor> _0x08_class_descriptors;
+    public PSimpleDoubleListElement<PClassDescriptor> __0x08_class_descriptors;
     public nint                                       m_index;              // name: +24FE9
-    public PSimpleDoubleListElement<PNamespace>       _0x14_sub_namespaces;
+    public PSimpleDoubleListElement<PNamespace>       __0x14_sub_namespaces;
 }
 
 /* [fkelava 19/03/26 16:20]
@@ -372,13 +372,13 @@ internal struct PNamespace {
 /// </remarks>
 [StructLayout(LayoutKind.Sequential, Size = 0x50, Pack = 4)]
 internal unsafe struct PCluster {
-    public PNamespace                              _0x00_namespace;
-    public PSimpleDoubleListElement<PInstanceList> _0x1C_instance_lists;
-    public nint                                    _0x24;
-    public PFreeList<PInstanceList>                _0x28_free_list_PInstanceList;
+    public PNamespace                              __0x00_namespace;
+    public PSimpleDoubleListElement<PInstanceList> __0x1C_instance_lists;
+    public nint                                    __0x24;
+    public PFreeList<PInstanceList>                __0x28_free_list_PInstanceList;
     public PWorld*                                 ptr_world; // deduced from Phyre::PWorld::addInstanceList (+433F0)
-    public nint                                    _0x44;
-    public PSimpleDoubleListElement<PUnknown>      _0x48;
+    public nint                                    __0x44;
+    public PSimpleDoubleListElement<PUnknown>      __0x48;
 }
 
 /* [fkelava 19/03/26 16:20]
@@ -398,38 +398,38 @@ internal struct PNamedSemanticDescriptor {
 /// <remarks>Used when a target Phyre type is not known, as a placeholder.</remarks>
 [StructLayout(LayoutKind.Sequential, Size = 0x80, Pack = 4)]
 public struct PUnknown {
-    public nint _0x00;
-    public nint _0x04;
-    public nint _0x08;
-    public nint _0x0C;
-    public nint _0x10;
-    public nint _0x14;
-    public nint _0x18;
-    public nint _0x1C;
-    public nint _0x20;
-    public nint _0x24;
-    public nint _0x28;
-    public nint _0x2C;
-    public nint _0x30;
-    public nint _0x34;
-    public nint _0x38;
-    public nint _0x3C;
-    public nint _0x40;
-    public nint _0x44;
-    public nint _0x48;
-    public nint _0x4C;
-    public nint _0x50;
-    public nint _0x54;
-    public nint _0x58;
-    public nint _0x5C;
-    public nint _0x60;
-    public nint _0x64;
-    public nint _0x68;
-    public nint _0x6C;
-    public nint _0x70;
-    public nint _0x74;
-    public nint _0x78;
-    public nint _0x7C;
+    public nint __0x00;
+    public nint __0x04;
+    public nint __0x08;
+    public nint __0x0C;
+    public nint __0x10;
+    public nint __0x14;
+    public nint __0x18;
+    public nint __0x1C;
+    public nint __0x20;
+    public nint __0x24;
+    public nint __0x28;
+    public nint __0x2C;
+    public nint __0x30;
+    public nint __0x34;
+    public nint __0x38;
+    public nint __0x3C;
+    public nint __0x40;
+    public nint __0x44;
+    public nint __0x48;
+    public nint __0x4C;
+    public nint __0x50;
+    public nint __0x54;
+    public nint __0x58;
+    public nint __0x5C;
+    public nint __0x60;
+    public nint __0x64;
+    public nint __0x68;
+    public nint __0x6C;
+    public nint __0x70;
+    public nint __0x74;
+    public nint __0x78;
+    public nint __0x7C;
 }
 
 /* [fkelava 25/03/26 17:04]
@@ -503,14 +503,14 @@ internal unsafe struct PSharray<T> where T : unmanaged {
 
 [StructLayout(LayoutKind.Sequential, Size = 0x14, Pack = 0x4)]
 internal unsafe struct PTextureFormatBase {
-    public nint                _0x00_format_name;
-    public PTextureFormatBase* _0x04;
-    public nint                _0x08_flags;
-    public nint                _0x0C;
-    public nint                _0x10;
+    public nint                __0x00_format_name;
+    public PTextureFormatBase* __0x04;
+    public nint                __0x08_flags;
+    public nint                __0x0C;
+    public nint                __0x10;
 
     public override string ToString() {
-        return $"{nameof(PTextureFormatBase)} - {Marshal.PtrToStringAnsi(_0x00_format_name)}";
+        return $"{nameof(PTextureFormatBase)} - {Marshal.PtrToStringAnsi(__0x00_format_name)}";
     }
 }
 
@@ -523,13 +523,13 @@ internal unsafe struct PTextureFormatBase {
 internal unsafe struct PTextureCommonBase {
     public PTextureFormatBase* m_format;       // 0x0
     public byte                m_memoryType;   // 0x5
-    public byte                _0x06;
-    public byte                _0x07;
-    public uint                _0x08;
+    public byte                __0x06;
+    public byte                __0x07;
+    public uint                __0x08;
     public uint                m_mipmapCount;  // 0xC
     public uint                m_maxMipLevel;  // 0x10
     public int                 m_textureFlags; // 0x14
-    public uint                _0x18;
+    public uint                __0x18;
 }
 
 /* [fkelava 25/03/26 18:30]
@@ -551,25 +551,25 @@ internal struct PTexture2DBase {
 [StructLayout(LayoutKind.Sequential, Size = 0x74, Pack = 0x4)]
 internal unsafe struct PTexture2DD3D11 {
     public PTexture2DBase  base_PTexture2DBase;
-    public uint            _0x24;
+    public uint            __0x24;
     public ID3D11Resource* ptr_d3d_resource; // discovered by Rurusachi
-    public uint            _0x2C;
-    public PUnknown*       _0x30;
-    public uint            _0x34;
-    public uint            _0x38;
-    public uint            _0x3C;
-    public uint            _0x40;
-    public uint            _0x44;
-    public uint            _0x48;
-    public uint            _0x4C;
-    public uint            _0x50;
-    public uint            _0x54;
-    public uint            _0x58;
-    public uint            _0x5C;
-    public uint            _0x60;
-    public uint            _0x64;
-    public uint            _0x68;
-    public uint            _0x6C;
+    public uint            __0x2C;
+    public PUnknown*       __0x30;
+    public uint            __0x34;
+    public uint            __0x38;
+    public uint            __0x3C;
+    public uint            __0x40;
+    public uint            __0x44;
+    public uint            __0x48;
+    public uint            __0x4C;
+    public uint            __0x50;
+    public uint            __0x54;
+    public uint            __0x58;
+    public uint            __0x5C;
+    public uint            __0x60;
+    public uint            __0x64;
+    public uint            __0x68;
+    public uint            __0x6C;
     public uint            is_bound; // 0x70 - name: +196120 - PTexture2DD3D11::isBound()
 }
 

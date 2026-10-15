@@ -24,7 +24,7 @@ public unsafe struct AtelWorkThread {
     public AtelWorkThreadStorage thread_local_storage;
 
     public  ushort ctrl_idx;
-    private ushort _0x42;
+    private ushort __0x42;
 
     public void* motion;
     public void* rotation;

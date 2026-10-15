@@ -94,17 +94,17 @@ public struct FhSaveHeader {
         private byte _e0;
     }
 
-    public uint             _0x00;
-    public byte             _0x04;
+    public uint             __0x00;
+    public byte             __0x04;
     public Formation        formation;
     public FhLangId         lang_id;
-    public byte             _0x0D;
-    public ushort           _0x0E;
+    public byte             __0x0D;
+    public ushort           __0x0E;
     public uint             playtime_secs;
     public uint             gil;
     public ushort           id_location;
-    public ushort           _0x1a;
-    public ushort           _0x1c;
+    public ushort           __0x1a;
+    public ushort           __0x1c;
     public ushort           _0x1e;
     public FhSavePlayerName player_name;
 };

@@ -128,10 +128,10 @@ public unsafe sealed class FhResourceLoaderModule : FhModule, IFhResourceLoaderI
             return false;
         }
 
-        FhPDoubleListIterator<PInstanceList> iter_instances = new(&ptr_cluster->_0x1C_instance_lists);
+        FhPDoubleListIterator<PInstanceList> iter_instances = new(&ptr_cluster->__0x1C_instance_lists);
 
         while (iter_instances.next(out PInstanceList* ptr_instance_list)) {
-            if (Marshal.PtrToStringAnsi(ptr_instance_list->_0x08_free_list._0x10_name) != nameof(PTexture2D))
+            if (Marshal.PtrToStringAnsi(ptr_instance_list->__0x08_free_list.__0x10_name) != nameof(PTexture2D))
                 continue;
 
             FhPFilteredInstanceList        <PTexture2D> texture_filter = new(ptr_instance_list);
@@ -204,10 +204,10 @@ public unsafe sealed class FhResourceLoaderModule : FhModule, IFhResourceLoaderI
             return false;
         }
 
-        FhPDoubleListIterator<PInstanceList> iter_instances = new(&ptr_cluster->_0x1C_instance_lists);
+        FhPDoubleListIterator<PInstanceList> iter_instances = new(&ptr_cluster->__0x1C_instance_lists);
 
         while (iter_instances.next(out PInstanceList* ptr_instance_list)) {
-            if (Marshal.PtrToStringAnsi(ptr_instance_list->_0x08_free_list._0x10_name) != nameof(PTexture3D))
+            if (Marshal.PtrToStringAnsi(ptr_instance_list->__0x08_free_list.__0x10_name) != nameof(PTexture3D))
                 continue;
 
             FhPFilteredInstanceList        <PTexture3D> texture_filter = new(ptr_instance_list);
@@ -248,10 +248,10 @@ public unsafe sealed class FhResourceLoaderModule : FhModule, IFhResourceLoaderI
             return false;
         }
 
-        FhPDoubleListIterator<PInstanceList> iter_instances = new(&ptr_cluster->_0x1C_instance_lists);
+        FhPDoubleListIterator<PInstanceList> iter_instances = new(&ptr_cluster->__0x1C_instance_lists);
 
         while (iter_instances.next(out PInstanceList* ptr_instance_list)) {
-            if (Marshal.PtrToStringAnsi(ptr_instance_list->_0x08_free_list._0x10_name) != nameof(PTextureCubeMap))
+            if (Marshal.PtrToStringAnsi(ptr_instance_list->__0x08_free_list.__0x10_name) != nameof(PTextureCubeMap))
                 continue;
 
             FhPFilteredInstanceList        <PTextureCubeMap> texture_filter = new(ptr_instance_list);

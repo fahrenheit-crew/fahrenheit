@@ -41,5 +41,5 @@ public struct Sphere {
     public SphereRange    range;
     public byte           special_role;
 
-    private ushort _0x0E;
+    private ushort __0x0E;
 }

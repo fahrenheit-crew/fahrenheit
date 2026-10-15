@@ -130,23 +130,23 @@ public sealed partial class FhLocalization {
     ///     Retrieves a localized string with the given ID, for the given language.
     /// </summary>
     /// <param name="id">The ID of the localized string.</param>
-    /// <param name="caller">The module in whose data the string shall be sought.</param>
+    /// <param name="owner">The module containing the localization.</param>
     /// <param name="lang_id">The ISO 639 language ID of the language to get the string in.</param>
     /// <returns>The localized string, or the ID if unavailable.</returns>
     /// <remarks>
     ///     You may pass either a fully qualified ID, or a short ID
-    ///     and a non-<c>null</c> <paramref name="caller"/>.
+    ///     and a non-<c>null</c> <paramref name="owner"/>.
     ///     <para/>
     ///     If no <paramref name="lang_id"/> is specified, the current game language is used.
     /// </remarks>
     public string localize(
         string    id,
-        FhModule? caller  = null,
+        FhModule? owner   = null,
         string?   lang_id = null
     ) {
-        string composite_id = (caller == null)
+        string composite_id = (owner == null)
             ? id
-            : $"{caller.ModuleType}.{id}";
+            : $"{owner.ModuleType}.{id}";
 
         lang_id ??= get_default_lang_id();
         return _s_locales.TryGetValue(lang_id, out LocaleData? locale) && locale.TryGetValue(composite_id, out string? localized_string)

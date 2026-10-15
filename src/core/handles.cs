@@ -6,26 +6,27 @@
 namespace Fahrenheit;
 
 /// <summary>
-///     A binding to <typeparamref name="T"/>. Allows access to it or its <see cref="FhModuleContext"/>.
+///     Allows access to the <see cref="FhModule"/> of type
+///     <typeparamref name="T"/> or its <see cref="FhModuleContext"/>.
 /// </summary>
 public sealed class FhModuleHandle<T>(FhModule owner) where T : FhModule {
     private readonly FhModule         _owner = owner;
     private          FhModuleContext? _match;
 
     /// <summary>
-    ///     Attempts to find <typeparamref name="T"/> and return its context.
+    ///     Attempt to get the module's context.
     /// </summary>
-    /// <param name="target_context"><typeparamref name="T"/>'s context, if the call succeeds.</param>
-    /// <returns>Whether <typeparamref name="T"/> is loaded.</returns>
+    /// <param name="target_context">The module's context, if it is loaded.</param>
+    /// <returns>Whether the module is loaded.</returns>
     public bool try_get_context([NotNullWhen(true)] out FhModuleContext? target_context) {
         return (target_context = (_match ??= FhApi.Mods.get_module<T>())) != null;
     }
 
     /// <summary>
-    ///     Attempts to find <typeparamref name="T"/> and return it.
+    ///     Attempt to get the module.
     /// </summary>
-    /// <param name="target"><typeparamref name="T"/>, if the call succeeds.</param>
-    /// <returns>Whether <typeparamref name="T"/> is loaded.</returns>
+    /// <param name="target">The module, if it is loaded.</param>
+    /// <returns>Whether the module is loaded.</returns>
     public bool try_get_module([NotNullWhen(true)] out T? target) {
         target = default;
         return try_get_context(out FhModuleContext? target_context) && (target = target_context.Module as T) != null;
@@ -33,7 +34,7 @@ public sealed class FhModuleHandle<T>(FhModule owner) where T : FhModule {
 }
 
 /// <summary>
-///     A binding to a <typeparamref name="T"/> initialized at runtime.
+///     A <typeparamref name="T"/> initialized at runtime.
 /// </summary>
 internal sealed class FhRuntimeHandle<T> {
     private readonly Lock _impl_lock = new Lock();
@@ -139,8 +140,9 @@ public readonly ref struct FhCallLocation {
     }
 
     /// <summary>
-    ///     Use this constructor for functions identical in FF X and X-2. The active game is targeted.
+    ///     Define a location of a function identical in FF X and X-2.
     /// </summary>
+    /// <remarks>The active game is targeted.</remarks>
     public FhCallLocation(nint offset_x, nint offset_x2) {
         bool is_ffx = FhGlobal.game_id == FhGameId.FFX;
 
@@ -151,23 +153,23 @@ public readonly ref struct FhCallLocation {
     }
 
     /// <summary>
-    ///     Use this constructor for exported functions in external modules, such as D3D11.dll.
+    ///     Define a location of a named export in an external library.
     /// </summary>
     public FhCallLocation(string module_name, string fn_name) {
         _ptr_target = calc_addr(module_name, fn_name);
     }
 
     /// <summary>
-    ///     Use this constructor for private/non-exported functions in external modules,
-    ///     such as D3D11.dll, or functions exclusive to either FF X or X-2.
+    ///     Define a location of an unexported function in an external library,
+    ///     or a function exclusive to FF X or X-2.
     /// </summary>
     public FhCallLocation(string module_name, nint offset) {
         _ptr_target = calc_addr(module_name, offset);
     }
 
     /// <summary>
-    ///     Use this constructor for member functions or vtable entries of objects, such as
-    ///     <see cref="IDXGISwapChain.Present(uint, DXGI_PRESENT)"/>.
+    ///     Define a location of a function you have a pointer to, such as
+    ///     a member function or vtable entry of an object.
     /// </summary>
     /// <remarks>Unlike other constructors, no validation is performed on the input address.</remarks>
     public FhCallLocation(nint abs_addr) {
@@ -180,9 +182,9 @@ public readonly ref struct FhCallLocation {
     }
 
     /// <summary>
-    ///     Gets the base address of a module.
+    ///     Get the base address of a module.
     /// </summary>
-    /// <param name="module_name">The name of the module whose address shall be obtained.</param>
+    /// <param name="module_name">The name of the module to get the address of.</param>
     /// <returns>The address of the specified module, or zero if it is not loaded.</returns>
     private static nint get_module_addr(string module_name) {
         return _lock == 0 && _s_modules.TryGetValue(module_name, out nint ptr_module)
@@ -191,10 +193,10 @@ public readonly ref struct FhCallLocation {
     }
 
     /// <summary>
-    ///     Gets the address of a named export in a module.
+    ///     Get the address of a named export in a module.
     /// </summary>
-    /// <param name="export">The name of the exported symbol.</param>
     /// <param name="module_addr">The base address of the module to search.</param>
+    /// <param name="export">The name of the exported symbol.</param>
     /// <param name="ptr_fn">A pointer to the export, or zero if it does not exist.</param>
     /// <returns>Whether the export exists.</returns>
     private static bool get_export(nint module_addr, string export, out nint ptr_fn) {
@@ -217,10 +219,10 @@ public readonly ref struct FhCallLocation {
     }
 
     /// <summary>
-    ///     Obtains the address of a named export.
+    ///     Obtain the address of a named export.
     /// </summary>
-    /// <param name="export">The name of the exported symbol.</param>
     /// <param name="module_name">The name of the module to search.</param>
+    /// <param name="export">The name of the exported symbol.</param>
     /// <returns>The export's address, or zero if the export or its module cannot be found.</returns>
     private static nint calc_addr(string module_name, string export) {
         nint module_addr = get_module_addr(module_name);
@@ -230,10 +232,10 @@ public readonly ref struct FhCallLocation {
     }
 
     /// <summary>
-    ///     Obtains the address of an unexported function.
+    ///     Obtain the address of an unexported function.
     /// </summary>
-    /// <param name="offset">The offset at which the function is located in the target module.</param>
     /// <param name="module_name">The name of the module the function is contained in.</param>
+    /// <param name="offset">The offset at which the function is located in the target module.</param>
     /// <returns>The function's address, or zero if its module is not loaded.</returns>
     private static nint calc_addr(string module_name, nint offset) {
         nint module_addr = get_module_addr(module_name);

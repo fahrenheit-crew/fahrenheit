@@ -14,7 +14,7 @@ public enum FhGameId {
 }
 
 /// <summary>
-///     Contains runtime constants that apply to any executing game.
+///     Contains runtime constants applicable to any executing game.
 /// </summary>
 public static class FhGlobal {
 

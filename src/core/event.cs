@@ -6,28 +6,30 @@
 namespace Fahrenheit;
 
 /// <summary>
-///     The method that runs in response to a Fahrenheit event.
+///     Represents the method that runs in response to an <see cref="FhEvent{TArgs}"/>.
 /// </summary>
-/// <param name="args">An object that contains the event data.</param>
-/// <typeparam name="TArgs">The type of supplementary data associated with the event.</typeparam>
+/// <param name="args">The arguments provided by the event.</param>
+/// <typeparam name="TArgs">The arguments provided by the event.</typeparam>
 public delegate void FhEventHandler<in TArgs>(TArgs args)
     where TArgs : allows ref struct;
 
 /// <summary>
-///     An occurrence of interest which can be responded to.
+///     Enables you to respond to in-game occurrences.
 /// </summary>
-/// <typeparam name="TArgs">The type of supplementary data associated with the event.</typeparam>
+/// <remarks>
+///     You can only subscribe to Fahrenheit events in your
+///     module's <c>init</c> method, and cannot unsubscribe from them.
+/// </remarks>
+/// <typeparam name="TArgs">The arguments provided by the event.</typeparam>
 public class FhEvent<TArgs> where TArgs : allows ref struct {
-    private readonly HashSet<FhEventHandler<TArgs>> _handlers;
+    private readonly HashSet<FhEventHandler<TArgs>> _handlers = [];
 
-    internal FhEvent() {
-        _handlers = new();
-    }
+    internal FhEvent() { }
 
     /// <summary>
     ///     Subscribe to the event.
     /// </summary>
-    /// <param name="handler">The handler to subscribe to the event with.</param>
+    /// <param name="handler">The handler to invoke when the event is raised.</param>
     public bool subscribe(FhEventHandler<TArgs> handler) {
         if (FhEnvironment.get_execution_state() != FhExecState.INIT) {
             throw new Exception("You cannot subscribe to events outside of a module's init() method.");
@@ -37,10 +39,11 @@ public class FhEvent<TArgs> where TArgs : allows ref struct {
     }
 
     /// <summary>
-    ///     Invokes the event's handlers.
+    ///     Raises the event.
     /// </summary>
-    /// <param name="args">The arguments to invoke the event's handlers with.</param>
-    /// <returns>Whether any handlers exist.</returns>
+    /// <remarks>The event's handlers are invoked in subscription order.</remarks>
+    /// <param name="args">The arguments to pass to the handlers.</param>
+    /// <returns>Whether any handlers were invoked.</returns>
     internal bool invoke(TArgs args) {
         foreach (FhEventHandler<TArgs> handler in _handlers) {
             handler.Invoke(args);

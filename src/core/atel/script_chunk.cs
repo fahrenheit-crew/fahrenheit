@@ -7,16 +7,16 @@ namespace Fahrenheit.Atel;
 
 [StructLayout(LayoutKind.Sequential, Size = 0x20)]
 public struct MapEntrance {
-    public short _0x00;
-    public short _0x02;
-    public short _0x04;
-    public short _0x06;
+    public short __0x00;
+    public short __0x02;
+    public short __0x04;
+    public short __0x06;
     public float rotation;
     public float x;
     public float y;
     public float z;
-    public int   _0x18;
-    public int   _0x1C;
+    public int   __0x18;
+    public int   __0x1C;
 
     public readonly Vector3 pos => new(x, y, z);
 }

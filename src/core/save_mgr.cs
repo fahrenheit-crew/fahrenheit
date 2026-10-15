@@ -116,14 +116,17 @@ public sealed class FhSaves {
         _ = Directory.CreateDirectory(_sm_path_default_set);
     }
 
-    private async Task _sm_index_save_file(string save_file) {
+    /// <summary>
+    ///     Reads a save file and prepares its display data.
+    /// </summary>
+    private async Task _sm_index_save_file(string save_file_path) {
         FhSaveDisplayData  display_data = new();
-        ReadOnlySpan<char> slot_str     = save_file[ (save_file.LastIndexOf('_') + 1) .. ];
+        ReadOnlySpan<char> slot_str     = save_file_path[ (save_file_path.LastIndexOf('_') + 1) .. ];
 
         if (!int.TryParse(slot_str, out int slot))
             return;
 
-        using (FileStream save_file_stream = File.OpenRead(save_file)) {
+        using (FileStream save_file_stream = File.OpenRead(save_file_path)) {
             save_file_stream.ReadExactly(display_data.header);
         }
 
@@ -138,18 +141,16 @@ public sealed class FhSaves {
 
         display_data.slot        = slot;
         display_data.slot_str    = slot.ToString();
-        display_data.create_time = File.GetLastWriteTime(save_file);
+        display_data.create_time = File.GetLastWriteTime(save_file_path);
 
         _sm_occupied_slots.Add(slot);
         _sm_display_data  .Add(display_data);
     }
 
     /// <summary>
-    ///     Indexes the active save set's directory. This function must be called under lock.
+    ///     Indexes the active save set. This function must be called under lock.
     /// </summary>
     private void _sm_index_active_set() {
-        Stopwatch sw = Stopwatch.StartNew();
-
         _sm_display_data  .Clear();
         _sm_occupied_slots.Clear();
 
@@ -178,8 +179,6 @@ public sealed class FhSaves {
         Task.WaitAll(tasks);
 
         _sm_display_data.Sort(FhSaveTimeComparer.Instance);
-
-        FhInternal.Log.Info($"{sw.Elapsed}");
     }
 
     /// <summary>

@@ -5,7 +5,7 @@
 
 namespace Fahrenheit;
 
-using SaveCounts     = Dictionary<FhGameId, Dictionary<string, int>>;
+using SaveCounts     = Dictionary<string, int>;
 using UserInterfaces = Dictionary<string, FhSaveUi>;
 
 /// <summary>Represents the current operating mode of the save system.</summary>
@@ -91,12 +91,7 @@ public sealed class FhSaves {
         _sm_active_set          = FhSavePal.DEFAULT_SET_NAME;
         _sm_display_data        = [];
         _sm_uis                 = [];
-
-        _sm_set_save_counts  = new() {
-            { FhGameId.FFX,    [] },
-            { FhGameId.FFX2,   [] },
-            { FhGameId.FFX2LM, [] },
-        };
+        _sm_set_save_counts     = [];
 
         /* [fkelava 19/01/26 18:13]
          * Save PAL is not ready to perform indexing operations at 'init' time because
@@ -148,7 +143,7 @@ public sealed class FhSaves {
 
         _ = Directory.CreateDirectory(path_set_folder);
 
-        foreach (var save_file in Directory.EnumerateFiles(path_set_folder, FhUtil.select("ffx_*", "ffx2_*", "ffx2_*"))) {
+        foreach (string save_file in Directory.EnumerateFiles(path_set_folder, FhSavePal.pal_get_save_name_glob())) {
             FhSaveDisplayData  display_data = new();
             ReadOnlySpan<char> slot_str     = save_file[ (save_file.LastIndexOf('_') + 1) .. ];
 
@@ -183,26 +178,23 @@ public sealed class FhSaves {
     private void _sm_query_sets() {
         _sm_sets               .Clear();
         _sm_sets_with_autosaves.Clear();
+        _sm_set_save_counts    .Clear();
 
-        _sm_set_save_counts[FhGameId.FFX]   .Clear();
-        _sm_set_save_counts[FhGameId.FFX2]  .Clear();
-        _sm_set_save_counts[FhGameId.FFX2LM].Clear();
+        foreach (string set_dir in Directory.EnumerateDirectories(_sm_path_base)) {
+            string set_name   = Path.GetFileName(set_dir);
+            string set_subdir = Path.Join       (set_dir, FhSavePal.pal_get_save_subfolder());
 
-        foreach (string dir in Directory.EnumerateDirectories(_sm_path_base)) {
-            string set_name = Path.GetFileName(dir);
             _sm_sets.Add(set_name);
 
             if (File.Exists(get_save_path_for_slot(set_name, 0))) {
                 _sm_sets_with_autosaves.Add(set_name);
             }
 
-            DirectoryInfo x_dir  = Directory.CreateDirectory(Path.Join(dir, "FINAL FANTASY X"));
-            DirectoryInfo x2_dir = Directory.CreateDirectory(Path.Join(dir, "FINAL FANTASY X-2"));
-            DirectoryInfo lm_dir = Directory.CreateDirectory(Path.Join(dir, "FINAL FANTASY X-2 LAST MISSION"));
+            _ = Directory.CreateDirectory(set_subdir);
 
-            _sm_set_save_counts[FhGameId.FFX   ][set_name] = x_dir .GetFiles("ffx_*") .Length;
-            _sm_set_save_counts[FhGameId.FFX2  ][set_name] = x2_dir.GetFiles("ffx2_*").Length;
-            _sm_set_save_counts[FhGameId.FFX2LM][set_name] = lm_dir.GetFiles("ffx2_*").Length;
+            ReadOnlySpan<string> saves = [ .. Directory.EnumerateFiles(set_subdir, FhSavePal.pal_get_save_name_glob()) ];
+
+            _sm_set_save_counts[set_name] = saves.Length;
         }
 
         /* [fkelava 19/01/26 14:50]
@@ -215,14 +207,15 @@ public sealed class FhSaves {
 
         if (!_sm_sets.Contains(_sm_active_set)) {
             FhInternal.Log.Warning($"Active set {_sm_active_set} was deleted; falling back to default.");
+
+            if (!_sm_sets.Contains(FhSavePal.DEFAULT_SET_NAME)) {
+                FhInternal.Log.Error("Default set was deleted; forcibly re-generating.");
+
+                _sm_create_default_set();
+                _sm_query_sets();
+            }
+
             _sm_active_set = FhSavePal.DEFAULT_SET_NAME;
-        }
-
-        if (!_sm_sets.Contains(FhSavePal.DEFAULT_SET_NAME)) {
-            FhInternal.Log.Error("Default set was deleted; forcibly re-generating.");
-
-            _sm_create_default_set();
-            _sm_query_sets();
         }
     }
 
@@ -302,7 +295,7 @@ public sealed class FhSaves {
     /// <summary>Retrieve the save counts for each set for the current game.</summary>
     /// <returns>A dictionary of save counts keyed by set names.</returns>
     public IReadOnlyDictionary<string, int> get_save_counts() {
-        return _sm_set_save_counts[FhGlobal.game_id];
+        return _sm_set_save_counts;
     }
 
     /// <summary>Determine whether a set contains an autosave.</summary>

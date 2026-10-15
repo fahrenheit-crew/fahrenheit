@@ -523,6 +523,13 @@ internal unsafe static class FhSavePal {
     }
 
     /// <summary>
+    ///     Gets a glob string for save game names for the currently loaded game.
+    /// </summary>
+    internal static string pal_get_save_name_glob() {
+        return FhUtil.select("ffx_*", "ffx2_*", "ffx2_*");
+    }
+
+    /// <summary>
     ///     Gets the name of the save game folder for the currently loaded game.
     /// </summary>
     internal static string pal_get_save_subfolder() {

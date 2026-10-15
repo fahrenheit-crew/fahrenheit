@@ -290,13 +290,30 @@ public abstract class FhSetting(string id) {
 ///     mod settings UI when provided through an <see cref="FhSettingProvider{T}"/>.
 /// </remarks>
 public abstract class FhSetting<T>(string id, T defval) : FhSetting(id) {
+    public struct SetEventArgs {
+        public readonly T old_value;
+
+        public SetEventArgs(T old_value) {
+            this.old_value = old_value;
+        }
+    }
+
+    public readonly FhEvent<SetEventArgs> PostSet = new();
+
     protected bool disabled = false;
 
     protected readonly T default_ = defval;
     protected          T value    = defval;
 
-    public   virtual T    get()            => value;
-    internal virtual void set(T new_value) => value = new_value;
+    public virtual T get() => value;
+
+    internal virtual void set(T new_value) {
+        SetEventArgs args = new(value);
+
+        value = new_value;
+
+        PostSet.invoke(args);
+    }
 
     internal override void save(Utf8JsonWriter writer) {
         writer.WritePropertyName(id);
@@ -317,7 +334,7 @@ public abstract class FhSetting<T>(string id, T defval) : FhSetting(id) {
             return;
         }
 
-        value = loaded_value;
+        set(loaded_value);
     }
 }
 
@@ -410,7 +427,11 @@ public class FhSettingNumber<T>(
     }
 
     internal override void set(T new_value) {
+        SetEventArgs args = new(value);
+
         value = T.Clamp(new_value, min, max);
+
+        PostSet.invoke(args);
     }
 }
 

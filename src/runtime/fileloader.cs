@@ -107,15 +107,7 @@ public unsafe sealed class FhFileLoaderModule : FhModule {
     }
 
     /* [fkelava 25/08/26 20:00]
-     * There's a nasty race condition hidden here. Normally, Fahrenheit initialization does not run game code. It is intended
-     * that game code does not run until all hooks have installed, to ensure no calls 'escape' hooking from an interested module.
-     *
-     * The 'allocator fix' module wants to hook that initializer. If it doesn't, we lose its benefits. However, intra-DLL, Fahrenheit
-     * leaves the initialization order of modules undefined. If we blithely `_init_crossload` in `init`, and this module ran `init`
-     * before the 'allocator fix' module did, the call would go through before that module could hook it.
-     * We therefore defer it to `fiosInitialize`, when the game sets up the primary VBF.
-     *
-     * Note also the 'creative' use of chaining from another method, our hook of the stream prefix setter, to avoid a stack overflow.
+     * Note the 'creative' use of chaining from another method, our hook of the stream prefix setter, to avoid a stack overflow.
      */
 
     private void _init_crossload() {
@@ -157,9 +149,7 @@ public unsafe sealed class FhFileLoaderModule : FhModule {
     private static void normalize_path(ReadOnlySpan<byte> src, Span<byte> dest) {
 
         /* [fkelava 22/08/26 18:16]
-        * `size` is NOT the length of the string passed in `src`.
-        *
-        * In fact, `src` and `dest` will regularly contain garbage off the end,
+        * `src` and `dest` regularly contain garbage off the end,
         * so all searches must be constrained by `strlen(src)`.
         */
 
@@ -167,16 +157,16 @@ public unsafe sealed class FhFileLoaderModule : FhModule {
 
         /* [fkelava 22/08/26 15:40]
          * There are three errors the game's path normalizer fixes.
-         * - A path might not have the stream prefix prepended.
+         * - A path does not have the stream prefix prepended.
          * - Some shader paths have the wrong file extension.
          * - Some paths have the wrong platform ID.
          *
-         * The second and third could have been completely avoided by the developers
-         * if they were more attentive, but they weren't, so we replicate those fixes.
+         * The second and third could have been avoided by the developers
+         * but weren't, so we replicate those fixes.
          *
          * The first, however, is different in Fahrenheit's case; because we simplify the stream
          * prefix from '../../..' to '/', we must also remove now-invalid prefixes. We also
-         * fix the fourth case where an old-style 'host0' path is used.
+         * fix a fourth case where an old-style 'host0' path is used.
          */
 
         ReadOnlySpan<byte> bad_path_prefix   = "host0:"u8;
@@ -219,10 +209,10 @@ public unsafe sealed class FhFileLoaderModule : FhModule {
     }
 
     /* [fkelava 21/08/26 14:10]
-     * The game has the concept of a 'stream prefix', prepended to any and all paths. For some silly reason,
-     * the default is '../../..'. We can simplify it, which is desirable so the user need not remember it.
+     * Paths in the game have a 'stream prefix' prepended. For some silly reason,
+     * the default is '../../..'. We can simplify it for the user's benefit.
      *
-     * Note that the VBF stream prefix can't be empty. The game will take an access violation if so.
+     * Note that the VBF stream prefix can't be left empty. Doing so causes an access violation.
      */
 
     [UnmanagedCallConv(CallConvs = [ typeof(CallConvThiscall) ] )]
@@ -243,21 +233,19 @@ public unsafe sealed class FhFileLoaderModule : FhModule {
     }
 
     /* [fkelava 22/08/26 15:20]
-     * Buckle up. This is where things get bad.
+     * Simplifying the stream prefix should be easy. The game has a path normalizer function
+     * `fiosUnifyFilename`, so reimplementing it should do. We are not so fortunate, though.
      *
-     * Simplifying the stream prefix, on paper, should not be problematic. The game has a path normalizer
-     * function `fiosUnifyFilename`, so at worst we have to reimplement just that, right?
-     *
-     * The game's usage of path normalization is, at best, inconsistent. It manages to fail in almost every way possible:
+     * The game's path normalization fails in almost every way possible:
      * - Blindly hardcoding the normal '../../..' stream prefix into a path.
      * - Blindly opening a path without normalizing.
      * - Blindly hashing a path without normalizing, then looking up tables with it.
      *
-     * In other words, the only reason why the path handling in the default game works _at all_ is because
-     * the hardcoded stream prefix ties together an incoherent mess of code that does not function independently.
+     * In other words, the path handling in the default game works _only because_ the hardcoded
+     * stream prefix ties together an otherwise incoherent mess.
      *
-     * To fix this, we have to insert path normalization in all the places the developers failed to. As you may well imagine,
-     * this is a minefield and you can never tell exactly where the whole thing will fall off the rails next.
+     * We have to insert path normalization in all the places the developers failed to.
+     * There are, unfortunately, quite a few places that need such patching.
      */
 
     [UnmanagedCallConv(CallConvs = [ typeof(CallConvThiscall) ] )]
@@ -327,12 +315,6 @@ public unsafe sealed class FhFileLoaderModule : FhModule {
                 return _crossload(rv, ptr_path_normalized);
             }
 
-            /* [fkelava 01/10/24 16:49]
-             * FFX.exe+208100 at +2081B9 onward:
-             * if (readOnly) { pvVar4 = CreateFileW(path, 1, 1, 0, 3, 0x08000000, 0); }
-             * else          { pvVar4 = CreateFileW(path, 2, 0, 0, 4, 0x08000000, 0); }
-             */
-
             fixed (char* ptr_path_modded = path_modded) {
                 FILE_ACCESS_RIGHTS        access      = read_only
                     ? FILE_ACCESS_RIGHTS.FILE_READ_DATA
@@ -354,7 +336,8 @@ public unsafe sealed class FhFileLoaderModule : FhModule {
                     null,
                     disposition,
                     flags,
-                    HANDLE.Null);
+                    HANDLE.Null
+                );
             }
 
             if (ptr_this->handle_os == HANDLE.INVALID_HANDLE_VALUE) {

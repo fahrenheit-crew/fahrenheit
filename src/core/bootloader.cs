@@ -40,14 +40,6 @@ internal static class FhEnvironment {
     internal static readonly bool         LargeAddressAware;
 
     static FhEnvironment() {
-        /* [fkelava 10/06/26 18:53]
-         * https://learn.microsoft.com/en-us/dotnet/api/system.appdomain?view=net-10.0#remarks
-         * > On .NET Core and .NET 5+ {...} These versions have exactly one AppDomain.
-         *
-         * In other words, AppDomain.CurrentDomain is the _only_ domain in existence.
-         * See the comments on FhExceptionHandler for the peculiar nature of events here.
-         */
-        ExceptionHandling.SetUnhandledExceptionHandler(FhExceptionHandler.eh_unhandled);
         // ExceptionHandling.SetFatalErrorHandler(FhExceptionHandler.eh_fatal); // Uncomment when added in .NET 11/12.
 
         Finder            = new();

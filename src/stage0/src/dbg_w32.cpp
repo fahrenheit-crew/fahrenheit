@@ -144,6 +144,7 @@ static S0_FRAME_DATA s0_dbg_w32_stack_frame(
 static void s0_dbg_w32_print_context(
     CONTEXT* ptr_context // A pointer to the faulting thread's context.
 ) {
+    fwprintf_s(stdout, L"\n");
     fwprintf_s(stdout, L"---- EXCEPTION CONTEXT ----\n");
 
     fwprintf_s(

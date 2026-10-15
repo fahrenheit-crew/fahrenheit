@@ -20,7 +20,7 @@ public enum FhTextureType {
 
 /* [fkelava 9/8/25 01:19]
  * A direct reimplementation of TexMetadata (https://github.com/microsoft/DirectXTex/wiki/TexMetadata)
- * to abstract Hexa implementation details from consumers and use more correct TerraFX defs.
+ * to abstract Hexa implementation details from consumers.
  */
 
 /// <summary>

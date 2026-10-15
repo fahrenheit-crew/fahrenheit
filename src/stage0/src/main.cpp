@@ -389,9 +389,6 @@ int __cdecl wmain(
         fwprintf_s(stdout, L"Process exited with code 0x%X.\n", exit_code);
         fwprintf_s(stdout, L"If reporting an issue, please include the core dump (*.dmp) from the location mentioned above.\n");
     }
-    else {
-        fwprintf_s(stdout, L"Process ended by user.\n");
-    }
 
     return exit_code;
 }

@@ -51,7 +51,7 @@ public unsafe sealed class FhCdInterfaceModule : FhModule {
     }
 
     /* [fkelava 27/01/26 17:14]
-     * We shorten this method compared to the base game.
+     * We shorten this function compared to the base game.
      *
      * FFX.exe+36D77A (in `check_ex_file_size`):
      * > if (DAT_01128ab8 == 0) {
@@ -90,11 +90,11 @@ public unsafe sealed class FhCdInterfaceModule : FhModule {
      * > }
      *
      * `CDfileSize_CD_EX` looks up the fixed values in `sizetbl.vita.bin`. Our goal is to avoid it,
-     * or rather that execution falls through to `sceOpen`/`sceFileSize`. These methods call Phyre's
+     * or rather that execution falls through to `sceOpen`/`sceFileSize`. These functions call Phyre's
      * PStreamFile constructor, which is hooked by EFL to return users' modded files on disk when
      * needed. The resulting FS I/O returns the correct size of the modded file.
      *
-     * So we set the module to always meet the conditional and restore it after the method call.
+     * So we set the module to always meet the conditional and restore it after the function call.
      */
 
     [UnmanagedCallConv(CallConvs = [ typeof(CallConvCdecl) ] )]

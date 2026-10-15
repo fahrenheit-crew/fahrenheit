@@ -178,6 +178,8 @@ internal sealed class FhSettings {
                 continue;
 
             _settings[module_type] = sd with { settings_path = module_context.Paths.GlobalConfigPath };
+
+            _settings[module_type].settings.init();
         }
 
         load_all();
@@ -271,6 +273,8 @@ public abstract class FhSetting(string id) {
     /// <remarks>This must be provided in localization data with ID <c>{setting_id}.desc</c>.</remarks>
     public string desc => FhApi.Localization.localize($"{id}.desc");
 
+    internal virtual void init() { }
+
     /// <summary>
     ///     Writes out the setting's value to disk through the provided <paramref name="writer"/>.
     /// </summary>
@@ -290,13 +294,30 @@ public abstract class FhSetting(string id) {
 ///     mod settings UI when provided through an <see cref="FhSettingProvider{T}"/>.
 /// </remarks>
 public abstract class FhSetting<T>(string id, T defval) : FhSetting(id) {
+    public struct SetEventArgs {
+        public readonly T old_value;
+
+        public SetEventArgs(T old_value) {
+            this.old_value = old_value;
+        }
+    }
+
+    public readonly FhEvent<SetEventArgs> PostSet = new();
+
     protected bool disabled = false;
 
     protected readonly T default_ = defval;
     protected          T value    = defval;
 
-    public   virtual T    get()            => value;
-    internal virtual void set(T new_value) => value = new_value;
+    public virtual T get() => value;
+
+    internal virtual void set(T new_value) {
+        SetEventArgs args = new(value);
+
+        value = new_value;
+
+        PostSet.invoke(args);
+    }
 
     internal override void save(Utf8JsonWriter writer) {
         writer.WritePropertyName(id);
@@ -317,7 +338,7 @@ public abstract class FhSetting<T>(string id, T defval) : FhSetting(id) {
             return;
         }
 
-        value = loaded_value;
+        set(loaded_value);
     }
 }
 
@@ -339,6 +360,12 @@ public sealed class FhSettingsCategory : FhSetting {
 
             if (setting is FhSettingsCategory category)
                 category.update_ids(new_prefix);
+        }
+    }
+
+    internal override void init() {
+        foreach (FhSetting setting in settings) {
+            setting.init();
         }
     }
 
@@ -410,8 +437,62 @@ public class FhSettingNumber<T>(
     }
 
     internal override void set(T new_value) {
+        SetEventArgs args = new(value);
+
         value = T.Clamp(new_value, min, max);
+
+        PostSet.invoke(args);
     }
 }
 
 public class FhSettingToggle(string id, bool def_value) : FhSetting<bool>(id, def_value);
+
+public class FhSettingChoice<T> : FhSetting<T> where T : struct, Enum {
+    public FhSettingChoice(string id, T def_value) : base(id, def_value) {
+        // This will be unnecessary once we can constrain T to be 'closed'
+        ArgumentOutOfRangeException.ThrowIfEqual(
+            Enum.IsDefined(def_value),
+            false,
+            nameof(def_value)
+        );
+    }
+
+    internal override void set(T new_value) {
+        SetEventArgs args = new(value);
+
+        // This will be unnecessary once we can constrain T to be 'closed'
+        if (!Enum.IsDefined(new_value)) {
+            FhInternal.Log.Error($"Value '{new_value}' rejected as invalid for setting '{id}'.");
+            return;
+        }
+
+        value = new_value;
+
+        PostSet.invoke(args);
+    }
+}
+
+public abstract class FhSettingDynamicChoice<T> (string id, T def_value) : FhSetting<T>(id, def_value) {
+    internal List<T> choices;
+
+    internal override void set(T new_value) {
+        SetEventArgs args = new(value);
+
+        if (!choices.Contains(new_value)) {
+            FhInternal.Log.Error($"Value '{new_value}' rejected as invalid for setting '{id}'.");
+            return;
+        }
+
+        value = new_value;
+
+        PostSet.invoke(args);
+    }
+
+    internal override void init() {
+        choices = [ ..init_choices() ];
+    }
+
+    protected abstract IReadOnlyList<T> init_choices();
+
+    public IList<T> get_choices() => [ .. choices ];
+}

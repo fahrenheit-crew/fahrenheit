@@ -386,6 +386,7 @@ int __cdecl wmain(
     CloseHandle(pi.hThread);
 
     if (exit_code != 0) {
+        fwprintf_s(stdout, L"\n");
         fwprintf_s(stdout, L"Process exited with code 0x%X.\n", exit_code);
         fwprintf_s(stdout, L"If reporting an issue, please include the core dump (*.dmp) from the location mentioned above.\n");
     }

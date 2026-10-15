@@ -189,8 +189,6 @@ static void s0_dbg_w32_print_stack_trace() {
 
         fwrite(frame_name, sizeof(wchar_t), lstrlenW(frame_name), stdout);
     }
-
-    fwprintf_s(stdout, L"\n");
 }
 
 // Walks the faulting thread's stack, displaying a stack trace.

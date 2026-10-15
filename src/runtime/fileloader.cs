@@ -161,7 +161,7 @@ public unsafe sealed class FhFileLoaderModule : FhModule {
          * - Some shader paths have the wrong file extension.
          * - Some paths have the wrong platform ID.
          *
-         * The second and third could have been avoided by the developers
+         * The second and third could have been avoided by the developers,
          * but they weren't, so we replicate those fixes.
          *
          * The first, however, is different in Fahrenheit's case; because we simplify the stream

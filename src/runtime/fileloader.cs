@@ -162,7 +162,7 @@ public unsafe sealed class FhFileLoaderModule : FhModule {
          * - Some paths have the wrong platform ID.
          *
          * The second and third could have been avoided by the developers
-         * but weren't, so we replicate those fixes.
+         * but they weren't, so we replicate those fixes.
          *
          * The first, however, is different in Fahrenheit's case; because we simplify the stream
          * prefix from '../../..' to '/', we must also remove now-invalid prefixes. We also

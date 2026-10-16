@@ -5,7 +5,7 @@
 
 namespace Fahrenheit;
 
-using SaveCounts     = Dictionary<FhGameId, Dictionary<string, int>>;
+using SaveCounts     = Dictionary<string, int>;
 using UserInterfaces = Dictionary<string, FhSaveUi>;
 
 /// <summary>Represents the current operating mode of the save system.</summary>
@@ -91,12 +91,7 @@ public sealed class FhSaves {
         _sm_active_set          = FhSavePal.DEFAULT_SET_NAME;
         _sm_display_data        = [];
         _sm_uis                 = [];
-
-        _sm_set_save_counts  = new() {
-            { FhGameId.FFX,    [] },
-            { FhGameId.FFX2,   [] },
-            { FhGameId.FFX2LM, [] },
-        };
+        _sm_set_save_counts     = [];
 
         /* [fkelava 19/01/26 18:13]
          * Save PAL is not ready to perform indexing operations at 'init' time because
@@ -122,59 +117,68 @@ public sealed class FhSaves {
     }
 
     /// <summary>
-    ///     Indexes the active save set's directory. This function must be called under lock.
+    ///     Reads a save file and prepares its display data.
+    /// </summary>
+    private async Task _sm_index_save_file(string save_file_path) {
+        FhSaveDisplayData  display_data = new();
+        ReadOnlySpan<char> slot_str     = save_file_path[ (save_file_path.LastIndexOf('_') + 1) .. ];
+
+        if (!int.TryParse(slot_str, out int slot))
+            return;
+
+        using (FileStream save_file_stream = File.OpenRead(save_file_path)) {
+            save_file_stream.ReadExactly(display_data.header);
+        }
+
+        FhSavePal.pal_get_location   (display_data.header, display_data.location);
+        FhSavePal.pal_get_icon_map   (display_data.header, display_data.icon_map);
+        FhSavePal.pal_get_player_name(display_data.header, display_data.player_name);
+        FhSavePal.pal_get_playtime   (display_data.header, display_data.play_time);
+        FhSavePal.pal_get_chapter    (display_data.header, display_data.chapter);
+        FhSavePal.pal_get_completion (display_data.header, display_data.completion);
+        FhSavePal.pal_get_lm_job     (display_data.header, display_data.lm_job);
+        FhSavePal.pal_get_lm_level   (display_data.header, display_data.lm_level);
+
+        display_data.slot        = slot;
+        display_data.slot_str    = slot.ToString();
+        display_data.create_time = File.GetLastWriteTime(save_file_path);
+
+        _sm_occupied_slots.Add(slot);
+        _sm_display_data  .Add(display_data);
+    }
+
+    /// <summary>
+    ///     Indexes the active save set. This function must be called under lock.
     /// </summary>
     private void _sm_index_active_set() {
         _sm_display_data  .Clear();
         _sm_occupied_slots.Clear();
-
-        /* [fkelava 08/02/26 15:00]
-         * Save sets mirror the base game save directory's structure, i.e. the subfolders
-         * 'FINAL FANTASY X', 'FINAL FANTASY X-2', 'FINAL FANTASY X-2 LAST MISSION' exist.
-         *
-         * When the user creates a set manually (not through the Fh API or mod manager),
-         * it is possible they forgot to create these subdirectories. When loading this fails
-         * safely because the saves will simply never be found. When saving this is lethal
-         * because SMM assumes the path it is writing to exists for simplicity.
-         *
-         * In this case we silently correct their error. I/O faults are still propagated
-         * because that is not something we can gracefully handle.
-         */
 
         string path_set_folder = Path.Join(
             _sm_path_base,
             _sm_active_set,
             FhSavePal.pal_get_save_subfolder());
 
+        /* [fkelava 08/02/26 15:00]
+         * Save sets mirror the base game save directory's structure, i.e. the subfolders
+         * 'FINAL FANTASY X', 'FINAL FANTASY X-2', 'FINAL FANTASY X-2 LAST MISSION' exist.
+         *
+         * When the user creates a set manually, they may forget to create these subdirectories.
+         * When loading, this fails safely. When saving this is lethal because we assume
+         * the path exists for simplicity. In this case we silently correct the error.
+         */
         _ = Directory.CreateDirectory(path_set_folder);
 
-        foreach (var save_file in Directory.EnumerateFiles(path_set_folder, FhUtil.select("ffx_*", "ffx2_*", "ffx2_*"))) {
-            FhSaveDisplayData  display_data = new();
-            ReadOnlySpan<char> slot_str     = save_file[ (save_file.LastIndexOf('_') + 1) .. ];
+        string[] files = [ .. Directory.EnumerateFiles(path_set_folder, FhSavePal.pal_get_save_name_glob()) ];
+        Task  [] tasks = new Task[files.Length];
 
-            if (!int.TryParse(slot_str, out int slot))
-                continue;
-
-            using (FileStream save_file_stream = File.OpenRead(save_file)) {
-                save_file_stream.ReadExactly(display_data.header);
-            }
-
-            FhSavePal.pal_get_location   (display_data.header, display_data.location);
-            FhSavePal.pal_get_icon_map   (display_data.header, display_data.icon_map);
-            FhSavePal.pal_get_player_name(display_data.header, display_data.player_name);
-            FhSavePal.pal_get_playtime   (display_data.header, display_data.play_time);
-            FhSavePal.pal_get_chapter    (display_data.header, display_data.chapter);
-            FhSavePal.pal_get_completion (display_data.header, display_data.completion);
-            FhSavePal.pal_get_lm_job     (display_data.header, display_data.lm_job);
-            FhSavePal.pal_get_lm_level   (display_data.header, display_data.lm_level);
-
-            display_data.slot        = slot;
-            display_data.slot_str    = slot.ToString();
-            display_data.create_time = File.GetLastWriteTimeUtc(save_file);
-
-            _sm_occupied_slots.Add(slot);
-            _sm_display_data  .Add(display_data);
+        for (int i = 0; i < files.Length; i++) {
+            tasks[i] = _sm_index_save_file(files[i]);
         }
+
+        Task.WaitAll(tasks);
+
+        _sm_display_data.Sort(FhSaveTimeComparer.Instance);
     }
 
     /// <summary>
@@ -183,26 +187,23 @@ public sealed class FhSaves {
     private void _sm_query_sets() {
         _sm_sets               .Clear();
         _sm_sets_with_autosaves.Clear();
+        _sm_set_save_counts    .Clear();
 
-        _sm_set_save_counts[FhGameId.FFX]   .Clear();
-        _sm_set_save_counts[FhGameId.FFX2]  .Clear();
-        _sm_set_save_counts[FhGameId.FFX2LM].Clear();
+        foreach (string set_dir in Directory.EnumerateDirectories(_sm_path_base)) {
+            string set_name   = Path.GetFileName(set_dir);
+            string set_subdir = Path.Join       (set_dir, FhSavePal.pal_get_save_subfolder());
 
-        foreach (string dir in Directory.EnumerateDirectories(_sm_path_base)) {
-            string set_name = Path.GetFileName(dir);
             _sm_sets.Add(set_name);
 
-            if (File.Exists(get_save_path_for_slot(set_name, 0))) {
+            if (File.Exists(get_save_path_for_slot(0, set_name))) {
                 _sm_sets_with_autosaves.Add(set_name);
             }
 
-            DirectoryInfo x_dir  = Directory.CreateDirectory(Path.Join(dir, "FINAL FANTASY X"));
-            DirectoryInfo x2_dir = Directory.CreateDirectory(Path.Join(dir, "FINAL FANTASY X-2"));
-            DirectoryInfo lm_dir = Directory.CreateDirectory(Path.Join(dir, "FINAL FANTASY X-2 LAST MISSION"));
+            _ = Directory.CreateDirectory(set_subdir);
 
-            _sm_set_save_counts[FhGameId.FFX   ][set_name] = x_dir .GetFiles("ffx_*") .Length;
-            _sm_set_save_counts[FhGameId.FFX2  ][set_name] = x2_dir.GetFiles("ffx2_*").Length;
-            _sm_set_save_counts[FhGameId.FFX2LM][set_name] = lm_dir.GetFiles("ffx2_*").Length;
+            ReadOnlySpan<string> saves = [ .. Directory.EnumerateFiles(set_subdir, FhSavePal.pal_get_save_name_glob()) ];
+
+            _sm_set_save_counts[set_name] = saves.Length;
         }
 
         /* [fkelava 19/01/26 14:50]
@@ -215,14 +216,15 @@ public sealed class FhSaves {
 
         if (!_sm_sets.Contains(_sm_active_set)) {
             FhInternal.Log.Warning($"Active set {_sm_active_set} was deleted; falling back to default.");
+
+            if (!_sm_sets.Contains(FhSavePal.DEFAULT_SET_NAME)) {
+                FhInternal.Log.Error("Default set was deleted; forcibly re-generating.");
+
+                _sm_create_default_set();
+                _sm_query_sets();
+            }
+
             _sm_active_set = FhSavePal.DEFAULT_SET_NAME;
-        }
-
-        if (!_sm_sets.Contains(FhSavePal.DEFAULT_SET_NAME)) {
-            FhInternal.Log.Error("Default set was deleted; forcibly re-generating.");
-
-            _sm_create_default_set();
-            _sm_query_sets();
         }
     }
 
@@ -239,23 +241,13 @@ public sealed class FhSaves {
     }
 
     /// <summary>
-    ///     For a given <paramref name="slot"/> in the given <paramref name="set"/>, gets the full path of the corresponding save file.
+    ///     For a given <paramref name="slot"/> in the given <paramref name="set"/>,
+    ///     gets the full path of the corresponding save file.
     /// </summary>
-    internal string get_save_path_for_slot(string set, int slot) {
+    internal string get_save_path_for_slot(int slot, string? set = null) {
         return Path.Join(
             _sm_path_base,
-            set,
-            FhSavePal.pal_get_save_subfolder(),
-            FhSavePal.pal_get_save_name_for_slot(slot));
-    }
-
-    /// <summary>
-    ///     For a given <paramref name="slot"/>, gets the full path of the corresponding save file.
-    /// </summary>
-    internal string get_save_path_for_slot(int slot) {
-        return Path.Join(
-            _sm_path_base,
-            _sm_active_set,
+            set ?? _sm_active_set,
             FhSavePal.pal_get_save_subfolder(),
             FhSavePal.pal_get_save_name_for_slot(slot));
     }
@@ -302,7 +294,7 @@ public sealed class FhSaves {
     /// <summary>Retrieve the save counts for each set for the current game.</summary>
     /// <returns>A dictionary of save counts keyed by set names.</returns>
     public IReadOnlyDictionary<string, int> get_save_counts() {
-        return _sm_set_save_counts[FhGlobal.game_id];
+        return _sm_set_save_counts;
     }
 
     /// <summary>Determine whether a set contains an autosave.</summary>

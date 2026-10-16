@@ -96,8 +96,9 @@ public partial class FhSettingsUiX : FhSettingsUi {
 
         _fade = new(0, 0, FADE_LENGTH);
 
-        FhInternal.Settings.register_setting_renderer<FhSettingsCategory, FhSettingsUiX, Renderer_Category>();
-        FhInternal.Settings.register_setting_renderer<FhSettingToggle, FhSettingsUiX, Renderer_Toggle>();
+        FhInternal.Settings.register_setting_renderer<FhSettingsUiX>(typeof(FhSettingsCategory), typeof(Renderer_Category));
+        FhInternal.Settings.register_setting_renderer<FhSettingsUiX>(typeof(FhSettingToggle),    typeof(Renderer_Toggle));
+        FhInternal.Settings.register_setting_renderer<FhSettingsUiX>(typeof(FhSettingChoice<>),  typeof(Renderer_Choice<>));
     }
 
     public override bool init(FhModContext context, FileStream global_state) {
@@ -258,7 +259,7 @@ public partial class FhSettingsUiX : FhSettingsUi {
 
     private void handle_input() {
         if (_captured_setting != null) {
-            if (!FhInternal.Settings.get_setting_renderer<FhSettingsUiX>(_captured_setting, out FhSettingRenderer? renderer)) {
+            if (!_captured_setting.get_renderer<FhSettingsUiX>(out FhSettingRenderer? renderer)) {
                 _capturing_renderer = null;
                 _captured_setting   = null;
                 return;
@@ -590,7 +591,7 @@ public partial class FhSettingsUiX : FhSettingsUi {
     }
 
     private void ui_setting(FhSetting setting, Rect outer_bounds) {
-        if (!FhInternal.Settings.get_setting_renderer<FhSettingsUiX>(setting, out FhSettingRenderer? renderer)) {
+        if (!setting.get_renderer<FhSettingsUiX>(out FhSettingRenderer? renderer)) {
             Rect debug_bounds = new() {
                 pos  = new(610f, 202f + _setting_y),
                 size = new(outer_bounds.size.X, 40f),

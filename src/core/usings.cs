@@ -20,6 +20,7 @@ global using System.Text;                      // Encoding
 global using System.Text.Json;                 // For JSON (de)serialization, we use STJ.
 global using System.Text.Json.Serialization;
 global using System.Threading;                 // Lock
+global using System.Threading.Tasks;           // Task<T>
 
 global using Fahrenheit.Events;
 global using Fahrenheit.Gui;

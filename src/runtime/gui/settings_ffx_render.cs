@@ -489,13 +489,6 @@ public partial class FhSettingsUiX {
         }
 
         internal protected override void render(FhSettingsUiX ui, FhSettingToggle toggle, Rect max_bounds) {
-            if (
-                !ui._texture_battle_kuang.try_use(out ImTextureRef battle_kuang, out _)
-                || !ui._texture_meswin   .try_use(out ImTextureRef meswin,       out _)
-            ) {
-                return;
-            }
-
             if (!render_background(
                 ui,
                 max_bounds,
@@ -523,73 +516,6 @@ public partial class FhSettingsUiX {
         }
     }
 
-    private class Renderer_Text
-        : FhSettingRenderer<FhSettingText, FhSettingsUiX>,
-          ICapturingRenderer {
-
-        private FhSettingText? focused_setting;
-        private string?        buffer;
-
-        internal protected override Vector2 get_size(FhSettingsUiX ui) {
-            //TODO: Implement size calculation
-            return new Vector2(0f, 0f);
-        }
-
-        internal protected override void render(FhSettingsUiX ui, FhSettingText text, Rect max_bounds) {
-            //TODO: Implement rendering
-        }
-
-        internal protected override void handle_input(FhSettingsUiX ui, FhSettingText text) {
-            ImGuiIOPtr io = ImGui.GetIO();
-
-            if (focused_setting == null) {
-                if (FhApi.Gui.is_any_pressed(FhApi.Gui.keys_confirm)) {
-                    io.WantCaptureKeyboard = true;
-
-                    ui.try_capture_setting(this, text);
-
-                    focused_setting = text;
-                    buffer          = text.get();
-                }
-
-                return;
-            }
-
-            if (focused_setting != text) return;
-
-            if (FhApi.Gui.is_any_pressed(FhApi.Gui.keys_confirm)) {
-                io.WantCaptureKeyboard = true;
-
-                text.set(buffer!);
-
-                ui.try_release_setting(this);
-
-                focused_setting = null;
-                buffer          = null;
-                return;
-            }
-
-            if (FhApi.Gui.is_any_pressed(FhApi.Gui.keys_cancel)) {
-                io.WantCaptureKeyboard = true;
-
-                ui.try_release_setting(this);
-
-                focused_setting = null;
-                buffer          = null;
-                return;
-            }
-
-            //TODO: Implement input handling
-
-            // Yes, we're making a single-line text editor here.
-            // This should probably be a helper on the `FhSettingText` class once it's done.
-        }
-
-        public string get_input_help_text() {
-            return FhApi.Localization.localize($"{typeof(FhSettingsUiBase).FullName}.help.input.text");
-        }
-    }
-
     private class Renderer_Number<T>
         : FhSettingRenderer<FhSettingNumber<T>, FhSettingsUiX>
         where T : unmanaged, INumber<T> {
@@ -605,6 +531,275 @@ public partial class FhSettingsUiX {
 
         internal protected override void handle_input(FhSettingsUiX ui, FhSettingNumber<T> number) {
             //TODO: Implement input handling
+        }
+    }
+
+    private class Renderer_Choice<T>
+        : Renderer_Base<FhSettingChoice<T>>
+        where T : struct, Enum {
+
+        protected const float SPIN_SPEED = 2f; // in progress per second
+        protected const float OPTION_SPIN_DIFF = 1f/3f;
+
+        // Between -1 and 1. 0 when no spin is happening
+        // Technically between -OPTION_SPIN_DIFF and OPTION_SPIN_DIFF
+        // Equal to the spin progress of the current value
+        protected Dictionary<FhSettingChoice<T>, float> spin_progress = [];
+
+        protected int get_prev_index(ReadOnlySpan<T> choices, T choice) {
+            int index = choices.IndexOf(choice);
+            if (index == 0) return choices.Length - 1;
+            return index - 1;
+        }
+
+        protected int get_next_index(ReadOnlySpan<T> choices, T choice) {
+            int index = choices.IndexOf(choice);
+            if (index == choices.Length - 1) return 0;
+            return index + 1;
+        }
+
+        protected int get_prev_prev_index(ReadOnlySpan<T> choices, T choice) {
+            int index = choices.IndexOf(choice);
+
+            if (index == 0)
+                index = choices.Length - 1;
+            else
+                index -= 1;
+
+            if (index == 0)
+                return choices.Length - 1;
+
+            return index - 1;
+        }
+
+        protected int get_next_next_index(ReadOnlySpan<T> choices, T choice) {
+            int index = choices.IndexOf(choice);
+
+            if (index == choices.Length - 1)
+                index = 0;
+            else
+                index += 1;
+
+            if (index == choices.Length - 1)
+                return 0;
+
+            return index + 1;
+        }
+
+        protected float map_spin_progress(float progress) {
+            // We remap progress to give us a nice arc
+            return (float)(
+                0.7372493987604 * float.Pow(progress, 4)
+                + 0.2627506012396 * float.Pow(progress, 2)
+            );
+        }
+
+        protected uint get_alpha_for_spin(float progress) {
+            return (uint)(((byte)(progress * 0xFF) << 24) | 0xFFFFFF);
+        }
+
+        protected Vector2 get_offset_for_spin(Vector2 center, Vector2 side, float progress) {
+            Vector2 max_offset = side - center;
+
+            bool other_way = progress < 0f;
+
+            progress = map_spin_progress(progress);
+
+            Vector2 offset = Vector2.Lerp(center, side, progress);
+
+            if (other_way) offset.X *= 1f;
+
+            return offset;
+        }
+
+        protected void render_option(FhSettingsUiX ui, FhSettingChoice<T> choice, int index, float progress, Rect value_bounds) {
+            Vector2 center = value_bounds.center;
+            Vector2 right  = value_bounds.right;
+            right.X -= value_bounds.size.X / 6f;
+
+            Vector2 pos   = center + get_offset_for_spin(center, right, progress);
+            uint    color = get_alpha_for_spin(progress);
+            float   scale = 1f - map_spin_progress(progress) / 3f;
+            string  name  = FhApi.Localization.localize(choice.choice_names[index]);
+
+            ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
+
+            FhApi.Gui.draw_text(
+                draw,
+                pos * ui.aspect_scale,
+                name,
+                ui.font_size * scale,
+                true,
+                new(Alignment.CENTER, Alignment.CENTER),
+                color
+            );
+        }
+
+        protected void render_options(FhSettingsUiX ui, FhSettingChoice<T> choice, Rect value_bounds) {
+            T curr_choice = choice.get();
+
+            int curr_index = choice.choices.IndexOf(curr_choice);
+            int prev_index = get_prev_index(choice.choices, curr_choice);
+            int next_index = get_next_index(choice.choices, curr_choice);
+
+            int[] choice_indices = spin_progress[choice] switch {
+                0f => [
+                    prev_index,
+                    curr_index,
+                    next_index,
+                ],
+
+                > 0f => [
+                    prev_index,
+                    curr_index,
+                    next_index,
+                    get_next_index(choice.choices, choice.choices[next_index]),
+                ],
+
+                < 0f => [
+                    get_prev_index(choice.choices, choice.choices[prev_index]),
+                    prev_index,
+                    curr_index,
+                    next_index,
+                ],
+
+                _ => throw new UnreachableException(),
+            };
+
+            int main_index = spin_progress[choice] switch {
+                  0f => 1,
+                > 0f => 1,
+                < 0f => 2,
+
+                _ => throw new UnreachableException(),
+            };
+
+            for (int i = 0; i < main_index; i++) {
+                float spin = spin_progress[choice] - OPTION_SPIN_DIFF * (main_index - i);
+
+                // This shouldn't be necessary but let's do it anyway
+                spin = float.Clamp(spin, -1f, 1f);
+
+                render_option(ui, choice, i, spin, value_bounds);
+            }
+
+            render_option(ui, choice, main_index, spin_progress[choice], value_bounds);
+
+            for (int i = main_index + 1; i < choice_indices.Length; i++) {
+                float spin = spin_progress[choice] + OPTION_SPIN_DIFF * (i - main_index);
+
+                // This shouldn't be necessary but let's do it anyway
+                spin = float.Clamp(spin, -1f, 1f);
+
+                render_option(ui, choice, i, spin, value_bounds);
+            }
+        }
+
+        protected void render_arrows(FhSettingsUiX ui, FhSettingChoice<T> choice, Rect value_bounds) {
+            if (!ui._texture_battle.try_use(out ImTextureRef battle, out _)) {
+                return;
+            }
+
+            float arrow_progress = float.Clamp(spin_progress[choice] * 5f, 0f, 1f);
+
+            Vector2 max_offset   = new(10f, 0f);
+
+            UV arrow_tuv = new Rect {
+                pos  = new(724f, 680f),
+                size = new( 36f,  48f),
+            }.as_uv(ui._tex_battle_size);
+
+            Vector2 arrow_size = new(36f, 48f);
+
+            Rect arrow_left  = new() { pos = value_bounds.left  + max_offset };
+            Rect arrow_right = new() { pos = value_bounds.right - max_offset };
+
+            arrow_left .expand(arrow_size, new(Alignment.BEGIN, Alignment.CENTER));
+            arrow_right.expand(arrow_size, new(Alignment.END,   Alignment.CENTER));
+
+            if (arrow_progress < 0f)
+                arrow_left.pos  += Vector2.Lerp(Vector2.Zero, max_offset, arrow_progress);
+            else if (arrow_progress > 0f)
+                arrow_right.pos += Vector2.Lerp(Vector2.Zero, max_offset, arrow_progress);
+
+            UV arrow_left_suv  = arrow_left .scale_to_aspect(ui.aspect_helper).as_uv();
+            UV arrow_right_suv = arrow_right.scale_to_aspect(ui.aspect_helper).as_uv();
+
+            ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
+
+            draw.AddImage(
+                battle,
+                arrow_left_suv.p0,
+                arrow_left_suv.p1,
+                arrow_tuv.p0,
+                arrow_tuv.p1
+            );
+
+            draw.AddImage(
+                battle,
+                arrow_right_suv.p0,
+                arrow_right_suv.p1,
+                arrow_tuv.p0,
+                arrow_tuv.p1
+            );
+        }
+
+        internal protected override void render(FhSettingsUiX ui, FhSettingChoice<T> choice, Rect max_bounds) {
+            if (!render_background(
+                ui,
+                max_bounds,
+                out Rect? name_bounds,
+                out Rect? value_bounds
+            )) {
+                return;
+            }
+
+            render_name(ui, (Rect)name_bounds, choice.name);
+
+            if (spin_progress[choice] != 0f) {
+                float spin_delta = SPIN_SPEED * ImGui.GetIO().DeltaTime;
+                spin_delta = float.Min(spin_delta, spin_progress[choice]);
+
+                spin_progress[choice] -= spin_delta * float.Sign(spin_progress[choice]);
+                spin_progress[choice]  = float.Clamp(spin_progress[choice], 0f, 1f);
+            }
+
+            render_options(ui, choice, (Rect)value_bounds);
+            render_arrows (ui, choice, (Rect)value_bounds);
+        }
+
+        protected void spin_left(FhSettingChoice<T> choice) {
+            T   curr_choice = choice.get();
+            int prev_index  = get_prev_index(choice.choices, curr_choice);
+            T   prev_choice = choice.choices[prev_index];
+
+            choice.set(prev_choice);
+
+            spin_progress[choice] = OPTION_SPIN_DIFF;
+        }
+
+        protected void spin_right(FhSettingChoice<T> choice) {
+            T   curr_choice = choice.get();
+            int next_index  = get_next_index(choice.choices, curr_choice);
+            T   next_choice = choice.choices[next_index];
+
+            choice.set(next_choice);
+
+            spin_progress[choice] = -OPTION_SPIN_DIFF;
+        }
+
+        internal protected override void handle_input(FhSettingsUiX ui, FhSettingChoice<T> choice) {
+            if (spin_progress[choice] != 0f) return;
+
+            if (FhApi.Gui.is_any_down(FhApi.Gui.keys_left)) {
+                spin_right(choice);
+                return;
+            }
+
+            if (FhApi.Gui.is_any_down(FhApi.Gui.keys_right)) {
+                spin_left(choice);
+                return;
+            }
         }
     }
 }

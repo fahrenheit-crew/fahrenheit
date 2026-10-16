@@ -148,20 +148,46 @@ public struct FhSaveHeader2 {
 }
 
 /// <summary>
+///     Sorts saves by their creation time.
+/// </summary>
+public sealed class FhSaveTimeComparer : Comparer<FhSaveDisplayData> {
+    private static FhSaveTimeComparer? _instance;
+
+    public override int Compare(FhSaveDisplayData x, FhSaveDisplayData y) {
+        if (x.slot == 0) return -1; // The autosave must precede any other save.
+        if (y.slot == 0) return  1;
+
+        if      (x.create_time > y.create_time) return -1;
+        else if (x.create_time < y.create_time) return  1;
+
+        return x.slot - y.slot;
+    }
+
+    public static FhSaveTimeComparer Instance => _instance ??= new();
+}
+
+/// <summary>
+///     Sorts saves by their slot index.
+/// </summary>
+public sealed class FhSaveSlotComparer : Comparer<FhSaveDisplayData> {
+    private static FhSaveSlotComparer? _instance;
+
+    public override int Compare(FhSaveDisplayData x, FhSaveDisplayData y) {
+        return x.slot - y.slot;
+    }
+
+    public static FhSaveSlotComparer Instance => _instance ??= new();
+}
+
+/// <summary>
 ///     Contains the fields the game shows as part of its standard save game display.
 /// </summary>
 [StructLayout(LayoutKind.Sequential)]
 public struct FhSaveDisplayData {
-
     /* [fkelava 19/01/26 13:14]
-     * An array of these of size DEFAULT_SET_SIZE is allocated by the save UI module on boot.
-     * These instances are continually reused. To prevent garbage from being displayed when a slot
-     * occupied in the previous set becomes empty, the save manager module (un)sets 'valid'.
-     *
      * These inline arrays are in reality UTF-8 strings, since both Iggy
      * and ImGui accept them as input. The sizes are taken from the base game.
      */
-
     public int    slot;
     public string slot_str;
 
@@ -523,6 +549,13 @@ internal unsafe static class FhSavePal {
     }
 
     /// <summary>
+    ///     Gets a glob string for save game names for the currently loaded game.
+    /// </summary>
+    internal static string pal_get_save_name_glob() {
+        return FhUtil.select("ffx_*", "ffx2_*", "ffx2_*");
+    }
+
+    /// <summary>
     ///     Gets the name of the save game folder for the currently loaded game.
     /// </summary>
     internal static string pal_get_save_subfolder() {
@@ -557,28 +590,14 @@ internal unsafe static class FhSavePal {
         };
     }
 
-    internal static nint pal_addr_buf_playtime_prefix_encoded() {
-        return FhUtil.select(0x8E8058, 0x9ED948, 0x9ED480);
-    }
-
-    internal static nint pal_addr_screen_state() {
-        return FhUtil.select(0x8CB994, 0x9CDA50, 0x9CDA50);
-    }
-
-    internal static nint pal_addr_dialog_state() {
-        return FhUtil.select(0x8CB998, 0x9CDA54, 0x9CDA54);
-    }
+    internal static nint pal_addr_buf_playtime_prefix_encoded() => FhUtil.select(0x8E8058, 0x9ED948, 0x9ED480);
+    internal static nint pal_addr_screen_state()                => FhUtil.select(0x8CB994, 0x9CDA50, 0x9CDA50);
+    internal static nint pal_addr_dialog_state()                => FhUtil.select(0x8CB998, 0x9CDA54, 0x9CDA54);
+    internal static nint pal_addr_force_player_rename()         => FhUtil.select(0xD33350, 0xA0FB70, 0xA0FB70);
+    internal static  int pal_sz_buf_save()                      => FhUtil.select(0x6900,   0x166A0,  0x166A0);
 
     internal static byte* pal_addr_buf_save() {
         return FhUtil.ptr_at<byte>(FhUtil.select(0x1197F70, 0xF9D500, 0xF9D500));
-    }
-
-    internal static int pal_sz_buf_save() {
-        return FhUtil.select(0x6900, 0x166A0, 0x166A0);
-    }
-
-    internal static nint pal_addr_force_player_rename() {
-        return FhUtil.select(0xD33350, 0xA0FB70, 0xA0FB70);
     }
 
     internal static int pal_header_offset_playerrename() {

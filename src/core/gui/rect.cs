@@ -114,10 +114,13 @@ public struct Rect {
     /// <returns>The scaled rectangle.</returns>
     /// <seealso cref="scale_raw"/>
     /// <seealso cref="scale_to_aspect"/>
-    public Rect scale(Vector2 by, Alignment2D align) {
+    public Rect scale(Vector2 by, Alignment2D align, Vector2 min_size = default) {
         Vector2 old_size = size;
 
         Rect scaled = this with { size = size * by };
+
+        scaled.size = Vector2.Max(scaled.size, min_size);
+
         scaled.adjust_pos_for_size(scaled.size - old_size, align);
 
         return scaled;
@@ -128,11 +131,15 @@ public struct Rect {
     /// <returns>The scaled rectangle.</returns>
     /// <seealso cref="scale"/>
     /// <seealso cref="scale_to_aspect"/>
-    public Rect scale_raw(Vector2 by) {
-        return new Rect {
+    public Rect scale_raw(Vector2 by, Vector2 min_size = default) {
+        Rect scaled = new() {
             pos  = pos  * by,
             size = size * by,
         };
+
+        scaled.size = Vector2.Max(scaled.size, min_size);
+
+        return scaled;
     }
 
     /// <summary>Scale the rectangle to a certain aspect ratio.</summary>
@@ -145,10 +152,14 @@ public struct Rect {
     /// <returns>The scaled rectangle.</returns>
     /// <seealso cref="scale"/>
     /// <seealso cref="scale_raw"/>
-    public Rect scale_to_aspect(Rect aspect_helper) {
-        return new Rect {
+    public Rect scale_to_aspect(Rect aspect_helper, Vector2 min_size = default) {
+        Rect scaled = new() {
             pos  = pos  * aspect_helper.size + aspect_helper.pos,
             size = size * aspect_helper.size,
         };
+
+        scaled.size = Vector2.Max(scaled.size, min_size);
+
+        return scaled;
     }
 }

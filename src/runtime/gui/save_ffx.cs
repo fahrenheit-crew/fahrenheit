@@ -85,15 +85,10 @@ public sealed class FhSaveUiX : FhSaveUi {
 
     private readonly NineSliceHelper  _savefile_border_helper;
 
-    private readonly Scrollable _scrollable_saves = new() {
-        visible = 5,
-    };
+    private readonly SteppedScrollable _scrollable_saves = new(visible: 5);
+    private readonly SteppedScrollable _scrollable_sets  = new(visible: 9);
 
-    private readonly Scrollable _scrollable_sets = new() {
-        visible = 9,
-    };
-
-    private Scrollable _current_scrollable;
+    private SteppedScrollable _current_scrollable;
 
     private bool     _scrollbar_dragging;
     private Vector2? _scrollbar_held_pos;
@@ -374,16 +369,13 @@ public sealed class FhSaveUiX : FhSaveUi {
         }
     }
 
-    private bool mouse_hovered(Rect rect) {
+    private bool mouse_hovered(Rect rect, bool require_movement = true) {
         return should_handle_input
-            && !ImGui.GetIO().WantCaptureMouse
-            && ImGui.GetIO().MouseDelta.LengthSquared() > 0
-            && FhApi.Gui.mouse_hovering(rect);
+            && FhApi.Gui.mouse_hovering(rect, require_movement);
     }
 
     private bool mouse_clicked(Rect rect, ImGuiMouseButton button = ImGuiMouseButton.Left, bool repeat = false) {
         return should_handle_input
-            && !ImGui.GetIO().WantCaptureMouse
             && FhApi.Gui.mouse_clicked(rect, button, repeat);
     }
 

@@ -10,11 +10,10 @@ namespace Fahrenheit.Runtime.Gui;
 /// </summary>
 [FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
 public unsafe class FhModListDisplayModule : FhModule {
-
-    public FhModListDisplayModule() { }
+    private FhSettingsUiBase? _settings_ui;
 
     public override bool init(FhModContext mod_context, FileStream global_state_file) {
-        return true;
+        return new FhModuleHandle<FhSettingsUiBase>(this).try_get_module(out _settings_ui);
     }
 
     public override void render_imgui() {
@@ -23,7 +22,8 @@ public unsafe class FhModListDisplayModule : FhModule {
         // Do not render the mod list outside the main menu.
         if (curr_event_id != 0x17
          || FhSavePal.pal_get_screen_state() == FhSaveScreenState.OPEN
-         || FhSavePal.pal_get_screen_state() == FhSaveScreenState.OPENING) {
+         || FhSavePal.pal_get_screen_state() == FhSaveScreenState.OPENING
+         || _settings_ui!.is_open) {
             return;
         }
 

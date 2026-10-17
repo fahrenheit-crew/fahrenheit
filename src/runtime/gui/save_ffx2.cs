@@ -169,7 +169,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
 
     private float get_move_volume() {
         return FhGlobal.game_id is FhGameId.FFX
-            ? 0.5f + (1f - _audio_fade_helper.progress) * 0.5f
+            ? 0.5f  + (1f - _audio_fade_helper.progress) * 0.5f
             : 0.25f + (1f - _audio_fade_helper.progress) * 0.25f;
     }
 

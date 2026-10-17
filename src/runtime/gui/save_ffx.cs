@@ -43,6 +43,7 @@ public sealed class FhSaveUiX : FhSaveUi {
 
     private const string MAP_ICONS_DIR  = "/FFX_Data/GameData/PS3Data/savedataicons/";
     private const string MENU_D3D11_DIR = "/FFX_Data/GameData/PS3Data/menu/D3D11/";
+    private const string HIKU_D3D11_DIR = "/FFX_Data/GameData/PS3Data/map/hiku/hiku22/2d/tex/D3D11/";
 
     private const uint COLOR_BLACK = 0xFF000000;
     private const uint COLOR_TRANS = 0x00000000;
@@ -65,17 +66,17 @@ public sealed class FhSaveUiX : FhSaveUi {
 
     private readonly FhTexture _texture_map_icon_default = new(Path.Join(MAP_ICONS_DIR, "0.png"), FhTextureType.PNG);
 
-    private readonly FhTexture _texture_bg           = new(Path.Join(MENU_D3D11_DIR, "ffx_bg.dds.phyre"),       FhTextureType.PHYRE);
-    private readonly FhTexture _texture_battle       = new(Path.Join(MENU_D3D11_DIR, "battle.dds.phyre"),       FhTextureType.PHYRE);
-    private readonly FhTexture _texture_battle_kuang = new(Path.Join(MENU_D3D11_DIR, "battle_kuang.dds.phyre"), FhTextureType.PHYRE);
-    private readonly FhTexture _texture_faces        = new(Path.Join(MENU_D3D11_DIR, "face_ply.dds.phyre"),     FhTextureType.PHYRE);
-    private readonly FhTexture _texture_meswin       = new(Path.Join(MENU_D3D11_DIR, "meswin.dds.phyre"),       FhTextureType.PHYRE);
-    private readonly FhTexture _texture_summonbg     = new(Path.Join(MENU_D3D11_DIR, "summonbg.dds.phyre"),     FhTextureType.PHYRE);
+    private readonly FhTexture _texture_bg           = new(Path.Join(MENU_D3D11_DIR, "ffx_bg.dds.phyre"),        FhTextureType.PHYRE);
+    private readonly FhTexture _texture_help         = new(Path.Join(HIKU_D3D11_DIR, "0_0_512_448_0.dds.phyre"), FhTextureType.PHYRE);
+    private readonly FhTexture _texture_battle_kuang = new(Path.Join(MENU_D3D11_DIR, "battle_kuang.dds.phyre"),  FhTextureType.PHYRE);
+    private readonly FhTexture _texture_faces        = new(Path.Join(MENU_D3D11_DIR, "face_ply.dds.phyre"),      FhTextureType.PHYRE);
+    private readonly FhTexture _texture_meswin       = new(Path.Join(MENU_D3D11_DIR, "meswin.dds.phyre"),        FhTextureType.PHYRE);
+    private readonly FhTexture _texture_summonbg     = new(Path.Join(MENU_D3D11_DIR, "summonbg.dds.phyre"),      FhTextureType.PHYRE);
 
     private readonly Vector2 _tex_map_icon_size     = new(310f, 210f);
 
     private readonly Vector2 _tex_bg_size           = new(2048f, 1024f);
-    private readonly Vector2 _tex_battle_size       = new(1024f, 1024f);
+    private readonly Vector2 _tex_help_size         = new(2048f, 2048f);
     private readonly Vector2 _tex_battle_kuang_size = new(2048f, 1024f);
     private readonly Vector2 _tex_faces_size        = new(1024f,  512f);
     private readonly Vector2 _tex_meswin_size       = new(1024f, 1024f);
@@ -116,7 +117,7 @@ public sealed class FhSaveUiX : FhSaveUi {
             && FhApi.Events.Common.GameLoop.PostCloseSaveMenu.subscribe(post_close);
     }
 
-    protected override Vector2 get_ref_size() => new(1600f, 900f);
+    protected override Vector2 get_ref_size() => new(1920f, 1080f);
 
     protected internal override void render_ui() {
         _current_scrollable = _mode switch {
@@ -329,7 +330,7 @@ public sealed class FhSaveUiX : FhSaveUi {
     private bool try_load_textures() {
         Span<FhTexture> textures = [
             _texture_bg,
-            _texture_battle,
+            _texture_help,
             _texture_battle_kuang,
             _texture_faces,
             _texture_meswin,
@@ -352,7 +353,7 @@ public sealed class FhSaveUiX : FhSaveUi {
     private void unload_textures() {
         Span<FhTexture> textures = [
             _texture_bg,
-            _texture_battle,
+            _texture_help,
             _texture_battle_kuang,
             _texture_faces,
             _texture_meswin,
@@ -393,17 +394,17 @@ public sealed class FhSaveUiX : FhSaveUi {
         }.as_uv(_tex_bg_size);
 
         UV screen_uv = new Rect {
-            pos  = new(   0f,   0f),
-            size = new(1600f, 900f),
+            pos  = new(   0f,    0f),
+            size = new(1920f, 1080f),
         }.scale_to_aspect(aspect_helper).as_uv();
 
         draw.AddImage(bg, screen_uv.p0, screen_uv.p1, tex_uv.p0, tex_uv.p1);
     }
 
     /// <summary>Render the help text for the save/load screen.</summary>
-    private unsafe void ui_help() {
-        if (!_texture_battle_kuang.try_use(out ImTextureRef battle_kuang, out _)
-         || !_texture_meswin      .try_use(out ImTextureRef meswin,       out _)
+    private void ui_help() {
+        if (!_texture_help  .try_use(out ImTextureRef help,   out _)
+         || !_texture_meswin.try_use(out ImTextureRef meswin, out _)
         ) {
             return;
         }
@@ -413,57 +414,31 @@ public sealed class FhSaveUiX : FhSaveUi {
         }
 
         UV bg_tuv = new Rect {
-            pos  = new(   0f, 425f),
-            size = new(1600f,  55f),
-        }.as_uv(_tex_battle_kuang_size);
+            pos  = new( 154f, 1762f),
+            size = new(1740f,  105f),
+        }.as_uv(_tex_help_size);
 
         // Saving this one as a rect to more easily calculate the text position later
         Rect bg_screen = new Rect {
-            pos  = new( 126f, 82f),
-            size = new(1348f, 43f),
+            pos  = new( 151f, 96f),
+            size = new(1600f, 55f),
         }.scale_to_aspect(aspect_helper);
 
         UV bg_suv = bg_screen.as_uv();
 
         UV title_tuv = new Rect {
-            pos  = new(670f, 37f),
-            size = new( 74f, 22f),
+            pos  = new(670f, 38f),
+            size = new( 74f, 21f),
         }.as_uv(_tex_meswin_size);
 
         UV title_suv = new Rect {
-            pos  = new(126f, 67f),
-            size = new( 62f, 18f),
+            pos  = new(151f, 82f),
+            size = new( 74f, 18f),
         }.scale_to_aspect(aspect_helper).as_uv();
 
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
-        draw.AddImage(battle_kuang, bg_suv.p0, bg_suv.p1, bg_tuv.p0, bg_tuv.p1);
-
-        /*
-         * Shenanigans time!
-         *
-         * In the vanilla game, the help background is rendered with
-         * a 100% -> 0% alpha gradient going from left to right.
-         *
-         * We cannot replicate this with just ImGui / DrawList calls.
-         * However, `.AddImage()` calls into `.PrimRectUV()`,
-         * which reveals potential for shenanigans in its code:
-         *
-         *     _VtxWritePtr[0].pos = a; _VtxWritePtr[0].uv = uv_a; _VtxWritePtr[0].col = col;
-         *     _VtxWritePtr[1].pos = b; _VtxWritePtr[1].uv = uv_b; _VtxWritePtr[1].col = col;
-         *     _VtxWritePtr[2].pos = c; _VtxWritePtr[2].uv = uv_c; _VtxWritePtr[2].col = col;
-         *     _VtxWritePtr[3].pos = d; _VtxWritePtr[3].uv = uv_d; _VtxWritePtr[3].col = col;
-         *     _VtxWritePtr += 4;
-         *
-         * Armed with this knowledge, we can exploit it by looking directly
-         * at the draw commands queued by `.AddImage()`, and manually
-         * changing the colors of points B (topright) and C (bottomright) to be transparent!
-         */
-
-        ImDrawVert* vtx_ptr = draw.VtxWritePtr.Handle;
-        vtx_ptr -= 4;
-        vtx_ptr[1].Col = 0;
-        vtx_ptr[2].Col = 0;
+        draw.AddImage(help, bg_suv.p0, bg_suv.p1, bg_tuv.p0, bg_tuv.p1);
 
         draw.AddImage(meswin, title_suv.p0, title_suv.p1, title_tuv.p0, title_tuv.p1);
 
@@ -485,9 +460,10 @@ public sealed class FhSaveUiX : FhSaveUi {
         };
 
         Vector2 text_pos = bg_screen.left;
-        text_pos.X += 20f * aspect_scale.X;
+        text_pos.X += 24f * aspect_scale.X;
+        text_pos.Y -=  1f * aspect_scale.Y;
 
-        float font_size = 36f * font_scale;
+        float font_size = 43f * font_scale;
 
         FhApi.Gui.draw_text(
             draw,
@@ -511,10 +487,10 @@ public sealed class FhSaveUiX : FhSaveUi {
             ? $" + {save_count} saves"
             : $"{save_count} saves";
 
-        Vector2 text_pos = new(1435f, 120f);
+        Vector2 text_pos = new(1722f, 144f);
 
-        float line_height = 32f;
-        float font_size   = 36f * font_scale;
+        float line_height = 38f;
+        float font_size   = 43f * font_scale;
 
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
@@ -569,9 +545,9 @@ public sealed class FhSaveUiX : FhSaveUi {
             new( 90f, 200f)
         ).map_to(_tex_meswin_size);
 
-        Vector2 cursor_size = new Vector2(76f, 51f) * aspect_scale;
+        Vector2 cursor_size = new Vector2(92f, 61f) * aspect_scale;
 
-        float max_offset   = 13f * aspect_scale.X;
+        float max_offset   = 16f * aspect_scale.X;
         float cycle_length = 0.38f;
 
         // Multiply by pi so cycle_length can be expressed in seconds.
@@ -610,8 +586,8 @@ public sealed class FhSaveUiX : FhSaveUi {
         }.as_uv(_tex_battle_kuang_size, false);
 
         Rect bg_screen = new Rect {
-            pos  = new(550f, 23f),
-            size = new(500f, 50f),
+            pos  = new(660f, 28f),
+            size = new(600f, 60f),
         }.scale_to_aspect(aspect_helper);
 
         UV bg_suv = bg_screen.as_uv();
@@ -624,7 +600,7 @@ public sealed class FhSaveUiX : FhSaveUi {
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
         draw.AddImage(battle_kuang, bg_suv.p0, bg_suv.p1, bg_tuv.p0, bg_tuv.p1);
 
-        float   font_size = 36f * font_scale;
+        float   font_size = 43f * font_scale;
         Vector2 text_pos  = bg_screen.center;
 
         //TODO: Add localization
@@ -641,7 +617,7 @@ public sealed class FhSaveUiX : FhSaveUi {
 
         if (_focus == UiFocus.ACTIVE_SET) {
             float text_left   = text_pos.X - text_size.X / 2f;
-            float text_margin = 33f * aspect_scale.X;
+            float text_margin = 40f * aspect_scale.X;
 
             Vector2 cursor_target = bg_screen.center with {
                 X = text_left - text_margin,
@@ -675,11 +651,11 @@ public sealed class FhSaveUiX : FhSaveUi {
 
         // Screen coordinates
         Rect button = new Rect {
-            pos  = new( 290f, 148f),
-            size = new(1024f,  70f),
+            pos  = new( 348f, 177f),
+            size = new(1229f,  84f),
         };
 
-        button.pos.Y += (button.size.Y + 8f) * (set_idx - start_idx);
+        button.pos.Y += (button.size.Y + 10f) * (set_idx - start_idx);
 
         Rect button_no_shadow = button.expand(new Vector2(-6f, -5f), new(Alignment.BEGIN, Alignment.BEGIN));
         Rect button_scaled    = button.scale_to_aspect(aspect_helper);
@@ -687,18 +663,18 @@ public sealed class FhSaveUiX : FhSaveUi {
         UV button_suv = button_scaled.as_uv();
 
         Vector2 name_pos = button_no_shadow.left;
-        name_pos.X += 30f;
+        name_pos.X += 36f;
         name_pos = name_pos * aspect_scale + aspect_helper.pos;
 
         Vector2 save_count_pos = button_no_shadow.right;
-        save_count_pos.X -= 40f;
+        save_count_pos.X -= 48f;
         save_count_pos = save_count_pos * aspect_scale + aspect_helper.pos;
 
         // Drawing time
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
         ImGuiIOPtr    io   = ImGui.GetIO();
 
-        float font_size = 36f * font_scale;
+        float font_size = 43f * font_scale;
 
         if (mouse_hovered(button_scaled)) {
             if (_focus != UiFocus.LIST || _scrollable_sets.hovered != set_idx) {
@@ -830,13 +806,13 @@ public sealed class FhSaveUiX : FhSaveUi {
 
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
-        float font_size = 36f * font_scale;
+        float font_size = 43f * font_scale;
 
         ImGui.PushFont(null, font_size);
         Vector2 text_size = ImGui.CalcTextSize(message);
         ImGui.PopFont();
 
-        Vector2 text_margin = new Vector2(30f, 40f) * aspect_scale;
+        Vector2 text_margin = new Vector2(36f, 48f) * aspect_scale;
         Vector2 window_size = text_margin * 2 + text_size;
 
         Rect window = new Rect {
@@ -900,11 +876,11 @@ public sealed class FhSaveUiX : FhSaveUi {
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
         Rect save_rect = new Rect {
-            pos  = new( 133f, 146f), // Topmost position
-            size = new(1302f, 127f),
+            pos  = new( 160f, 176f), // Topmost position
+            size = new(1563f, 152f),
         };
 
-        float save_gap = 10f;
+        float save_gap = 13f;
 
         save_rect.pos.Y += (save_rect.size.Y + save_gap) * (index - _scrollable_saves.current);
 
@@ -922,7 +898,7 @@ public sealed class FhSaveUiX : FhSaveUi {
         if (save.slot == 0) {
             UV save_suv = save_rect.scale_to_aspect(aspect_helper).as_uv();
 
-            draw.AddRectFilled(save_suv.p0, save_suv.p1, 0x25FFFFFF);
+            draw.AddRectFilled(save_suv.p0, save_suv.p1, 0x40F0F0F0);
         }
 
         /* ===== Border ===== */
@@ -944,7 +920,7 @@ public sealed class FhSaveUiX : FhSaveUi {
         Vector2 save_border_size = new(4f);
 
         /* ===== Header Gradient ===== */
-        float header_size = 35f;
+        float header_size = 43f;
 
         uint header_grad_l = 0xFF000000; // black
         uint header_grad_r = 0x00800000; // transparent blue
@@ -967,11 +943,11 @@ public sealed class FhSaveUiX : FhSaveUi {
         Span<UV> face_tuvs = stackalloc UV[8];
 
         for (int i = 0; i < 8; i++) {
-            float x1 = 200f * (i % 4);
-            float x2 = x1 + 200f;
+            float x1 = (200f * (i % 4)) + 1f;
+            float x2 = x1 + 199f;
 
-            float y1 = i > 3 ? 312f : 512f;
-            float y2 = y1 - 200f;
+            float y1 = (i > 3 ? 312f : 512f) + 1f;
+            float y2 = y1 - 199f;
 
             face_tuvs[i] = new UV(
                 new(x1, y1),
@@ -979,7 +955,7 @@ public sealed class FhSaveUiX : FhSaveUi {
             ).map_to(_tex_faces_size);
         }
 
-        Vector2 face_size = new(83f);
+        Vector2 face_size = new(100f);
         float   face_gap  = 5f;
 
         Rect face = new Rect {
@@ -1014,25 +990,23 @@ public sealed class FhSaveUiX : FhSaveUi {
         //     UV tuv = new(new(0f, 1f), new(1f, 0f));
         //
         //     UV suv = new Rect {
-        //         pos  = save_rect.pos + new Vector2(1085f, 4f),
-        //         size = new(212f, 120f),
+        //         pos  = save_rect.pos + new Vector2(1302f, 5f),
+        //         size = new(255f, 144f),
         //     }.scale_to_aspect(_aspect_helper).as_uv();
         //
         //     draw.AddImage(map_icon, suv.p0, suv.p1, tuv.p0, tuv.p1);
         // }
 
-        /* ===== Text ===== */
-
         /* ===== Header ===== */
-        float text_margin_left    = 10f;
-        float text_margin_between = 40f;
+        float text_margin_left    = 12f;
+        float text_margin_between = 48f;
 
         Vector2 text_pos_left =
               save_rect.pos
             + save_border_size
             + new Vector2( text_margin_left, header_size / 2f);
 
-        float font_size = 36f * font_scale;
+        float font_size = 43f * font_scale;
 
         //TODO: Add localization
         string slot_text   = save.slot == 0 ? "Autosave" : save.slot_str;
@@ -1048,24 +1022,27 @@ public sealed class FhSaveUiX : FhSaveUi {
             save.slot == 0 ? 0xFF19D8FF : 0xFFFFFFFF // Autosave text is yellow
         );
 
-        text_pos_left = text_pos_left * aspect_scale + aspect_helper.pos;
-        text_pos_left.X += text_size.X + text_margin_between * aspect_scale.X;
+        // If location string is "None", don't render
+        if (header.id_location != 0) {
+            text_pos_left = text_pos_left * aspect_scale + aspect_helper.pos;
+            text_pos_left.X += text_size.X + text_margin_between * aspect_scale.X;
 
-        // For some reason, if the slot text is "Autosave", the margin is doubled
-        if (save.slot == 0) {
-            text_pos_left.X += text_margin_between * aspect_scale.X;
+            // For some reason, if the slot text is "Autosave", the margin is doubled
+            if (save.slot == 0) {
+                text_pos_left.X += text_margin_between * aspect_scale.X;
+            }
+
+            FhApi.Gui.draw_text(
+                draw,
+                text_pos_left,
+                save.location,
+                font_size,
+                true,
+                new(Alignment.BEGIN, Alignment.CENTER)
+            );
         }
 
-        FhApi.Gui.draw_text(
-            draw,
-            text_pos_left,
-            save.location,
-            font_size,
-            true,
-            new(Alignment.BEGIN, Alignment.CENTER)
-        );
-
-        float map_icon_size = 212f;
+        float map_icon_size = 255f;
 
         Vector2 text_pos_right =
               save_rect.top_right
@@ -1082,9 +1059,9 @@ public sealed class FhSaveUiX : FhSaveUi {
         );
 
         /* ===== Details ===== */
-        float margin_from_header    =  5f;
-        float margin_from_last_face = 31f;
-        float line_height           = 40f;
+        float margin_from_header    =  6f;
+        float margin_from_last_face = 38f;
+        float line_height           = 48f;
 
         Vector2 text_pos = save_rect.pos + new Vector2(
             face_size.X * 3 + face_gap * 2 + margin_from_last_face,
@@ -1113,7 +1090,12 @@ public sealed class FhSaveUiX : FhSaveUi {
 
         /* ===== Cursor ===== */
         if (_focus == UiFocus.LIST && _scrollable_saves.hovered == index) {
-            ui_cursor(save_rect.scale_to_aspect(aspect_helper).left);
+
+            Vector2 cursor_target = save_rect.scale_to_aspect(aspect_helper).left with {
+                Y = save_rect.left.Y + 4f,
+            };
+
+            ui_cursor(cursor_target, false);
         }
 
         // Handle input
@@ -1131,8 +1113,8 @@ public sealed class FhSaveUiX : FhSaveUi {
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
         Rect save_rect = new Rect {
-            pos  = new( 133f, 146f),
-            size = new(1302f, 127f),
+            pos  = new( 160f, 175f),
+            size = new(1562f, 152f),
         };
 
         // The border effectively has two sizes: 4f and 9f.
@@ -1163,12 +1145,14 @@ public sealed class FhSaveUiX : FhSaveUi {
         }
 
         /* ===== Header Gradient ===== */
+        float header_height = 43f;
+
         uint grad_l = 0xFF000000; // black
         uint grad_r = 0x00800000; // transparent blue
 
         UV header_uv = new Rect {
             pos  = save_rect.pos + save_border_size,
-            size = save_rect.size with { Y = 35f },
+            size = save_rect.size with { Y = header_height },
         }.scale_to_aspect(aspect_helper).as_uv();
 
         draw.AddRectFilledMultiColor(header_uv.p0, header_uv.p1, grad_l, grad_r, grad_r, grad_l);
@@ -1177,14 +1161,12 @@ public sealed class FhSaveUiX : FhSaveUi {
         //TODO: Add localization
         string text = "New Save Data";
 
-        float header_height = 35f;
-
         Vector2 text_pos = save_rect.top_left + new Vector2(
-            12f,
+            14f,
             header_height + (save_rect.size.Y - header_height) / 2f
         );
 
-        float font_size = 36f * font_scale;
+        float font_size = 43f * font_scale;
 
         FhApi.Gui.draw_text(
             draw,
@@ -1197,7 +1179,12 @@ public sealed class FhSaveUiX : FhSaveUi {
 
         /* ===== Cursor ===== */
         if (_focus == UiFocus.LIST && _scrollable_saves.hovered == 0) {
-            ui_cursor(save_rect.scale_to_aspect(aspect_helper).left);
+
+            Vector2 cursor_target = save_rect.scale_to_aspect(aspect_helper).left with {
+                Y = save_rect.left.Y + 4f,
+            };
+
+            ui_cursor(cursor_target);
         }
 
         // Handle input
@@ -1213,13 +1200,13 @@ public sealed class FhSaveUiX : FhSaveUi {
         }
 
         Rect track = new() {
-            pos  = new(1461f, 174f),
-            size = new(  14f, 630f),
+            pos  = new(1753f, 209f),
+            size = new(  17f, 756f),
         };
 
         uint track_color = 0xFF000000;
 
-        Vector2 thumb_margin = new(1f);
+        Vector2 thumb_margin = new(2f);
 
         float scrollable_height = track.size.Y - thumb_margin.Y * 2;
 
@@ -1233,13 +1220,13 @@ public sealed class FhSaveUiX : FhSaveUi {
             visible_percentage
         );
 
-        Vector2 thumb_size = new(12f, thumb_height);
+        Vector2 thumb_size = new(13f, thumb_height);
 
         uint thumb_color_top    = 0xFFCCCCCC;
         uint thumb_color_bottom = 0xFF818181;
 
-        Vector2 triangle_size = new(30f, 15f);
-        float   triangle_gap  = 13f;
+        Vector2 triangle_size = new(38f, 19f);
+        float   triangle_gap  = 15f;
 
         Rect triangle_top = new() {
             pos = new(

@@ -562,9 +562,9 @@ public unsafe class FhGui {
     private void draw_rectangle_gradient_up(
         ImDrawListPtr      draw_list,
         Rect               bounds,
-        List<GradientStep> steps
+        ReadOnlySpan<GradientStep> steps
     ) {
-        for (int i = 1; i < steps.Count; i++)  {
+        for (int i = 1; i < steps.Length; i++)  {
             GradientStep step1 = steps[i - 1];
             GradientStep step2 = steps[i];
 
@@ -589,9 +589,9 @@ public unsafe class FhGui {
     private void draw_rectangle_gradient_right(
         ImDrawListPtr      draw_list,
         Rect               bounds,
-        List<GradientStep> steps
+        ReadOnlySpan<GradientStep> steps
     ) {
-        for (int i = 1; i < steps.Count; i++)  {
+        for (int i = 1; i < steps.Length; i++)  {
             GradientStep step1 = steps[i - 1];
             GradientStep step2 = steps[i];
 
@@ -616,9 +616,9 @@ public unsafe class FhGui {
     private void draw_rectangle_gradient_down(
         ImDrawListPtr      draw_list,
         Rect               bounds,
-        List<GradientStep> steps
+        ReadOnlySpan<GradientStep> steps
     ) {
-        for (int i = 1; i < steps.Count; i++)  {
+        for (int i = 1; i < steps.Length; i++)  {
             GradientStep step1 = steps[i - 1];
             GradientStep step2 = steps[i];
 
@@ -643,9 +643,9 @@ public unsafe class FhGui {
     private void draw_rectangle_gradient_left(
         ImDrawListPtr      draw_list,
         Rect               bounds,
-        List<GradientStep> steps
+        ReadOnlySpan<GradientStep> steps
     ) {
-        for (int i = 1; i < steps.Count; i++)  {
+        for (int i = 1; i < steps.Length; i++)  {
             GradientStep step1 = steps[i - 1];
             GradientStep step2 = steps[i];
 
@@ -683,11 +683,13 @@ public unsafe class FhGui {
         if (steps[^1].progress != 1f)
             full_steps.Add(steps[^1] with { progress = 1f });
 
+        ReadOnlySpan<GradientStep> gradient_steps = CollectionsMarshal.AsSpan(full_steps);
+
         switch (direction) {
-            case GradientDirection.UP:    draw_rectangle_gradient_up   (draw_list, bounds, full_steps); break;
-            case GradientDirection.RIGHT: draw_rectangle_gradient_right(draw_list, bounds, full_steps); break;
-            case GradientDirection.DOWN:  draw_rectangle_gradient_down (draw_list, bounds, full_steps); break;
-            case GradientDirection.LEFT:  draw_rectangle_gradient_left (draw_list, bounds, full_steps); break;
+            case GradientDirection.UP:    draw_rectangle_gradient_up   (draw_list, bounds, gradient_steps); break;
+            case GradientDirection.RIGHT: draw_rectangle_gradient_right(draw_list, bounds, gradient_steps); break;
+            case GradientDirection.DOWN:  draw_rectangle_gradient_down (draw_list, bounds, gradient_steps); break;
+            case GradientDirection.LEFT:  draw_rectangle_gradient_left (draw_list, bounds, gradient_steps); break;
 
             default: throw new UnreachableException();
         }

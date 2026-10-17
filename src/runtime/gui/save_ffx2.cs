@@ -418,14 +418,11 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             if (_map_icon_textures.TryGetValue(map, out _)) continue;
 
             // TODO: Handle some map icons that use "{map}_1.png" across both games
-            FhTexture map_icon;
-            if (FhGlobal.game_id is FhGameId.FFX) {
-                map_icon = new(Path.Join(FFX_MAP_ICONS_DIR, $"{map}.png"), FhTextureType.PNG);
-            }
-            else {
-                map_icon = new(Path.Join(MAP_ICONS_DIR, $"{map}_0.png"), FhTextureType.PNG);
-            }
+            string map_icon_path = FhGlobal.game_id is FhGameId.FFX
+                ? Path.Join(FFX_MAP_ICONS_DIR, $"{map}.png")
+                : Path.Join(MAP_ICONS_DIR,     $"{map}_0.png");
 
+            FhTexture map_icon = new(map_icon_path, FhTextureType.PNG);
             _map_icon_textures.Add(
                 map,
                 map_icon

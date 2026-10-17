@@ -1996,12 +1996,12 @@ public sealed class FhSaveUiX2 : FhSaveUi {
 
         Vector2 thumb_margin = new(2f);
 
-        float scrollable_height = track.size.Y - thumb_margin.Y * 2;
-
+        float scrollable_height  = track.size.Y - thumb_margin.Y * 2;
         float visible_percentage = _current_scrollable.visible / (float)_current_scrollable.max;
 
         float thumb_height_max = 0.8f * scrollable_height;
         float thumb_height_min = float.Min(20f, thumb_height_max);
+
         float thumb_height = float.Lerp(
             thumb_height_min,
             thumb_height_max,

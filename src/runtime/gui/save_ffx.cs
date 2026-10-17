@@ -898,7 +898,7 @@ public sealed class FhSaveUiX : FhSaveUi {
         if (save.slot == 0) {
             UV save_suv = save_rect.scale_to_aspect(aspect_helper).as_uv();
 
-            draw.AddRectFilled(save_suv.p0, save_suv.p1, 0x40F0F0F0);
+            draw.AddRectFilled(save_suv.p0, save_suv.p1, 0x30F0F0F0);
         }
 
         /* ===== Border ===== */
@@ -920,14 +920,14 @@ public sealed class FhSaveUiX : FhSaveUi {
         Vector2 save_border_size = new(4f);
 
         /* ===== Header Gradient ===== */
-        float header_size = 43f;
+        float header_height = 43f;
 
         uint header_grad_l = 0xFF000000; // black
         uint header_grad_r = 0x00800000; // transparent blue
 
         UV header_uv = new Rect {
             pos  = save_rect.pos + save_border_size,
-            size = save_rect.size with { Y = header_size },
+            size = save_rect.size with { Y = header_height },
         }.scale_to_aspect(aspect_helper).as_uv();
 
         draw.AddRectFilledMultiColor(
@@ -937,6 +937,29 @@ public sealed class FhSaveUiX : FhSaveUi {
             header_grad_r,
             header_grad_r,
             header_grad_l
+        );
+
+        // Separator
+        Rect separator_bounds = new Rect {
+            pos  = new(
+                    save_rect.pos.X + save_border_size.X,
+                    save_rect.pos.Y + (header_height - 1f) + save_border_size.Y
+                ),
+            size = save_rect.size with { Y = 3f },
+        }.scale_to_aspect(aspect_helper);
+
+        GradientStep[] separator_steps = [
+            new(0.0f, 0x00FBF1F3),
+            new(0.2f, 0x40FBF1F3),
+            new(0.6f, 0x40FBF1F3),
+            new(0.8f, 0x00FBF1F3),
+        ];
+
+        FhApi.Gui.draw_rectangle_gradient(
+            draw,
+            separator_bounds,
+            GradientDirection.RIGHT,
+            separator_steps
         );
 
         /* ===== Party Icons ===== */
@@ -1004,7 +1027,7 @@ public sealed class FhSaveUiX : FhSaveUi {
         Vector2 text_pos_left =
               save_rect.pos
             + save_border_size
-            + new Vector2( text_margin_left, header_size / 2f);
+            + new Vector2( text_margin_left, header_height / 2f);
 
         float font_size = 43f * font_scale;
 
@@ -1047,7 +1070,7 @@ public sealed class FhSaveUiX : FhSaveUi {
         Vector2 text_pos_right =
               save_rect.top_right
             + new Vector2(-save_border_size.X, save_border_size.Y)
-            + new Vector2(-(map_icon_size + text_margin_between), header_size / 2f);
+            + new Vector2(-(map_icon_size + text_margin_between), header_height / 2f);
 
         FhApi.Gui.draw_text(
             draw,
@@ -1065,7 +1088,7 @@ public sealed class FhSaveUiX : FhSaveUi {
 
         Vector2 text_pos = save_rect.pos + new Vector2(
             face_size.X * 3 + face_gap * 2 + margin_from_last_face,
-            header_size + margin_from_header + line_height / 2f
+            header_height + margin_from_header + line_height / 2f
         );
 
         FhApi.Gui.draw_text(
@@ -1156,6 +1179,29 @@ public sealed class FhSaveUiX : FhSaveUi {
         }.scale_to_aspect(aspect_helper).as_uv();
 
         draw.AddRectFilledMultiColor(header_uv.p0, header_uv.p1, grad_l, grad_r, grad_r, grad_l);
+
+        // Separator
+        Rect separator_bounds = new Rect {
+            pos  = new(
+                    save_rect.pos.X + save_border_size.X,
+                    save_rect.pos.Y + (header_height - 1f) + save_border_size.Y
+                ),
+            size = save_rect.size with { Y = 3f },
+        }.scale_to_aspect(aspect_helper);
+
+        GradientStep[] separator_steps = [
+            new(0.0f, 0x00FBF1F3),
+            new(0.2f, 0x40FBF1F3),
+            new(0.6f, 0x40FBF1F3),
+            new(0.8f, 0x00FBF1F3),
+        ];
+
+        FhApi.Gui.draw_rectangle_gradient(
+            draw,
+            separator_bounds,
+            GradientDirection.RIGHT,
+            separator_steps
+        );
 
         /* ===== New Save Data Text ===== */
         //TODO: Add localization

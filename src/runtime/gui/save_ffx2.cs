@@ -1996,7 +1996,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
         uint thumb_color_top    = 0xFFCCCCCC;
         uint thumb_color_bottom = 0xFF818181;
 
-        Vector2 triangle_size = new(35f, 17f);
+        Vector2 triangle_size = new(38f, 19f);
         float   triangle_gap  = 13f;
 
         Rect triangle_top = new() {
@@ -2015,9 +2015,8 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             size = triangle_size,
         };
 
-        // In the vanilla game, the triangles are a linear gradient
-        // #c0c0c3 at the tip to #838383 at the base.
-        uint triangle_color = 0xFFA0A0A0;
+        uint triangle_color_top    = 0xFFBEBEBE;
+        uint triangle_color_bottom = 0xFF818181;
 
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
@@ -2057,19 +2056,22 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             thumb_color_bottom
         );
 
-        // TODO: Make these use FhApi.Gui.draw_triangle_filled_multi_color
-        draw.AddTriangleFilled(
-            triangle_top.top,
-            triangle_top.bottom_left,
-            triangle_top.bottom_right,
-            triangle_color
+        FhApi.Gui.draw_triangle_gradient(
+            draw,
+            triangle_top,
+            GradientDirection.UP,
+            triangle_color_bottom,
+            triangle_color_bottom,
+            triangle_color_top
         );
 
-        draw.AddTriangleFilled(
-            triangle_bottom.bottom,
-            triangle_bottom.top_left,
-            triangle_bottom.top_right,
-            triangle_color
+        FhApi.Gui.draw_triangle_gradient(
+            draw,
+            triangle_bottom,
+            GradientDirection.DOWN,
+            triangle_color_bottom,
+            triangle_color_bottom,
+            triangle_color_top
         );
 
         // Handle input

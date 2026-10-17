@@ -103,9 +103,9 @@ public struct FhSaveHeader {
     public uint             playtime_secs;
     public uint             gil;
     public ushort           id_location;
-    public ushort           __0x1a;
-    public ushort           __0x1c;
-    public ushort           _0x1e;
+    public ushort           __0x1A;
+    public ushort           __0x1C;
+    public ushort           __0x1E;
     public FhSavePlayerName player_name;
 };
 
@@ -119,8 +119,8 @@ public struct FhSaveHeader2 {
         private byte _e0;
     }
 
-    public uint     _0x00;
-    public byte     _0x04;
+    public uint     __0x00;
+    public byte     __0x04;
     public Party    ply;
     public Party    ply_levels;
     public byte     chapter;
@@ -129,8 +129,8 @@ public struct FhSaveHeader2 {
     public uint     playtime_secs;
     public uint     gil;
     public ushort   id_location;
-    public ushort   _0x1A;
-    public uint     _0x1C;
+    public ushort   __0x1A;
+    public uint     __0x1C;
     public byte     times_played;
     public byte     lm_ply;
     public byte     lm_ply_level;
@@ -138,11 +138,11 @@ public struct FhSaveHeader2 {
     public byte     lm_job_level;
     public byte     lm_id_location;
     public byte     lm_retry;
-    public byte     _0x27;
+    public byte     __0x27;
     public FhLangId lang_id;
-    public byte     _0x29;
+    public byte     __0x29;
     public ushort   id_map_icon;
-    public byte     _0x2C;
+    public byte     __0x2C;
 
     public bool is_new_game_plus => times_played > 1;
 }

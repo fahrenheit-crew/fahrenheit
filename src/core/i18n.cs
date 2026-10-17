@@ -9,10 +9,13 @@ namespace Fahrenheit;
  * A locale file takes the name {LANG_ID}.json, where {LANG_ID} is a ISO 639 ID.
  * https://www.localeplanet.com/icu/ can help you refer to them.
  *
- * It is to contain a flat map with string keys and string values.
+ * It must contain a flat map with string keys and string values.
  */
 using LocaleData = Dictionary<string, string>;
 
+/// <summary>
+///     Provides methods for retrieving localization data.
+/// </summary>
 public sealed partial class FhLocalization {
 
     /* [fkelava 08/07/26 00:07]
@@ -30,8 +33,9 @@ public sealed partial class FhLocalization {
      */
 
     /// <summary>
-    ///     Returns the ISO 639 language ID for the current game language.
+    ///     Gets the default localization language for the current game language.
     /// </summary>
+    /// <returns>The ISO 639 language ID of the default localization language.</returns>
     private string get_default_lang_id() {
         return FhGlobal.lang_id switch {
             FhLangId.English  => "en-US",
@@ -65,8 +69,9 @@ public sealed partial class FhLocalization {
     }
 
     /// <summary>
-    ///     Loads localization data for the given <paramref name="mod"/>.
+    ///     Loads localization data for a given mod.
     /// </summary>
+    /// <param name="mod">The context of the mod to load localization data for.</param>
     internal void load_for_mod(FhModContext mod) {
         foreach (DirectoryInfo module_lang_dir in mod.Paths.LangDir.EnumerateDirectories()) {
             load_for_module(mod, module_lang_dir);
@@ -74,14 +79,16 @@ public sealed partial class FhLocalization {
     }
 
     /// <summary>
-    ///     Loads localization data for a given <paramref name="mod"/>'s module.
+    ///     Loads localization data for a given mod's module.
     /// </summary>
-    internal void load_for_module(FhModContext mod, DirectoryInfo module_dir) {
-        foreach (FileInfo lang_file in module_dir.EnumerateFiles("*.json", SearchOption.TopDirectoryOnly)) {
+    /// <param name="mod">The context of the mod the module belongs to.</param>
+    /// <param name="module_lang_dir">The directory containing the module's localization data.</param>
+    internal void load_for_module(FhModContext mod, DirectoryInfo module_lang_dir) {
+        foreach (FileInfo lang_file in module_lang_dir.EnumerateFiles("*.json", SearchOption.TopDirectoryOnly)) {
             string lang_id = Path.GetFileNameWithoutExtension(lang_file.FullName);
 
             string mod_name    = mod.Manifest.Id;
-            string module_name = module_dir.Name; // ex. Fahrenheit.Runtime.FhSaveUiModule
+            string module_name = module_lang_dir.Name; // ex. Fahrenheit.Runtime.FhSaveUiModule
 
             if (!_s_locales.TryGetValue(lang_id, out LocaleData? locale)) {
                 FhInternal.Log.Warning($"Mod '{mod_name}', module '{module_name}': ignoring unknown locale '{lang_id}'.");
@@ -120,18 +127,26 @@ public sealed partial class FhLocalization {
     }
 
     /// <summary>
-    ///     Attempts to retrieve the string with ID <paramref name="id"/>
-    ///     for the locale with ID <paramref name="lang_id"/>,
-    ///     falling back to <paramref name="id"/> if unavailable.
+    ///     Retrieves a localized string with the given ID, for the given language.
     /// </summary>
+    /// <param name="id">The ID of the localized string.</param>
+    /// <param name="owner">The module containing the localization.</param>
+    /// <param name="lang_id">The ISO 639 language ID of the language to get the string in.</param>
+    /// <returns>The localized string, or the ID if unavailable.</returns>
+    /// <remarks>
+    ///     You may pass either a fully qualified ID, or a short ID
+    ///     and a non-<c>null</c> <paramref name="owner"/>.
+    ///     <para/>
+    ///     If no <paramref name="lang_id"/> is specified, the current game language is used.
+    /// </remarks>
     public string localize(
         string    id,
-        FhModule? caller  = null,
+        FhModule? owner   = null,
         string?   lang_id = null
     ) {
-        string composite_id = (caller == null)
+        string composite_id = (owner == null)
             ? id
-            : $"{caller.ModuleType}.{id}";
+            : $"{owner.ModuleType}.{id}";
 
         lang_id ??= get_default_lang_id();
         return _s_locales.TryGetValue(lang_id, out LocaleData? locale) && locale.TryGetValue(composite_id, out string? localized_string)

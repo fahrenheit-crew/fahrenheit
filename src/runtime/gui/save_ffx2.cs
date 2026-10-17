@@ -18,7 +18,7 @@ namespace Fahrenheit.Runtime.Gui;
  */
 
 /// <summary>The default save UI renderer for Final Fantasy X-2/Last Mission.</summary>
-[FhLoad(FhGameId.FFX2 | FhGameId.FFX2LM)]
+[FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
 public sealed class FhSaveUiX2 : FhSaveUi {
     /// <summary>Possible open windows of the save/load menu.</summary>
     private enum UiMode {
@@ -46,6 +46,9 @@ public sealed class FhSaveUiX2 : FhSaveUi {
     private const string MENU_D3D11_DIR     = "/FFX-2_Data/GameData/PS3Data/menu/D3D11/";
     private const string MENU_MAHOJIN_DIR   = "/FFX-2_Data/GameData/PS3Data/menu/menu_mahojin/tex/D3D11/";
     private const string MENU_PLATE_DIR     = "/FFX-2_Data/GameData/PS3Data/menu/menu_plate/tex/D3D11/";
+
+    private const string FFX_MENU_D3D11_DIR = "/FFX_Data/GameData/PS3Data/menu/D3D11/";
+    private const string FFX_MAP_ICONS_DIR  = "/FFX_Data/GameData/PS3Data/savedataicons/";
 
     private const uint COLOR_BLACK = 0xFF000000;
     private const uint COLOR_TRANS = 0x00000000;
@@ -77,6 +80,8 @@ public sealed class FhSaveUiX2 : FhSaveUi {
     private readonly FhTexture _texture_freetex  = new(Path.Join(MENU_D3D11_DIR,   "freetex.dds.phyre"),              FhTextureType.PHYRE);
     private readonly FhTexture _texture_x2_bg    = new(Path.Join(MENU_D3D11_DIR,   "x2_bg.dds.phyre"),                FhTextureType.PHYRE);
 
+    private readonly FhTexture _texture_ffx_faces = new(Path.Join(FFX_MENU_D3D11_DIR, "face_ply.dds.phyre"), FhTextureType.PHYRE);
+
     private readonly Vector2 _tex_face_size     = new(256f, 256f);
     private readonly Vector2 _tex_map_icon_size = new(320f, 176f);
 
@@ -86,6 +91,8 @@ public sealed class FhSaveUiX2 : FhSaveUi {
     private readonly Vector2 _tex_plate_size    = new( 512f,  512f);
     private readonly Vector2 _tex_freetex_size  = new(1024f,  768f);
     private readonly Vector2 _tex_x2_bg_size    = new(2048f, 2048f);
+
+    private readonly Vector2 _tex_ffx_faces_size = new(1024f, 512f);
 
     private bool is_saving => FhApi.Saves.get_system_mode(out FhSaveSystemMode? system_mode) && system_mode is FhSaveSystemMode.SAVE;
 
@@ -410,7 +417,15 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             string map = Encoding.UTF8.GetString(save.icon_map);
             if (_map_icon_textures.TryGetValue(map, out _)) continue;
 
-            FhTexture map_icon = new(Path.Join(MAP_ICONS_DIR, $"{map}_0.png"), FhTextureType.PNG);
+            // TODO: Handle some map icons that use "{map}_1.png" across both games
+            FhTexture map_icon;
+            if (FhGlobal.game_id is FhGameId.FFX) {
+                map_icon = new(Path.Join(FFX_MAP_ICONS_DIR, $"{map}.png"), FhTextureType.PNG);
+            }
+            else {
+                map_icon = new(Path.Join(MAP_ICONS_DIR, $"{map}_0.png"), FhTextureType.PNG);
+            }
+
             _map_icon_textures.Add(
                 map,
                 map_icon
@@ -432,6 +447,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             .. _face_icon_textures.Values,
             // _texture_map_icon_default,
             // .. _map_icon_textures.Values,
+            _texture_ffx_faces
         ];
 
         _loaded_all_textures = true;
@@ -457,6 +473,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             .. _face_icon_textures.Values,
             // _texture_map_icon_default,
             // .. _map_icon_textures.Values,
+            _texture_ffx_faces
         ];
 
         foreach (FhTexture texture in textures) {
@@ -504,17 +521,19 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             size = new(512f, 512f),
         }.as_uv(_tex_menuback_size);
 
-        // Draw the background in 4 chunks, top/bottom, left/right
+        // Draw the background in 6 left->right chunks, top row, bottom row
         Rect menuback_screen = new Rect {
             pos  = new(  0f,   0f),
-            size = new(960f, 665f),
+            size = new(948f, 947f),
         };
 
         ReadOnlySpan<Rect> menuback_rects = [
-            menuback_screen,
-            menuback_screen with { pos = new(menuback_screen.size.X, menuback_screen.pos.Y) },
-            menuback_screen with { pos = new(menuback_screen.pos.X, menuback_screen.size.Y) },
-            menuback_screen with { pos = menuback_screen.size },
+            menuback_screen with { pos = new(-1f, menuback_screen.pos.Y) },
+            menuback_screen with { pos = new(menuback_screen.size.X - 1f, menuback_screen.pos.Y) },
+            menuback_screen with { pos = new((menuback_screen.size.X * 2) - 2f, menuback_screen.pos.Y) },
+            menuback_screen with { pos = new(-1f, menuback_screen.size.Y) },
+            menuback_screen with { pos = new(menuback_screen.size.X - 1f, menuback_screen.size.Y) },
+            menuback_screen with { pos = new((menuback_screen.size.X * 2) - 2f, menuback_screen.size.Y) },
         ];
 
         foreach (Rect rect in menuback_rects) {
@@ -1292,8 +1311,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
         );
 
         switch (FhGlobal.game_id) {
-            //TODO: Support FFX save files.
-            case FhGameId.FFX:    /* ui_savefile_details_x(save_rect, save); */  break;
+            case FhGameId.FFX:    ui_savefile_details_x (save_rect, save); break;
             case FhGameId.FFX2:   ui_savefile_details_x2(save_rect, save); break;
             case FhGameId.FFX2LM: ui_savefile_details_lm(save_rect, save); break;
 
@@ -1315,6 +1333,176 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             FhApi.Audio.play_sound(SoundId.UI_ACTION);
             fade_out(() => execute(save.slot));
         }
+    }
+
+    private void ui_savefile_details_x(Rect save_rect, FhSaveDisplayData save) {
+        if (save.slot == 0 && is_saving) return;
+
+        if (!_texture_ffx_faces.try_use(out ImTextureRef faces, out _)) return;
+
+        ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
+
+        /* ===== Party Icons ===== */
+        Span<UV> face_tuvs = stackalloc UV[8];
+
+        for (int i = 0; i < 8; i++) {
+            float x1 = 200f * (i % 4);
+            float x2 = x1 + 200f;
+
+            float y1 = i > 3 ? 312f : 512f;
+            float y2 = y1 - 200f;
+
+            face_tuvs[i] = new UV(
+                new(x1, y1),
+                new(x2, y2)
+            ).map_to(_tex_ffx_faces_size);
+        }
+
+        Vector2 face_size   = new(102f, 96f);
+        float   face_gap    = 3f;
+        float   face_offset = 5f;
+
+        Rect face = new Rect {
+            pos = new(
+                save_rect.left.X + face_offset,
+                save_rect.bottom.Y - 6f - face_size.Y
+            ),
+            size = face_size,
+        };
+
+        UV face_suv = face.scale_to_aspect(aspect_helper).as_uv();
+
+        Vector2 face_screen_offset = new Vector2(face_size.X + face_gap, 0f) * aspect_scale;
+
+        FhSaveHeader header = MemoryMarshal.Read<FhSaveHeader>(save.header);
+
+        foreach (int chr in header.formation[..3]) {
+            if (chr == 0xFF) continue;
+
+            UV tuv = face_tuvs[chr];
+
+            draw.AddImage(faces, face_suv.p0, face_suv.p1, tuv.p0, tuv.p1);
+
+            face_suv = face_suv.move(face_screen_offset);
+        }
+
+        /* ===== Location Icon ===== */
+        string    map     = Encoding.UTF8.GetString(save.icon_map);
+        FhTexture tex_map = _map_icon_textures.GetValueOrDefault(map, _texture_map_icon_default);
+
+        // if (tex_map.try_use(out ImTextureRef map_icon, out _)) {
+        //     UV tuv = new(new(0f, 1f), new(1f, 0f));
+        //
+        //     UV suv = new Rect {
+        //         pos  = save_rect.top_right + new Vector2(-260f, 6f),
+        //         size = new(255f, 144f),
+        //     }.scale_to_aspect(aspect_helper).as_uv();
+        //
+        //     draw.AddImage(
+        //         map_icon,
+        //         suv.p0,
+        //         suv.p1,
+        //         tuv.p0,
+        //         tuv.p1
+        //     );
+        // }
+
+        /* ===== Text ===== */
+
+        /* ===== Header Details ===== */
+        float border_thickness =  5f;
+        float header_size      = 47f;
+        float text_offset      = 13f;
+        float text_margin      = 66f;
+        float autosave_offset  = 10f;
+
+        Vector2 header_text_pos_l = save_rect.top_left + new Vector2(
+            border_thickness + text_offset,
+            header_size / 2
+        );
+
+        float font_size = 40f * font_scale;
+
+        //TODO: Add localization
+        string slot_text   = save.slot == 0 ? "Autosave" : save.slot_str;
+        string create_time = save.create_time.ToString(@"yyyy\/M\/d H\:mm\:ss");
+
+        Vector2 text_size = FhApi.Gui.draw_text(
+            draw,
+            header_text_pos_l * aspect_scale + aspect_helper.pos,
+            slot_text,
+            font_size,
+            true,
+            new(Alignment.BEGIN, Alignment.CENTER),
+            save.slot == 0 ? 0xFF19D8FF : 0xFFFFFFFF // Autosave text is yellow
+        );
+
+        // If location string is "None", don't render
+        if (header.id_location != 0) {
+            header_text_pos_l.X -= 1f;
+            header_text_pos_l.Y -= 2f;
+            header_text_pos_l = header_text_pos_l * aspect_scale + aspect_helper.pos;
+            header_text_pos_l.X += text_size.X + text_margin * aspect_scale.X;
+
+            // If the slot text is "Autosave", increase the margin
+            if (save.slot == 0) header_text_pos_l.X += autosave_offset * aspect_scale.X;
+
+            FhApi.Gui.draw_text(
+                draw,
+                header_text_pos_l,
+                save.location,
+                font_size,
+                true,
+                new(Alignment.BEGIN, Alignment.CENTER)
+            );
+        }
+
+        float map_icon_size = 255f;
+        text_margin = 59f;
+
+        Vector2 header_text_pos_r = save_rect.top_right + new Vector2(
+            border_thickness - map_icon_size - text_margin,
+            (header_size / 2) - 1f
+        );
+
+        FhApi.Gui.draw_text(
+            draw,
+            header_text_pos_r * aspect_scale + aspect_helper.pos,
+            create_time,
+            font_size,
+            true,
+            new(Alignment.END, Alignment.CENTER)
+        );
+
+        /* ===== Info Details ===== */
+        float margin_from_header    =  6f;
+        float margin_from_last_face = 38f;
+        float line_height           = 48f;
+
+        Vector2 info_text_pos = save_rect.top_left + new Vector2(
+            face_offset + face_size.X * 3 + face_gap * 2 + margin_from_last_face,
+            header_size + margin_from_header + line_height / 2f
+        );
+
+        FhApi.Gui.draw_text(
+            draw,
+            info_text_pos * aspect_scale + aspect_helper.pos,
+            save.player_name,
+            font_size,
+            true,
+            new(Alignment.BEGIN, Alignment.CENTER)
+        );
+
+        info_text_pos.Y += line_height;
+
+        FhApi.Gui.draw_text(
+            draw,
+            info_text_pos * aspect_scale + aspect_helper.pos,
+            save.play_time,
+            font_size,
+            true,
+            new(Alignment.BEGIN, Alignment.CENTER)
+        );
     }
 
     private void ui_savefile_details_x2(Rect save_rect, FhSaveDisplayData save) {
@@ -1425,22 +1613,25 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             save.slot == 0 ? 0xFF19D8FF : 0xFFFFFFFF // Autosave text is yellow
         );
 
-        header_text_pos_l.X -= 1f;
-        header_text_pos_l.Y -= 2f;
-        header_text_pos_l = header_text_pos_l * aspect_scale + aspect_helper.pos;
-        header_text_pos_l.X += text_size.X + text_margin * aspect_scale.X;
+        // If location string is "NONAME", don't render
+        if (header2.id_location != 0) {
+            header_text_pos_l.X -= 1f;
+            header_text_pos_l.Y -= 2f;
+            header_text_pos_l = header_text_pos_l * aspect_scale + aspect_helper.pos;
+            header_text_pos_l.X += text_size.X + text_margin * aspect_scale.X;
 
-        // If the slot text is "Autosave", increase the margin
-        if (save.slot == 0) header_text_pos_l.X += autosave_offset * aspect_scale.X;
+            // If the slot text is "Autosave", increase the margin
+            if (save.slot == 0) header_text_pos_l.X += autosave_offset * aspect_scale.X;
 
-        FhApi.Gui.draw_text(
-            draw,
-            header_text_pos_l,
-            save.location,
-            font_size,
-            true,
-            new(Alignment.BEGIN, Alignment.CENTER)
-        );
+            FhApi.Gui.draw_text(
+                draw,
+                header_text_pos_l,
+                save.location,
+                font_size,
+                true,
+                new(Alignment.BEGIN, Alignment.CENTER)
+            );
+        }
 
         float map_icon_size = 255f;
         text_margin = 59f;
@@ -1639,22 +1830,25 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             save.slot == 0 ? 0xFF19D8FF : 0xFFFFFFFF // Autosave text is yellow
         );
 
-        header_text_pos_l.X -= 3f;
-        header_text_pos_l.Y -= 1f;
-        header_text_pos_l = header_text_pos_l * aspect_scale + aspect_helper.pos;
-        header_text_pos_l.X += text_size.X + text_margin * aspect_scale.X;
+        // If location string is "NONAME", don't render
+        if (header2.lm_id_location != 0) {
+            header_text_pos_l.X -= 3f;
+            header_text_pos_l.Y -= 1f;
+            header_text_pos_l = header_text_pos_l * aspect_scale + aspect_helper.pos;
+            header_text_pos_l.X += text_size.X + text_margin * aspect_scale.X;
 
-        // If the slot text is "Autosave", increase the margin
-        if (save.slot == 0) header_text_pos_l.X += autosave_offset * aspect_scale.X;
+            // If the slot text is "Autosave", increase the margin
+            if (save.slot == 0) header_text_pos_l.X += autosave_offset * aspect_scale.X;
 
-        FhApi.Gui.draw_text(
-            draw,
-            header_text_pos_l,
-            save.location,
-            font_size,
-            true,
-            new(Alignment.BEGIN, Alignment.CENTER)
-        );
+            FhApi.Gui.draw_text(
+                draw,
+                header_text_pos_l,
+                save.location,
+                font_size,
+                true,
+                new(Alignment.BEGIN, Alignment.CENTER)
+            );
+        }
 
         float map_icon_size = 255f;
         text_margin = 57f;

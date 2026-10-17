@@ -165,42 +165,42 @@ public unsafe class FhGui {
     public Vector2 display_size => ImGui.GetMainViewport().WorkSize;
 
     //TODO: Change these keys arrays to private and add ReadOnlySpan accessors
-    public readonly ImGuiKey[] keys_up = [
+    public ImGuiKey[] keys_up => [
         ImGuiKey.W,
         ImGuiKey.UpArrow,
         ImGuiKey.GamepadDpadUp,
         ImGuiKey.GamepadLStickUp,
     ];
 
-    public readonly ImGuiKey[] keys_down = [
+    public ImGuiKey[] keys_down => [
         ImGuiKey.S,
         ImGuiKey.DownArrow,
         ImGuiKey.GamepadDpadDown,
         ImGuiKey.GamepadLStickDown,
     ];
 
-    public readonly ImGuiKey[] keys_left = [
+    public ImGuiKey[] keys_left => [
         ImGuiKey.A,
         ImGuiKey.LeftArrow,
         ImGuiKey.GamepadDpadLeft,
         ImGuiKey.GamepadLStickLeft,
     ];
 
-    public readonly ImGuiKey[] keys_right = [
+    public ImGuiKey[] keys_right => [
         ImGuiKey.D,
         ImGuiKey.RightArrow,
         ImGuiKey.GamepadDpadRight,
         ImGuiKey.GamepadLStickRight,
     ];
 
-    public readonly ImGuiKey[] keys_confirm = [
+    public ImGuiKey[] keys_confirm => [
         ImGuiKey.Enter,
         FhGlobal.lang_id == FhLangId.Japanese
             ? ImGuiKey.GamepadFaceRight
             : ImGuiKey.GamepadFaceDown,
     ];
 
-    public readonly ImGuiKey[] keys_cancel = [
+    public ImGuiKey[] keys_cancel => [
         ImGuiKey.Escape,
         ImGuiKey.Backspace,
         FhGlobal.lang_id == FhLangId.Japanese

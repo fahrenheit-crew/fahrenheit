@@ -104,11 +104,11 @@ public abstract class BaseScrollable<T> : BaseScrollable
     }
 
     /// <summary>
-    ///     Set what the visible range in the scrollable is
-    ///     by providing a percent value (between 0 and 1).
+    ///     Set what the visible range in the scrollable is,
+    ///     by providing a percentage value (between 0 and 1).
     /// </summary>
     /// <param name="value">
-    ///     How far through the scrollable, in percent,
+    ///     How far through the scrollable, as a percentage,
     ///     the new visible range should be.
     /// </param>
     /// <remarks>
@@ -242,11 +242,11 @@ public class SteppedScrollable : BaseScrollable<int> {
     }
 
     /// <summary>
-    ///     Set what the visible range in the scrollable is
-    ///     by providing a percent value (between 0 and 1).
+    ///     Set what the visible range in the scrollable is,
+    ///     by providing a percentage value (between 0 and 1).
     /// </summary>
     /// <param name="value">
-    ///     How far through the scrollable, in percent,
+    ///     How far through the scrollable, as a percentage,
     ///     the new visible range should be.
     /// </param>
     /// <param name="preserve_hover">

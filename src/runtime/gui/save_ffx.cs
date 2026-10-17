@@ -45,6 +45,8 @@ public sealed class FhSaveUiX : FhSaveUi {
     private const string MENU_D3D11_DIR = "/FFX_Data/GameData/PS3Data/menu/D3D11/";
     private const string HIKU_D3D11_DIR = "/FFX_Data/GameData/PS3Data/map/hiku/hiku22/2d/tex/D3D11/";
 
+    private const string FFX2_MENU_D3D11_DIR = "/FFX-2_Data/GameData/PS3Data/menu/D3D11/";
+
     private const uint COLOR_BLACK = 0xFF000000;
     private const uint COLOR_TRANS = 0x00000000;
 
@@ -73,6 +75,8 @@ public sealed class FhSaveUiX : FhSaveUi {
     private readonly FhTexture _texture_meswin       = new(Path.Join(MENU_D3D11_DIR, "meswin.dds.phyre"),        FhTextureType.PHYRE);
     private readonly FhTexture _texture_summonbg     = new(Path.Join(MENU_D3D11_DIR, "summonbg.dds.phyre"),      FhTextureType.PHYRE);
 
+    private readonly FhTexture _texture_freetex = new(Path.Join(FFX2_MENU_D3D11_DIR, "freetex.dds.phyre"), FhTextureType.PHYRE);
+
     private readonly Vector2 _tex_map_icon_size     = new(310f, 210f);
 
     private readonly Vector2 _tex_bg_size           = new(2048f, 1024f);
@@ -81,6 +85,8 @@ public sealed class FhSaveUiX : FhSaveUi {
     private readonly Vector2 _tex_faces_size        = new(1024f,  512f);
     private readonly Vector2 _tex_meswin_size       = new(1024f, 1024f);
     private readonly Vector2 _tex_summonbg_size     = new(1024f, 1024f);
+
+    private readonly Vector2 _tex_freetex_size = new(1024f,  768f);
 
     private bool is_saving => FhApi.Saves.get_system_mode(out FhSaveSystemMode? system_mode) && system_mode is FhSaveSystemMode.SAVE;
 
@@ -337,6 +343,7 @@ public sealed class FhSaveUiX : FhSaveUi {
             _texture_summonbg,
             // _texture_map_icon_default,
             // .. _map_icon_textures.Values,
+            _texture_freetex,
         ];
 
         _loaded_all_textures = true;
@@ -360,6 +367,7 @@ public sealed class FhSaveUiX : FhSaveUi {
             _texture_summonbg,
             // _texture_map_icon_default,
             // .. _map_icon_textures.Values,
+            _texture_freetex,
         ];
 
         foreach (FhTexture texture in textures) {
@@ -877,7 +885,7 @@ public sealed class FhSaveUiX : FhSaveUi {
 
         Rect save_rect = new Rect {
             pos  = new( 160f, 176f), // Topmost position
-            size = new(1563f, 152f),
+            size = new(1561f, 152f),
         };
 
         float save_gap = 13f;
@@ -1013,7 +1021,7 @@ public sealed class FhSaveUiX : FhSaveUi {
         //     UV tuv = new(new(0f, 1f), new(1f, 0f));
         //
         //     UV suv = new Rect {
-        //         pos  = save_rect.pos + new Vector2(1302f, 5f),
+        //         pos  = save_rect.pos + new Vector2(1302f, 4f),
         //         size = new(255f, 144f),
         //     }.scale_to_aspect(_aspect_helper).as_uv();
         //
@@ -1114,11 +1122,13 @@ public sealed class FhSaveUiX : FhSaveUi {
         /* ===== Cursor ===== */
         if (_focus == UiFocus.LIST && _scrollable_saves.hovered == index) {
 
-            Vector2 cursor_target = save_rect.scale_to_aspect(aspect_helper).left with {
-                Y = save_rect.left.Y + 4f,
+            Rect save_rect_scaled = save_rect.scale_to_aspect(aspect_helper);
+
+            Vector2 cursor_target = save_rect_scaled.left with {
+                Y = save_rect_scaled.left.Y + 4f,
             };
 
-            ui_cursor(cursor_target, false);
+            ui_cursor(cursor_target);
         }
 
         // Handle input
@@ -1129,15 +1139,17 @@ public sealed class FhSaveUiX : FhSaveUi {
     }
 
     private void ui_newdata() {
-        if (!_texture_meswin.try_use(out ImTextureRef meswin, out _)) {
+        if (!_texture_meswin .try_use(out ImTextureRef meswin,  out _)
+         || !_texture_freetex.try_use(out ImTextureRef freetex, out _)
+        ) {
             return;
         }
 
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
         Rect save_rect = new Rect {
-            pos  = new( 160f, 175f),
-            size = new(1562f, 152f),
+            pos  = new( 160f, 176f),
+            size = new(1561f, 152f),
         };
 
         // The border effectively has two sizes: 4f and 9f.
@@ -1223,11 +1235,49 @@ public sealed class FhSaveUiX : FhSaveUi {
             new(Alignment.BEGIN, Alignment.CENTER)
         );
 
+        /* ===== "+" Icon ===== */
+        grad_l = 0xFF191919; // grey
+        grad_r = 0xFF252525; // black
+
+        UV suv = new Rect {
+            pos  = save_rect.pos + new Vector2(1302f, 4f),
+            size = new(255f, 144f),
+        }.scale_to_aspect(aspect_helper).as_uv();
+
+        draw.AddRectFilledMultiColor(
+            suv.p0,
+            suv.p1,
+            grad_r,
+            grad_r,
+            grad_l,
+            grad_l
+        );
+
+        UV plus_tuv = new Rect {
+            pos  = new(581f, 724f),
+            size = new( 36f,  36f),
+        }.as_uv(_tex_freetex_size);
+
+        UV plus_suv = new Rect {
+            pos  = save_rect.pos + new Vector2(1405f, 56f),
+            size = new(45f, 47f),
+        }.scale_to_aspect(aspect_helper).as_uv();
+
+        draw.AddImage(
+            freetex,
+            plus_suv.p0,
+            plus_suv.p1,
+            plus_tuv.p0,
+            plus_tuv.p1
+        );
+
         /* ===== Cursor ===== */
         if (_focus == UiFocus.LIST && _scrollable_saves.hovered == 0) {
 
-            Vector2 cursor_target = save_rect.scale_to_aspect(aspect_helper).left with {
-                Y = save_rect.left.Y + 4f,
+            Rect save_rect_scaled = save_rect.scale_to_aspect(aspect_helper);
+
+            Vector2 cursor_target = save_rect_scaled.left with {
+                Y = save_rect_scaled.left.Y + 4f,
             };
 
             ui_cursor(cursor_target);

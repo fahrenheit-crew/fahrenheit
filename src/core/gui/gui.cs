@@ -501,8 +501,8 @@ public unsafe class FhGui {
     /// <param name="draw_list">The draw list to draw the triangle to.</param>
     /// <param name="bounds">The bounding box of the desired triangle.</param>
     /// <param name="direction">The cardinal direction the triangle should point in.</param>
-    /// <param name="color_base1">The color of the left point of the base of the triangle.</param>
-    /// <param name="color_base2">The color of the right point of the base of the triangle.</param>
+    /// <param name="color_base_l">The color of the left point of the base of the triangle.</param>
+    /// <param name="color_base_r">The color of the right point of the base of the triangle.</param>
     /// <param name="color_peak">The color of the top point of the triangle.</param>
     /// <seealso cref="ImGui.GetWindowDrawList()"/>
     /// <seealso cref="ImGui.GetBackgroundDrawList()"/>
@@ -511,11 +511,11 @@ public unsafe class FhGui {
         ImDrawListPtr     draw_list,
         Rect              bounds,
         GradientDirection direction,
-        uint              color_base1,
-        uint              color_base2,
+        uint              color_base_l,
+        uint              color_base_r,
         uint              color_peak
     ) {
-        if (((color_base1 | color_base2 | color_peak) & 0xFF000000) == 0) {
+        if (((color_base_l | color_base_r | color_peak) & 0xFF000000) == 0) {
             return;
         }
 
@@ -536,7 +536,7 @@ public unsafe class FhGui {
             _ => throw new UnreachableException(),
         };
 
-        Vector2 base1 = direction switch {
+        Vector2 base_l = direction switch {
             GradientDirection.UP    => bounds.bottom_left,
             GradientDirection.RIGHT => bounds.top_left,
             GradientDirection.DOWN  => bounds.top_right,
@@ -545,7 +545,7 @@ public unsafe class FhGui {
             _ => throw new UnreachableException(),
         };
 
-        Vector2 base2 = direction switch {
+        Vector2 base_r = direction switch {
             GradientDirection.UP    => bounds.bottom_right,
             GradientDirection.RIGHT => bounds.bottom_left,
             GradientDirection.DOWN  => bounds.top_left,
@@ -554,9 +554,9 @@ public unsafe class FhGui {
             _ => throw new UnreachableException(),
         };
 
-        draw_list.PrimWriteVtx(peak , uv, color_peak);
-        draw_list.PrimWriteVtx(base1, uv, color_base1);
-        draw_list.PrimWriteVtx(base2, uv, color_base2);
+        draw_list.PrimWriteVtx(peak  , uv, color_peak);
+        draw_list.PrimWriteVtx(base_l, uv, color_base_l);
+        draw_list.PrimWriteVtx(base_r, uv, color_base_r);
     }
 
     private void draw_rectangle_gradient_up(

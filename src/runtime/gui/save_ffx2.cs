@@ -527,10 +527,10 @@ public sealed class FhSaveUiX2 : FhSaveUi {
         ReadOnlySpan<Rect> menuback_rects = [
             menuback_screen with { pos = new(-1f, menuback_screen.pos.Y) },
             menuback_screen with { pos = new(menuback_screen.size.X - 1f, menuback_screen.pos.Y) },
-            menuback_screen with { pos = new((menuback_screen.size.X * 2) - 2f, menuback_screen.pos.Y) },
+            menuback_screen with { pos = new((menuback_screen.size.X - 1f) * 2f, menuback_screen.pos.Y) },
             menuback_screen with { pos = new(-1f, menuback_screen.size.Y) },
             menuback_screen with { pos = new(menuback_screen.size.X - 1f, menuback_screen.size.Y) },
-            menuback_screen with { pos = new((menuback_screen.size.X * 2) - 2f, menuback_screen.size.Y) },
+            menuback_screen with { pos = new((menuback_screen.size.X - 1f) * 2f, menuback_screen.size.Y) },
         ];
 
         foreach (Rect rect in menuback_rects) {

@@ -267,11 +267,11 @@ public unsafe class FhGui {
     /// <returns>Whether the mouse cursor is hovering the specified rectangle.</returns>
     public bool mouse_hovering(
         Rect rect,
-        bool require_movement = false,
+        bool require_movement     = false,
         bool respect_want_capture = true
     ) {
         return (!respect_want_capture || !ImGui.GetIO().WantCaptureMouse)
-            && (!require_movement || ImGui.GetIO().MouseDelta.LengthSquared() > 0)
+            && (!require_movement     || ImGui.GetIO().MouseDelta.LengthSquared() > 0)
             && ImGui.IsMouseHoveringRect(rect.pos, rect.pos + rect.size, false);
     }
 
@@ -284,10 +284,10 @@ public unsafe class FhGui {
     /// </param>
     /// <returns>Whether the user clicked with the button on the specified rectangle.</returns>
     public bool mouse_clicked(
-        Rect rect,
-        ImGuiMouseButton button = ImGuiMouseButton.Left,
-        bool repeat = false,
-        bool respect_want_capture = true
+        Rect             rect,
+        ImGuiMouseButton button               = ImGuiMouseButton.Left,
+        bool             repeat               = false,
+        bool             respect_want_capture = true
     ) {
         return (!respect_want_capture || !ImGui.GetIO().WantCaptureMouse)
             && ImGui.IsMouseHoveringRect(rect.pos, rect.pos + rect.size, false)
@@ -508,12 +508,12 @@ public unsafe class FhGui {
     /// <seealso cref="ImGui.GetBackgroundDrawList()"/>
     /// <seealso cref="ImGui.GetForegroundDrawList()"/>
     public void draw_triangle_gradient(
-        ImDrawListPtr draw_list,
-        Rect          bounds,
-        GradientDirection     direction,
-        uint          color_base1,
-        uint          color_base2,
-        uint          color_peak
+        ImDrawListPtr     draw_list,
+        Rect              bounds,
+        GradientDirection direction,
+        uint              color_base1,
+        uint              color_base2,
+        uint              color_peak
     ) {
         if (((color_base1 | color_base2 | color_peak) & 0xFF000000) == 0) {
             return;
@@ -523,7 +523,7 @@ public unsafe class FhGui {
 
         draw_list.PrimReserve(3, 3);
 
-        draw_list.PrimWriteIdx((ushort)draw_list.VtxCurrentIdx);
+        draw_list.PrimWriteIdx((ushort)(draw_list.VtxCurrentIdx + 0));
         draw_list.PrimWriteIdx((ushort)(draw_list.VtxCurrentIdx + 1));
         draw_list.PrimWriteIdx((ushort)(draw_list.VtxCurrentIdx + 2));
 
@@ -560,8 +560,8 @@ public unsafe class FhGui {
     }
 
     private void draw_rectangle_gradient_up(
-        ImDrawListPtr draw_list,
-        Rect bounds,
+        ImDrawListPtr      draw_list,
+        Rect               bounds,
         List<GradientStep> steps
     ) {
         for (int i = 1; i < steps.Count; i++)  {
@@ -587,8 +587,8 @@ public unsafe class FhGui {
     }
 
     private void draw_rectangle_gradient_right(
-        ImDrawListPtr draw_list,
-        Rect bounds,
+        ImDrawListPtr      draw_list,
+        Rect               bounds,
         List<GradientStep> steps
     ) {
         for (int i = 1; i < steps.Count; i++)  {
@@ -614,8 +614,8 @@ public unsafe class FhGui {
     }
 
     private void draw_rectangle_gradient_down(
-        ImDrawListPtr draw_list,
-        Rect bounds,
+        ImDrawListPtr      draw_list,
+        Rect               bounds,
         List<GradientStep> steps
     ) {
         for (int i = 1; i < steps.Count; i++)  {
@@ -641,8 +641,8 @@ public unsafe class FhGui {
     }
 
     private void draw_rectangle_gradient_left(
-        ImDrawListPtr draw_list,
-        Rect bounds,
+        ImDrawListPtr      draw_list,
+        Rect               bounds,
         List<GradientStep> steps
     ) {
         for (int i = 1; i < steps.Count; i++)  {
@@ -668,9 +668,9 @@ public unsafe class FhGui {
     }
 
     public void draw_rectangle_gradient(
-        ImDrawListPtr draw_list,
-        Rect bounds,
-        GradientDirection direction,
+        ImDrawListPtr              draw_list,
+        Rect                       bounds,
+        GradientDirection          direction,
         ReadOnlySpan<GradientStep> steps
     ) {
         ArgumentOutOfRangeException.ThrowIfLessThan(steps.Length, 1);
@@ -695,8 +695,8 @@ public unsafe class FhGui {
 
     public void draw_quad_gradient(
         ImDrawListPtr draw_list,
-        Vector2[] points,
-        uint[] colors
+        Vector2[]     points,
+        uint[]        colors
     ) {
         ArgumentOutOfRangeException.ThrowIfNotEqual(points.Length, 4);
         ArgumentOutOfRangeException.ThrowIfNotEqual(colors.Length, 4);

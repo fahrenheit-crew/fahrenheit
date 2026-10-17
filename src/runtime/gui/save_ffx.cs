@@ -1220,7 +1220,20 @@ public sealed class FhSaveUiX : FhSaveUi {
         uint track_color = 0xFF000000;
 
         Vector2 thumb_margin = new(1f);
-        Vector2 thumb_size   = new(12f, 50f);
+
+        float scrollable_height = track.size.Y - thumb_margin.Y * 2;
+
+        float visible_percentage = _current_scrollable.visible / (float)_current_scrollable.max;
+
+        float thumb_height_max = 0.8f * scrollable_height;
+        float thumb_height_min = float.Min(20f, thumb_height_max);
+        float thumb_height = float.Lerp(
+            thumb_height_min,
+            thumb_height_max,
+            visible_percentage
+        );
+
+        Vector2 thumb_size = new(12f, thumb_height);
 
         uint thumb_color_top    = 0xFFCCCCCC;
         uint thumb_color_bottom = 0xFF818181;

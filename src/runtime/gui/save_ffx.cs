@@ -1379,6 +1379,34 @@ public sealed class FhSaveUiX : FhSaveUi {
             thumb_color_bottom
         );
 
+        Rect triangle_top_outline_bounds = triangle_top.expand(
+            Vector2.Round(new Vector2(2f, 1f) * new Vector2(1f) * aspect_scale) * 2f,
+            new(Alignment.CENTER, Alignment.CENTER)
+        );
+
+        Rect triangle_bot_outline_bounds = triangle_bottom.expand(
+            Vector2.Round(new Vector2(2f, 1f) * new Vector2(1f) * aspect_scale) * 2f,
+            new(Alignment.CENTER, Alignment.CENTER)
+        );
+
+        FhApi.Gui.draw_triangle_gradient(
+            draw,
+            triangle_top_outline_bounds,
+            GradientDirection.UP,
+            0xFF000000,
+            0xFF000000,
+            0xFF000000
+        );
+
+        FhApi.Gui.draw_triangle_gradient(
+            draw,
+            triangle_bot_outline_bounds,
+            GradientDirection.DOWN,
+            0xFF000000,
+            0xFF000000,
+            0xFF000000
+        );
+
         FhApi.Gui.draw_triangle_gradient(
             draw,
             triangle_top,

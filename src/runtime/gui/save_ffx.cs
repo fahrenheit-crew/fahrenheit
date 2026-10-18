@@ -1319,7 +1319,7 @@ public sealed class FhSaveUiX : FhSaveUi {
         Vector2 thumb_size = new(13f, thumb_height);
 
         uint thumb_color_top    = 0xFFCCCCCC;
-        uint thumb_color_bottom = 0xFF818181;
+        uint thumb_color_bottom = 0xFF808080;
 
         Vector2 triangle_size = new(38f, 19f);
         float   triangle_gap  = 15f;

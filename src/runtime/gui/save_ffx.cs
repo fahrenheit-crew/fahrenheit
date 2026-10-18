@@ -865,110 +865,12 @@ public sealed class FhSaveUiX : FhSaveUi {
         );
     }
 
-    private void ui_savefile(int index, FhSaveDisplayData save) {
-        if (save.slot == 0 && is_saving) {
-            ui_newdata();
-            return;
-        }
-
-        if (!_scrollable_saves.is_within_clip(index)) {
-            return;
-        }
-
-        if (!_texture_meswin.try_use(out ImTextureRef meswin, out _)
-         || !_texture_faces .try_use(out ImTextureRef faces , out _)
-        ) {
+    private void ui_save_details_x(FhSaveDisplayData save, Rect save_bounds, Rect header_bounds) {
+        if (!_texture_faces.try_use(out ImTextureRef faces, out _)) {
             return;
         }
 
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
-
-        Rect save_rect = new Rect {
-            pos  = new( 160f, 176f), // Topmost position
-            size = new(1561f, 152f),
-        };
-
-        float save_gap = 13f;
-
-        save_rect.pos.Y += (save_rect.size.Y + save_gap) * (index - _scrollable_saves.current);
-
-        // We set the hovered state early to potentially use it later.
-        if (mouse_hovered(save_rect.scale_to_aspect(aspect_helper))) {
-            if (_focus != UiFocus.LIST || _scrollable_saves.hovered != index) {
-                FhApi.Audio.play_sound(SoundId.UI_ACTION);
-            }
-
-            _focus = UiFocus.LIST;
-            _scrollable_saves.hovered = index;
-        }
-
-        /* ===== Autosave Background ===== */
-        if (save.slot == 0) {
-            UV save_suv = save_rect.scale_to_aspect(aspect_helper).as_uv();
-
-            draw.AddRectFilled(save_suv.p0, save_suv.p1, 0x30F0F0F0);
-        }
-
-        /* ===== Border ===== */
-        NineSliceHelper screen_border_helper = NineSliceHelper.create(
-            Vector2.One,
-            save_rect.scale_to_aspect(aspect_helper),
-            new Vector2(9f, 9f) * aspect_scale
-        );
-
-        for (int slice_idx = 0; slice_idx < 9; slice_idx++) {
-            Vector2[] tex_uv    = _savefile_border_helper.get_uvs(slice_idx);
-            Vector2[] screen_uv =    screen_border_helper.get_uvs(slice_idx);
-
-            draw.AddImage(meswin, screen_uv[0], screen_uv[3], tex_uv[0], tex_uv[3]);
-        }
-
-        // The border effectively has two sizes: 4f and 9f.
-        // We only want to respect the outermost border, so we use 4f.
-        Vector2 save_border_size = new(4f);
-
-        /* ===== Header Gradient ===== */
-        float header_height = 43f;
-
-        uint header_grad_l = 0xFF000000; // black
-        uint header_grad_r = 0x00800000; // transparent blue
-
-        UV header_uv = new Rect {
-            pos  = save_rect.pos + save_border_size,
-            size = save_rect.size with { Y = header_height },
-        }.scale_to_aspect(aspect_helper).as_uv();
-
-        draw.AddRectFilledMultiColor(
-            header_uv.p0,
-            header_uv.p1,
-            header_grad_l,
-            header_grad_r,
-            header_grad_r,
-            header_grad_l
-        );
-
-        // Separator
-        Rect separator_bounds = new Rect {
-            pos = new(
-                save_rect.pos.X + save_border_size.X,
-                save_rect.pos.Y + (header_height - 1f) + save_border_size.Y
-            ),
-            size = save_rect.size with { Y = 3f },
-        }.scale_to_aspect(aspect_helper);
-
-        GradientStep[] separator_steps = [
-            new(0.0f, 0x00FBF1F3),
-            new(0.2f, 0x40FBF1F3),
-            new(0.6f, 0x40FBF1F3),
-            new(0.8f, 0x00FBF1F3),
-        ];
-
-        FhApi.Gui.draw_rectangle_gradient(
-            draw,
-            separator_bounds,
-            GradientDirection.RIGHT,
-            separator_steps
-        );
 
         /* ===== Party Icons ===== */
         Span<UV> face_tuvs = stackalloc UV[8];
@@ -991,10 +893,10 @@ public sealed class FhSaveUiX : FhSaveUi {
         Vector2 face_size = new(99f);
         float   face_gap  = 6f;
 
-        Rect face = new Rect {
+        Rect face = new() {
             pos = new(
-                save_rect.left.X + face_gap,
-                save_rect.bottom.Y - save_border_size.Y - face_size.Y
+                save_bounds.left.X + 2f,
+                save_bounds.bottom.Y - face_size.Y
             ),
             size = face_size,
         };
@@ -1019,13 +921,18 @@ public sealed class FhSaveUiX : FhSaveUi {
         string    map     = Encoding.UTF8.GetString(save.icon_map);
         FhTexture tex_map = _map_icon_textures.GetValueOrDefault(map, _texture_map_icon_default);
 
+        Vector2 map_icon_size = new(255f, 144f);
+
         // if (tex_map.try_use(out ImTextureRef map_icon, out _)) {
         //     UV tuv = new(new(0f, 1f), new(1f, 0f));
         //
         //     UV suv = new Rect {
-        //         pos  = save_rect.pos + new Vector2(1302f, 4f),
-        //         size = new(255f, 144f),
-        //     }.scale_to_aspect(_aspect_helper).as_uv();
+        //         pos  = new() {
+        //             X = save_bounds.right.X - map_icon_size.X,
+        //             Y = save_bounds.top.Y,
+        //         },
+        //         size = map_icon_size,
+        //     }.scale_to_aspect(aspect_helper).as_uv();
         //
         //     draw.AddImage(map_icon, suv.p0, suv.p1, tuv.p0, tuv.p1);
         // }
@@ -1035,9 +942,8 @@ public sealed class FhSaveUiX : FhSaveUi {
         float text_margin_between = 48f;
 
         Vector2 text_pos_left =
-              save_rect.pos
-            + save_border_size
-            + new Vector2( text_margin_left, header_height / 2f);
+              save_bounds.pos
+            + new Vector2( text_margin_left, header_bounds.size.Y / 2f);
 
         float font_size = 43f * font_scale;
 
@@ -1075,12 +981,9 @@ public sealed class FhSaveUiX : FhSaveUi {
             );
         }
 
-        float map_icon_size = 255f;
-
         Vector2 text_pos_right =
-              save_rect.top_right
-            + new Vector2(-save_border_size.X, save_border_size.Y)
-            + new Vector2(-(map_icon_size + text_margin_between), header_height / 2f);
+              save_bounds.top_right
+            + new Vector2(-(map_icon_size.X + text_margin_between), header_bounds.size.Y / 2f);
 
         FhApi.Gui.draw_text(
             draw,
@@ -1096,10 +999,10 @@ public sealed class FhSaveUiX : FhSaveUi {
         float margin_from_last_face = 38f;
         float line_height           = 48f;
 
-        Vector2 text_pos = save_rect.pos + new Vector2(
-            face_size.X * 3 + face_gap * 2 + margin_from_last_face,
-            header_height + margin_from_header + line_height / 2f
-        );
+        Vector2 text_pos = new() {
+            X = save_bounds.left.X + face_size.X * 3 + face_gap * 2 + margin_from_last_face,
+            Y = header_bounds.bottom.Y + margin_from_header + line_height / 2f,
+        };
 
         FhApi.Gui.draw_text(
             draw,
@@ -1120,10 +1023,127 @@ public sealed class FhSaveUiX : FhSaveUi {
             true,
             new(Alignment.BEGIN, Alignment.CENTER)
         );
+    }
+
+    private void ui_savefile(int index, FhSaveDisplayData save) {
+        if (save.slot == 0 && is_saving) {
+            ui_newdata();
+            return;
+        }
+
+        if (!_scrollable_saves.is_within_clip(index)) {
+            return;
+        }
+
+        if (!_texture_meswin.try_use(out ImTextureRef meswin, out _)
+         || !_texture_faces .try_use(out ImTextureRef faces , out _)
+        ) {
+            return;
+        }
+
+        ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
+
+        Rect save_outer_bounds = new Rect {
+            pos  = new( 160f, 176f), // Topmost position
+            size = new(1561f, 152f),
+        };
+
+        float save_gap = 13f;
+
+        save_outer_bounds.pos.Y += (save_outer_bounds.size.Y + save_gap) * (index - _scrollable_saves.current);
+
+        // We set the hovered state early to potentially use it later.
+        if (mouse_hovered(save_outer_bounds.scale_to_aspect(aspect_helper))) {
+            if (_focus != UiFocus.LIST || _scrollable_saves.hovered != index) {
+                FhApi.Audio.play_sound(SoundId.UI_ACTION);
+            }
+
+            _focus = UiFocus.LIST;
+            _scrollable_saves.hovered = index;
+        }
+
+        /* ===== Autosave Background ===== */
+        if (save.slot == 0) {
+            UV save_suv = save_outer_bounds.scale_to_aspect(aspect_helper).as_uv();
+
+            draw.AddRectFilled(save_suv.p0, save_suv.p1, 0x30F0F0F0);
+        }
+
+        /* ===== Border ===== */
+        NineSliceHelper screen_border_helper = NineSliceHelper.create(
+            Vector2.One,
+            save_outer_bounds.scale_to_aspect(aspect_helper),
+            new Vector2(9f, 9f) * aspect_scale
+        );
+
+        for (int slice_idx = 0; slice_idx < 9; slice_idx++) {
+            Vector2[] tex_uv    = _savefile_border_helper.get_uvs(slice_idx);
+            Vector2[] screen_uv =    screen_border_helper.get_uvs(slice_idx);
+
+            draw.AddImage(meswin, screen_uv[0], screen_uv[3], tex_uv[0], tex_uv[3]);
+        }
+
+        // The border effectively has two sizes: 4f and 9f.
+        // We only want to respect the outermost border, so we use 4f.
+        Vector2 save_border_size = new(4f);
+
+        Rect save_bounds = save_outer_bounds.expand(-save_border_size * 2f, new(Alignment.CENTER, Alignment.CENTER));
+
+        /* ===== Header Gradient ===== */
+        float header_height = 43f;
+
+        uint header_grad_l = 0xFF000000; // black
+        uint header_grad_r = 0x00800000; // transparent blue
+
+        Rect header_bounds = new() {
+            pos  = save_bounds.pos,
+            size = save_bounds.size with { Y = header_height },
+        };
+
+        UV header_uv = header_bounds
+            .scale_to_aspect(aspect_helper)
+            .as_uv();
+
+        draw.AddRectFilledMultiColor(
+            header_uv.p0,
+            header_uv.p1,
+            header_grad_l,
+            header_grad_r,
+            header_grad_r,
+            header_grad_l
+        );
+
+        /* ===== Separator ===== */
+        Rect separator_bounds = new Rect {
+            pos  = save_bounds.pos  with { Y = header_bounds.bottom.Y - 1f },
+            size = save_bounds.size with { Y = 3f },
+        }.scale_to_aspect(aspect_helper);
+
+        GradientStep[] separator_steps = [
+            new(0.0f, 0x00FBF1F3),
+            new(0.2f, 0x40FBF1F3),
+            new(0.6f, 0x40FBF1F3),
+            new(0.8f, 0x00FBF1F3),
+        ];
+
+        FhApi.Gui.draw_rectangle_gradient(
+            draw,
+            separator_bounds,
+            GradientDirection.RIGHT,
+            separator_steps
+        );
+
+        /* ===== Details ===== */
+
+        switch (FhGlobal.game_id) {
+            case FhGameId.FFX:    ui_save_details_x (save, save_bounds, header_bounds); break;
+            // case FhGameId.FFX2:   ui_save_details_x2(save, save_bounds, header_bounds); break;
+            // case FhGameId.FFX2LM: ui_save_details_lm(save, save_bounds, header_bounds); break;
+        }
 
         /* ===== Cursor ===== */
         if (_focus == UiFocus.LIST && _scrollable_saves.hovered == index) {
-            Rect save_rect_scaled = save_rect.scale_to_aspect(aspect_helper);
+            Rect save_rect_scaled = save_outer_bounds.scale_to_aspect(aspect_helper);
 
             Vector2 cursor_target = save_rect_scaled.left with {
                 Y = save_rect_scaled.left.Y + 4f,
@@ -1133,7 +1153,7 @@ public sealed class FhSaveUiX : FhSaveUi {
         }
 
         // Handle input
-        if (mouse_clicked(save_rect.scale_to_aspect(aspect_helper))) {
+        if (mouse_clicked(save_outer_bounds.scale_to_aspect(aspect_helper))) {
             FhApi.Audio.play_sound(SoundId.UI_ACTION);
             fade_out(() => execute(save.slot));
         }

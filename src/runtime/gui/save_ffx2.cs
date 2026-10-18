@@ -661,7 +661,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
         text_pos.X += 241f * aspect_scale.X;
         text_pos.Y -=   7f * aspect_scale.Y;
 
-        float font_size = 40f * font_scale;
+        float font_size = 43f * font_scale;
 
         FhApi.Gui.draw_text(
             draw,
@@ -688,7 +688,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
         Vector2 text_pos = new(1717f, 146f);
 
         float line_height = 34f;
-        float font_size   = 34f * font_scale;
+        float font_size   = 37f * font_scale;
 
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
@@ -893,7 +893,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             accent_tuv.p1
         );
 
-        float   font_size =  40f * font_scale;
+        float   font_size =  43f * font_scale;
         Vector2 text_pos  =  bg_screen.center;
         text_pos.Y        -= 2f * aspect_scale.Y;
 
@@ -966,7 +966,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
         ImGuiIOPtr    io   = ImGui.GetIO();
 
-        float font_size = 40f * font_scale;
+        float font_size = 43f * font_scale;
 
         if (mouse_hovered(button_scaled)) {
             if (_focus != UiFocus.LIST || _scrollable_sets.hovered != set_idx) {
@@ -1109,7 +1109,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
 
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
-        float font_size = 40f * font_scale;
+        float font_size = 43f * font_scale;
 
         ImGui.PushFont(null, font_size);
         Vector2 text_size = ImGui.CalcTextSize(message);
@@ -1414,7 +1414,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             header_size / 2
         );
 
-        float font_size = 40f * font_scale;
+        float font_size = 43f * font_scale;
 
         //TODO: Add localization
         string slot_text   = save.slot == 0 ? "Autosave" : save.slot_str;
@@ -1590,7 +1590,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             header_size / 2
         );
 
-        float font_size = 40f * font_scale;
+        float font_size = 43f * font_scale;
 
         //TODO: Add localization
         string slot_text   = save.slot == 0 ? "Autosave" : save.slot_str;
@@ -1807,7 +1807,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             header_size / 2
         );
 
-        float font_size = 40f * font_scale;
+        float font_size = 43f * font_scale;
 
         //TODO: Add localization
         string slot_text   = save.slot == 0 ? "Autosave" : save.slot_str;
@@ -1936,7 +1936,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             header_height + (save_rect.size.Y - header_height) / 2f + 1f
         );
 
-        float font_size = 40f * font_scale;
+        float font_size = 43f * font_scale;
 
         FhApi.Gui.draw_text(
             draw,

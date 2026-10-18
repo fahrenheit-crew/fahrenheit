@@ -479,7 +479,7 @@ public sealed class FhSaveUiX : FhSaveUi {
             text,
             font_size,
             true,
-            Alignment2D.TOP_LEFT
+            Alignment2D.LEFT
         );
     }
 

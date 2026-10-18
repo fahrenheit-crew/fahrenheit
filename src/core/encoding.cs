@@ -32,7 +32,17 @@ public enum FhLangId : byte {
     Italian  = 5,
     Korean   = 9,
     Chinese  = 10,
-    Debug    = 11
+    Debug    = 11,
+}
+
+public static class FhEnumExt {
+    extension (FhLangId lang_id) {
+        public bool is_cjk => lang_id
+            is FhLangId.Japanese
+            or FhLangId.Korean
+            or FhLangId.Chinese
+            or FhLangId.Debug;
+    }
 }
 
 /* [fkelava 16/10/25 19:54]

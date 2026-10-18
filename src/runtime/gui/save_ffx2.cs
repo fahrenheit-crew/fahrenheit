@@ -352,34 +352,6 @@ public sealed class FhSaveUiX2 : FhSaveUi {
         );
     }
 
-    /// <returns>The correct filename for the face icon.</returns>
-    private static string remap_job(byte ply_id, byte job_id) {
-        if (job_id == 0x21) return "mface_147.dds.phyre"; // She-Goon
-
-        string ply = ply_id switch {
-            0 => "yuna",
-            1 => "rikku",
-            2 => "paine",
-            _ => "m"
-        };
-
-        // Rewires Rikku's and Paine's job IDs to match original filenames
-        byte job = job_id switch {
-            24 or
-            25 => 12, // Trainer
-            26 or
-            27 => 14, // Mascot
-            28 => 16, // Psychic
-            29 or
-            30 or
-            31 => 17, // Festivalist
-            32 => 18, // Freelancer
-            _  => job_id
-        };
-
-        return $"{ply}face_{job:D3}.dds.phyre";
-    }
-
     private void populate_face_icons() {
         _face_icon_textures.Clear();
 
@@ -395,7 +367,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
 
                 if (job_id > 0x21) continue;
 
-                string face = remap_job(ply_id, job_id);
+                string face = FhSaveHeader2.get_job_icon_file(ply_id, job_id);
 
                 if (_face_icon_textures.TryGetValue(face, out _)) continue;
 
@@ -1400,8 +1372,6 @@ public sealed class FhSaveUiX2 : FhSaveUi {
         //     );
         // }
 
-        /* ===== Text ===== */
-
         /* ===== Header Details ===== */
         float border_thickness =  5f;
         float header_size      = 47f;
@@ -1536,7 +1506,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
                 continue;
             }
 
-            string    filename = remap_job(ply_id, job_id);
+            string    filename = FhSaveHeader2.get_job_icon_file(ply_id, job_id);
             FhTexture portrait = _face_icon_textures.GetValueOrDefault(filename, _texture_face_icon_default);
 
             uint alpha = job_id == 0x0 ? 0xA0C0C0C0 : 0xFFFFFFFF;
@@ -1575,8 +1545,6 @@ public sealed class FhSaveUiX2 : FhSaveUi {
         //         tuv.p1
         //     );
         // }
-
-        /* ===== Text ===== */
 
         /* ===== Header Details ===== */
         float border_thickness =  5f;
@@ -1753,7 +1721,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
                 continue;
             }
 
-            string    filename = remap_job(ply_id, job_id);
+            string    filename = FhSaveHeader2.get_job_icon_file(ply_id, job_id);
             FhTexture portrait = _face_icon_textures.GetValueOrDefault(filename, _texture_face_icon_default);
 
             if (portrait.try_use(out ImTextureRef faces, out _)) {
@@ -1792,8 +1760,6 @@ public sealed class FhSaveUiX2 : FhSaveUi {
         //         tuv.p1
         //     );
         // }
-
-        /* ===== Text ===== */
 
         /* ===== Header Details ===== */
         float border_thickness =  5f;

@@ -18,7 +18,7 @@ namespace Fahrenheit.Runtime.Gui;
  */
 
 /// <summary>The default save UI renderer for Final Fantasy X.</summary>
-[FhLoad(FhGameId.FFX)]
+[FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
 public sealed class FhSaveUiX : FhSaveUi {
     /// <summary>Possible open windows of the save/load menu.</summary>
     private enum UiMode {
@@ -46,6 +46,8 @@ public sealed class FhSaveUiX : FhSaveUi {
     private const string HIKU_D3D11_DIR = "/FFX_Data/GameData/PS3Data/map/hiku/hiku22/2d/tex/D3D11/";
 
     private const string FFX2_MENU_D3D11_DIR = "/FFX-2_Data/GameData/PS3Data/menu/D3D11/";
+    private const string FFX2_MAP_ICONS_DIR  = "/FFX-2_Data/GameData/PS3Data/savedataicons/";
+    private const string FFX2_FACE_DATA_DIR  = "/FFX-2_Data/GameData/PS3Data/menu/face_data/D3D11/";
 
     private const uint COLOR_BLACK = 0xFF000000;
     private const uint COLOR_TRANS = 0x00000000;
@@ -64,6 +66,7 @@ public sealed class FhSaveUiX : FhSaveUi {
 
     private bool _loaded_all_textures;
 
+    // FFX textures
     private readonly Dictionary<string, FhTexture> _map_icon_textures = [ ];
 
     private readonly FhTexture _texture_map_icon_default = new(Path.Join(MAP_ICONS_DIR, "0.png"), FhTextureType.PNG);
@@ -75,9 +78,7 @@ public sealed class FhSaveUiX : FhSaveUi {
     private readonly FhTexture _texture_meswin       = new(Path.Join(MENU_D3D11_DIR, "meswin.dds.phyre"),        FhTextureType.PHYRE);
     private readonly FhTexture _texture_summonbg     = new(Path.Join(MENU_D3D11_DIR, "summonbg.dds.phyre"),      FhTextureType.PHYRE);
 
-    private readonly FhTexture _texture_freetex = new(Path.Join(FFX2_MENU_D3D11_DIR, "freetex.dds.phyre"), FhTextureType.PHYRE);
-
-    private readonly Vector2 _tex_map_icon_size     = new(310f, 210f);
+    private readonly Vector2 _tex_map_icon_size  = new(310f, 210f);
 
     private readonly Vector2 _tex_bg_size           = new(2048f, 1024f);
     private readonly Vector2 _tex_help_size         = new(2048f, 2048f);
@@ -85,6 +86,17 @@ public sealed class FhSaveUiX : FhSaveUi {
     private readonly Vector2 _tex_faces_size        = new(1024f,  512f);
     private readonly Vector2 _tex_meswin_size       = new(1024f, 1024f);
     private readonly Vector2 _tex_summonbg_size     = new(1024f, 1024f);
+
+    // FFX-2 textures
+    private readonly Dictionary<string, FhTexture> _ffx2_face_icon_textures = [ ];
+
+    private readonly FhTexture _texture_ffx2_face_icon_default = new(Path.Join(FFX2_FACE_DATA_DIR, "mface_000.dds.phyre"), FhTextureType.PHYRE);
+    private readonly FhTexture _texture_ffx2_map_icon_default  = new(Path.Join(FFX2_MAP_ICONS_DIR, "logo_j.png"),          FhTextureType.PNG);
+
+    private readonly FhTexture _texture_freetex = new(Path.Join(FFX2_MENU_D3D11_DIR, "freetex.dds.phyre"), FhTextureType.PHYRE);
+
+    private readonly Vector2 _tex_ffx2_face_size     = new(256f, 256f);
+    private readonly Vector2 _tex_ffx2_map_icon_size = new(320f, 176f);
 
     private readonly Vector2 _tex_freetex_size = new(1024f,  768f);
 
@@ -270,6 +282,7 @@ public sealed class FhSaveUiX : FhSaveUi {
         _focus = UiFocus.LIST;
 
         populate_map_icons();
+        populate_ffx2_job_icons();
         try_load_textures();
 
         _set_list.Clear();
@@ -331,6 +344,35 @@ public sealed class FhSaveUiX : FhSaveUi {
         }
     }
 
+    private void populate_ffx2_job_icons() {
+        _ffx2_face_icon_textures.Clear();
+
+        foreach (FhSaveDisplayData save in FhApi.Saves.display_data) {
+            FhSaveHeader2 header2 = MemoryMarshal.Read<FhSaveHeader2>(save.header);
+
+            bool is_lm     = FhGlobal.game_id is FhGameId.FFX2LM;
+            int  num_faces = is_lm ? 1 : 3;
+
+            for (int i = 0; i < num_faces; i++) {
+                byte ply_id = is_lm ? header2.lm_ply : header2.ply[i];
+                byte job_id = is_lm ? header2.lm_job : header2.ply_jobs[i];
+
+                if (job_id > 0x21) continue;
+
+                string face = FhSaveHeader2.get_job_icon_file(ply_id, job_id);
+
+                if (_ffx2_face_icon_textures.TryGetValue(face, out _)) continue;
+
+                FhTexture face_icon = new(Path.Join(FFX2_FACE_DATA_DIR, face), FhTextureType.PHYRE);
+
+                _ffx2_face_icon_textures.Add(
+                    face,
+                    face_icon
+                );
+            }
+        }
+    }
+
     /// <summary>Attempt to load all of the textures the renderer requires to display properly.</summary>
     /// <returns>Whether all textures have been successfully loaded.</returns>
     private bool try_load_textures() {
@@ -341,9 +383,14 @@ public sealed class FhSaveUiX : FhSaveUi {
             _texture_faces,
             _texture_meswin,
             _texture_summonbg,
+
             // _texture_map_icon_default,
             // .. _map_icon_textures.Values,
+
             _texture_freetex,
+
+            _texture_ffx2_face_icon_default,
+            .. _ffx2_face_icon_textures.Values,
         ];
 
         _loaded_all_textures = true;
@@ -937,13 +984,12 @@ public sealed class FhSaveUiX : FhSaveUi {
         //     draw.AddImage(map_icon, suv.p0, suv.p1, tuv.p0, tuv.p1);
         // }
 
-        /* ===== Header ===== */
+        /* ===== Header Details ===== */
         float text_margin_left    = 12f;
         float text_margin_between = 48f;
 
-        Vector2 text_pos_left =
-              save_bounds.pos
-            + new Vector2( text_margin_left, header_bounds.size.Y / 2f);
+        Vector2 header_text_pos_left = save_bounds.left;
+        header_text_pos_left.X += text_margin_left;
 
         float font_size = 43f * font_scale;
 
@@ -953,7 +999,7 @@ public sealed class FhSaveUiX : FhSaveUi {
 
         Vector2 text_size = FhApi.Gui.draw_text(
             draw,
-            text_pos_left * aspect_scale + aspect_helper.pos,
+            header_text_pos_left * aspect_scale + aspect_helper.pos,
             slot_text,
             font_size,
             true,
@@ -963,17 +1009,17 @@ public sealed class FhSaveUiX : FhSaveUi {
 
         // If location string is "None", don't render
         if (header.id_location != 0) {
-            text_pos_left = text_pos_left * aspect_scale + aspect_helper.pos;
-            text_pos_left.X += text_size.X + text_margin_between * aspect_scale.X;
+            header_text_pos_left = header_text_pos_left * aspect_scale + aspect_helper.pos;
+            header_text_pos_left.X += text_size.X + text_margin_between * aspect_scale.X;
 
             // For some reason, if the slot text is "Autosave", the margin is doubled
             if (save.slot == 0) {
-                text_pos_left.X += text_margin_between * aspect_scale.X;
+                header_text_pos_left.X += text_margin_between * aspect_scale.X;
             }
 
             FhApi.Gui.draw_text(
                 draw,
-                text_pos_left,
+                header_text_pos_left,
                 save.location,
                 font_size,
                 true,
@@ -981,47 +1027,456 @@ public sealed class FhSaveUiX : FhSaveUi {
             );
         }
 
-        Vector2 text_pos_right =
-              save_bounds.top_right
-            + new Vector2(-(map_icon_size.X + text_margin_between), header_bounds.size.Y / 2f);
+        Vector2 header_text_pos_right = save_bounds.right;
+        header_text_pos_right.X -= map_icon_size.X + text_margin_between;
 
         FhApi.Gui.draw_text(
             draw,
-            text_pos_right * aspect_scale + aspect_helper.pos,
+            header_text_pos_right * aspect_scale + aspect_helper.pos,
             create_time,
             font_size,
             true,
             Alignment2D.RIGHT
         );
 
-        /* ===== Details ===== */
+        /* ===== Info Details ===== */
         float margin_from_header    =  6f;
         float margin_from_last_face = 38f;
         float line_height           = 48f;
 
-        Vector2 text_pos = new() {
+        Vector2 info_text_pos = new() {
             X = save_bounds.left.X + face_size.X * 3 + face_gap * 2 + margin_from_last_face,
             Y = header_bounds.bottom.Y + margin_from_header + line_height / 2f,
         };
 
         FhApi.Gui.draw_text(
             draw,
-            text_pos * aspect_scale + aspect_helper.pos,
+            info_text_pos * aspect_scale + aspect_helper.pos,
             save.player_name,
             font_size,
             true,
             Alignment2D.LEFT
         );
 
-        text_pos.Y += line_height;
+        info_text_pos.Y += line_height;
 
         FhApi.Gui.draw_text(
             draw,
-            text_pos * aspect_scale + aspect_helper.pos,
+            info_text_pos * aspect_scale + aspect_helper.pos,
             save.play_time,
             font_size,
             true,
             Alignment2D.LEFT
+        );
+    }
+
+    private void ui_save_details_x2(FhSaveDisplayData save, Rect save_bounds, Rect header_bounds) {
+        if (save.slot == 0 && is_saving) return;
+
+        ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
+
+        /* ===== Party Icons ===== */
+        UV face_tuv = new Rect {
+            pos  = new(  0f,   0f),
+            size = new(256f, 239f),
+        }.as_uv(_tex_ffx2_face_size);
+
+        Vector2 face_size   = new(102f, 96f);
+        float   face_gap    = 3f;
+        float   face_offset = 5f;
+
+        Rect face_bounds = new() {
+            pos = new() {
+                X = save_bounds.left.X + face_offset,
+                Y = header_bounds.bottom.Y,
+            },
+            size = face_size,
+        };
+
+        UV face_suv = face_bounds.scale_to_aspect(aspect_helper).as_uv();
+
+        Vector2 face_screen_offset = new Vector2(face_size.X + face_gap, 0f) * aspect_scale;
+
+        FhSaveHeader2 header2 = MemoryMarshal.Read<FhSaveHeader2>(save.header);
+
+        for (byte i = 0; i < 3; i++) {
+            byte ply_id = header2.ply[i];
+            byte job_id = header2.ply_jobs[i];
+
+            if (job_id > 0x21) {
+                face_suv = face_suv.move(face_screen_offset);
+                continue;
+            }
+
+            string    filename = FhSaveHeader2.get_job_icon_file(ply_id, job_id);
+            FhTexture portrait = _ffx2_face_icon_textures.GetValueOrDefault(filename, _texture_ffx2_face_icon_default);
+
+            uint alpha = job_id == 0x0 ? 0xA0C0C0C0 : 0xFFFFFFFF;
+
+            if (portrait.try_use(out ImTextureRef face, out _)) {
+                draw.AddImage(
+                    face,
+                    face_suv.p0,
+                    face_suv.p1,
+                    face_tuv.p0,
+                    face_tuv.p1,
+                    alpha
+                );
+            }
+
+            face_suv = face_suv.move(face_screen_offset);
+        }
+
+        /* ===== Location Icon ===== */
+        string    map     = Encoding.UTF8.GetString(save.icon_map);
+        FhTexture tex_map = _map_icon_textures.GetValueOrDefault(map, _texture_map_icon_default);
+
+        Vector2 map_icon_size = new(255f, save_bounds.size.Y);
+
+        // if (tex_map.try_use(out ImTextureRef map_icon, out _)) {
+        //     UV tuv = new(new(0f, 1f), new(1f, 0f));
+        //
+        //     UV suv = new Rect {
+        //         pos  = new() {
+        //             X = save_bounds.right.X - map_icon_size.X,
+        //             Y = save_bounds.top.Y,
+        //         },
+        //         size = map_icon_size,
+        //     }.scale_to_aspect(aspect_helper).as_uv();
+        //
+        //     draw.AddImage(map_icon, suv.p0, suv.p1, tuv.p0, tuv.p1);
+        // }
+
+        /* ===== Header Details ===== */
+        float text_margin_left    = 12f;
+        float text_margin_between = 48f;
+
+        Vector2 header_text_pos_left = header_bounds.left;
+        header_text_pos_left.X += text_margin_left;
+
+        float font_size = 43f * font_scale;
+
+        //TODO: Add localization
+        string slot_text   = save.slot == 0 ? "Autosave" : save.slot_str;
+        string create_time = save.create_time.ToString(@"yyyy\/M\/d H\:mm\:ss");
+
+        Vector2 text_size = FhApi.Gui.draw_text(
+            draw,
+            header_text_pos_left * aspect_scale + aspect_helper.pos,
+            slot_text,
+            font_size,
+            true,
+            Alignment2D.LEFT,
+            save.slot == 0 ? 0xFF19D8FF : 0xFFFFFFFF // Autosave text is yellow
+        );
+
+        // If location string is "NONAME", don't render
+        if (header2.id_location != 0) {
+            header_text_pos_left = header_text_pos_left * aspect_scale + aspect_helper.pos;
+            header_text_pos_left.X += text_size.X + text_margin_between * aspect_scale.X;
+
+            // If the slot text is "Autosave", double the margin
+            if (save.slot == 0) {
+                header_text_pos_left.X += text_margin_between * aspect_scale.X;
+            }
+
+            FhApi.Gui.draw_text(
+                draw,
+                header_text_pos_left,
+                save.location,
+                font_size,
+                true,
+                Alignment2D.LEFT
+            );
+        }
+
+        Vector2 header_text_pos_right = header_bounds.right;
+        header_text_pos_right.X -= map_icon_size.X + text_margin_between;
+
+        FhApi.Gui.draw_text(
+            draw,
+            header_text_pos_right * aspect_scale + aspect_helper.pos,
+            create_time,
+            font_size,
+            true,
+            Alignment2D.RIGHT
+        );
+
+        /* ===== Info Details ===== */
+        float info_margin_left  = face_size.X * 3 + face_gap * 3f;
+        float info_margin_right = map_icon_size.X;
+
+        Rect info_bounds = new() {
+            pos = new() {
+                X = save_bounds.left.X + info_margin_left,
+                Y = header_bounds.bottom.Y,
+            },
+            size = new() {
+                X = save_bounds.size.X - info_margin_left - info_margin_right,
+                Y = save_bounds.size.Y - header_bounds.size.Y,
+            },
+        };
+
+        Vector2 info_text_pos_name = new() {
+            X = info_bounds.left.X + text_margin_between,
+            Y = float.Lerp(info_bounds.top.Y, info_bounds.bottom.Y, 0.25f),
+        };
+
+        Vector2 info_text_pos_chapter = new() {
+            X = info_bounds.left.X + text_margin_between,
+            Y = float.Lerp(info_bounds.top.Y, info_bounds.bottom.Y, 0.7f),
+        };
+
+        Vector2 info_text_pos_completion = new() {
+            X = info_bounds.right.X - text_margin_between,
+            Y = float.Lerp(info_bounds.top.Y, info_bounds.bottom.Y, 0.25f),
+        };
+
+        Vector2 info_text_pos_playtime = new() {
+            X = info_bounds.right.X - text_margin_between,
+            Y = float.Lerp(info_bounds.top.Y, info_bounds.bottom.Y, 0.7f),
+        };
+
+        // When running in CJK, we slightly reduce the text margin and hardcode
+        // the "STORY COMPLETED" string to shorten it and prevent overlap.
+        string completion = FhGlobal.lang_id.is_cjk
+            ? $"STORY COMPLETED: {header2.completion}%"
+            : Encoding.UTF8.GetString(save.completion);
+
+        FhApi.Gui.draw_text(
+            draw,
+            info_text_pos_name * aspect_scale + aspect_helper.pos,
+            save.player_name,
+            font_size,
+            true,
+            Alignment2D.LEFT
+        );
+
+        FhApi.Gui.draw_text(
+            draw,
+            info_text_pos_chapter * aspect_scale + aspect_helper.pos,
+            save.chapter,
+            font_size,
+            true,
+            Alignment2D.LEFT
+        );
+
+        FhApi.Gui.draw_text(
+            draw,
+            info_text_pos_completion * aspect_scale + aspect_helper.pos,
+            completion,
+            font_size,
+            true,
+            Alignment2D.RIGHT
+        );
+
+        FhApi.Gui.draw_text(
+            draw,
+            info_text_pos_playtime * aspect_scale + aspect_helper.pos,
+            save.play_time,
+            font_size,
+            true,
+            Alignment2D.RIGHT
+        );
+    }
+
+    private void ui_save_details_lm(FhSaveDisplayData save, Rect save_bounds, Rect header_bounds) {
+        if (save.slot == 0 && is_saving) return;
+
+        ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
+
+        /* ===== Party Icons ===== */
+        UV face_tuv = new Rect {
+            pos  = new(  0f,   0f),
+            size = new(256f, 239f),
+        }.as_uv(_tex_ffx2_face_size);
+
+        Vector2 face_size   = new(102f, 96f);
+        float   face_gap    = 25f;
+        float   face_offset =  6f;
+
+        Rect face = new() {
+            pos = new(
+                    save_bounds.left.X + face_offset + (3 * face_gap),
+                    header_bounds.bottom.Y
+            ),
+            size = face_size,
+        };
+
+        UV face_suv = face.scale_to_aspect(aspect_helper).as_uv();
+
+        Vector2 face_screen_offset = new Vector2(-face_gap, 0f) * aspect_scale;
+
+        FhSaveHeader2 header2 = MemoryMarshal.Read<FhSaveHeader2>(save.header);
+
+        byte ply_id = header2.lm_ply;
+        byte job_id = header2.lm_job;
+
+        if (job_id <= 0x21) {
+            string    filename = FhSaveHeader2.get_job_icon_file(ply_id, job_id);
+            FhTexture portrait = _ffx2_face_icon_textures.GetValueOrDefault(filename, _texture_ffx2_face_icon_default);
+
+            if (portrait.try_use(out ImTextureRef faces, out _)) {
+                for (int i = 3; i >= 0; i--) {
+                    uint alpha = ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 1f - (i * 0.25f)));
+
+                    draw.AddImage(
+                        faces,
+                        face_suv.p0,
+                        face_suv.p1,
+                        face_tuv.p0,
+                        face_tuv.p1,
+                        alpha
+                    );
+
+                    face_suv = face_suv.move(face_screen_offset);
+                }
+            }
+        }
+
+        /* ===== Location Icon ===== */
+        string    map     = Encoding.UTF8.GetString(save.icon_map);
+        FhTexture tex_map = _map_icon_textures.GetValueOrDefault(map, _texture_map_icon_default);
+
+        Vector2 map_icon_size = new(255f, save_bounds.size.Y);
+
+        // if (tex_map.try_use(out ImTextureRef map_icon, out _)) {
+        //     UV tuv = new(new(0f, 1f), new(1f, 0f));
+        //
+        //     UV suv = new Rect {
+        //         pos  = new() {
+        //             X = save_bounds.right.X - map_icon_size.X,
+        //             Y = save_bounds.top.Y,
+        //         },
+        //         size = map_icon_size,
+        //     }.scale_to_aspect(aspect_helper).as_uv();
+        //
+        //     draw.AddImage(map_icon, suv.p0, suv.p1, tuv.p0, tuv.p1);
+        // }
+
+        /* ===== Header Details ===== */
+        float text_margin_left    = 12f;
+        float text_margin_between = 48f;
+
+        Vector2 header_text_pos_left = header_bounds.left;
+        header_text_pos_left.X += text_margin_left;
+
+        float font_size = 43f * font_scale;
+
+        //TODO: Add localization
+        string slot_text   = save.slot == 0 ? "Autosave" : save.slot_str;
+        string create_time = save.create_time.ToString(@"yyyy\/M\/d H\:mm\:ss");
+
+        Vector2 text_size = FhApi.Gui.draw_text(
+            draw,
+            header_text_pos_left * aspect_scale + aspect_helper.pos,
+            slot_text,
+            font_size,
+            true,
+            Alignment2D.LEFT,
+            save.slot == 0 ? 0xFF19D8FF : 0xFFFFFFFF // Autosave text is yellow
+        );
+
+        // If location string is "NONAME", don't render
+        if (header2.lm_id_location != 0) {
+            header_text_pos_left = header_text_pos_left * aspect_scale + aspect_helper.pos;
+            header_text_pos_left.X += text_size.X + text_margin_between * aspect_scale.X;
+
+            // If the slot text is "Autosave", double the margin
+            if (save.slot == 0) {
+                header_text_pos_left.X += text_margin_between * aspect_scale.X;
+            }
+
+            FhApi.Gui.draw_text(
+                draw,
+                header_text_pos_left,
+                save.location,
+                font_size,
+                true,
+                Alignment2D.LEFT
+            );
+        }
+
+        Vector2 header_text_pos_right = header_bounds.right;
+        header_text_pos_right.X -= map_icon_size.X + text_margin_between;
+
+        FhApi.Gui.draw_text(
+            draw,
+            header_text_pos_right * aspect_scale + aspect_helper.pos,
+            create_time,
+            font_size,
+            true,
+            Alignment2D.RIGHT
+        );
+
+        /* ===== Info Details ===== */
+        float info_margin_left  = face_size.X + face_gap * 3f;
+        float info_margin_right = map_icon_size.X;
+
+        Rect info_bounds = new() {
+            pos = new() {
+                X = save_bounds.left.X + info_margin_left,
+                Y = header_bounds.bottom.Y,
+            },
+            size = new() {
+                X = save_bounds.size.X - info_margin_left - info_margin_right,
+                Y = save_bounds.size.Y - header_bounds.size.Y,
+            },
+        };
+
+        Vector2 info_text_pos_name = new() {
+            X = info_bounds.left.X + text_margin_between,
+            Y = float.Lerp(info_bounds.top.Y, info_bounds.bottom.Y, 0.25f),
+        };
+
+        Vector2 info_text_pos_job = new() {
+            X = info_bounds.left.X + text_margin_between,
+            Y = float.Lerp(info_bounds.top.Y, info_bounds.bottom.Y, 0.7f),
+        };
+
+        Vector2 info_text_pos_playtime = new() {
+            X = info_bounds.right.X - text_margin_between,
+            Y = float.Lerp(info_bounds.top.Y, info_bounds.bottom.Y, 0.7f),
+        };
+
+        FhApi.Gui.draw_text(
+            draw,
+            info_text_pos_name * aspect_scale + aspect_helper.pos,
+            save.player_name,
+            font_size,
+            true,
+            Alignment2D.LEFT
+        );
+
+        info_text_pos_job = info_text_pos_job * aspect_scale + aspect_helper.pos;
+
+        Vector2 job_text_size = FhApi.Gui.draw_text(
+            draw,
+            info_text_pos_job,
+            save.lm_job,
+            font_size,
+            true,
+            Alignment2D.LEFT
+        );
+
+        info_text_pos_job.X += job_text_size.X + text_margin_between;
+
+        FhApi.Gui.draw_text(
+            draw,
+            info_text_pos_job,
+            save.lm_level,
+            font_size,
+            true,
+            Alignment2D.LEFT
+        );
+
+        FhApi.Gui.draw_text(
+            draw,
+            info_text_pos_playtime * aspect_scale + aspect_helper.pos,
+            save.play_time,
+            font_size,
+            true,
+            Alignment2D.RIGHT
         );
     }
 
@@ -1035,9 +1490,7 @@ public sealed class FhSaveUiX : FhSaveUi {
             return;
         }
 
-        if (!_texture_meswin.try_use(out ImTextureRef meswin, out _)
-         || !_texture_faces .try_use(out ImTextureRef faces , out _)
-        ) {
+        if (!_texture_meswin.try_use(out ImTextureRef meswin, out _)) {
             return;
         }
 
@@ -1137,8 +1590,8 @@ public sealed class FhSaveUiX : FhSaveUi {
 
         switch (FhGlobal.game_id) {
             case FhGameId.FFX:    ui_save_details_x (save, save_bounds, header_bounds); break;
-            // case FhGameId.FFX2:   ui_save_details_x2(save, save_bounds, header_bounds); break;
-            // case FhGameId.FFX2LM: ui_save_details_lm(save, save_bounds, header_bounds); break;
+            case FhGameId.FFX2:   ui_save_details_x2(save, save_bounds, header_bounds); break;
+            case FhGameId.FFX2LM: ui_save_details_lm(save, save_bounds, header_bounds); break;
         }
 
         /* ===== Cursor ===== */

@@ -1832,8 +1832,12 @@ public sealed class FhSaveUiX : FhSaveUi {
             size = thumb_size,
         };
 
-        track = track.scale_to_aspect(aspect_helper);
-        thumb = thumb.scale_to_aspect(aspect_helper);
+        Rect scaled_track = track.scale_to_aspect(aspect_helper);
+        Rect scaled_thumb = thumb.scale_to_aspect(aspect_helper);
+
+        // Make sure that the thumb is still in the middle of the track after scaling
+        scaled_thumb.size.X = float.Round(scaled_track.size.X) - float.Round(thumb_margin.X * aspect_scale.X) * 2f;
+        scaled_thumb.pos.X  = float.Round(scaled_track.pos.X) + (float.Round(scaled_track.size.X) - scaled_thumb.size.X) / 2f;
 
         triangle_top    = triangle_top   .scale_to_aspect(aspect_helper);
         triangle_bottom = triangle_bottom.scale_to_aspect(aspect_helper);
@@ -1841,14 +1845,14 @@ public sealed class FhSaveUiX : FhSaveUi {
         scrollable_track_height *= aspect_scale.Y;
 
         draw.AddRectFilled(
-            track.top_left,
-            track.bottom_right,
+            scaled_track.top_left,
+            scaled_track.bottom_right,
             track_color
         );
 
         draw.AddRectFilledMultiColor(
-            thumb.top_left,
-            thumb.bottom_right,
+            scaled_thumb.top_left,
+            scaled_thumb.bottom_right,
             thumb_color_top,
             thumb_color_top,
             thumb_color_bottom,
@@ -1904,12 +1908,12 @@ public sealed class FhSaveUiX : FhSaveUi {
         // Handle input
 
         // Allow grabbing the thumb on the entire track width
-        Rect expanded_thumb = thumb.expand(
-            new(track.size.X - thumb.size.X),
+        Rect expanded_thumb = scaled_thumb.expand(
+            new(scaled_track.size.X - scaled_thumb.size.X),
             Alignment2D.CENTER
         );
 
-        float expanded_track_height = scrollable_track_height + (track.size.X - thumb.size.X);
+        float expanded_track_height = scrollable_track_height + (scaled_track.size.X - scaled_thumb.size.X);
 
         if (mouse_clicked(expanded_thumb)) {
             _scrollbar_dragging = true;

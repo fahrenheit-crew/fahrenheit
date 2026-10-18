@@ -2011,7 +2011,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
         Vector2 thumb_size = new(13f, thumb_height);
 
         uint thumb_color_top    = 0xFFCCCCCC;
-        uint thumb_color_bottom = 0xFF818181;
+        uint thumb_color_bottom = 0xFF808080;
 
         Vector2 triangle_size = new(38f, 19f);
         float   triangle_gap  = 13f;
@@ -2032,8 +2032,8 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             size = triangle_size,
         };
 
-        uint triangle_color_top    = 0xFFBEBEBE;
-        uint triangle_color_bottom = 0xFF818181;
+        uint triangle_color_top    = 0xFFC0C0C0;
+        uint triangle_color_bottom = 0xFF808080;
 
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 

@@ -973,12 +973,14 @@ public sealed class FhSaveUiX : FhSaveUi {
         /* ===== Party Icons ===== */
         Span<UV> face_tuvs = stackalloc UV[8];
 
-        for (int i = 0; i < 8; i++) {
-            float x1 = (200f * (i % 4)) + 1f;
-            float x2 = x1 + 199f;
+        int[] face_pos_xs = [ 1, 201, 400, 600 ];
 
-            float y1 = (i > 3 ? 312f : 512f) + 1f;
-            float y2 = y1 - 199f;
+        for (int i = 0; i < 8; i++) {
+            float x1 = face_pos_xs[i % 4];
+            float x2 = x1 + 198f;
+
+            float y1 = i > 3 ? 311f : 511f;
+            float y2 = y1 - 198f;
 
             face_tuvs[i] = new UV(
                 new(x1, y1),
@@ -986,8 +988,8 @@ public sealed class FhSaveUiX : FhSaveUi {
             ).map_to(_tex_faces_size);
         }
 
-        Vector2 face_size = new(100f);
-        float   face_gap  = 5f;
+        Vector2 face_size = new(99f);
+        float   face_gap  = 6f;
 
         Rect face = new Rect {
             pos = new(
@@ -1235,7 +1237,7 @@ public sealed class FhSaveUiX : FhSaveUi {
         );
 
         /* ===== "+" Icon ===== */
-        grad_l = 0xFF191919; // grey
+        /*grad_l = 0xFF191919; // grey
         grad_r = 0xFF252525; // black
 
         UV suv = new Rect {
@@ -1268,7 +1270,7 @@ public sealed class FhSaveUiX : FhSaveUi {
             plus_suv.p1,
             plus_tuv.p0,
             plus_tuv.p1
-        );
+        );*/
 
         /* ===== Cursor ===== */
         if (_focus == UiFocus.LIST && _scrollable_saves.hovered == 0) {
@@ -1338,8 +1340,8 @@ public sealed class FhSaveUiX : FhSaveUi {
             size = triangle_size,
         };
 
-        uint triangle_color_top    = 0xFFBEBEBE;
-        uint triangle_color_bottom = 0xFF818181;
+        uint triangle_color_top    = 0xFFC0C0C0;
+        uint triangle_color_bottom = 0xFF808080;
 
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 

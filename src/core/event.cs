@@ -9,7 +9,7 @@ namespace Fahrenheit;
 ///     Represents the method that runs in response to an <see cref="FhEvent{TArgs}"/>.
 /// </summary>
 /// <param name="args">The arguments provided by the event.</param>
-/// <typeparam name="TArgs">The arguments provided by the event.</typeparam>
+/// <typeparam name="TArgs">The type of arguments provided by the event.</typeparam>
 public delegate void FhEventHandler<in TArgs>(TArgs args)
     where TArgs : allows ref struct;
 
@@ -20,7 +20,7 @@ public delegate void FhEventHandler<in TArgs>(TArgs args)
 ///     You can only subscribe to Fahrenheit events in your
 ///     module's <c>init</c> method, and cannot unsubscribe from them.
 /// </remarks>
-/// <typeparam name="TArgs">The arguments provided by the event.</typeparam>
+/// <typeparam name="TArgs">The type of arguments provided by the event.</typeparam>
 public class FhEvent<TArgs> where TArgs : allows ref struct {
     private readonly HashSet<FhEventHandler<TArgs>> _handlers = [];
 

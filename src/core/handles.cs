@@ -34,7 +34,7 @@ public sealed class FhModuleHandle<T>(FhModule owner) where T : FhModule {
 }
 
 /// <summary>
-///     A <typeparamref name="T"/> initialized at runtime.
+///     Represents the implementation of <typeparamref name="T"/> provided by the runtime.
 /// </summary>
 internal sealed class FhRuntimeHandle<T> {
     private readonly Lock _impl_lock = new Lock();
@@ -142,7 +142,7 @@ public readonly ref struct FhCallLocation {
     /// <summary>
     ///     Define a location of a function identical in FF X and X-2.
     /// </summary>
-    /// <remarks>The active game is targeted.</remarks>
+    /// <remarks>The correct offset is chosen based on the active game.</remarks>
     public FhCallLocation(nint offset_x, nint offset_x2) {
         bool is_ffx = FhGlobal.game_id == FhGameId.FFX;
 
@@ -160,8 +160,8 @@ public readonly ref struct FhCallLocation {
     }
 
     /// <summary>
-    ///     Define a location of an unexported function in an external library,
-    ///     or a function exclusive to FF X or X-2.
+    ///     Define a location of a function exclusive to FF X or X-2,
+    ///     or an unexported function in an external library.
     /// </summary>
     public FhCallLocation(string module_name, nint offset) {
         _ptr_target = calc_addr(module_name, offset);

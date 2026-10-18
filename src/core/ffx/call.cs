@@ -214,7 +214,7 @@ public static partial class FhCall {
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate byte d_TkMenuGetPlayerFromIndex2(int ply_idx);
     public static FhCallHandle<d_TkMenuGetPlayerFromIndex2> TkMenuGetPlayerFromIndex2
-        => new( new FhCallLocation("FFX.exe", 0x4A9AD0) );
+        => new( new FhCallLocation("FFX.exe", 0x4A9B00) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate float d_graphicUiRemapX2(float x);

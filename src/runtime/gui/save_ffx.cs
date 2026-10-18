@@ -479,7 +479,7 @@ public sealed class FhSaveUiX : FhSaveUi {
             text,
             font_size,
             true,
-            new(Alignment.BEGIN, Alignment.CENTER)
+            Alignment2D.TOP_LEFT
         );
     }
 
@@ -508,7 +508,7 @@ public sealed class FhSaveUiX : FhSaveUi {
             save_text,
             font_size,
             true,
-            new(Alignment.END, Alignment.CENTER)
+            Alignment2D.RIGHT
         );
 
         if (has_autosave) {
@@ -521,7 +521,7 @@ public sealed class FhSaveUiX : FhSaveUi {
                 "A",
                 font_size,
                 true,
-                new(Alignment.END, Alignment.CENTER),
+                Alignment2D.RIGHT,
                 0xFF19D8FF
             );
         }
@@ -534,7 +534,7 @@ public sealed class FhSaveUiX : FhSaveUi {
             active_set,
             font_size,
             true,
-            new(Alignment.END, Alignment.CENTER)
+            Alignment2D.RIGHT
         );
     }
 
@@ -570,7 +570,7 @@ public sealed class FhSaveUiX : FhSaveUi {
         );
 
         UV cursor_suv = new Rect { pos = cursor_center }
-            .expand(cursor_size, new(Alignment.CENTER, Alignment.CENTER))
+            .expand(cursor_size, Alignment2D.CENTER)
             .as_uv();
 
         draw.AddImage(
@@ -620,7 +620,7 @@ public sealed class FhSaveUiX : FhSaveUi {
             text,
             font_size,
             true,
-            new(Alignment.CENTER, Alignment.CENTER)
+            Alignment2D.CENTER
         );
 
         if (_focus == UiFocus.ACTIVE_SET) {
@@ -665,7 +665,7 @@ public sealed class FhSaveUiX : FhSaveUi {
 
         button.pos.Y += (button.size.Y + 10f) * (set_idx - start_idx);
 
-        Rect button_no_shadow = button.expand(new Vector2(-6f, -5f), new(Alignment.BEGIN, Alignment.BEGIN));
+        Rect button_no_shadow = button.expand(new Vector2(-6f, -5f), Alignment2D.TOP_LEFT);
         Rect button_scaled    = button.scale_to_aspect(aspect_helper);
 
         UV button_suv = button_scaled.as_uv();
@@ -710,7 +710,7 @@ public sealed class FhSaveUiX : FhSaveUi {
             name,
             font_size,
             true,
-            new(Alignment.BEGIN, Alignment.CENTER)
+            Alignment2D.LEFT
         );
 
         bool has_autosave = FhApi.Saves.set_has_autosave(name);
@@ -721,7 +721,7 @@ public sealed class FhSaveUiX : FhSaveUi {
             has_autosave ? $" + {save_count - 1} saves" : $"{save_count} saves",
             font_size,
             true,
-            new(Alignment.END, Alignment.CENTER)
+            Alignment2D.RIGHT
         );
 
         if (has_autosave) {
@@ -734,7 +734,7 @@ public sealed class FhSaveUiX : FhSaveUi {
                 "A",
                 font_size,
                 true,
-                new(Alignment.END, Alignment.CENTER),
+                Alignment2D.RIGHT,
                 0xFF19D8FF
             );
         }
@@ -826,7 +826,7 @@ public sealed class FhSaveUiX : FhSaveUi {
         Rect window = new Rect {
             pos  = FhApi.Gui.display_size / 2f,
             size = Vector2.Zero,
-        }.expand(window_size, new(Alignment.CENTER, Alignment.CENTER));
+        }.expand(window_size, Alignment2D.CENTER);
 
         uint gradient_tl = 0xFF9E4541;
         uint gradient_tr = 0xFF91264F;
@@ -861,7 +861,7 @@ public sealed class FhSaveUiX : FhSaveUi {
             message,
             font_size,
             true,
-            new(Alignment.CENTER, Alignment.CENTER)
+            Alignment2D.CENTER
         );
     }
 
@@ -957,7 +957,7 @@ public sealed class FhSaveUiX : FhSaveUi {
             slot_text,
             font_size,
             true,
-            new(Alignment.BEGIN, Alignment.CENTER),
+            Alignment2D.LEFT,
             save.slot == 0 ? 0xFF19D8FF : 0xFFFFFFFF // Autosave text is yellow
         );
 
@@ -977,7 +977,7 @@ public sealed class FhSaveUiX : FhSaveUi {
                 save.location,
                 font_size,
                 true,
-                new(Alignment.BEGIN, Alignment.CENTER)
+                Alignment2D.LEFT
             );
         }
 
@@ -991,7 +991,7 @@ public sealed class FhSaveUiX : FhSaveUi {
             create_time,
             font_size,
             true,
-            new(Alignment.END, Alignment.CENTER)
+            Alignment2D.RIGHT
         );
 
         /* ===== Details ===== */
@@ -1010,7 +1010,7 @@ public sealed class FhSaveUiX : FhSaveUi {
             save.player_name,
             font_size,
             true,
-            new(Alignment.BEGIN, Alignment.CENTER)
+            Alignment2D.LEFT
         );
 
         text_pos.Y += line_height;
@@ -1021,7 +1021,7 @@ public sealed class FhSaveUiX : FhSaveUi {
             save.play_time,
             font_size,
             true,
-            new(Alignment.BEGIN, Alignment.CENTER)
+            Alignment2D.LEFT
         );
     }
 
@@ -1087,7 +1087,7 @@ public sealed class FhSaveUiX : FhSaveUi {
         // We only want to respect the outermost border, so we use 4f.
         Vector2 save_border_size = new(4f);
 
-        Rect save_bounds = save_outer_bounds.expand(-save_border_size * 2f, new(Alignment.CENTER, Alignment.CENTER));
+        Rect save_bounds = save_outer_bounds.expand(-save_border_size * 2f, Alignment2D.CENTER);
 
         /* ===== Header Gradient ===== */
         float header_height = 43f;
@@ -1253,7 +1253,7 @@ public sealed class FhSaveUiX : FhSaveUi {
             text,
             font_size,
             true,
-            new(Alignment.BEGIN, Alignment.CENTER)
+            Alignment2D.LEFT
         );
 
         // TODO: Uncomment once map icons can be loaded/rendered.
@@ -1404,12 +1404,12 @@ public sealed class FhSaveUiX : FhSaveUi {
 
         Rect triangle_top_outline_bounds = triangle_top.expand(
             Vector2.Round(new Vector2(2f, 1f) * new Vector2(1f) * aspect_scale) * 2f,
-            new(Alignment.CENTER, Alignment.CENTER)
+            Alignment2D.CENTER
         );
 
         Rect triangle_bot_outline_bounds = triangle_bottom.expand(
             Vector2.Round(new Vector2(2f, 1f) * new Vector2(1f) * aspect_scale) * 2f,
-            new(Alignment.CENTER, Alignment.CENTER)
+            Alignment2D.CENTER
         );
 
         FhApi.Gui.draw_triangle_gradient(
@@ -1453,7 +1453,7 @@ public sealed class FhSaveUiX : FhSaveUi {
         // Allow grabbing the thumb on the entire track width
         Rect expanded_thumb = thumb.expand(
             new(track.size.X - thumb.size.X),
-            new(Alignment.CENTER, Alignment.CENTER)
+            Alignment2D.CENTER
         );
 
         float expanded_track_height = scrollable_track_height + (track.size.X - thumb.size.X);

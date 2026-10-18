@@ -669,7 +669,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             text,
             font_size,
             true,
-            new(Alignment.BEGIN, Alignment.CENTER)
+            Alignment2D.LEFT
         );
     }
 
@@ -698,7 +698,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             save_text,
             font_size,
             true,
-            new(Alignment.END, Alignment.CENTER)
+            Alignment2D.RIGHT
         );
 
         if (has_autosave) {
@@ -711,7 +711,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
                 "A",
                 font_size,
                 true,
-                new(Alignment.END, Alignment.CENTER),
+                Alignment2D.RIGHT,
                 0xFF19D8FF
             );
         }
@@ -724,7 +724,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             active_set,
             font_size,
             true,
-            new(Alignment.END, Alignment.CENTER)
+            Alignment2D.RIGHT
         );
     }
 
@@ -906,7 +906,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             text,
             font_size,
             true,
-            new(Alignment.CENTER, Alignment.CENTER)
+            Alignment2D.CENTER
         );
 
         if (_focus == UiFocus.ACTIVE_SET) {
@@ -949,7 +949,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
 
         button.pos.Y += (button.size.Y + 10f) * (set_idx - start_idx);
 
-        Rect button_no_shadow = button.expand(new Vector2(-6f, -5f), new(Alignment.BEGIN, Alignment.BEGIN));
+        Rect button_no_shadow = button.expand(new Vector2(-6f, -5f), Alignment2D.TOP_LEFT);
         Rect button_scaled    = button.scale_to_aspect(aspect_helper);
 
         UV button_suv = button_scaled.as_uv();
@@ -1016,7 +1016,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             name,
             font_size,
             true,
-            new(Alignment.BEGIN, Alignment.CENTER)
+            Alignment2D.LEFT
         );
 
         bool has_autosave = FhApi.Saves.set_has_autosave(name);
@@ -1027,7 +1027,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             has_autosave ? $" + {save_count - 1} saves" : $"{save_count} saves",
             font_size,
             true,
-            new(Alignment.END, Alignment.CENTER)
+            Alignment2D.RIGHT
         );
 
         if (has_autosave) {
@@ -1040,7 +1040,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
                 "A",
                 font_size,
                 true,
-                new(Alignment.END, Alignment.CENTER),
+                Alignment2D.RIGHT,
                 0xFF19D8FF
             );
         }
@@ -1121,7 +1121,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
         Rect window = new Rect {
             pos  = FhApi.Gui.display_size / 2f,
             size = Vector2.Zero,
-        }.expand(window_size, new(Alignment.CENTER, Alignment.CENTER));
+        }.expand(window_size, Alignment2D.CENTER);
 
         draw.AddRectFilled(
             window.top_left,
@@ -1171,7 +1171,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             message,
             font_size,
             true,
-            new(Alignment.CENTER, Alignment.CENTER)
+            Alignment2D.CENTER
         );
     }
 
@@ -1426,7 +1426,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             slot_text,
             font_size,
             true,
-            new(Alignment.BEGIN, Alignment.CENTER),
+            Alignment2D.LEFT,
             save.slot == 0 ? 0xFF19D8FF : 0xFFFFFFFF // Autosave text is yellow
         );
 
@@ -1446,7 +1446,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
                 save.location,
                 font_size,
                 true,
-                new(Alignment.BEGIN, Alignment.CENTER)
+                Alignment2D.LEFT
             );
         }
 
@@ -1464,7 +1464,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             create_time,
             font_size,
             true,
-            new(Alignment.END, Alignment.CENTER)
+            Alignment2D.RIGHT
         );
 
         /* ===== Info Details ===== */
@@ -1483,7 +1483,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             save.player_name,
             font_size,
             true,
-            new(Alignment.BEGIN, Alignment.CENTER)
+            Alignment2D.LEFT
         );
 
         info_text_pos.Y += line_height;
@@ -1494,7 +1494,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             save.play_time,
             font_size,
             true,
-            new(Alignment.BEGIN, Alignment.CENTER)
+            Alignment2D.LEFT
         );
     }
 
@@ -1602,7 +1602,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             slot_text,
             font_size,
             true,
-            new(Alignment.BEGIN, Alignment.CENTER),
+            Alignment2D.LEFT,
             save.slot == 0 ? 0xFF19D8FF : 0xFFFFFFFF // Autosave text is yellow
         );
 
@@ -1622,7 +1622,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
                 save.location,
                 font_size,
                 true,
-                new(Alignment.BEGIN, Alignment.CENTER)
+                Alignment2D.LEFT
             );
         }
 
@@ -1640,7 +1640,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             create_time,
             font_size,
             true,
-            new(Alignment.END, Alignment.CENTER)
+            Alignment2D.RIGHT
         );
 
         /* ===== Info Details ===== */
@@ -1681,7 +1681,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             save.player_name,
             font_size,
             true,
-            new(Alignment.BEGIN, Alignment.CENTER)
+            Alignment2D.LEFT
         );
 
         FhApi.Gui.draw_text(
@@ -1690,7 +1690,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             completion,
             font_size,
             true,
-            new(Alignment.END, Alignment.CENTER)
+            Alignment2D.RIGHT
         );
 
         info_text_pos_l.Y += line_height;
@@ -1702,7 +1702,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             save.chapter,
             font_size,
             true,
-            new(Alignment.BEGIN, Alignment.CENTER)
+            Alignment2D.LEFT
         );
 
         FhApi.Gui.draw_text(
@@ -1711,7 +1711,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             save.play_time,
             font_size,
             true,
-            new(Alignment.END, Alignment.CENTER)
+            Alignment2D.RIGHT
         );
     }
 
@@ -1819,7 +1819,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             slot_text,
             font_size,
             true,
-            new(Alignment.BEGIN, Alignment.CENTER),
+            Alignment2D.LEFT,
             save.slot == 0 ? 0xFF19D8FF : 0xFFFFFFFF // Autosave text is yellow
         );
 
@@ -1839,7 +1839,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
                 save.location,
                 font_size,
                 true,
-                new(Alignment.BEGIN, Alignment.CENTER)
+                Alignment2D.LEFT
             );
         }
 
@@ -1857,7 +1857,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             create_time,
             font_size,
             true,
-            new(Alignment.END, Alignment.CENTER)
+            Alignment2D.RIGHT
         );
 
         /* ===== Info Details ===== */
@@ -1883,7 +1883,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             save.player_name,
             font_size,
             true,
-            new(Alignment.BEGIN, Alignment.CENTER)
+            Alignment2D.LEFT
         );
 
         info_text_pos_l.Y += line_height;
@@ -1895,7 +1895,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             save.lm_job,
             font_size,
             true,
-            new(Alignment.BEGIN, Alignment.CENTER)
+            Alignment2D.LEFT
         );
 
         info_text_pos_l = info_text_pos_l * aspect_scale + aspect_helper.pos;
@@ -1907,7 +1907,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             save.lm_level,
             font_size,
             true,
-            new(Alignment.BEGIN, Alignment.CENTER)
+            Alignment2D.LEFT
         );
 
         FhApi.Gui.draw_text(
@@ -1916,7 +1916,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             save.play_time,
             font_size,
             true,
-            new(Alignment.END, Alignment.CENTER)
+            Alignment2D.RIGHT
         );
     }
 
@@ -1944,7 +1944,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             text,
             font_size,
             true,
-            new(Alignment.BEGIN, Alignment.CENTER)
+            Alignment2D.LEFT
         );
 
         /* ===== "+" Icon ===== */
@@ -2075,12 +2075,12 @@ public sealed class FhSaveUiX2 : FhSaveUi {
 
         Rect triangle_top_outline_bounds = triangle_top.expand(
             Vector2.Round(new Vector2(2f, 1f) * new Vector2(1f) * aspect_scale) * 2f,
-            new(Alignment.CENTER, Alignment.CENTER)
+            Alignment2D.CENTER
         );
 
         Rect triangle_bot_outline_bounds = triangle_bottom.expand(
             Vector2.Round(new Vector2(2f, 1f) * new Vector2(1f) * aspect_scale) * 2f,
-            new(Alignment.CENTER, Alignment.CENTER)
+            Alignment2D.CENTER
         );
 
         FhApi.Gui.draw_triangle_gradient(
@@ -2124,7 +2124,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
         // Allow grabbing the thumb on the entire track width
         Rect expanded_thumb = thumb.expand(
             new(track.size.X - thumb.size.X),
-            new(Alignment.CENTER, Alignment.CENTER)
+            Alignment2D.CENTER
         );
 
         float expanded_track_height = scrollable_track_height + (track.size.X - thumb.size.X);

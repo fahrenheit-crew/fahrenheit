@@ -206,7 +206,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             int hovered = _current_scrollable.hovered;
 
             if (_mode == UiMode.SAVE_LIST) {
-                FhApi.Audio.play_sound(SoundId.UI_ACTION);
+                FhApi.Audio.play_sound(SoundId.UI_ACTION, _volume);
 
                 if (is_saving && hovered == 0) {
                     fade_out(() => FhApi.Saves.save(0));
@@ -1295,7 +1295,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
 
         // Handle input
         if (mouse_clicked(save_rect.scale_to_aspect(aspect_helper))) {
-            FhApi.Audio.play_sound(SoundId.UI_ACTION);
+            FhApi.Audio.play_sound(SoundId.UI_ACTION, _volume);
             fade_out(() => execute(save.slot));
         }
     }

@@ -973,7 +973,7 @@ public sealed class FhSaveUiX : FhSaveUi {
         /* ===== Party Icons ===== */
         Span<UV> face_tuvs = stackalloc UV[8];
 
-        int[] face_pos_xs = [ 1, 201, 400, 600 ];
+        ReadOnlySpan<int> face_pos_xs = [ 1, 201, 400, 600 ];
 
         for (int i = 0; i < 8; i++) {
             float x1 = face_pos_xs[i % 4];
@@ -1236,6 +1236,7 @@ public sealed class FhSaveUiX : FhSaveUi {
             new(Alignment.BEGIN, Alignment.CENTER)
         );
 
+        // TODO: Uncomment once map icons can be loaded/rendered.
         /* ===== "+" Icon ===== */
         /*grad_l = 0xFF191919; // grey
         grad_r = 0xFF252525; // black

@@ -1220,28 +1220,33 @@ public sealed class FhSaveUiX : FhSaveUi {
             },
         };
 
+        float info_text_left_x  = info_bounds.left.X  + text_margin_between;
+        float info_text_right_x = info_bounds.right.X - text_margin_between;
+
+        float info_text_top_y    = float.Lerp(info_bounds.top.Y, info_bounds.bottom.Y, 0.25f);
+        float info_text_bottom_y = float.Lerp(info_bounds.top.Y, info_bounds.bottom.Y, 0.7f);
+
         Vector2 info_text_pos_name = new() {
-            X = info_bounds.left.X + text_margin_between,
-            Y = float.Lerp(info_bounds.top.Y, info_bounds.bottom.Y, 0.25f),
+            X = info_text_left_x,
+            Y = info_text_top_y,
         };
 
         Vector2 info_text_pos_chapter = new() {
-            X = info_bounds.left.X + text_margin_between,
-            Y = float.Lerp(info_bounds.top.Y, info_bounds.bottom.Y, 0.7f),
+            X = info_text_left_x,
+            Y = info_text_bottom_y,
         };
 
         Vector2 info_text_pos_completion = new() {
-            X = info_bounds.right.X - text_margin_between,
-            Y = float.Lerp(info_bounds.top.Y, info_bounds.bottom.Y, 0.25f),
+            X = info_text_right_x,
+            Y = info_text_top_y,
         };
 
         Vector2 info_text_pos_playtime = new() {
-            X = info_bounds.right.X - text_margin_between,
-            Y = float.Lerp(info_bounds.top.Y, info_bounds.bottom.Y, 0.7f),
+            X = info_text_right_x,
+            Y = info_text_bottom_y,
         };
 
-        // When running in CJK, we slightly reduce the text margin and hardcode
-        // the "STORY COMPLETED" string to shorten it and prevent overlap.
+        // When running in CJK, we hardcode the "STORY COMPLETED" string.
         string completion = FhGlobal.lang_id.is_cjk
             ? $"STORY COMPLETED: {header2.completion}%"
             : Encoding.UTF8.GetString(save.completion);
@@ -1427,19 +1432,22 @@ public sealed class FhSaveUiX : FhSaveUi {
             },
         };
 
+        float top_line_y    = float.Lerp(info_bounds.top.Y, info_bounds.bottom.Y, 0.25f);
+        float bottom_line_y = float.Lerp(info_bounds.top.Y, info_bounds.bottom.Y, 0.7f);
+
         Vector2 info_text_pos_name = new() {
             X = info_bounds.left.X + text_margin_between,
-            Y = float.Lerp(info_bounds.top.Y, info_bounds.bottom.Y, 0.25f),
+            Y = top_line_y,
         };
 
         Vector2 info_text_pos_job = new() {
             X = info_bounds.left.X + text_margin_between,
-            Y = float.Lerp(info_bounds.top.Y, info_bounds.bottom.Y, 0.7f),
+            Y = bottom_line_y,
         };
 
         Vector2 info_text_pos_playtime = new() {
             X = info_bounds.right.X - text_margin_between,
-            Y = float.Lerp(info_bounds.top.Y, info_bounds.bottom.Y, 0.7f),
+            Y = bottom_line_y,
         };
 
         FhApi.Gui.draw_text(

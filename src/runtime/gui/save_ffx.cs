@@ -374,6 +374,10 @@ public sealed class FhSaveUiX : FhSaveUi {
     private void populate_ffx2_job_icons() {
         _ffx2_face_icon_textures.Clear();
 
+        if (FhGlobal.game_id == FhGameId.FFX) {
+            return;
+        }
+
         foreach (FhSaveDisplayData save in FhApi.Saves.display_data) {
             FhSaveHeader2 header2 = MemoryMarshal.Read<FhSaveHeader2>(save.header);
 

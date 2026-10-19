@@ -143,13 +143,13 @@ public sealed class FhSaves {
             FhSaveHeader2 header = MemoryMarshal.Read<FhSaveHeader2>(display_data.header);
 
             if (FhGlobal.game_id == FhGameId.FFX2LM) {
-                display_data.lm_job_filename = FhSavePal.get_icon_job(header.lm_ply, header.lm_job);
+                display_data.lm_job_filename = FhSavePal.pal_get_icon_job(header.lm_ply, header.lm_job);
             }
             else {
                 display_data.job_filenames = new string[3];
 
                 for (int i = 0; i < 3; i++) {
-                    display_data.job_filenames[i] = FhSavePal.get_icon_job(header.ply[i], header.ply_jobs[i]);
+                    display_data.job_filenames[i] = FhSavePal.pal_get_icon_job(header.ply[i], header.ply_jobs[i]);
                 }
             }
         }

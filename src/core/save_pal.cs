@@ -345,7 +345,7 @@ internal unsafe static class FhSavePal {
     /// <param name="ply_id">The ID of the player character to find the icon for.</param>
     /// <param name="job_id">The ID of the job to find the icon for.</param>
     /// <returns>The filename for the face icon.</returns>
-    public static string get_icon_job(byte ply_id, byte job_id) {
+    public static string pal_get_icon_job(byte ply_id, byte job_id) {
         if (job_id == 0x21) return "mface_147.dds.phyre"; // She-Goon
 
         string ply = ply_id switch {

@@ -314,8 +314,8 @@ public sealed class FhSaveUiX2 : FhSaveUi {
         _scrollable_sets .reset();
 
         unload_textures([
-            ..textures,
-            ..textures_set,
+            .. textures,
+            .. textures_set,
         ]);
     }
 
@@ -438,8 +438,8 @@ public sealed class FhSaveUiX2 : FhSaveUi {
     /// <returns>Whether all textures have been successfully loaded.</returns>
     private bool try_load_textures() {
         Span<FhTexture> texture_list = [
-            ..textures,
-            ..textures_set,
+            .. textures,
+            .. textures_set,
         ];
 
         _loaded_all_textures = true;

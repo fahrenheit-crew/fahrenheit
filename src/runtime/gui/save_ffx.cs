@@ -327,8 +327,8 @@ public sealed class FhSaveUiX : FhSaveUi {
         _scrollable_sets .reset();
 
         unload_textures([
-            ..textures,
-            ..textures_set,
+            .. textures,
+            .. textures_set,
         ]);
 
         _map_icon_textures.Clear();
@@ -413,8 +413,8 @@ public sealed class FhSaveUiX : FhSaveUi {
     /// <returns>Whether all textures have been successfully loaded.</returns>
     private bool try_load_textures() {
         Span<FhTexture> texture_list = [
-            ..textures,
-            ..textures_set,
+            .. textures,
+            .. textures_set,
         ];
 
         _loaded_all_textures = true;

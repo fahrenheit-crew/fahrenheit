@@ -186,9 +186,7 @@ static void s0_dbg_w32_print_stack_trace() {
     fwprintf_s(stdout, L"---- STACK TRACE ----\n");
 
     for (const S0_FRAME_DATA& frame : g_frames) {
-        const wchar_t* frame_name = frame.frame_name;
-
-        fwrite(frame_name, sizeof(wchar_t), lstrlenW(frame_name), stdout);
+        fwprintf_s(stdout, L"%s", frame.frame_name);
     }
 }
 

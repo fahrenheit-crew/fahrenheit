@@ -1305,8 +1305,8 @@ public sealed class FhSaveUiX : FhSaveUi {
 
         Rect face = new() {
             pos = new(
-                    save_bounds.left.X + face_offset + (3 * face_gap),
-                    header_bounds.bottom.Y
+                save_bounds.left.X + face_offset + (3 * face_gap),
+                header_bounds.bottom.Y
             ),
             size = face_size,
         };

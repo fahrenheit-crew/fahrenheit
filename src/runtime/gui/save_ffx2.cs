@@ -367,7 +367,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
 
                 if (job_id > 0x21) continue;
 
-                string face = FhSaveHeader2.get_job_icon_file(ply_id, job_id);
+                string face = is_lm ? save.lm_job_filename : save.job_filenames[i];
 
                 if (_face_icon_textures.TryGetValue(face, out _)) continue;
 
@@ -1506,7 +1506,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
                 continue;
             }
 
-            string    filename = FhSaveHeader2.get_job_icon_file(ply_id, job_id);
+            string    filename = save.job_filenames[i];
             FhTexture portrait = _face_icon_textures.GetValueOrDefault(filename, _texture_face_icon_default);
 
             uint alpha = job_id == 0x0 ? 0xA0C0C0C0 : 0xFFFFFFFF;
@@ -1721,7 +1721,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
                 continue;
             }
 
-            string    filename = FhSaveHeader2.get_job_icon_file(ply_id, job_id);
+            string    filename = save.lm_job_filename;
             FhTexture portrait = _face_icon_textures.GetValueOrDefault(filename, _texture_face_icon_default);
 
             if (portrait.try_use(out ImTextureRef faces, out _)) {

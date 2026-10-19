@@ -145,34 +145,6 @@ public struct FhSaveHeader2 {
     public byte     __0x2C;
 
     public bool is_new_game_plus => times_played > 1;
-
-    /// <summary>Compute the correct filename of a face icon.</summary>
-    /// <param name="ply_id">The ID of the player character to find the icon for.</param>
-    /// <param name="job_id">The ID of the job to find the icon for.</param>
-    /// <returns>The filename for the face icon.</returns>
-    public static string get_job_icon_file(byte ply_id, byte job_id) {
-        if (job_id == 0x21) return "mface_147.dds.phyre"; // She-Goon
-
-        string ply = ply_id switch {
-            0 => "yuna",
-            1 => "rikku",
-            2 => "paine",
-            _ => "m",
-        };
-
-        // Rewires Rikku's and Paine's job IDs to match original filenames
-        byte job = job_id switch {
-            24 or 25       => 12, // Trainer
-            26 or 27       => 14, // Mascot
-            28             => 16, // Psychic
-            29 or 30 or 31 => 17, // Festivalist
-            32             => 18, // Freelancer
-
-            _  => job_id,
-        };
-
-        return $"{ply}face_{job:D3}.dds.phyre";
-    }
 }
 
 /// <summary>
@@ -230,6 +202,9 @@ public struct FhSaveDisplayData {
     public InlineArray128<byte> completion;
     public InlineArray64 <byte> lm_level;
     public InlineArray64 <byte> lm_job;
+
+    public string[] job_filenames;
+    public string   lm_job_filename;
 }
 
 /* [fkelava 10/01/26 16:53]
@@ -364,6 +339,34 @@ internal unsafe static class FhSavePal {
 
         int len_icon_map = Encoding.UTF8.GetBytes(str_icon_map, dest);
         dest [ len_icon_map ] = 0x00;
+    }
+
+    /// <summary>Compute the correct filename of a face icon.</summary>
+    /// <param name="ply_id">The ID of the player character to find the icon for.</param>
+    /// <param name="job_id">The ID of the job to find the icon for.</param>
+    /// <returns>The filename for the face icon.</returns>
+    public static string get_icon_job(byte ply_id, byte job_id) {
+        if (job_id == 0x21) return "mface_147.dds.phyre"; // She-Goon
+
+        string ply = ply_id switch {
+            0 => "yuna",
+            1 => "rikku",
+            2 => "paine",
+            _ => "m",
+        };
+
+        // Rewires Rikku's and Paine's job IDs to match original filenames
+        byte job = job_id switch {
+            24 or 25       => 12, // Trainer
+            26 or 27       => 14, // Mascot
+            28             => 16, // Psychic
+            29 or 30 or 31 => 17, // Festivalist
+            32             => 18, // Freelancer
+
+            _  => job_id,
+        };
+
+        return $"{ply}face_{job:D3}.dds.phyre";
     }
 
     /* [fkelava 13/11/25 22:08]

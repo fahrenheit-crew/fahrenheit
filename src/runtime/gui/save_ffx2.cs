@@ -53,6 +53,11 @@ public sealed class FhSaveUiX2 : FhSaveUi {
     private const uint COLOR_BLACK = 0xFF000000;
     private const uint COLOR_TRANS = 0x00000000;
 
+    private static readonly float ACTION_VOLUME =
+        FhGlobal.game_id is FhGameId.FFX
+            ? 1f
+            : 0.5f;
+
     private UiMode  _mode;
     private UiFocus _focus;
 
@@ -122,8 +127,6 @@ public sealed class FhSaveUiX2 : FhSaveUi {
 
     private bool     _scrollbar_dragging;
     private Vector2? _scrollbar_held_pos;
-
-    private float _volume = FhGlobal.game_id is FhGameId.FFX ? 1f : 0.5f;
 
     // We block input when fading out, for example so you can't requests two loads of a file.
     // We block input when fading in as well, but only for a short time to make the UI feel snappy.
@@ -202,7 +205,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             if (FhApi.Gui.is_any_pressed(FhApi.Gui.keys_up)
              && _current_scrollable.hovered == 0
             ) {
-                FhApi.Audio.play_sound(SoundId.UI_ACTION, _volume);
+                FhApi.Audio.play_sound(SoundId.UI_ACTION, ACTION_VOLUME);
                 _focus = UiFocus.ACTIVE_SET;
                 return true;
             }
@@ -225,7 +228,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             int hovered = _current_scrollable.hovered;
 
             if (_mode == UiMode.SAVE_LIST) {
-                FhApi.Audio.play_sound(SoundId.UI_ACTION, _volume);
+                FhApi.Audio.play_sound(SoundId.UI_ACTION, ACTION_VOLUME);
 
                 if (is_saving && hovered == 0) {
                     fade_out(() => FhApi.Saves.save(0));
@@ -253,7 +256,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
 
     private bool handle_input_active_set() {
         if (_mode == UiMode.SAVE_LIST && FhApi.Gui.is_any_pressed(FhApi.Gui.keys_down) && _current_scrollable.max > 0) {
-            FhApi.Audio.play_sound(SoundId.UI_ACTION, _volume);
+            FhApi.Audio.play_sound(SoundId.UI_ACTION, ACTION_VOLUME);
 
             _focus = UiFocus.LIST;
             _current_scrollable.hovered = _current_scrollable.current;
@@ -826,7 +829,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
         UV bg_suv = bg_screen.as_uv();
 
         if (mouse_hovered(bg_screen) && _focus != UiFocus.ACTIVE_SET) {
-            FhApi.Audio.play_sound(SoundId.UI_ACTION, _volume);
+            FhApi.Audio.play_sound(SoundId.UI_ACTION, ACTION_VOLUME);
             _focus = UiFocus.ACTIVE_SET;
         }
 
@@ -949,7 +952,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
 
         if (mouse_hovered(button_scaled)) {
             if (_focus != UiFocus.LIST || _scrollable_sets.hovered != set_idx) {
-                FhApi.Audio.play_sound(SoundId.UI_ACTION, _volume);
+                FhApi.Audio.play_sound(SoundId.UI_ACTION, ACTION_VOLUME);
             }
 
             _focus = UiFocus.LIST;
@@ -1173,7 +1176,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
         // We set the hovered state early to potentially use it later.
         if (mouse_hovered(save_rect.scale_to_aspect(aspect_helper))) {
             if (_focus != UiFocus.LIST || _scrollable_saves.hovered != index) {
-                FhApi.Audio.play_sound(SoundId.UI_ACTION, _volume);
+                FhApi.Audio.play_sound(SoundId.UI_ACTION, ACTION_VOLUME);
             }
 
             _focus = UiFocus.LIST;
@@ -1302,7 +1305,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
 
         // Handle input
         if (mouse_clicked(save_rect.scale_to_aspect(aspect_helper))) {
-            FhApi.Audio.play_sound(SoundId.UI_ACTION, _volume);
+            FhApi.Audio.play_sound(SoundId.UI_ACTION, ACTION_VOLUME);
             fade_out(() => execute(save.slot));
         }
     }

@@ -1968,7 +1968,7 @@ public sealed class FhSaveUiX : FhSaveUi {
             _current_scrollable.move_hover(1);
         }
 
-        if ((mouse_hovered(triangle_top) || mouse_hovered(triangle_bottom))
+        if ((mouse_hovered(triangle_top, false) || mouse_hovered(triangle_bottom, false))
          && ImGui.IsMouseDown(ImGuiMouseButton.Left)
            ) {
             _audio_fade_helper_restart = false;

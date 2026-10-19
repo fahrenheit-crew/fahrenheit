@@ -942,10 +942,9 @@ public sealed class FhSaveUiX : FhSaveUi {
         float   face_gap  = 6f;
 
         Rect face = new() {
-            pos = new(
-                save_bounds.left.X + 2f,
-                save_bounds.bottom.Y - face_size.Y
-            ),
+            pos = save_bounds.bottom_left with {
+                Y = save_bounds.bottom_left.Y - face_size.Y,
+            },
             size = face_size,
         };
 
@@ -1082,14 +1081,13 @@ public sealed class FhSaveUiX : FhSaveUi {
             size = new(256f, 239f),
         }.as_uv(_tex_ffx2_face_size);
 
-        Vector2 face_size   = new(102f, 96f);
+        float   face_height = save_bounds.size.Y - header_bounds.size.Y;
+        Vector2 face_size   = new(1.0625f * face_height, face_height);
         float   face_gap    = 3f;
-        float   face_offset = 5f;
 
         Rect face_bounds = new() {
-            pos = new() {
-                X = save_bounds.left.X + face_offset,
-                Y = header_bounds.bottom.Y,
+            pos = save_bounds.bottom_left with {
+                Y = save_bounds.bottom_left.Y - face_size.Y,
             },
             size = face_size,
         };
@@ -1204,7 +1202,7 @@ public sealed class FhSaveUiX : FhSaveUi {
         );
 
         /* ===== Info Details ===== */
-        float info_margin_left  = face_size.X * 3 + face_gap * 3f;
+        float info_margin_left  = face_size.X * 3 + face_gap * 2f;
         float info_margin_right = map_icon_size.X;
 
         Rect info_bounds = new() {
@@ -1297,15 +1295,15 @@ public sealed class FhSaveUiX : FhSaveUi {
             size = new(256f, 239f),
         }.as_uv(_tex_ffx2_face_size);
 
-        Vector2 face_size   = new(102f, 96f);
+        float   face_height = save_bounds.size.Y - header_bounds.size.Y;
+        Vector2 face_size   = new(1.0625f * face_height, face_height);
         float   face_gap    = 25f;
-        float   face_offset =  6f;
 
         Rect face = new() {
-            pos = new(
-                save_bounds.left.X + face_offset + (3 * face_gap),
-                header_bounds.bottom.Y
-            ),
+            pos = save_bounds.bottom_left with {
+                X = save_bounds.bottom_left.X + face_gap * 3,
+                Y = save_bounds.bottom_left.Y - face_size.Y,
+            },
             size = face_size,
         };
 

@@ -60,7 +60,6 @@ internal sealed class FhState {
                 using FileStream state_meta_fs = File.Open(state_meta_fn, FileMode.Open,         FileAccess.Read, FileShare.None);
                 using FileStream state_fs      = File.Open(state_fn,      FileMode.OpenOrCreate, FileAccess.Read, FileShare.Read);
 
-                FhInternal.Log.Debug($"Reading metadata for module {module_type}.");
                 FhLocalStateInfo state_meta = JsonSerializer.Deserialize<FhLocalStateInfo>(state_meta_fs, FhUtil.InternalJsonOpts)
                     ?? throw new Exception("FH_E_LOCAL_STATE_META_BLOCK_NULL");
 
@@ -87,7 +86,6 @@ internal sealed class FhState {
                 using FileStream state_meta_fs = File.Open(state_meta_fn, FileMode.Create,       FileAccess.Write, FileShare.None);
                 using FileStream state_fs      = File.Open(state_fn,      FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read);
 
-                FhInternal.Log.Debug($"Writing metadata for module {module_type}.");
                 state_meta_fs.Write(JsonSerializer.SerializeToUtf8Bytes(state_meta, FhUtil.InternalJsonOpts));
 
                 FhInternal.Log.Debug($"{module_type} -> {state_fn}.");

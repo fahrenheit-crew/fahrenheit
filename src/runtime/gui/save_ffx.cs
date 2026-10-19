@@ -105,6 +105,23 @@ public sealed class FhSaveUiX : FhSaveUi {
 
     private readonly Vector2 _tex_freetex_size = new(1024f,  768f);
 
+    private FhTexture[] textures => [
+        _texture_bg,
+        _texture_help,
+        _texture_battle_kuang,
+        _texture_faces,
+        _texture_meswin,
+        _texture_summonbg,
+
+        // _texture_map_icon_default,
+        // .. _map_icon_textures.Values,
+
+        _texture_freetex,
+
+        _texture_ffx2_face_icon_default,
+        .. _ffx2_face_icon_textures.Values,
+    ];
+
     private bool is_saving => FhApi.Saves.get_system_mode(out FhSaveSystemMode? system_mode) && system_mode is FhSaveSystemMode.SAVE;
 
     private readonly NineSliceHelper  _savefile_border_helper;
@@ -290,6 +307,7 @@ public sealed class FhSaveUiX : FhSaveUi {
 
         populate_map_icons();
         populate_ffx2_job_icons();
+
         try_load_textures();
 
         _set_list.Clear();
@@ -334,6 +352,8 @@ public sealed class FhSaveUiX : FhSaveUi {
         FhApi.Saves.switch_active_set(set_name);
 
         populate_map_icons();
+        populate_ffx2_job_icons();
+
         try_load_textures();
 
         change_mode(UiMode.SAVE_LIST);
@@ -382,25 +402,10 @@ public sealed class FhSaveUiX : FhSaveUi {
     /// <summary>Attempt to load all of the textures the renderer requires to display properly.</summary>
     /// <returns>Whether all textures have been successfully loaded.</returns>
     private bool try_load_textures() {
-        Span<FhTexture> textures = [
-            _texture_bg,
-            _texture_help,
-            _texture_battle_kuang,
-            _texture_faces,
-            _texture_meswin,
-            _texture_summonbg,
-
-            // _texture_map_icon_default,
-            // .. _map_icon_textures.Values,
-
-            _texture_freetex,
-
-            _texture_ffx2_face_icon_default,
-            .. _ffx2_face_icon_textures.Values,
-        ];
+        Span<FhTexture> texture_list = textures;
 
         _loaded_all_textures = true;
-        foreach (FhTexture texture in textures) {
+        foreach (FhTexture texture in texture_list) {
             if (!FhApi.Resources.load_game_texture_2d(texture)) {
                 _loaded_all_textures = false;
             }
@@ -411,19 +416,9 @@ public sealed class FhSaveUiX : FhSaveUi {
 
     /// <summary>Unload all of the textures the renderer requires to display properly.</summary>
     private void unload_textures() {
-        Span<FhTexture> textures = [
-            _texture_bg,
-            _texture_help,
-            _texture_battle_kuang,
-            _texture_faces,
-            _texture_meswin,
-            _texture_summonbg,
-            // _texture_map_icon_default,
-            // .. _map_icon_textures.Values,
-            _texture_freetex,
-        ];
+        Span<FhTexture> texture_list = textures;
 
-        foreach (FhTexture texture in textures) {
+        foreach (FhTexture texture in texture_list) {
             if (FhApi.Resources.unload_texture(texture))
                 _loaded_all_textures = false;
             else

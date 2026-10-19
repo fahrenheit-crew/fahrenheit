@@ -646,7 +646,7 @@ void s0_dbg_w32_main() {
             wchar_t sym_search_path[1024] = { 0 };
             swprintf_s(
                 sym_search_path,
-                L"cache*%s;SRV*https://msdl.microsoft.com/download/symbols",
+                L"cache*%s;SRV*https://msdl.microsoft.com/download/symbols;SRV*https://proton-archive.steamos.cloud/",
                 g_path_dir_cache
             );
 

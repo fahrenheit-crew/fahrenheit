@@ -942,7 +942,7 @@ public sealed class FhSaveUiX : FhSaveUi {
             ).map_to(_tex_faces_size);
         }
 
-        Vector2 face_size = new(99f);
+        Vector2 face_size = new(save_bounds.size.Y - header_bounds.size.Y);
         float   face_gap  = 6f;
 
         Rect face = new() {

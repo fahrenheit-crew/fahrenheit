@@ -338,7 +338,6 @@ internal sealed class FhCallRegistry {
     /// <returns>A newly generated or cached delegate for the target function.</returns>
     public T get_fnptr<T>(nint ptr_target) where T : Delegate {
         lock (_lock_chains) {
-            FhInternal.Log.Info($"get");
             if (_fnptrs.TryGetValue(ptr_target, out Delegate? fnptr) && fnptr is T t_fnptr)
                 return t_fnptr;
 
@@ -356,7 +355,6 @@ internal sealed class FhCallRegistry {
         uint module_size
     ) {
         lock (_lock_chains) {
-            FhInternal.Log.Info($"inval start");
             nint module_end = nint.CreateChecked( module_base + module_size );
 
             foreach ((nint call_addr, FhCallContext call_context) in _contexts) {
@@ -392,8 +390,6 @@ internal sealed class FhCallRegistry {
                     throw new Exception($"Failed to invalidate delegate at 0x{fnptr_addr:X8}.");
                 }
             }
-
-            FhInternal.Log.Info($"inval end");
         }
     }
 
@@ -402,7 +398,6 @@ internal sealed class FhCallRegistry {
     /// </summary>
     public T? chain_next<T>(T hook) where T : Delegate {
         lock (_lock_chains) {
-            FhInternal.Log.Info($"next");
             return _chains.TryGetValue(hook, out nint ptr_chain)
                 ? get_fnptr<T>(ptr_chain)
                 : null;

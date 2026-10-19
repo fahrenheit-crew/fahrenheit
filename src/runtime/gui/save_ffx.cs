@@ -112,13 +112,14 @@ public sealed class FhSaveUiX : FhSaveUi {
         _texture_faces,
         _texture_meswin,
         _texture_summonbg,
-
-        // _texture_map_icon_default,
-        // .. _map_icon_textures.Values,
-
         _texture_freetex,
 
+        // _texture_map_icon_default,
         _texture_ffx2_face_icon_default,
+    ];
+
+    private FhTexture[] textures_set => [
+        // .. _map_icon_textures.Values,
         .. _ffx2_face_icon_textures.Values,
     ];
 
@@ -325,7 +326,10 @@ public sealed class FhSaveUiX : FhSaveUi {
         _scrollable_saves.reset();
         _scrollable_sets .reset();
 
-        unload_textures();
+        unload_textures([
+            ..textures,
+            ..textures_set,
+        ]);
 
         _map_icon_textures.Clear();
     }
@@ -350,6 +354,8 @@ public sealed class FhSaveUiX : FhSaveUi {
 
     private void switch_set(string set_name) {
         FhApi.Saves.switch_active_set(set_name);
+
+        unload_textures(textures_set);
 
         populate_map_icons();
         populate_ffx2_job_icons();
@@ -406,7 +412,10 @@ public sealed class FhSaveUiX : FhSaveUi {
     /// <summary>Attempt to load all of the textures the renderer requires to display properly.</summary>
     /// <returns>Whether all textures have been successfully loaded.</returns>
     private bool try_load_textures() {
-        Span<FhTexture> texture_list = textures;
+        Span<FhTexture> texture_list = [
+            ..textures,
+            ..textures_set,
+        ];
 
         _loaded_all_textures = true;
         foreach (FhTexture texture in texture_list) {
@@ -419,9 +428,7 @@ public sealed class FhSaveUiX : FhSaveUi {
     }
 
     /// <summary>Unload all of the textures the renderer requires to display properly.</summary>
-    private void unload_textures() {
-        Span<FhTexture> texture_list = textures;
-
+    private void unload_textures(Span<FhTexture> texture_list) {
         foreach (FhTexture texture in texture_list) {
             if (FhApi.Resources.unload_texture(texture))
                 _loaded_all_textures = false;

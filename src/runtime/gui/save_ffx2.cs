@@ -94,6 +94,25 @@ public sealed class FhSaveUiX2 : FhSaveUi {
 
     private readonly Vector2 _tex_ffx_faces_size = new(1024f, 512f);
 
+    private FhTexture[] textures => [
+        _texture_menuback,
+        _texture_black0,
+        _texture_mahojin,
+        _texture_plate,
+        _texture_freetex,
+        _texture_x2_bg,
+        _texture_ffx_faces,
+
+        _texture_face_icon_default,
+        // _texture_map_icon_default,
+    ];
+
+    private FhTexture[] textures_set => [
+        .. _face_icon_textures.Values,
+        // .. _map_icon_textures.Values,
+
+    ];
+
     private bool is_saving => FhApi.Saves.get_system_mode(out FhSaveSystemMode? system_mode) && system_mode is FhSaveSystemMode.SAVE;
 
     private readonly SteppedScrollable _scrollable_saves = new(visible: 5);
@@ -273,6 +292,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
 
         populate_face_icons();
         populate_map_icons();
+
         try_load_textures();
 
         _set_list.Clear();
@@ -290,7 +310,10 @@ public sealed class FhSaveUiX2 : FhSaveUi {
         _scrollable_saves.reset();
         _scrollable_sets .reset();
 
-        unload_textures();
+        unload_textures([
+            ..textures,
+            ..textures_set,
+        ]);
     }
 
     private void change_mode(UiMode new_mode) {
@@ -314,8 +337,11 @@ public sealed class FhSaveUiX2 : FhSaveUi {
     private void switch_set(string set_name) {
         FhApi.Saves.switch_active_set(set_name);
 
+        unload_textures(textures_set);
+
         populate_face_icons();
         populate_map_icons();
+
         try_load_textures();
 
         change_mode(UiMode.SAVE_LIST);
@@ -408,22 +434,13 @@ public sealed class FhSaveUiX2 : FhSaveUi {
     /// <summary>Attempt to load all of the textures the save/load screen requires to display properly.</summary>
     /// <returns>Whether all textures have been successfully loaded.</returns>
     private bool try_load_textures() {
-        Span<FhTexture> textures = [
-            _texture_menuback,
-            _texture_black0,
-            _texture_mahojin,
-            _texture_plate,
-            _texture_freetex,
-            _texture_x2_bg,
-            _texture_face_icon_default,
-            .. _face_icon_textures.Values,
-            // _texture_map_icon_default,
-            // .. _map_icon_textures.Values,
-            _texture_ffx_faces
+        Span<FhTexture> texture_list = [
+            ..textures,
+            ..textures_set,
         ];
 
         _loaded_all_textures = true;
-        foreach (FhTexture texture in textures) {
+        foreach (FhTexture texture in texture_list) {
             if (!FhApi.Resources.load_game_texture_2d(texture)) {
                 _loaded_all_textures = false;
             }
@@ -433,22 +450,8 @@ public sealed class FhSaveUiX2 : FhSaveUi {
     }
 
     /// <summary>Unload all of the textures the renderer requires to display properly.</summary>
-    private void unload_textures() {
-        Span<FhTexture> textures = [
-            _texture_menuback,
-            _texture_black0,
-            _texture_mahojin,
-            _texture_plate,
-            _texture_freetex,
-            _texture_x2_bg,
-            _texture_face_icon_default,
-            .. _face_icon_textures.Values,
-            // _texture_map_icon_default,
-            // .. _map_icon_textures.Values,
-            _texture_ffx_faces
-        ];
-
-        foreach (FhTexture texture in textures) {
+    private void unload_textures(Span<FhTexture> texture_list) {
+        foreach (FhTexture texture in texture_list) {
             if (FhApi.Resources.unload_texture(texture))
                 _loaded_all_textures = false;
             else

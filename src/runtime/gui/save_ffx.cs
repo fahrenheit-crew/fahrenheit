@@ -992,7 +992,7 @@ public sealed class FhSaveUiX : FhSaveUi {
         float text_margin_left    = 12f;
         float text_margin_between = 48f;
 
-        Vector2 header_text_pos_left = save_bounds.left;
+        Vector2 header_text_pos_left = header_bounds.left;
         header_text_pos_left.X += text_margin_left;
 
         float font_size = 43f * font_scale;
@@ -1031,7 +1031,7 @@ public sealed class FhSaveUiX : FhSaveUi {
             );
         }
 
-        Vector2 header_text_pos_right = save_bounds.right;
+        Vector2 header_text_pos_right = header_bounds.right;
         header_text_pos_right.X -= map_icon_size.X + text_margin_between;
 
         FhApi.Gui.draw_text(

@@ -232,7 +232,7 @@ public static class FhEncoding {
            FhLangId           lang,
            FhGameId           game
     ) {
-        return _is_cjk(lang)
+        return lang.is_cjk
             ? _decode_cjk(src, dest, lang, game)
             : _decode_we (src, dest, lang, game);
     }
@@ -297,17 +297,6 @@ public static class FhEncoding {
         return code_point.Value is 0x000D  // U+000D - <Carriage Return> (CR)
                                 or 0x000A  // U+000A - <End of Line> (EOL, LF, NL)
                                 or 0xFEFF; // U+FEFF - Zero Width No-Break Space (BOM, ZWNBSP)
-    }
-
-    /// <summary>
-    ///     Determines whether the given <paramref name="lang"/> is a CJK language.
-    /// </summary>
-    private static bool _is_cjk(
-        FhLangId lang
-    ) {
-        return lang is FhLangId.Chinese
-                    or FhLangId.Japanese
-                    or FhLangId.Korean;
     }
 
     /// <summary>
@@ -833,7 +822,7 @@ public static class FhEncoding {
              * If the character is NOT an op statement opener, find it in the Shift-JIS table and emit its index.
              */
         encode:
-            if (flags.HasFlag(FhEncodingFlags.IMPLICIT_CJK_EXTENSION) && _is_cjk(lang_id) && _extend_cjk(ref code_point)) {
+            if (flags.HasFlag(FhEncodingFlags.IMPLICIT_CJK_EXTENSION) && lang_id.is_cjk && _extend_cjk(ref code_point)) {
                 Span<byte> extend_buf = stackalloc byte[code_point.Utf8SequenceLength];
                 code_point.EncodeToUtf8(extend_buf);
                 bytes = extend_buf;

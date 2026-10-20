@@ -40,7 +40,22 @@ public unsafe sealed class FhPrintControlModule : FhModule {
         string str = Marshal.PtrToStringAnsi((nint)ptr_str)!;
         str        = str.ReplaceLineEndings("");
 
-        _logger.Log(FhLogLevel.Info, $"[{sev}] {str}");
+        /* [fkelava 20/10/26 15:58]
+         * Phyre has its own log levels. 2 _would_ be Debug- but we suppress
+         * Debug-level logs in Release builds. We map it to Info instead
+         * because we want all logs to be caught when the user enables this.
+         */
+
+        FhLogLevel level = sev switch {
+            0 => FhLogLevel.Info,
+            1 => FhLogLevel.Warning,
+            2 => FhLogLevel.Info,
+            3 => FhLogLevel.Error,
+            4 => FhLogLevel.Fatal,
+            _ => FhLogLevel.None,
+        };
+
+        _logger.Log(level, str);
     }
 
     [UnmanagedCallConv(CallConvs = new Type[] { typeof(CallConvCdecl) })]

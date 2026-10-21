@@ -253,6 +253,42 @@ public sealed class FhSaves {
         _cache_init = 1;
     }
 
+    /// <summary>
+    ///     Attempt to load all character and map icons for the current set.
+    /// </summary>
+    private static void _pal_cache_tex_load() {
+        foreach ((_, FhTexture icon_chr) in _cache_icon_chr) {
+            if (!FhApi.Resources.load_game_texture_2d(icon_chr)) {
+                FhInternal.Log.Warning($"Failed to load texture {icon_chr}.");
+            }
+        }
+
+        foreach ((_, FhTexture icon_map) in _cache_icon_map) {
+            if (!FhApi.Resources.load_game_texture_2d(icon_map)) {
+                FhInternal.Log.Warning($"Failed to load texture {icon_map}.");
+            }
+        }
+    }
+
+    /// <summary>
+    ///     Attempt to unload all character and map icons for the current set.
+    /// </summary>
+    private static void _pal_cache_tex_unload() {
+        foreach (var tex in _cache_icon_chr) {
+            if (!_cache_icon_chr.Remove(tex.Key, out FhTexture? icon_chr))
+                throw new Exception("Failed to clear texture cache.");
+
+            FhApi.Resources.unload_texture(icon_chr);
+        }
+
+        foreach (var tex in _cache_icon_map) {
+            if (!_cache_icon_map.Remove(tex.Key, out FhTexture? icon_map))
+                throw new Exception("Failed to clear texture cache.");
+
+            FhApi.Resources.unload_texture(icon_map);
+        }
+    }
+
     /* [fkelava 12/11/25 16:51]
      * To show `Tower {X}F` in LM or `Chapter {X}` and `Story Completion: {X}%` in X-2, the game gets
      * a template from SaveDataGetLoc(), with a [ 0x05, 0x30 ] sequence marking a fill point.
@@ -775,8 +811,11 @@ public sealed class FhSaves {
         if (Interlocked.CompareExchange(ref _lock, 1, 0) != 0)
             return;
 
-        _pal_cache_init  ();
-        _sets_index();
+        _pal_cache_init();
+
+        _pal_cache_tex_unload();
+        _sets_index    ();
+        _pal_cache_tex_load  ();
 
         Interlocked.Decrement(ref _lock);
     }

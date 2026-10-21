@@ -72,9 +72,6 @@ public sealed class FhSaveUiX2 : FhSaveUi {
 
     private bool _loaded_all_textures;
 
-    private readonly Dictionary<string, FhTexture> _face_icon_textures = [ ];
-    private readonly Dictionary<string, FhTexture> _map_icon_textures  = [ ];
-
     private readonly FhTexture _texture_face_icon_default = new(Path.Join(MENU_FACE_DATA_DIR, "mface_000.dds.phyre"), FhTextureType.PHYRE);
     private readonly FhTexture _texture_map_icon_default  = new(Path.Join(MAP_ICONS_DIR,      "logo_j.png"),          FhTextureType.PNG);
 
@@ -110,12 +107,6 @@ public sealed class FhSaveUiX2 : FhSaveUi {
 
         _texture_face_icon_default,
         // _texture_map_icon_default,
-    ];
-
-    private FhTexture[] textures_set => [
-        .. _face_icon_textures.Values,
-        // .. _map_icon_textures.Values,
-
     ];
 
     private bool is_saving => FhApi.Saves.impl_get_system_mode(out FhSaveSystemMode? system_mode) && system_mode is FhSaveSystemMode.SAVE;
@@ -293,9 +284,6 @@ public sealed class FhSaveUiX2 : FhSaveUi {
         _mode  = UiMode .SAVE_LIST;
         _focus = UiFocus.LIST;
 
-        populate_face_icons();
-        populate_map_icons();
-
         try_load_textures();
 
         _set_list.Clear();
@@ -313,10 +301,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
         _scrollable_saves.reset();
         _scrollable_sets .reset();
 
-        unload_textures([
-            .. textures,
-            .. textures_set,
-        ]);
+        unload_textures(textures);
     }
 
     private void change_mode(UiMode new_mode) {
@@ -328,11 +313,6 @@ public sealed class FhSaveUiX2 : FhSaveUi {
 
     private void switch_set(string set_name) {
         FhApi.Saves.sets_switch(set_name);
-
-        unload_textures(textures_set);
-
-        populate_face_icons();
-        populate_map_icons();
 
         try_load_textures();
 
@@ -373,13 +353,8 @@ public sealed class FhSaveUiX2 : FhSaveUi {
     /// <summary>Attempt to load all of the textures the save/load screen requires to display properly.</summary>
     /// <returns>Whether all textures have been successfully loaded.</returns>
     private bool try_load_textures() {
-        Span<FhTexture> texture_list = [
-            .. textures,
-            .. textures_set,
-        ];
-
         _loaded_all_textures = true;
-        foreach (FhTexture texture in texture_list) {
+        foreach (FhTexture texture in textures) {
             if (!FhApi.Resources.load_game_texture_2d(texture)) {
                 _loaded_all_textures = false;
             }

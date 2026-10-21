@@ -22,8 +22,8 @@ public unsafe class FhModListDisplayModule : FhModule {
 
         // Do not render the mod list outside the main menu.
         if (curr_event_id != 0x17
-         || FhSavePal.pal_get_screen_state() == FhSaveScreenState.OPEN
-         || FhSavePal.pal_get_screen_state() == FhSaveScreenState.OPENING) {
+         || FhSavePal.pal_get_screen_state() == SaveScreenState.OPEN
+         || FhSavePal.pal_get_screen_state() == SaveScreenState.OPENING) {
             return;
         }
 

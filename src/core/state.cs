@@ -34,8 +34,8 @@ internal sealed class FhState {
             FhEnvironment.Finder.State.FullName,
             FhInternal.Hasher.SaveSetHash,
             FhApi.Saves.active_set,
-            FhSavePal.pal_get_save_subfolder(),
-            FhSavePal.pal_get_save_name_for_slot(slot),
+            FhSaves.pal_get_save_subfolder(),
+            FhSaves.pal_get_save_name_for_slot(slot),
             mod_context.Manifest.Id,
             module_context.Module.ModuleType);
 

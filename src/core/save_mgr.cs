@@ -9,10 +9,13 @@ namespace Fahrenheit;
 public enum FhSaveSystemMode {
     /// <summary>The save system is not active.</summary>
     NULL = 0,
+
     /// <summary>The save system wants to load a save file.</summary>
     LOAD = 1,
+
     /// <summary>The save system wants to save to a slot.</summary>
     SAVE = 2,
+
     /// <summary>The save system wants to compile Al Bhed information from a save file to the current save data.</summary>
     /// <remarks>This mode is only valid and entered in Final Fantasy X.</remarks>
     ALBD = 3,
@@ -54,7 +57,7 @@ public sealed class FhSaveSet {
 
 /* [fkelava 07/11/25 15:01]
  * Fh computes a load-order sensitive hash over all mods that declare 'separate saves'.
- * It creates a 'default' save set for that hash. The user may create manual sets.
+ * It creates a 'default' save set for that hash. The user may create other sets manually.
  * At runtime, you may swap between all sets for the hash.
  */
 
@@ -65,26 +68,31 @@ public sealed class FhSaves {
 
     internal readonly FhRuntimeHandle<IFhSaveSystemImpl> impl_handle = new();
 
+    private const string DIR_MAP_ICON_X  = "/FFX_Data/GameData/PS3Data/savedataicons/";
+    private const string DIR_MAP_ICON_X2 = "/FFX-2_Data/GameData/PS3Data/savedataicons/";
+    private const string DIR_CHR_ICON_X  = "/FFX_Data/GameData/PS3Data/menu/D3D11/";
+    private const string DIR_CHR_ICON_X2 = "/FFX-2_Data/GameData/PS3Data/menu/face_data/D3D11/";
+
     private static readonly string _s_set_path_base;
     private static readonly string _s_set_path_default;
     private static readonly string _s_set_name_default = "default";
 
     // Caches for immutable portions of certain templated game strings.
-    private static int    _s_pal_init            = 0;
-    private static string _s_pal_prefix_lm_level = "";
-    private static string _s_pal_prefix_lm_loc   = "";
-    private static string _s_pal_prefix_playtime = "";
+    private static int    _cache_init             = 0;
+    private static string _cache_prefix_lm_level  = "";
+    private static string _cache_prefix_lm_loc    = "";
+    private static string _cache_prefix_play_time = "";
 
     // Caches for display data strings.
-    private static readonly Dictionary<uint,         string> _s_pal_player_name = [];
-    private static readonly Dictionary<uint,         string> _s_pal_playtime    = [];
-    private static readonly Dictionary<ushort,       string> _s_pal_location    = [];
-    private static readonly Dictionary<byte,         string> _s_pal_completion  = [];
-    private static readonly Dictionary<byte,         string> _s_pal_chapter     = [];
-    private static readonly Dictionary<byte,         string> _s_pal_lm_level    = [];
-    private static readonly Dictionary<(byte, byte), string> _s_pal_lm_job      = [];
-    private static readonly Dictionary<(byte, byte), string> _s_pal_icon_chr    = [];
-    private static readonly Dictionary<int,          string> _s_pal_icon_map    = [];
+    private static readonly Dictionary<uint,         string>    _cache_player_name = [];
+    private static readonly Dictionary<uint,         string>    _cache_play_time   = [];
+    private static readonly Dictionary<ushort,       string>    _cache_location    = [];
+    private static readonly Dictionary<byte,         string>    _cache_completion  = [];
+    private static readonly Dictionary<byte,         string>    _cache_chapter     = [];
+    private static readonly Dictionary<byte,         string>    _cache_lm_level    = [];
+    private static readonly Dictionary<(byte, byte), string>    _cache_lm_job      = [];
+    private static readonly Dictionary<(byte, byte), FhTexture> _cache_icon_chr    = [];
+    private static readonly Dictionary<int,          FhTexture> _cache_icon_map    = [];
 
     private readonly Dictionary<string, FhSaveSet> _sets; // The available save sets.
     private readonly Dictionary<string, FhSaveUi>  _ui;   // The available save user interfaces.
@@ -110,7 +118,7 @@ public sealed class FhSaves {
          * Indexing cannot be done here because game functions
          * are not callable before module initialization has run.
          *
-         * It is performed just in time when we switch to save/load mode.
+         * It is instead performed just in time when we switch to save/load mode.
          */
     }
 
@@ -206,8 +214,8 @@ public sealed class FhSaves {
      * emit terminating null bytes, so we take care to do so manually in the PAL.
      */
 
-    private static unsafe void _pal_init() {
-        if (Interlocked.CompareExchange(ref _s_pal_init, 0, 0) == 1)
+    private static unsafe void _pal_cache_init() {
+        if (Interlocked.CompareExchange(ref _cache_init, 0, 0) == 1)
             return;
 
         Span<byte> dest    = stackalloc byte[0x100];
@@ -221,7 +229,7 @@ public sealed class FhSaves {
             FhCall.SaveDataGetLoc.fnptr!(0x36B, ptr_scratch);
 
             int len_lm_level_prefix = FhEncoding.decode(scratch, dest, flags: FhEncodingFlags.IMPLICIT_END);
-            _s_pal_prefix_lm_level = Encoding.UTF8.GetString(dest[ .. len_lm_level_prefix ]);
+            _cache_prefix_lm_level = Encoding.UTF8.GetString(dest[ .. len_lm_level_prefix ]);
 
             scratch.Clear();
 
@@ -229,7 +237,7 @@ public sealed class FhSaves {
             FhCall.SaveDataGetLoc.fnptr!(FhUtil.select(0x52, 0x5C, 0x5C), ptr_scratch);
 
             int len_playtime_prefix = FhEncoding.decode(scratch, dest, flags: FhEncodingFlags.IMPLICIT_END);
-            _s_pal_prefix_playtime = Encoding.UTF8.GetString(dest[ .. len_playtime_prefix ]);
+            _cache_prefix_play_time = Encoding.UTF8.GetString(dest[ .. len_playtime_prefix ]);
 
             scratch.Clear();
 
@@ -237,12 +245,12 @@ public sealed class FhSaves {
             FhCall.SaveDataGetLoc.fnptr!(0x4C1, ptr_scratch);
 
             int len_lm_loc_prefix = FhEncoding.decode(scratch, dest, flags: FhEncodingFlags.IMPLICIT_END);
-            _s_pal_prefix_lm_loc = Encoding.UTF8.GetString(dest[ .. len_lm_loc_prefix ]);
+            _cache_prefix_lm_loc = Encoding.UTF8.GetString(dest[ .. len_lm_loc_prefix ]);
 
             scratch.Clear();
         }
 
-        _s_pal_init = 1;
+        _cache_init = 1;
     }
 
     /* [fkelava 12/11/25 16:51]
@@ -299,7 +307,7 @@ public sealed class FhSaves {
     /// <summary>
     ///     Returns the icon filename for the current map in the save with the given <paramref name="header"/>.
     /// </summary>
-    private static string _pal_get_icon_map(in SaveHeader header) {
+    private static FhTexture _pal_get_icon_map(in SaveHeader header) {
         bool not_lm = FhGlobal.game_id is not FhGameId.FFX2LM;
 
         int id_icon_clear = FhGlobal.game_id switch {
@@ -316,20 +324,28 @@ public sealed class FhSaves {
             id_icon_map = 999;
         }
 
-        return (_s_pal_icon_map[id_icon_map] = id_icon_map < 0x3E9
+        string map_dir  = FhGlobal.game_id is FhGameId.FFX
+            ? DIR_MAP_ICON_X
+            : DIR_MAP_ICON_X2;
+
+        string map_icon = id_icon_map < 0x3E9
             ? $"m{id_icon_map}"
-            : $"m{id_icon_map - 1000}_l");
+            : $"m{id_icon_map - 1000}_l";
+
+        return (_cache_icon_map[id_icon_map] = new FhTexture($"{map_dir}/{map_icon}.png", FhTextureType.PHYRE));
     }
 
     /// <summary>Compute the correct filename of a face icon.</summary>
-    /// <param name="ply_id">The ID of the player character to find the icon for.</param>
-    /// <param name="job_id">The ID of the job to find the icon for.</param>
     /// <returns>The filename for the face icon.</returns>
-    private static string _pal_get_icon_chr(in SaveHeader header, int index) {
+    private static FhTexture _pal_get_icon_chr(in SaveHeader header, int index) {
         ArgumentOutOfRangeException.ThrowIfGreaterThan(index, 2, nameof(index));
 
-        if (FhGlobal.game_id is FhGameId.FFX)
-            return "";
+        if (FhGlobal.game_id is FhGameId.FFX) {
+            if (_cache_icon_chr.TryGetValue((0, 0), out FhTexture? tex_x))
+                return tex_x;
+
+            return (_cache_icon_chr[(0, 0)] = new FhTexture($"{DIR_CHR_ICON_X}/face_ply.dds.phyre", FhTextureType.PHYRE));
+        }
 
         bool is_lm = FhGlobal.game_id is FhGameId.FFX2LM;
 
@@ -343,11 +359,11 @@ public sealed class FhSaves {
 
         (byte, byte) key = (ply_id, job_id);
 
-        if (_s_pal_icon_chr.TryGetValue(key, out string? str_loc))
-            return str_loc;
+        if (_cache_icon_chr.TryGetValue(key, out FhTexture? tex))
+            return tex;
 
         if (job_id == 0x21) {
-            return "mface_147.dds.phyre"; // She-Goon
+            return (_cache_icon_chr[key] = new FhTexture($"{DIR_CHR_ICON_X2}/mface_147.dds.phyre", FhTextureType.PHYRE)); // She-Goon
         }
 
         string ply = ply_id switch {
@@ -368,7 +384,7 @@ public sealed class FhSaves {
             _  => job_id,
         };
 
-        return (_s_pal_icon_chr[key] = $"{ply}face_{job:D3}.dds.phyre");
+        return (_cache_icon_chr[key] = new FhTexture($"{DIR_CHR_ICON_X2}/{ply}face_{job:D3}.dds.phyre", FhTextureType.PHYRE));
     }
 
     /* [fkelava 13/11/25 22:08]
@@ -380,14 +396,14 @@ public sealed class FhSaves {
     /// <summary>
     ///     Returns the total play time in the save with the given <paramref name="header"/>.
     /// </summary>
-    private unsafe static string _pal_get_playtime(in SaveHeader header) {
-        uint playtime_secs = header.x.playtime_secs; // The offset of the location is the same in X and X-2.
-        uint playtime_mins = playtime_secs / 60;
+    private unsafe static string _pal_get_play_time(in SaveHeader header) {
+        uint t_sec = header.x.playtime_secs; // The offset of the location is the same in X and X-2.
+        uint t_min = t_sec / 60;
 
-        if (_s_pal_playtime.TryGetValue(playtime_secs, out string? str_loc))
+        if (_cache_play_time.TryGetValue(t_sec, out string? str_loc))
             return str_loc;
 
-        return (_s_pal_playtime[playtime_secs] = $"{_s_pal_prefix_playtime}  {playtime_mins / 60:D3}:{playtime_mins % 60:D2}:{playtime_secs % 60:D2}\0");
+        return (_cache_play_time[t_sec] = $"{_cache_prefix_play_time}  {t_min / 60:D3}:{t_min % 60:D2}:{t_sec % 60:D2}\0");
     }
 
     /* [fkelava 13/11/25 22:08]
@@ -407,13 +423,13 @@ public sealed class FhSaves {
         dest.Clear();
 
         if (FhGlobal.game_id is FhGameId.FFX) {
-            if (_s_pal_player_name.TryGetValue(0, out str_loc))
+            if (_cache_player_name.TryGetValue(0, out str_loc))
                 return str_loc;
 
             len_player_name = FhEncoding.decode(header.x.player_name, dest, header.x.lang_id, flags: FhEncodingFlags.IMPLICIT_END);
             dest [ len_player_name ] = 0x00;
 
-            return (_s_pal_player_name[0] = Encoding.UTF8.GetString(dest));
+            return (_cache_player_name[0] = Encoding.UTF8.GetString(dest));
         }
 
         byte*              ptr_player_name_encoded = stackalloc byte[0x10];
@@ -424,7 +440,7 @@ public sealed class FhSaves {
         len_player_name = FhEncoding.decode(player_name_encoded, dest, flags: FhEncodingFlags.IMPLICIT_END);
         dest [ len_player_name ] = 0x00;
 
-        return (_s_pal_player_name[header.x2.lm_ply] = Encoding.UTF8.GetString(dest));
+        return (_cache_player_name[header.x2.lm_ply] = Encoding.UTF8.GetString(dest));
     }
 
     /// <summary>
@@ -442,7 +458,7 @@ public sealed class FhSaves {
             ? header.x .id_location // The offset of the location is the same in X and X-2.
             : header.x2.lm_id_location;
 
-        if (_s_pal_location.TryGetValue(location_id, out string? str_loc))
+        if (_cache_location.TryGetValue(location_id, out string? str_loc))
             return str_loc;
 
         Span<byte> dest = stackalloc byte[128];
@@ -455,7 +471,7 @@ public sealed class FhSaves {
             int len_location = FhEncoding.decode(location_name, dest, flags: FhEncodingFlags.IMPLICIT_END);
             dest [ len_location ] = 0x00;
 
-            return (_s_pal_location[location_id] = Encoding.UTF8.GetString(dest));
+            return (_cache_location[location_id] = Encoding.UTF8.GetString(dest));
         }
 
         byte*      ptr_lm_location_suffix = stackalloc byte[0x40];
@@ -468,7 +484,7 @@ public sealed class FhSaves {
         int len_lm_location = FhEncoding.decode(lm_location_suffix, dest, flags: FhEncodingFlags.IMPLICIT_END);
         dest [ len_lm_location ] = 0x00;
 
-        return (_s_pal_location[location_id] = $"{_s_pal_prefix_lm_loc} {Encoding.UTF8.GetString(dest)}");
+        return (_cache_location[location_id] = $"{_cache_prefix_lm_loc} {Encoding.UTF8.GetString(dest)}");
     }
 
     /* [fkelava 13/11/25 22:08]
@@ -484,7 +500,7 @@ public sealed class FhSaves {
 
         byte chapter_id = header.x2.chapter;
 
-        if (_s_pal_chapter.TryGetValue(chapter_id, out string? str_loc))
+        if (_cache_chapter.TryGetValue(chapter_id, out string? str_loc))
             return str_loc;
 
         Span<byte> dest = stackalloc byte[0x80];
@@ -499,7 +515,7 @@ public sealed class FhSaves {
         int len_chapter = FhEncoding.decode(chapter, dest, flags: FhEncodingFlags.IMPLICIT_END);
         dest[ len_chapter ] = 0x00;
 
-        return (_s_pal_chapter[chapter_id] = Encoding.UTF8.GetString(dest));
+        return (_cache_chapter[chapter_id] = Encoding.UTF8.GetString(dest));
     }
 
     /* [fkelava 13/11/25 22:08]
@@ -515,7 +531,7 @@ public sealed class FhSaves {
 
         byte completion_pct = header.x2.completion;
 
-        if (_s_pal_completion.TryGetValue(completion_pct, out string? str_loc))
+        if (_cache_completion.TryGetValue(completion_pct, out string? str_loc))
             return str_loc;
 
         Span<byte> dest = stackalloc byte[0x80];
@@ -530,7 +546,7 @@ public sealed class FhSaves {
         int len_completion = FhEncoding.decode(completion, dest, flags: FhEncodingFlags.IMPLICIT_END);
         dest[ len_completion ] = 0x00;
 
-        return (_s_pal_completion[completion_pct] = Encoding.UTF8.GetString(dest));
+        return (_cache_completion[completion_pct] = Encoding.UTF8.GetString(dest));
     }
 
     /* [fkelava 13/11/25 22:08]
@@ -546,7 +562,7 @@ public sealed class FhSaves {
 
         (byte, byte) key = (header.x2.lm_ply, header.x2.lm_job);
 
-        if (_s_pal_lm_job.TryGetValue(key, out string? str_loc))
+        if (_cache_lm_job.TryGetValue(key, out string? str_loc))
             return str_loc;
 
         Span<byte> dest = stackalloc byte[0x80];
@@ -558,7 +574,7 @@ public sealed class FhSaves {
         int len_lm_job = FhEncoding.decode(lm_job, dest, flags: FhEncodingFlags.IMPLICIT_END);
         dest [ len_lm_job ] = 0x00;
 
-        return (_s_pal_lm_job[key] = Encoding.UTF8.GetString(dest));
+        return (_cache_lm_job[key] = Encoding.UTF8.GetString(dest));
     }
 
     /* [fkelava 13/11/25 22:08]
@@ -573,10 +589,10 @@ public sealed class FhSaves {
             return "";
 
         byte lm_level = header.x2.lm_ply_level;
-        if (_s_pal_lm_level.TryGetValue(lm_level, out string? str_loc))
+        if (_cache_lm_level.TryGetValue(lm_level, out string? str_loc))
             return str_loc;
 
-        return (_s_pal_lm_level[lm_level] = $"{_s_pal_prefix_lm_level} {lm_level}\0");
+        return (_cache_lm_level[lm_level] = $"{_cache_prefix_lm_level} {lm_level}\0");
     }
 
     /// <summary>
@@ -637,7 +653,7 @@ public sealed class FhSaves {
             slot        = slot,
             slot_str    = slot.ToString(),
             create_time = File.GetLastWriteTime(save_file_path),
-            play_time   = _pal_get_playtime   (header),
+            play_time   = _pal_get_play_time  (header),
             player_name = _pal_get_player_name(header),
             chapter     = _pal_get_chapter    (header),
             completion  = _pal_get_completion (header),
@@ -748,7 +764,7 @@ public sealed class FhSaves {
 
     /// <summary>Register a new save UI for selection by the user.</summary>
     /// <param name="ui">The new UI to register.</param>
-    public void ui_register(FhSaveUi ui) {
+    internal void ui_register(FhSaveUi ui) {
         _ui[ui.ModuleType] = ui;
     }
 
@@ -759,7 +775,7 @@ public sealed class FhSaves {
         if (Interlocked.CompareExchange(ref _lock, 1, 0) != 0)
             return;
 
-        _pal_init  ();
+        _pal_cache_init  ();
         _sets_index();
 
         Interlocked.Decrement(ref _lock);

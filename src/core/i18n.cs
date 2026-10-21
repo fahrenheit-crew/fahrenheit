@@ -59,20 +59,21 @@ public sealed partial class FhLocalization {
     /// </summary>
     /// <returns>The relative path of the active LocKit binary file in the VBF.</returns>
     private static string _init_loc_kit_path() {
-        ReadOnlySpan<char> game_name = FhUtil.select("ffx", "ffx2", "ffx2");
-
-        return FhGlobal.lang_id switch {
-            FhLangId.English  => $"/{game_name}_data/gamedata/ps3data/lockit/{game_name}_loc_kit_ps3_us.bin",
-            FhLangId.French   => $"/{game_name}_data/gamedata/ps3data/lockit/{game_name}_loc_kit_ps3_fr.bin",
-            FhLangId.Spanish  => $"/{game_name}_data/gamedata/ps3data/lockit/{game_name}_loc_kit_ps3_sp.bin",
-            FhLangId.German   => $"/{game_name}_data/gamedata/ps3data/lockit/{game_name}_loc_kit_ps3_de.bin",
-            FhLangId.Italian  => $"/{game_name}_data/gamedata/ps3data/lockit/{game_name}_loc_kit_ps3_it.bin",
+        ReadOnlySpan<char> game = FhUtil.select("ffx", "ffx2", "ffx2");
+        ReadOnlySpan<char> lang = FhGlobal.lang_id switch {
+            FhLangId.English  => "us",
+            FhLangId.French   => "fr",
+            FhLangId.Spanish  => "sp",
+            FhLangId.German   => "de",
+            FhLangId.Italian  => "it",
             FhLangId.Japanese or
-            FhLangId.Debug    => $"/{game_name}_data/gamedata/ps3data/lockit/{game_name}_loc_kit_ps3_jp.bin",
-            FhLangId.Chinese  => $"/{game_name}_data/gamedata/ps3data/lockit/{game_name}_loc_kit_ps3_ch.bin",
-            FhLangId.Korean   => $"/{game_name}_data/gamedata/ps3data/lockit/{game_name}_loc_kit_ps3_kr.bin",
-            _                 => $"/{game_name}_data/gamedata/ps3data/lockit/{game_name}_loc_kit_ps3_us.bin"
+            FhLangId.Debug    => "jp",
+            FhLangId.Chinese  => "ch",
+            FhLangId.Korean   => "kr",
+            _                 => "us"
         };
+
+        return $"/{game}_data/gamedata/ps3data/lockit/{game}_loc_kit_ps3_{lang}.bin";
     }
 
     /// <summary>

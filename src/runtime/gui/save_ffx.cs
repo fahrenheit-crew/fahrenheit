@@ -306,9 +306,6 @@ public sealed class FhSaveUiX : FhSaveUi {
         _mode  = UiMode.SAVE_LIST;
         _focus = UiFocus.LIST;
 
-        populate_map_icons();
-        populate_ffx2_job_icons();
-
         try_load_textures();
 
         _set_list.Clear();
@@ -346,56 +343,9 @@ public sealed class FhSaveUiX : FhSaveUi {
 
         unload_textures(textures_set);
 
-        populate_map_icons();
-        populate_ffx2_job_icons();
-
         try_load_textures();
 
         change_mode(UiMode.SAVE_LIST);
-    }
-
-    private void populate_map_icons() {
-        _map_icon_textures.Clear();
-
-        foreach (FhSaveUiData save in FhApi.Saves.display_data) {
-            string map = Encoding.UTF8.GetString(save.icon_map);
-            if (_map_icon_textures.TryGetValue(map, out _)) continue;
-
-            FhTexture map_icon = new(Path.Join(DIR_MAP_ICONS, $"{map}.png"), FhTextureType.PNG);
-            _map_icon_textures.Add(map, map_icon);
-        }
-    }
-
-    private void populate_ffx2_job_icons() {
-        _ffx2_face_icon_textures.Clear();
-
-        if (FhGlobal.game_id == FhGameId.FFX) {
-            return;
-        }
-
-        foreach (FhSaveUiData save in FhApi.Saves.display_data) {
-            SaveHeaderX2 header2 = MemoryMarshal.Read<SaveHeaderX2>(save.header);
-
-            bool is_lm     = FhGlobal.game_id is FhGameId.FFX2LM;
-            int  num_faces = is_lm ? 1 : 3;
-
-            for (int i = 0; i < num_faces; i++) {
-                byte job_id = is_lm ? header2.lm_job : header2.ply_jobs[i];
-
-                if (job_id > 0x21) continue;
-
-                string face = is_lm ? save.lm_job_filename : save.job_filenames[i];
-
-                if (_ffx2_face_icon_textures.TryGetValue(face, out _)) continue;
-
-                FhTexture face_icon = new(Path.Join(FFX2_DIR_FACE_DATA, face), FhTextureType.PHYRE);
-
-                _ffx2_face_icon_textures.Add(
-                    face,
-                    face_icon
-                );
-            }
-        }
     }
 
     /// <summary>Attempt to load all of the textures the renderer requires to display properly.</summary>

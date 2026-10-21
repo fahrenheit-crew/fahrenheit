@@ -370,59 +370,6 @@ public sealed class FhSaveUiX2 : FhSaveUi {
         );
     }
 
-    private void populate_face_icons() {
-        _face_icon_textures.Clear();
-
-        if (FhGlobal.game_id == FhGameId.FFX) {
-            return;
-        }
-
-        foreach (FhSaveUiData save in FhApi.Saves.display_data) {
-            SaveHeaderX2 header2 = MemoryMarshal.Read<SaveHeaderX2>(save.header);
-
-            bool is_lm     = FhGlobal.game_id is FhGameId.FFX2LM;
-            int  num_faces = is_lm ? 1 : 3;
-
-            for (int i = 0; i < num_faces; i++) {
-                byte ply_id = is_lm ? header2.lm_ply : header2.ply[i];
-                byte job_id = is_lm ? header2.lm_job : header2.ply_jobs[i];
-
-                if (job_id > 0x21) continue;
-
-                string face = is_lm ? save.lm_job_filename : save.job_filenames[i];
-
-                if (_face_icon_textures.TryGetValue(face, out _)) continue;
-
-                FhTexture face_icon = new(Path.Join(MENU_FACE_DATA_DIR, face), FhTextureType.PHYRE);
-
-                _face_icon_textures.Add(
-                    face,
-                    face_icon
-                );
-            }
-        }
-    }
-
-    private void populate_map_icons() {
-        _map_icon_textures.Clear();
-
-        foreach (FhSaveUiData save in FhApi.Saves.display_data) {
-            string map = Encoding.UTF8.GetString(save.icon_map);
-            if (_map_icon_textures.TryGetValue(map, out _)) continue;
-
-            // TODO: Handle some map icons that use "{map}_1.png" across both games
-            string map_icon_path = FhGlobal.game_id is FhGameId.FFX
-                ? Path.Join(FFX_MAP_ICONS_DIR, $"{map}.png")
-                : Path.Join(MAP_ICONS_DIR,     $"{map}_0.png");
-
-            FhTexture map_icon = new(map_icon_path, FhTextureType.PNG);
-            _map_icon_textures.Add(
-                map,
-                map_icon
-            );
-        }
-    }
-
     /// <summary>Attempt to load all of the textures the save/load screen requires to display properly.</summary>
     /// <returns>Whether all textures have been successfully loaded.</returns>
     private bool try_load_textures() {

@@ -10,17 +10,6 @@ global using HexaID3D11DevicePtr        = Hexa.NET.ImGui.Backends.D3D11.ID3D11De
 global using ImGuiImplD3D11             = Hexa.NET.ImGui.Backends.D3D11.ImGuiImplD3D11;
 global using ImGuiImplWin32             = Hexa.NET.ImGui.Backends.Win32.ImGuiImplWin32;
 
-global using DirectXTex                 = Hexa.NET.DirectXTex.DirectXTex;
-global using Hexa_DDSFlags              = Hexa.NET.DirectXTex.DDSFlags;
-global using Hexa_Extensions            = Hexa.NET.DirectXTex.Extensions;
-global using Hexa_HRESULT               = HexaGen.Runtime.HResult;
-global using Hexa_ID3D11Device          = Hexa.NET.DirectXTex.ID3D11Device;
-global using Hexa_ID3D11SRV             = Hexa.NET.DirectXTex.ID3D11ShaderResourceView;
-global using Hexa_ScratchImage          = Hexa.NET.DirectXTex.ScratchImage;
-global using Hexa_TexMetadata           = Hexa.NET.DirectXTex.TexMetadata;
-global using Hexa_TGAFlags              = Hexa.NET.DirectXTex.TGAFlags;
-global using Hexa_WICFlags              = Hexa.NET.DirectXTex.WICFlags;
-
 global using System;                          // primitives
 global using System.Buffers.Binary;           // BinaryPrimitives et al.
 global using System.Collections.Generic;      // List<T>, Dictionary<T,U> and others

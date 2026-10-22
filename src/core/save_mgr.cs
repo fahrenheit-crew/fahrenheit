@@ -695,6 +695,7 @@ public sealed class FhSaves {
         icon_chr[2] = _pal_get_icon_chr(header, 2);
 
         FhSaveUiData ui_data = new() {
+            header      = header,
             slot        = slot,
             slot_str    = slot.ToString(),
             create_time = File.GetLastWriteTime(save_file_path),
@@ -706,7 +707,7 @@ public sealed class FhSaves {
             lm_level    = _pal_get_lm_level   (header),
             lm_job      = _pal_get_lm_job     (header),
             icon_map    = _pal_get_icon_map   (header),
-            icon_chr    = new(),
+            icon_chr    = icon_chr,
         };
 
         _slots  .Add(slot);

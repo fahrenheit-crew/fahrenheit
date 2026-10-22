@@ -236,8 +236,9 @@ public sealed class FhSaveUiX : FhSaveUi {
                     fade_out(() => FhApi.Saves.impl_execute(0));
                 }
                 else {
-                    FhSaveUiData save = FhApi.Saves.display_data[hovered];
-                    fade_out(() => FhApi.Saves.impl_execute(save.slot));
+                    if (FhApi.Saves.sets_get_ui_data(hovered, out FhSaveUiData data)) {
+                        fade_out(() => FhApi.Saves.impl_execute(data.slot));
+                    }
                 }
 
                 return true;
@@ -300,10 +301,12 @@ public sealed class FhSaveUiX : FhSaveUi {
         _set_list.Clear();
         _set_list.AddRange(FhApi.Saves.sets_enumerate());
 
+        FhSaveSet set = FhApi.Saves.sets_get_active();
+
         _scrollable_sets .max = _set_list.Count;
         _scrollable_saves.max = is_saving
-            ? FhApi.Saves.get_slots_used() + 1 // Add one for New Save Data button
-            : FhApi.Saves.display_data.Count;
+            ? set.count + 1 // Add one for New Save Data button
+            : set.count;
 
         _fade.restart(COLOR_BLACK, COLOR_TRANS, _fade_length);
     }
@@ -460,8 +463,7 @@ public sealed class FhSaveUiX : FhSaveUi {
 
     /// <summary>Render the active set name and set count.</summary>
     private void ui_savecount() {
-        if (!FhApi.Saves.sets_get_active(out FhSaveSet? set))
-            return;
+        FhSaveSet set = FhApi.Saves.sets_get_active();
 
         bool has_autosave = set.has_autosave;
         int  save_count   = set.count;
@@ -689,7 +691,7 @@ public sealed class FhSaveUiX : FhSaveUi {
             Alignment2D.LEFT
         );
 
-        bool has_autosave = FhApi.Saves.set_has_autosave(name);
+        bool has_autosave = FhApi.Saves.sets_get(name, out FhSaveSet? set) && set.has_autosave;
 
         Vector2 save_count_size = FhApi.Gui.draw_text(
             draw,
@@ -734,27 +736,25 @@ public sealed class FhSaveUiX : FhSaveUi {
         int end_idx   = _scrollable_sets.get_clip_end();
 
         for (int set_idx = start_idx; set_idx < end_idx; set_idx++) {
-            string set_name   = _set_list[set_idx];
-            int    save_count = FhApi.Saves.get_save_counts()[set_name];
+            string set_name = _set_list[set_idx];
+
+            if (!FhApi.Saves.sets_get(set_name, out FhSaveSet? set))
+                continue;
+
+            int save_count = set.count;
 
             ui_set(set_idx, set_name, save_count);
         }
     }
 
     private void ui_savelist() {
-        if (!FhApi.Saves.sets_get_active(out FhSaveSet? active_set))
-            return;
-
-        List<FhSaveUiData> display_data = FhApi.Saves.display_data;
-        if (is_saving && active_set.has_autosave) {
-            display_data = display_data[ 1 .. ];
-        }
+        FhSaveSet set = FhApi.Saves.sets_get_active();
 
         _scrollable_saves.max = is_saving
-            ? display_data.Count + 1
-            : display_data.Count;
+            ? set.count + 1
+            : set.count;
 
-        if (!is_saving && display_data.Count == 0) {
+        if (!is_saving && set.count == 0) {
             ui_no_saves();
             return;
         }
@@ -762,14 +762,21 @@ public sealed class FhSaveUiX : FhSaveUi {
         int start = _scrollable_saves.get_clip_start();
         int end   = _scrollable_saves.get_clip_end();
 
+        int ui_data_start = is_saving && set.has_autosave ? 1 : 0;
+
         for (int i = start; i < end; i++) {
-            bool is_new_data = is_saving && i == 0;
+            if (is_saving && i == 0) { // New Save Data
+                ui_savefile(0, new FhSaveUiData { slot = 0 });
+                continue;
+            }
 
-            FhSaveUiData save = is_new_data
-                ? new FhSaveUiData { slot = 0 }
-                : display_data[is_saving ? i - 1 : i];
+            int ui_data_index = is_saving
+                ? ui_data_start + i - 1
+                : ui_data_start + i;
 
-            ui_savefile(i, save);
+            if (FhApi.Saves.sets_get_ui_data(ui_data_index, out FhSaveUiData save)) {
+                ui_savefile(i, save);
+            }
         }
     }
 
@@ -883,7 +890,7 @@ public sealed class FhSaveUiX : FhSaveUi {
 
         Vector2 face_screen_offset = new Vector2(face_size.X + face_gap, 0f) * aspect_scale;
 
-        SaveHeaderX header = MemoryMarshal.Read<SaveHeaderX>(save.header);
+        SaveHeaderX header = save.header.x;
 
         foreach (int chr in header.formation[..3]) {
             if (chr == 0xFF) continue;
@@ -1025,11 +1032,11 @@ public sealed class FhSaveUiX : FhSaveUi {
 
         Vector2 face_screen_offset = new Vector2(face_size.X + face_gap, 0f) * aspect_scale;
 
-        SaveHeaderX2 header2 = MemoryMarshal.Read<SaveHeaderX2>(save.header);
+        SaveHeaderX2 header = save.header.x2;
 
         for (byte i = 0; i < 3; i++) {
-            byte ply_id = header2.ply[i];
-            byte job_id = header2.ply_jobs[i];
+            byte ply_id = header.ply[i];
+            byte job_id = header.ply_jobs[i];
 
             if (job_id > 0x21) {
                 face_suv = face_suv.move(face_screen_offset);
@@ -1096,7 +1103,7 @@ public sealed class FhSaveUiX : FhSaveUi {
         );
 
         // If location string is "NONAME", don't render
-        if (header2.id_location != 0) {
+        if (header.id_location != 0) {
             header_text_pos_left = header_text_pos_left * aspect_scale + aspect_helper.pos;
             header_text_pos_left.X += text_size.X + text_margin_between * aspect_scale.X;
 
@@ -1170,7 +1177,7 @@ public sealed class FhSaveUiX : FhSaveUi {
 
         // When running in CJK, we hardcode the "STORY COMPLETED" string.
         string completion = FhGlobal.lang_id.is_cjk
-            ? $"STORY COMPLETED: {header2.completion}%"
+            ? $"STORY COMPLETED: {header.completion}%"
             : save.completion;
 
         FhApi.Gui.draw_text(
@@ -1237,10 +1244,10 @@ public sealed class FhSaveUiX : FhSaveUi {
 
         Vector2 face_screen_offset = new Vector2(-face_gap, 0f) * aspect_scale;
 
-        SaveHeaderX2 header2 = MemoryMarshal.Read<SaveHeaderX2>(save.header);
+        SaveHeaderX2 header = save.header.x2;
 
-        byte ply_id = header2.lm_ply;
-        byte job_id = header2.lm_job;
+        byte ply_id = header.lm_ply;
+        byte job_id = header.lm_job;
 
         if (job_id <= 0x21) {
             FhTexture portrait = save.icon_chr[0];
@@ -1305,7 +1312,7 @@ public sealed class FhSaveUiX : FhSaveUi {
         );
 
         // If location string is "NONAME", don't render
-        if (header2.lm_id_location != 0) {
+        if (header.lm_id_location != 0) {
             header_text_pos_left = header_text_pos_left * aspect_scale + aspect_helper.pos;
             header_text_pos_left.X += text_size.X + text_margin_between * aspect_scale.X;
 

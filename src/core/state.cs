@@ -30,10 +30,12 @@ internal sealed class FhState {
     ///     returns the path of the local state directory and creates it.
     /// </summary>
     private string _get_state_dir_path(FhModContext mod_context, FhModuleContext module_context, int slot) {
+        FhSaveSet set = FhApi.Saves.sets_get_active();
+
         string local_state_dir = Path.Join(
             FhEnvironment.Finder.State.FullName,
             FhInternal.Hasher.SaveSetHash,
-            FhApi.Saves.active_set,
+            set.name,
             FhSaves.pal_get_save_subfolder(),
             FhSaves.pal_get_save_name_for_slot(slot),
             mod_context.Manifest.Id,

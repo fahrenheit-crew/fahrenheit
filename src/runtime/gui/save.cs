@@ -81,7 +81,7 @@ public sealed class FhSaveUiSelector : FhModule {
             }
         }
 
-        if (FhSavePal.pal_get_screen_state() is SaveScreenState.OPEN) {
+        if (FhSaves.pal_state_screen is SaveScreenState.OPEN) {
             ui.render_ui();
         }
     }

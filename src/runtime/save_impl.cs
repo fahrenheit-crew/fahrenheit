@@ -198,7 +198,7 @@ public unsafe sealed class FhSaveExtensionModule : FhModule, IFhSaveSystemImpl {
         string save_path = FhApi.Saves.pal_get_path_for_slot(slot);
 
         ReadOnlySpan<byte> save = FhSaves.pal_get_buf_save();
-        FhCall.SaveDataWriteCrc.fnptr!(FhSavePal.pal_addr_buf_save());
+        FhCall.SaveDataWriteCrc.fnptr!(FhSaves.pal_addr_buf_save());
 
         // TODO: add popups on success/failure
 

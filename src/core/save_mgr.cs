@@ -62,16 +62,17 @@ public sealed class FhSaveSet {
  */
 
 /// <summary>
-///     Allows multiple sets of saves to exist.
+///     The interface to the game's save system,
+///     and a manager that allows multiple sets of saves to exist.
 /// </summary>
 public sealed class FhSaves {
 
     internal readonly FhRuntimeHandle<IFhSaveSystemImpl> impl_handle = new();
 
-    private const string DIR_MAP_ICON_X  = "/FFX_Data/GameData/PS3Data/savedataicons/";
-    private const string DIR_MAP_ICON_X2 = "/FFX-2_Data/GameData/PS3Data/savedataicons/";
-    private const string DIR_CHR_ICON_X  = "/FFX_Data/GameData/PS3Data/menu/D3D11/";
-    private const string DIR_CHR_ICON_X2 = "/FFX-2_Data/GameData/PS3Data/menu/face_data/D3D11/";
+    private const string DIR_MAP_ICON_X  = "/FFX_Data/GameData/PS3Data/savedataicons";
+    private const string DIR_MAP_ICON_X2 = "/FFX-2_Data/GameData/PS3Data/savedataicons";
+    private const string DIR_CHR_ICON_X  = "/FFX_Data/GameData/PS3Data/menu/D3D11";
+    private const string DIR_CHR_ICON_X2 = "/FFX-2_Data/GameData/PS3Data/menu/face_data/D3D11";
 
     private static readonly string _s_set_path_base;
     private static readonly string _s_set_path_default;
@@ -120,6 +121,7 @@ public sealed class FhSaves {
          *
          * It is instead performed just in time when we switch to save/load mode.
          */
+        _sets_query();
     }
 
     private unsafe static SaveDataManager* _pal_get_save_mgr()
@@ -180,11 +182,12 @@ public sealed class FhSaves {
         }
     }
 
+    internal unsafe static byte* pal_addr_buf_save() {
+        return FhUtil.ptr_at<byte>(FhUtil.select(0x1197F70, 0xF9D500, 0xF9D500));
+    }
+
     internal unsafe static Span<byte> pal_get_buf_save() {
-        return new(
-            FhUtil.ptr_at<byte>(FhUtil.select(0x1197F70, 0xF9D500, 0xF9D500)),
-            FhUtil.select(0x6900, 0x166A0, 0x166A0)
-        );
+        return new(pal_addr_buf_save(), FhUtil.select(0x6900, 0x166A0, 0x166A0));
     }
 
     /// <summary>
@@ -225,27 +228,29 @@ public sealed class FhSaves {
         scratch.Clear();
 
         fixed (byte* ptr_scratch = scratch) {
-            // Player level prefix, X-2 LM
-            FhCall.SaveDataGetLoc.fnptr!(0x36B, ptr_scratch);
+            // Player level/location prefix, X-2 LM
+            if (FhGlobal.game_id is FhGameId.FFX2LM) {
+                FhCall.SaveDataGetLoc.fnptr!(0x36B, ptr_scratch);
 
-            int len_lm_level_prefix = FhEncoding.decode(scratch, dest, flags: FhEncodingFlags.IMPLICIT_END);
-            _cache_prefix_lm_level = Encoding.UTF8.GetString(dest[ .. len_lm_level_prefix ]);
+                int len_lm_level_prefix = FhEncoding.decode(scratch, dest, flags: FhEncodingFlags.IMPLICIT_END);
+                _cache_prefix_lm_level = Encoding.UTF8.GetString(dest[ .. len_lm_level_prefix ]);
 
-            scratch.Clear();
+                scratch.Clear();
+
+                // Location prefix, X-2 LM
+                FhCall.SaveDataGetLoc.fnptr!(0x4C1, ptr_scratch);
+
+                int len_lm_loc_prefix = FhEncoding.decode(scratch, dest, flags: FhEncodingFlags.IMPLICIT_END);
+                _cache_prefix_lm_loc = Encoding.UTF8.GetString(dest[ .. len_lm_loc_prefix]);
+
+                scratch.Clear();
+            }
 
             // Playtime prefix, all games
             FhCall.SaveDataGetLoc.fnptr!(FhUtil.select(0x52, 0x5C, 0x5C), ptr_scratch);
 
             int len_playtime_prefix = FhEncoding.decode(scratch, dest, flags: FhEncodingFlags.IMPLICIT_END);
             _cache_prefix_play_time = Encoding.UTF8.GetString(dest[ .. len_playtime_prefix ]);
-
-            scratch.Clear();
-
-            // Location prefix, X-2 LM
-            FhCall.SaveDataGetLoc.fnptr!(0x4C1, ptr_scratch);
-
-            int len_lm_loc_prefix = FhEncoding.decode(scratch, dest, flags: FhEncodingFlags.IMPLICIT_END);
-            _cache_prefix_lm_loc = Encoding.UTF8.GetString(dest[ .. len_lm_loc_prefix ]);
 
             scratch.Clear();
         }
@@ -264,9 +269,10 @@ public sealed class FhSaves {
         }
 
         foreach ((_, FhTexture icon_map) in _cache_icon_map) {
-            if (!FhApi.Resources.load_game_texture_2d(icon_map)) {
-                FhInternal.Log.Warning($"Failed to load texture {icon_map}.");
-            }
+            // TODO: How the fuck do we load PNG map icons?
+            //if (!FhApi.Resources.load_game_texture_2d(icon_map)) {
+            //    FhInternal.Log.Warning($"Failed to load texture {icon_map}.");
+            //}
         }
     }
 
@@ -285,7 +291,8 @@ public sealed class FhSaves {
             if (!_cache_icon_map.Remove(tex.Key, out FhTexture? icon_map))
                 throw new Exception("Failed to clear texture cache.");
 
-            FhApi.Resources.unload_texture(icon_map);
+            // TODO: How the fuck do we load PNG map icons?
+            //FhApi.Resources.unload_texture(icon_map);
         }
     }
 
@@ -364,11 +371,7 @@ public sealed class FhSaves {
             ? DIR_MAP_ICON_X
             : DIR_MAP_ICON_X2;
 
-        string map_icon = id_icon_map < 0x3E9
-            ? $"m{id_icon_map}"
-            : $"m{id_icon_map - 1000}_l";
-
-        return (_cache_icon_map[id_icon_map] = new FhTexture($"{map_dir}/{map_icon}.png", FhTextureType.PHYRE));
+        return (_cache_icon_map[id_icon_map] = new FhTexture($"{map_dir}/{id_icon_map}.png", FhTextureType.PHYRE));
     }
 
     /// <summary>Compute the correct filename of a face icon.</summary>
@@ -820,10 +823,11 @@ public sealed class FhSaves {
             return;
 
         _pal_cache_init();
-
         _pal_cache_tex_unload();
-        _sets_index    ();
-        _pal_cache_tex_load  ();
+
+        _sets_index();
+
+        _pal_cache_tex_load();
 
         Interlocked.Decrement(ref _lock);
     }
@@ -849,18 +853,25 @@ public sealed class FhSaves {
         if (Interlocked.CompareExchange(ref _lock, 1, 0) != 0)
             return;
 
+        _pal_cache_tex_unload();
+
         _set_active = set_name;
         _sets_index();
+
+        _pal_cache_tex_load();
 
         Interlocked.Decrement(ref _lock);
     }
 
     /// <summaryRetrieve the active set.</summary>
-    public bool sets_get_active([NotNullWhen(true)] out FhSaveSet? set) {
-        return _sets.TryGetValue(_set_active, out set);
+    public FhSaveSet sets_get_active() => _sets[_set_active];
+
+    /// <summaryRetrieve a specific set.</summary>
+    public bool sets_get(string set_name, [NotNullWhen(true)] out FhSaveSet? set) {
+        return _sets.TryGetValue(set_name, out set);
     }
 
-    public bool sets_get_display_data(int index, [NotNullWhen(true)] out FhSaveUiData? data) {
+    public bool sets_get_ui_data(int index, out FhSaveUiData data) {
         data = default;
         if (index >= _ui_data.Count)
             return false;

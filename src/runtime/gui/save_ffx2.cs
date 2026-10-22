@@ -568,10 +568,12 @@ public sealed class FhSaveUiX2 : FhSaveUi {
 
     /// <summary>Render the active set name and set count.</summary>
     private void ui_savecount() {
-        string active_set   = FhApi.Saves.active_set;
-        bool   has_autosave = FhApi.Saves.set_has_autosave(active_set);
+        if (!FhApi.Saves.sets_get_active(out FhSaveSet? set))
+            return;
 
-        int save_count = FhApi.Saves.get_slots_used();
+        string active_set   = set.name;
+        bool   has_autosave = set.has_autosave;
+        int    save_count   = set.count;
 
         //TODO: Add localization
         string save_text = has_autosave
@@ -1273,8 +1275,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
         }
 
         /* ===== Location Icon ===== */
-        string    map     = Encoding.UTF8.GetString(save.icon_map);
-        FhTexture tex_map = _map_icon_textures.GetValueOrDefault(map, _texture_map_icon_default);
+        FhTexture tex_map = save.icon_map;
 
         // if (tex_map.try_use(out ImTextureRef map_icon, out _)) {
         //     UV tuv = new(new(0f, 1f), new(1f, 0f));
@@ -1427,8 +1428,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
                 continue;
             }
 
-            string    filename = save.job_filenames[i];
-            FhTexture portrait = _face_icon_textures.GetValueOrDefault(filename, _texture_face_icon_default);
+            FhTexture portrait = save.icon_chr[i];
 
             uint alpha = job_id == 0x0 ? 0xA0C0C0C0 : 0xFFFFFFFF;
 
@@ -1447,8 +1447,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
         }
 
         /* ===== Location Icon ===== */
-        string    map     = Encoding.UTF8.GetString(save.icon_map);
-        FhTexture tex_map = _map_icon_textures.GetValueOrDefault(map, _texture_map_icon_default);
+        FhTexture tex_map = save.icon_map;
 
         // if (tex_map.try_use(out ImTextureRef map_icon, out _)) {
         //     UV tuv = new(new(0f, 1f), new(1f, 0f));
@@ -1642,8 +1641,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
                 continue;
             }
 
-            string    filename = save.lm_job_filename;
-            FhTexture portrait = _face_icon_textures.GetValueOrDefault(filename, _texture_face_icon_default);
+            FhTexture portrait = save.icon_chr[i];
 
             if (portrait.try_use(out ImTextureRef faces, out _)) {
                 uint alpha = ImGui.GetColorU32(new Vector4(1f, 1f, 1f, 1f - (i * 0.25f)));
@@ -1662,8 +1660,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
         }
 
         /* ===== Location Icon ===== */
-        string    map     = Encoding.UTF8.GetString(save.icon_map);
-        FhTexture tex_map = _map_icon_textures.GetValueOrDefault(map, _texture_map_icon_default);
+        FhTexture tex_map = save.icon_map;
 
         // if (tex_map.try_use(out ImTextureRef map_icon, out _)) {
         //     UV tuv = new(new(0f, 1f), new(1f, 0f));

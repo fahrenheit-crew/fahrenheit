@@ -81,7 +81,7 @@ internal unsafe struct SaveDataManagerX2 {
 }
 
 [StructLayout(LayoutKind.Explicit)]
-internal struct SaveHeader {
+public struct SaveHeader {
     [FieldOffset(0x0)] public SaveHeaderX  x;
     [FieldOffset(0x0)] public SaveHeaderX2 x2;
 }
@@ -186,19 +186,22 @@ public sealed class FhSaveSlotComparer : Comparer<FhSaveUiData> {
 ///     Contains the fields the game shows as part of its standard save game display.
 /// </summary>
 public struct FhSaveUiData {
-    public FhSaveUiData() { }
+    [InlineArray(3)]
+    public struct IconChr {
+        private FhTexture _e0;
+    }
 
-    public int        slot   { get; internal init; } = 0;
-    public SaveHeader header { get; internal init; }
-
-    public string slot_str    { get; internal init; } = "";
-    public string play_time   { get; internal init; } = "";
-    public string player_name { get; internal init; } = "";
-    public string chapter     { get; internal init; } = "";
-    public string completion  { get; internal init; } = "";
-    public string location    { get; internal init; } = "";
-    public string lm_level    { get; internal init; } = "";
-    public string lm_job      { get; internal init; } = "";
-
-    public DateTimeOffset create_time { get; internal init; } = DateTimeOffset.MinValue;
+    public int            slot        { get; internal init; }
+    public SaveHeader     header      { get; internal init; }
+    public string         slot_str    { get; internal init; }
+    public string         play_time   { get; internal init; }
+    public string         player_name { get; internal init; }
+    public string         chapter     { get; internal init; }
+    public string         completion  { get; internal init; }
+    public string         location    { get; internal init; }
+    public string         lm_level    { get; internal init; }
+    public string         lm_job      { get; internal init; }
+    public IconChr        icon_chr    { get; internal init; }
+    public FhTexture      icon_map    { get; internal init; }
+    public DateTimeOffset create_time { get; internal init; }
 }

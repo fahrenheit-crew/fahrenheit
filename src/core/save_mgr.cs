@@ -684,7 +684,13 @@ public sealed class FhSaves {
             save_file_stream.ReadExactly(header_bytes);
         }
 
-        SaveHeader   header  = MemoryMarshal.Read<SaveHeader>(header_bytes);
+        SaveHeader header = MemoryMarshal.Read<SaveHeader>(header_bytes);
+
+        FhSaveUiData.IconChr icon_chr = new();
+        icon_chr[0] = _pal_get_icon_chr(header, 0);
+        icon_chr[1] = _pal_get_icon_chr(header, 1);
+        icon_chr[2] = _pal_get_icon_chr(header, 2);
+
         FhSaveUiData ui_data = new() {
             slot        = slot,
             slot_str    = slot.ToString(),
@@ -696,6 +702,8 @@ public sealed class FhSaves {
             location    = _pal_get_location   (header),
             lm_level    = _pal_get_lm_level   (header),
             lm_job      = _pal_get_lm_job     (header),
+            icon_map    = _pal_get_icon_map   (header),
+            icon_chr    = new(),
         };
 
         _slots  .Add(slot);

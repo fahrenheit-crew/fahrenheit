@@ -71,9 +71,6 @@ public sealed class FhSaveUiX : FhSaveUi {
 
     private bool _loaded_all_textures;
 
-    // FFX textures
-    private readonly Dictionary<string, FhTexture> _map_icon_textures = [ ];
-
     private readonly FhTexture _texture_map_icon_default = new(Path.Join(DIR_MAP_ICONS, "0.png"), FhTextureType.PNG);
 
     private readonly FhTexture _texture_bg           = new(Path.Join(DIR_MENU_D3D11, "ffx_bg.dds.phyre"),        FhTextureType.PHYRE);
@@ -91,9 +88,6 @@ public sealed class FhSaveUiX : FhSaveUi {
     private readonly Vector2 _tex_faces_size        = new(1024f,  512f);
     private readonly Vector2 _tex_meswin_size       = new(1024f, 1024f);
     private readonly Vector2 _tex_summonbg_size     = new(1024f, 1024f);
-
-    // FFX-2 textures
-    private readonly Dictionary<string, FhTexture> _ffx2_face_icon_textures = [ ];
 
     private readonly FhTexture _texture_ffx2_face_icon_default = new(Path.Join(FFX2_DIR_FACE_DATA, "mface_000.dds.phyre"), FhTextureType.PHYRE);
     private readonly FhTexture _texture_ffx2_map_icon_default  = new(Path.Join(FFX2_DIR_MAP_ICONS, "logo_j.png"),          FhTextureType.PNG);
@@ -116,11 +110,6 @@ public sealed class FhSaveUiX : FhSaveUi {
 
         // _texture_map_icon_default,
         _texture_ffx2_face_icon_default,
-    ];
-
-    private FhTexture[] textures_set => [
-        // .. _map_icon_textures.Values,
-        .. _ffx2_face_icon_textures.Values,
     ];
 
     private bool is_saving => FhApi.Saves.impl_get_system_mode(out FhSaveSystemMode? system_mode) && system_mode is FhSaveSystemMode.SAVE;
@@ -323,12 +312,7 @@ public sealed class FhSaveUiX : FhSaveUi {
         _scrollable_saves.reset();
         _scrollable_sets .reset();
 
-        unload_textures([
-            .. textures,
-            .. textures_set,
-        ]);
-
-        _map_icon_textures.Clear();
+        unload_textures(textures);
     }
 
     private void change_mode(UiMode new_mode) {
@@ -341,8 +325,6 @@ public sealed class FhSaveUiX : FhSaveUi {
     private void switch_set(string set_name) {
         FhApi.Saves.sets_switch(set_name);
 
-        unload_textures(textures_set);
-
         try_load_textures();
 
         change_mode(UiMode.SAVE_LIST);
@@ -351,13 +333,8 @@ public sealed class FhSaveUiX : FhSaveUi {
     /// <summary>Attempt to load all of the textures the renderer requires to display properly.</summary>
     /// <returns>Whether all textures have been successfully loaded.</returns>
     private bool try_load_textures() {
-        Span<FhTexture> texture_list = [
-            .. textures,
-            .. textures_set,
-        ];
-
         _loaded_all_textures = true;
-        foreach (FhTexture texture in texture_list) {
+        foreach (FhTexture texture in textures) {
             if (!FhApi.Resources.load_game_texture_2d(texture)) {
                 _loaded_all_textures = false;
             }
@@ -919,10 +896,8 @@ public sealed class FhSaveUiX : FhSaveUi {
         }
 
         /* ===== Location Icon ===== */
-        string    map     = Encoding.UTF8.GetString(save.icon_map);
-        FhTexture tex_map = _map_icon_textures.GetValueOrDefault(map, _texture_map_icon_default);
-
-        Vector2 map_icon_size = new(255f, 144f);
+        FhTexture tex_map       = save.icon_map;
+        Vector2   map_icon_size = new(255f, 144f);
 
         // if (tex_map.try_use(out ImTextureRef map_icon, out _)) {
         //     UV tuv = new(new(0f, 1f), new(1f, 0f));
@@ -1061,8 +1036,7 @@ public sealed class FhSaveUiX : FhSaveUi {
                 continue;
             }
 
-            string    filename = save.job_filenames[i];
-            FhTexture portrait = _ffx2_face_icon_textures.GetValueOrDefault(filename, _texture_ffx2_face_icon_default);
+            FhTexture portrait = save.icon_chr[i];
 
             uint alpha = job_id == 0x0 ? 0xA0C0C0C0 : 0xFFFFFFFF;
 
@@ -1081,10 +1055,8 @@ public sealed class FhSaveUiX : FhSaveUi {
         }
 
         /* ===== Location Icon ===== */
-        string    map     = Encoding.UTF8.GetString(save.icon_map);
-        FhTexture tex_map = _map_icon_textures.GetValueOrDefault(map, _texture_map_icon_default);
-
-        Vector2 map_icon_size = new(255f, save_bounds.size.Y);
+        FhTexture tex_map       = save.icon_map;
+        Vector2   map_icon_size = new(255f, save_bounds.size.Y);
 
         // if (tex_map.try_use(out ImTextureRef map_icon, out _)) {
         //     UV tuv = new(new(0f, 1f), new(1f, 0f));
@@ -1271,8 +1243,7 @@ public sealed class FhSaveUiX : FhSaveUi {
         byte job_id = header2.lm_job;
 
         if (job_id <= 0x21) {
-            string    filename = save.lm_job_filename;
-            FhTexture portrait = _ffx2_face_icon_textures.GetValueOrDefault(filename, _texture_ffx2_face_icon_default);
+            FhTexture portrait = save.icon_chr[0];
 
             if (portrait.try_use(out ImTextureRef faces, out _)) {
                 for (int i = 3; i >= 0; i--) {
@@ -1293,10 +1264,8 @@ public sealed class FhSaveUiX : FhSaveUi {
         }
 
         /* ===== Location Icon ===== */
-        string    map     = Encoding.UTF8.GetString(save.icon_map);
-        FhTexture tex_map = _map_icon_textures.GetValueOrDefault(map, _texture_map_icon_default);
-
-        Vector2 map_icon_size = new(255f, save_bounds.size.Y);
+        FhTexture tex_map       = save.icon_map;
+        Vector2   map_icon_size = new(255f, save_bounds.size.Y);
 
         // if (tex_map.try_use(out ImTextureRef map_icon, out _)) {
         //     UV tuv = new(new(0f, 1f), new(1f, 0f));

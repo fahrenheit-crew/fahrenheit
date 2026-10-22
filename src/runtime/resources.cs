@@ -39,33 +39,7 @@ public unsafe sealed class FhResourceLoaderModule : FhModule, IFhResourceLoaderI
     /// <summary>
     ///     Creates a <see cref="ID3D11ShaderResourceView"/> from a given texture, then assigns it to a <see cref="FhTexture"/>.
     /// </summary>
-    private bool _helper_create_srv(Hexa_ScratchImage hexa_image, Hexa_TexMetadata hexa_metadata, FhTexture texture) {
-        Hexa_ID3D11SRV* srv;
-        Hexa_HRESULT    rc = DirectXTex.CreateShaderResourceView(
-            (Hexa_ID3D11Device*)_p_device,
-            Hexa_Extensions.GetImages    (hexa_image),
-            Hexa_Extensions.GetImageCount(hexa_image),
-            &hexa_metadata,
-            &srv);
-
-        if (rc.IsFailure) {
-            _logger.Info($"0x{rc:X}");
-            return false;
-        }
-
-        FhTextureMetadata image_metadata = new(
-            hexa_metadata.Width,
-            hexa_metadata.Height,
-            hexa_metadata.Depth,
-            hexa_metadata.ArraySize,
-            hexa_metadata.MipLevels,
-            hexa_metadata.MiscFlags,
-            hexa_metadata.MiscFlags2,
-            (DXGI_FORMAT)             hexa_metadata.Format,
-            (D3D11_RESOURCE_DIMENSION)hexa_metadata.Dimension);
-        ImTextureRef imgui_ref = new ImTextureRef(null, srv);
-
-        texture.load(imgui_ref, image_metadata);
+    private bool _helper_create_srv(FhTexture texture) {
         return true;
     }
 
@@ -80,24 +54,7 @@ public unsafe sealed class FhResourceLoaderModule : FhModule, IFhResourceLoaderI
         if (!texture.try_lock())
             return false;
 
-        Hexa_TexMetadata  image_metadata = default;
-        Hexa_ScratchImage image = DirectXTex.CreateScratchImage();
-        Hexa_HRESULT      rc    = texture.type switch {
-            FhTextureType.DDS  => DirectXTex.LoadFromDDSFile (file_path, Hexa_DDSFlags.None, &image_metadata, &image),
-            FhTextureType.TGA  => DirectXTex.LoadFromTGAFile (file_path, Hexa_TGAFlags.None, &image_metadata, &image),
-            FhTextureType.JPEG => DirectXTex.LoadFromJPEGFile(file_path,                     &image_metadata, &image),
-            FhTextureType.PNG  => DirectXTex.LoadFromPNGFile (file_path,                     &image_metadata, &image),
-            FhTextureType.WIC  => DirectXTex.LoadFromWICFile (file_path, Hexa_WICFlags.None, &image_metadata, &image, null),
-            _                  => -1
-        };
-
-        if (rc.IsFailure) {
-            _logger.Info($"{file_path} -> 0x{rc.Value:X}");
-            return false;
-        }
-
-        bool rv = _helper_create_srv(image, image_metadata, texture);
-        Hexa_Extensions.Release(image);
+        bool rv = _helper_create_srv(texture);
 
         texture.unlock();
         return rv;

@@ -51,7 +51,7 @@ internal interface IFhSaveSystemImpl {
 /// </summary>
 public sealed class FhSaveSet {
     public string name         { get; internal init; } = "";
-    public bool   has_autosave { get; internal set;  }
+    public bool   has_autosave { get; internal init; }
     public int    count        { get; internal set;  }
 }
 
@@ -241,7 +241,7 @@ public sealed class FhSaves {
                 FhCall.SaveDataGetLoc.fnptr!(0x4C1, ptr_scratch);
 
                 int len_lm_loc_prefix = FhEncoding.decode(scratch, dest, flags: FhEncodingFlags.IMPLICIT_END);
-                _cache_prefix_lm_loc = Encoding.UTF8.GetString(dest[ .. len_lm_loc_prefix]);
+                _cache_prefix_lm_loc = Encoding.UTF8.GetString(dest[ .. len_lm_loc_prefix ]);
 
                 scratch.Clear();
             }
@@ -342,9 +342,7 @@ public sealed class FhSaves {
     }
 
     /* [fkelava 13/11/25 21:59]
-     * FFX.exe  +2F0DA0, L66-80   (X)
-     * FFX-2.exe+11DC50, L83-97   (X-2)
-     * FFX-2.exe+11DC50, L161-165 (X-2 LM)
+     * The following functions are excerpts from FFX.exe+2F0C60 and FFX-2.exe+11DD00.
      */
 
     /// <summary>
@@ -426,12 +424,6 @@ public sealed class FhSaves {
         return (_cache_icon_chr[key] = new FhTexture($"{DIR_CHR_ICON_X2}/{ply}face_{job:D3}.dds.phyre", FhTextureType.PHYRE));
     }
 
-    /* [fkelava 13/11/25 22:08]
-     * FFX.exe  +2F0DA0, L57-61   (X)
-     * FFX-2.exe+11DC50, L74-78   (X-2)
-     * FFX-2.exe+11DC50, L139-144 (X-2 LM)
-     */
-
     /// <summary>
     ///     Returns the total play time in the save with the given <paramref name="header"/>.
     /// </summary>
@@ -444,12 +436,6 @@ public sealed class FhSaves {
 
         return (_cache_play_time[t_sec] = $"{_cache_prefix_play_time}  {t_min / 60:D3}:{t_min % 60:D2}:{t_sec % 60:D2}\0");
     }
-
-    /* [fkelava 13/11/25 22:08]
-     * FFX.exe  +2F0DA0, L55      (X)
-     * FFX-2.exe+11DC50, L64-65   (X-2)
-     * FFX-2.exe+11DC50, L122-132 (X-2 LM)
-     */
 
     /// <summary>
     ///     Returns the player character's name in the save with the given <paramref name="header"/>.
@@ -526,10 +512,6 @@ public sealed class FhSaves {
         return (_cache_location[location_id] = $"{_cache_prefix_lm_loc} {Encoding.UTF8.GetString(dest)}");
     }
 
-    /* [fkelava 13/11/25 22:08]
-     * FFX-2.exe+11DC50, L66-69 (X-2)
-     */
-
     /// <summary>
     ///     Returns the story chapter in the FF X-2 save with the given <paramref name="header"/>.
     /// </summary>
@@ -556,10 +538,6 @@ public sealed class FhSaves {
 
         return (_cache_chapter[chapter_id] = Encoding.UTF8.GetString(dest));
     }
-
-    /* [fkelava 13/11/25 22:08]
-     * FFX-2.exe+11DC50, L70-73 (X-2)
-     */
 
     /// <summary>
     ///     Returns the story completion in the FF X-2 save with the given <paramref name="header"/>.
@@ -588,10 +566,6 @@ public sealed class FhSaves {
         return (_cache_completion[completion_pct] = Encoding.UTF8.GetString(dest));
     }
 
-    /* [fkelava 13/11/25 22:08]
-     * FFX-2.exe+11DC50, L137-138 (X-2 LM)
-     */
-
     /// <summary>
     ///     Returns the player's job in the FF X-2 LM save with the given <paramref name="header"/>.
     /// </summary>
@@ -615,10 +589,6 @@ public sealed class FhSaves {
 
         return (_cache_lm_job[key] = Encoding.UTF8.GetString(dest));
     }
-
-    /* [fkelava 13/11/25 22:08]
-     * FFX-2.exe+11DC50, L133-136 (X-2 LM)
-     */
 
     /// <summary>
     ///     Returns the player's level in the FF X-2 LM save with the given <paramref name="header"/>.

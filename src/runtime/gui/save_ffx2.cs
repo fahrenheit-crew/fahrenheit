@@ -579,7 +579,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
 
         //TODO: Add localization
         string save_text = has_autosave
-            ? $" + {save_count} saves"
+            ? $" + {save_count - 1} saves"
             : $"{save_count} saves";
 
         Vector2 text_pos = new(1717f, 146f);

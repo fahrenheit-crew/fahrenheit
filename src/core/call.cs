@@ -546,7 +546,7 @@ public static unsafe partial class FhCall {
         => new( new FhCallLocation(0x387370, 0x20F4B0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    internal delegate void d_SaveDataSaveLoadSucceed(FhSaveSystemState arg1);
+    internal delegate void d_SaveDataSaveLoadSucceed(SaveSystemState arg1);
     internal static FhCallHandle<d_SaveDataSaveLoadSucceed> SaveDataSaveLoadSucceed
         => new( new FhCallLocation(0x248540, 0x88300) );
 

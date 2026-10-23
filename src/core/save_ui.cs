@@ -39,7 +39,7 @@ public abstract class FhSaveUi : FhModule {
 
     public override bool init(FhModContext mod_context, FileStream global_state_file) {
         _logger.Info($"Registering new save UI: {ModuleType}");
-        FhApi.Saves.register_ui(this);
+        FhApi.Saves.ui_register(this);
 
         FhApi.Events.Common.GameLoop.PostOpenSaveMenu.subscribe(post_open);
 

@@ -21,14 +21,7 @@ using EflIndex = Dictionary<string, string>;
 ///     and the ability to cross-load the inactive game's assets from the active game.
 /// </summary>
 /// <remarks>
-///     Place any files you wish to use in this way
-///     in the <c>efl\x</c> or <c>efl\x2</c> subdirectory of your mod folder.
-///     <para/>
-///     These subdirectories are treated as the root of the VBF archive for their respective games;
-///     from that point, you must mirror the VBF's directory structure.
-///     <para/>
-///     For example, to replace <c>FFX_Data\ffx_ps2\ffx\master\jppc\battle\kernel\takara.bin</c>,
-///     the full path is <c>{...}\efl\x\FFX_Data\ffx_ps2\ffx\master\jppc\battle\kernel\takara.bin</c>.
+///     See <see href="https://github.com/fahrenheit-crew/fahrenheit/wiki/Mod-structure#efl"/>.
 /// </remarks>
 [FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
 [SupportedOSPlatform("windows6.1")]

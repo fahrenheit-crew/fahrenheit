@@ -43,7 +43,7 @@ internal interface IFhSaveSystemImpl {
     internal void copy_albd(int slot);
 
     /// <summary>Exit the save screen through cancellation or error.</summary>
-    internal void exit_cancel();
+    internal void abort();
 }
 
 /// <summary>
@@ -772,20 +772,6 @@ public sealed class FhSaves {
         }
     }
 
-    /// <summary>Get the save UI associated with the given ID.</summary>
-    /// <param name="id">The ID of the desired UI.</param>
-    /// <param name="ui">The UI with the given ID.</param>
-    /// <returns>Whether the operation succeeded.</returns>
-    internal bool ui_get(string id, [NotNullWhen(true)] out FhSaveUi? ui) {
-        return _ui.TryGetValue(id, out ui);
-    }
-
-    /// <summary>Register a new save UI for selection by the user.</summary>
-    /// <param name="ui">The new UI to register.</param>
-    internal void ui_register(FhSaveUi ui) {
-        _ui[ui.ModuleType] = ui;
-    }
-
     /// <summary>
     ///     Reindexes the active save set.
     /// </summary>
@@ -803,14 +789,25 @@ public sealed class FhSaves {
         Interlocked.Decrement(ref _lock);
     }
 
-    /// <summary>Regenerate and retrieve the loadable sets.</summary>
+    /// <summary>
+    ///     Regenerates the available save sets.
+    /// </summary>
     /// <remarks>
     ///     Regenerating sets involves expensive file operations,
     ///     so only do this when you have to.
     /// </remarks>
+    internal void sets_query() {
+        if (Interlocked.CompareExchange(ref _lock, 1, 0) != 0)
+            return;
+
+        _sets_query();
+
+        Interlocked.Decrement(ref _lock);
+    }
+
+    /// <summary>Retrieve the loadable sets.</summary>
     /// <returns>A set of the available set names.</returns>
     public IEnumerable<string> sets_enumerate() {
-        _sets_query();
         return _sets.Keys;
     }
 
@@ -851,6 +848,20 @@ public sealed class FhSaves {
         return true;
     }
 
+    /// <summary>Get the save UI associated with the given ID.</summary>
+    /// <param name="id">The ID of the desired UI.</param>
+    /// <param name="ui">The UI with the given ID.</param>
+    /// <returns>Whether the operation succeeded.</returns>
+    internal bool ui_get(string id, [NotNullWhen(true)] out FhSaveUi? ui) {
+        return _ui.TryGetValue(id, out ui);
+    }
+
+    /// <summary>Register a new save UI for selection by the user.</summary>
+    /// <param name="ui">The new UI to register.</param>
+    internal void ui_register(FhSaveUi ui) {
+        _ui[ui.ModuleType] = ui;
+    }
+
     /// <summary>Retrieve the current save system mode.</summary>
     /// <param name="mode">The current mode of the system.</param>
     /// <returns>Whether the operation succeeded.</returns>
@@ -880,13 +891,13 @@ public sealed class FhSaves {
         return true;
     }
 
-    /// <inheritdoc cref="IFhSaveSystemImpl.exit_cancel"/>
+    /// <inheritdoc cref="IFhSaveSystemImpl.abort"/>
     /// <returns>Whether the operation succeeded.</returns>
-    public bool impl_exit() {
+    public bool impl_abort() {
         if (!impl_handle.get(out IFhSaveSystemImpl? impl))
             return false;
 
-        impl.exit_cancel();
+        impl.abort();
         return true;
     }
 }

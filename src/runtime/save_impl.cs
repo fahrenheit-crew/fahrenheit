@@ -61,6 +61,8 @@ public unsafe sealed class FhSaveExtensionModule : FhModule, IFhSaveSystemImpl {
     [UnmanagedCallConv(CallConvs = [ typeof(CallConvCdecl) ] )]
     private void signal_enter_save() {
         FhApi.Input.lock_on();
+
+        FhApi.Saves.sets_query();
         FhApi.Saves.sets_index();
 
         _mode = FhSaveSystemMode.SAVE;
@@ -75,6 +77,8 @@ public unsafe sealed class FhSaveExtensionModule : FhModule, IFhSaveSystemImpl {
     [UnmanagedCallConv(CallConvs = [ typeof(CallConvCdecl) ] )]
     private void signal_enter_load() {
         FhApi.Input.lock_on();
+
+        FhApi.Saves.sets_query();
         FhApi.Saves.sets_index();
 
         _mode = FhSaveSystemMode.LOAD;
@@ -90,6 +94,8 @@ public unsafe sealed class FhSaveExtensionModule : FhModule, IFhSaveSystemImpl {
     [UnmanagedCallConv(CallConvs = [ typeof(CallConvCdecl ) ] )]
     private void signal_enter_albd() {
         FhApi.Input.lock_on();
+
+        FhApi.Saves.sets_query();
         FhApi.Saves.sets_index();
 
         _mode = FhSaveSystemMode.ALBD;
@@ -255,8 +261,8 @@ public unsafe sealed class FhSaveExtensionModule : FhModule, IFhSaveSystemImpl {
         signal_exit_success();
     }
 
-    /// <inheritdoc cref="IFhSaveSystemImpl.exit_cancel"/>
-    void IFhSaveSystemImpl.exit_cancel() {
+    /// <inheritdoc cref="IFhSaveSystemImpl.abort"/>
+    void IFhSaveSystemImpl.abort() {
         signal_exit_abort();
     }
 }

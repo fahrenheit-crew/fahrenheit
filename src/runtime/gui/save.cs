@@ -61,8 +61,8 @@ public sealed class FhSaveUiSelector : FhModule {
 
     public override void render_imgui() {
         if (
-            FhApi.Saves.impl_get_system_mode(out FhSaveSystemMode? mode)
-            && mode is FhSaveSystemMode.NULL
+            !FhApi.Saves.impl_get_system_mode(out FhSaveSystemMode? mode)
+            || mode is FhSaveSystemMode.NULL
         ) {
             return;
         }

@@ -277,7 +277,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             if (_mode == UiMode.SET_SWAP)
                 change_mode(UiMode.SAVE_LIST);
             else
-                fade_out(() => FhApi.Saves.impl_exit());
+                fade_out(() => FhApi.Saves.impl_abort());
         }
     }
 
@@ -294,7 +294,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
 
         _scrollable_sets .max = _set_list.Count;
         _scrollable_saves.max = is_saving
-            ? set.count + 1 // Add one for New Save Data button
+            ? set.count + 1 - (set.has_autosave ? 1 : 0) // Add one for New Save Data button
             : set.count;
 
         _fade.restart(COLOR_BLACK, COLOR_TRANS, _fade_length);
@@ -573,14 +573,10 @@ public sealed class FhSaveUiX2 : FhSaveUi {
     private void ui_savecount() {
         FhSaveSet set = FhApi.Saves.sets_get_active();
 
-        string active_set   = set.name;
-        bool   has_autosave = set.has_autosave;
-        int    save_count   = set.count;
-
         //TODO: Add localization
-        string save_text = has_autosave
-            ? $" + {save_count - 1} saves"
-            : $"{save_count} saves";
+        string save_text = set.has_autosave
+            ? $" + {set.count - 1} saves"
+            : $"{set.count} saves";
 
         Vector2 text_pos = new(1717f, 146f);
 
@@ -598,7 +594,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
             Alignment2D.RIGHT
         );
 
-        if (has_autosave) {
+        if (set.has_autosave) {
             Vector2 autosave_pos = text_pos * aspect_scale + aspect_helper.pos;
             autosave_pos.X -= saves_text_size.X;
 
@@ -618,7 +614,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
         FhApi.Gui.draw_text(
             draw,
             second_line_pos * aspect_scale + aspect_helper.pos,
-            active_set,
+            set.name,
             font_size,
             true,
             Alignment2D.RIGHT

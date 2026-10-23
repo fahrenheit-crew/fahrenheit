@@ -200,7 +200,10 @@ public unsafe sealed class FhSaveExtensionModule : FhModule, IFhSaveSystemImpl {
 
     /// <inheritdoc cref="IFhSaveSystemImpl.save"/>
     void IFhSaveSystemImpl.save(int slot) {
-               slot      = FhApi.Saves.slot_remap(slot);
+        if (slot == 0) { // This is a new save, not an overwrite.
+            slot = FhApi.Saves.pal_get_open_slot();
+        }
+
         string save_path = FhApi.Saves.pal_get_path_for_slot(slot);
 
         ReadOnlySpan<byte> save = FhSaves.pal_get_buf_save();

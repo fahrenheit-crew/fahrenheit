@@ -617,12 +617,9 @@ public sealed class FhSaves {
     }
 
     /// <summary>
-    ///     For a given <paramref name="slot"/>, returns the slot number being saved to.
+    ///     Returns the first slot number free for saving.
     /// </summary>
-    internal int slot_remap(int slot) {
-        // This method is not re-entrant.
-        if (slot != 0) return slot;
-
+    internal int pal_get_open_slot() {
         int target_slot = 1;
         while (_slots.Contains(target_slot)) { target_slot++; }
 

@@ -51,7 +51,7 @@ internal interface IFhSaveSystemImpl {
 /// </summary>
 public sealed class FhSaveSet {
     public string name         { get; internal init; } = "";
-    public bool   has_autosave { get; internal init; }
+    public bool   has_autosave { get; internal set;  }
     public int    count        { get; internal set;  }
 }
 
@@ -715,7 +715,9 @@ public sealed class FhSaves {
 
         Task.WaitAll(tasks);
 
-        _sets[_set_active].count = _ui_data.Count;
+        _sets[_set_active].has_autosave = File.Exists(pal_get_path_for_slot(0));
+        _sets[_set_active].count        = _ui_data.Count;
+
         _ui_data.Sort(FhSaveTimeComparer.Instance);
     }
 

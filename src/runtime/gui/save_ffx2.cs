@@ -973,7 +973,7 @@ public sealed class FhSaveUiX2 : FhSaveUi {
         FhSaveSet set = FhApi.Saves.sets_get_active();
 
         _scrollable_saves.max = is_saving
-            ? set.count + 1
+            ? set.count + 1 - (set.has_autosave ? 1 : 0) // Add one for New Save Data button
             : set.count;
 
         if (!is_saving && set.count == 0) {

@@ -87,8 +87,13 @@ public unsafe sealed class FhImguiModule : FhModule, IFhPlatformUser {
         // Enable features
         io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
 
-        io.ConfigDpiScaleFonts     = true;
-        io.ConfigDpiScaleViewports = true;
+        /* [fkelava 23/10/26 22:05]
+         * The game is NOT DPI-aware. If we set otherwise,
+         * we'll get bad results when the user sets a custom
+         * display scale, which is common on hi-res displays.
+         */
+        io.ConfigDpiScaleFonts     = false;
+        io.ConfigDpiScaleViewports = false;
 
         ImGui.StyleColorsDark();
 

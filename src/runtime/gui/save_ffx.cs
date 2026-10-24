@@ -165,15 +165,14 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
 
         draw.AddImage(meswin, title_suv.p0, title_suv.p1, title_tuv.p0, title_tuv.p1);
 
-        //TODO: Add localization
-        string text = _mode switch {
-            UiMode.SET_SWAP => "Select save set",
+        string text_key = _mode switch {
+            UiMode.SET_SWAP => "help.set",
 
             UiMode.SAVE_LIST  or
             UiMode.SAVE_POPUP => system_mode switch {
-                FhSaveSystemMode.SAVE => "Select save area",
+                FhSaveSystemMode.SAVE => "help.save",
                 FhSaveSystemMode.LOAD or
-                FhSaveSystemMode.ALBD => "Select save data",
+                FhSaveSystemMode.ALBD => "help.load",
 
                 //TODO-C#16: Remove this, since FhSaveSystemMode should be a `closed enum`.
                 _ => throw new UnreachableException(),
@@ -181,6 +180,8 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
 
             _ => throw new NotImplementedException(),
         };
+
+        string text = localize(text_key);
 
         Vector2 text_pos = bg_screen.left;
         text_pos.X += 24f * aspect_scale.X;
@@ -199,10 +200,11 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
     protected override void ui_savecount() {
         FhSaveSet set = FhApi.Saves.sets_get_active();
 
-        //TODO: Add localization
         string save_text = set.has_autosave
-            ? $" + {set.count - 1} saves"
-            : $"{set.count} saves";
+            ? localize("save_count.separator") + localize("save_count.saves")
+            : localize("save_count.saves");
+
+        save_text = string.Format(save_text, set.has_autosave ? set.count - 1 : set.count);
 
         Vector2 text_pos = new(1722f, 144f);
 
@@ -223,10 +225,12 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
             Vector2 autosave_pos = text_pos * aspect_scale + aspect_helper.pos;
             autosave_pos.X -= saves_text_size.X;
 
+            string autosave_text = localize("save_count.autosave");
+
             FhApi.Gui.draw_text(
                 draw,
                 autosave_pos,
-                "A",
+                autosave_text,
                 font_size,
                 true,
                 Alignment2D.RIGHT,
@@ -314,8 +318,7 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
 
         Vector2 text_pos  = bg_screen.center;
 
-        //TODO: Add localization
-        string text = "Change set";
+        string text = localize("set_list.change_set");
 
         Vector2 text_size = FhApi.Gui.draw_text(
             draw,
@@ -508,14 +511,15 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
             return;
         }
 
-        //TODO: Add localization
-        string message =  system_mode switch {
-            FhSaveSystemMode.LOAD => "No saved data. Change set or return to the main menu.",
-            FhSaveSystemMode.ALBD => "No saved data. Change set or return.",
+        string message_key =  system_mode switch {
+            FhSaveSystemMode.ALBD => "popup.no_save_data",
+            FhSaveSystemMode.LOAD => "popup.no_save_data.menu",
 
             // When saving, we should always display "New Save Data" instead.
             _ => throw new UnreachableException(),
         };
+
+        string message = localize(message_key);
 
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
@@ -786,8 +790,7 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
         Vector2 header_text_pos_left = header_bounds.left;
         header_text_pos_left.X += text_margin_left;
 
-        //TODO: Add localization
-        string slot_text   = save.slot == 0 ? "Autosave" : save.slot_str;
+        string slot_text   = save.slot == 0 ? localize("details.autosave") : save.slot_str;
         string create_time = save.create_time.ToString(@"yyyy\/M\/d H\:mm\:ss");
 
         Vector2 text_size = FhApi.Gui.draw_text(
@@ -957,8 +960,7 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
         Vector2 header_text_pos_left = header_bounds.left;
         header_text_pos_left.X += text_margin_left;
 
-        //TODO: Add localization
-        string slot_text   = save.slot == 0 ? "Autosave" : save.slot_str;
+        string slot_text   = save.slot == 0 ? localize("details.autosave") : save.slot_str;
         string create_time = save.create_time.ToString(@"yyyy\/M\/d H\:mm\:ss");
 
         Vector2 text_size = FhApi.Gui.draw_text(
@@ -1156,8 +1158,7 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
         Vector2 header_text_pos_left = header_bounds.left;
         header_text_pos_left.X += text_margin_left;
 
-        //TODO: Add localization
-        string slot_text   = save.slot == 0 ? "Autosave" : save.slot_str;
+        string slot_text   = save.slot == 0 ? localize("details.autosave") : save.slot_str;
         string create_time = save.create_time.ToString(@"yyyy\/M\/d H\:mm\:ss");
 
         Vector2 text_size = FhApi.Gui.draw_text(
@@ -1346,8 +1347,7 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
         );
 
         /* ===== New Save Data Text ===== */
-        //TODO: Add localization
-        string text = "New Save Data";
+        string text = localize("details.new_save_data");
 
         Vector2 text_pos = save_rect.top_left + new Vector2(
             14f,

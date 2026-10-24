@@ -129,6 +129,13 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
 
     /* ===== Helper methods ===== */
 
+    /// <summary>Get localized save UI text with the given key.</summary>
+    /// <param name="key">The key of the save UI text to localize.</param>
+    /// <returns>The localized text.</returns>
+    protected string localize(string key) {
+        return FhApi.Localization.localize($"{typeof(FhSaveUi)}.{key}");
+    }
+
     /// <summary>Begin a fade-out.</summary>
     /// <param name="action">The action to end the fade-out with.</param>
     protected void fade_out(Action action) {

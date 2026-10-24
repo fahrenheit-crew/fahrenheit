@@ -127,6 +127,7 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
         unload_textures(textures);
     }
 
+
     /* ===== Helper methods ===== */
 
     /// <summary>Get localized save UI text with the given key.</summary>
@@ -174,6 +175,7 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
         change_mode(UiMode.SAVE_LIST);
     }
 
+
     /* ===== Textures ===== */
 
     /// <summary>Attempt to load all of the textures the UI requires to display properly.</summary>
@@ -198,6 +200,7 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
                 _logger.Warning($"Failed to unload texture: {texture.path}");
         }
     }
+
 
     /* ===== Input handling ===== */
 
@@ -325,7 +328,42 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
         }
     }
 
+
     /* ===== Rendering ===== */
+
+    /// <summary>Render the UI.</summary>
+    protected internal override void render_ui() {
+        _current_scrollable = _mode switch {
+            UiMode.SET_SWAP => _scrollable_sets,
+            _               => _scrollable_saves,
+        };
+
+        if (!try_load_textures()) return;
+
+        _audio_fade_helper_restart = true;
+
+        handle_input();
+
+        ui_background();
+        ui_help();
+
+        if (_mode == UiMode.SET_SWAP) {
+            ui_setlist();
+        }
+        else {
+            ui_savecount();
+            ui_savelist();
+            ui_change_set();
+        }
+
+        ui_scrollbar();
+
+        ui_fade();
+
+        if (_audio_fade_helper_restart) {
+            _audio_fade_helper.restart();
+        }
+    }
 
     /// <summary>Render the background.</summary>
     protected abstract void ui_background();
@@ -415,6 +453,13 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
         _fade.tick(ImGui.GetIO().DeltaTime);
     }
 
+    /// <summary>Render the scrollbar.</summary>
+    protected abstract void ui_scrollbar();
+
+    /// <summary>Render a scrollbar for a given scrollable at a given position.</summary>
+    /// <param name="scrollable">The scrollable to render a scrollbar for.</param>
+    /// <param name="track_bounds">The bounds of the scrollbar's track.</param>
+    /// <param name="triangle_gap">The gap between the scrollbar's track and its arrows.</param>
     protected virtual void ui_scrollbar(
         SteppedScrollable scrollable,
         Rect track_bounds,

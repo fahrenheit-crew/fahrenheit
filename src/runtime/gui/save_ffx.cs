@@ -72,39 +72,6 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
         );
     }
 
-    protected internal override void render_ui() {
-        _current_scrollable = _mode switch {
-            UiMode.SET_SWAP => _scrollable_sets,
-            _               => _scrollable_saves,
-        };
-
-        if (!try_load_textures()) return;
-
-        _audio_fade_helper_restart = true;
-
-        handle_input();
-
-        ui_background();
-        ui_help();
-
-        if (_mode == UiMode.SET_SWAP) {
-            ui_setlist();
-        }
-        else {
-            ui_savecount();
-            ui_savelist();
-            ui_change_set();
-        }
-
-        ui_scrollbar();
-
-        ui_fade();
-
-        if (_audio_fade_helper_restart) {
-            _audio_fade_helper.restart();
-        }
-    }
-
     protected override void ui_background() {
         if (!_texture_bg.try_use(out ImTextureRef bg, out _)) {
             return;
@@ -1418,7 +1385,7 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
         }
     }
 
-    private void ui_scrollbar() {
+    protected override void ui_scrollbar() {
         Rect track_bounds = new() {
             pos  = new(1753f, 209f),
             size = new(  17f, 756f),

@@ -122,7 +122,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
     }
 
     /// <summary>Render the background for the save/load screen.</summary>
-    private void ui_background() {
+    protected override void ui_background() {
         if (!_texture_menuback.try_use(out ImTextureRef menuback, out _)
          || !_texture_black0  .try_use(out ImTextureRef black0,   out _)
          || !_texture_mahojin .try_use(out ImTextureRef mahojin,  out _)
@@ -209,7 +209,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
     }
 
     /// <summary>Render the help text for the save/load screen.</summary>
-    private void ui_help() {
+    protected override void ui_help() {
         if (!_texture_freetex.try_use(out ImTextureRef freetex, out _)) return;
 
         if (!FhApi.Saves.impl_get_system_mode(out FhSaveSystemMode? system_mode)) return;
@@ -305,7 +305,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
     }
 
     /// <summary>Render the active set name and set count.</summary>
-    private void ui_savecount() {
+    protected override void ui_savecount() {
         FhSaveSet set = FhApi.Saves.sets_get_active();
 
         //TODO: Add localization
@@ -359,7 +359,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
     /// <summary>Render the cursor.</summary>
     /// <param name="target_pos">The position the cursor should point at.</param>
     /// <param name="overlap">Whether the cursor should overlap the target like the vanilla game.</param>
-    private void ui_cursor(Vector2 target_pos, bool overlap = true) {
+    protected override void ui_cursor(Vector2 target_pos, bool overlap = true) {
         if (!_texture_freetex.try_use(out ImTextureRef freetex, out _)) return;
 
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
@@ -809,6 +809,159 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
             true,
             Alignment2D.CENTER
         );
+    }
+
+    private void ui_savefile(int index, FhSaveUiData save) {
+        if (!_scrollable_saves.is_within_clip(index)) return;
+
+        if (!_texture_plate.try_use(out ImTextureRef plate, out _)) return;
+
+        ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
+
+        Rect save_rect = new Rect {
+            pos  = new( 157f, 172f), // Topmost position
+            size = new(1565f, 155f),
+        };
+
+        float save_gap = 10f;
+
+        save_rect.pos.Y += (save_rect.size.Y + save_gap) * (index - _scrollable_saves.current);
+
+        // We set the hovered state early to potentially use it later.
+        if (mouse_hovered(save_rect.scale_to_aspect(aspect_helper))) {
+            if (_focus != UiFocus.LIST || _scrollable_saves.hovered != index) {
+                FhApi.Audio.play_sound(sound_id_action, ACTION_VOLUME);
+            }
+
+            _focus = UiFocus.LIST;
+            _scrollable_saves.hovered = index;
+        }
+
+        /* ===== Plate Texture ===== */
+        float header_size    = 47f;
+        float vertical_space =  4f;
+
+        Rect header_rect = new Rect {
+            pos  = save_rect.pos,
+            size = new(save_rect.size.X, header_size),
+        };
+
+        Rect info_rect = new Rect {
+            pos  = new(save_rect.pos.X, header_rect.bottom.Y + vertical_space),
+            size = new(save_rect.size.X, save_rect.size.Y - (header_size + vertical_space)),
+        };
+
+        // Texture UV changes for each slot
+        float slice_size = 64f;
+        float max_y = 512f - (((index + 1) % 8) * slice_size);
+
+        float uv_y_start = max_y;
+        float uv_y_end   = max_y - slice_size;
+        float uv_y_split = uv_y_start + (uv_y_end - uv_y_start) * (47f / 151f);
+
+        UV header_tuv = new Rect {
+            pos  = new(  0f,              uv_y_split),
+            size = new(512f, uv_y_start - uv_y_split),
+        }.as_uv(_tex_plate_size);
+
+        UV info_tuv = new Rect {
+            pos  = new(  0f,              uv_y_end),
+            size = new(512f, uv_y_split - uv_y_end),
+        }.as_uv(_tex_plate_size);
+
+        UV header_suv = header_rect.scale_to_aspect(aspect_helper).as_uv();
+        UV info_suv   = info_rect  .scale_to_aspect(aspect_helper).as_uv();
+
+        // Shadows behind saves
+        Vector2 shadow_offset = 10f * aspect_scale;
+
+        draw.AddRectFilled(
+            header_suv.p0 + shadow_offset,
+            header_suv.p1 + shadow_offset,
+            0xA5000000
+        );
+
+        draw.AddRectFilled(
+            info_suv.p0 + shadow_offset,
+            info_suv.p1 + shadow_offset,
+            0xA5000000
+        );
+
+        // Draw Autosave darker
+        bool is_autosave = save.slot == 0 && !is_saving;
+
+        uint header_clr   = is_autosave ? 0xFFB6A19F  : 0xFFBECED3;
+        uint info_clr     = is_autosave ? 0xFFC6B1AF  : 0xFFD3EEF2;
+        uint header_shade = is_autosave ? 0x63000000U : 0x33000000U;
+
+        draw.AddImage(
+            plate,
+            header_suv.p0,
+            header_suv.p1,
+            header_tuv.p0,
+            header_tuv.p1,
+            header_clr
+        );
+
+        draw.AddImage(
+            plate,
+            info_suv.p0,
+            info_suv.p1,
+            info_tuv.p0,
+            info_tuv.p1,
+            info_clr
+        );
+
+        // Border highlights/shadows
+        float border_thickness = 5f * aspect_scale.Y;
+        uint  highlight        = 0x28FFFFFF;
+        uint  shadow           = 0x80000000;
+
+        draw_highlight_shadow(
+            draw,
+            header_rect.scale_to_aspect(aspect_helper),
+            border_thickness,
+            highlight,
+            shadow
+        );
+
+        draw.AddRectFilled(
+            header_suv.p0,
+            header_suv.p1,
+            header_shade
+        );
+
+        draw_highlight_shadow(
+            draw,
+            info_rect.scale_to_aspect(aspect_helper),
+            border_thickness,
+            highlight,
+            shadow
+        );
+
+        switch (FhGlobal.game_id) {
+            case FhGameId.FFX:    ui_save_details_x (save_rect, save); break;
+            case FhGameId.FFX2:   ui_save_details_x2(save_rect, save); break;
+            case FhGameId.FFX2LM: ui_save_details_lm(save_rect, save); break;
+
+            default: throw new UnreachableException();
+        }
+
+        if (save.slot == 0 && is_saving) {
+            ui_newdata(save_rect);
+        }
+
+        /* ===== Cursor ===== */
+        if (_focus == UiFocus.LIST && _scrollable_saves.hovered == index) {
+            save_rect.pos.Y += 28f;
+            ui_cursor(save_rect.scale_to_aspect(aspect_helper).left);
+        }
+
+        // Handle input
+        if (mouse_clicked(save_rect.scale_to_aspect(aspect_helper))) {
+            FhApi.Audio.play_sound(sound_id_action, ACTION_VOLUME);
+            fade_out(() => FhApi.Saves.impl_execute(save.slot));
+        }
     }
 
     private void ui_save_details_x(Rect save_rect, FhSaveUiData save) {
@@ -1390,159 +1543,6 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
             true,
             Alignment2D.RIGHT
         );
-    }
-
-    private void ui_savefile(int index, FhSaveUiData save) {
-        if (!_scrollable_saves.is_within_clip(index)) return;
-
-        if (!_texture_plate.try_use(out ImTextureRef plate, out _)) return;
-
-        ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
-
-        Rect save_rect = new Rect {
-            pos  = new( 157f, 172f), // Topmost position
-            size = new(1565f, 155f),
-        };
-
-        float save_gap = 10f;
-
-        save_rect.pos.Y += (save_rect.size.Y + save_gap) * (index - _scrollable_saves.current);
-
-        // We set the hovered state early to potentially use it later.
-        if (mouse_hovered(save_rect.scale_to_aspect(aspect_helper))) {
-            if (_focus != UiFocus.LIST || _scrollable_saves.hovered != index) {
-                FhApi.Audio.play_sound(sound_id_action, ACTION_VOLUME);
-            }
-
-            _focus = UiFocus.LIST;
-            _scrollable_saves.hovered = index;
-        }
-
-        /* ===== Plate Texture ===== */
-        float header_size    = 47f;
-        float vertical_space =  4f;
-
-        Rect header_rect = new Rect {
-            pos  = save_rect.pos,
-            size = new(save_rect.size.X, header_size),
-        };
-
-        Rect info_rect = new Rect {
-            pos  = new(save_rect.pos.X, header_rect.bottom.Y + vertical_space),
-            size = new(save_rect.size.X, save_rect.size.Y - (header_size + vertical_space)),
-        };
-
-        // Texture UV changes for each slot
-        float slice_size = 64f;
-        float max_y = 512f - (((index + 1) % 8) * slice_size);
-
-        float uv_y_start = max_y;
-        float uv_y_end   = max_y - slice_size;
-        float uv_y_split = uv_y_start + (uv_y_end - uv_y_start) * (47f / 151f);
-
-        UV header_tuv = new Rect {
-            pos  = new(  0f,              uv_y_split),
-            size = new(512f, uv_y_start - uv_y_split),
-        }.as_uv(_tex_plate_size);
-
-        UV info_tuv = new Rect {
-            pos  = new(  0f,              uv_y_end),
-            size = new(512f, uv_y_split - uv_y_end),
-        }.as_uv(_tex_plate_size);
-
-        UV header_suv = header_rect.scale_to_aspect(aspect_helper).as_uv();
-        UV info_suv   = info_rect  .scale_to_aspect(aspect_helper).as_uv();
-
-        // Shadows behind saves
-        Vector2 shadow_offset = 10f * aspect_scale;
-
-        draw.AddRectFilled(
-            header_suv.p0 + shadow_offset,
-            header_suv.p1 + shadow_offset,
-            0xA5000000
-        );
-
-        draw.AddRectFilled(
-            info_suv.p0 + shadow_offset,
-            info_suv.p1 + shadow_offset,
-            0xA5000000
-        );
-
-        // Draw Autosave darker
-        bool is_autosave = save.slot == 0 && !is_saving;
-
-        uint header_clr   = is_autosave ? 0xFFB6A19F  : 0xFFBECED3;
-        uint info_clr     = is_autosave ? 0xFFC6B1AF  : 0xFFD3EEF2;
-        uint header_shade = is_autosave ? 0x63000000U : 0x33000000U;
-
-        draw.AddImage(
-            plate,
-            header_suv.p0,
-            header_suv.p1,
-            header_tuv.p0,
-            header_tuv.p1,
-            header_clr
-        );
-
-        draw.AddImage(
-            plate,
-            info_suv.p0,
-            info_suv.p1,
-            info_tuv.p0,
-            info_tuv.p1,
-            info_clr
-        );
-
-        // Border highlights/shadows
-        float border_thickness = 5f * aspect_scale.Y;
-        uint  highlight        = 0x28FFFFFF;
-        uint  shadow           = 0x80000000;
-
-        draw_highlight_shadow(
-            draw,
-            header_rect.scale_to_aspect(aspect_helper),
-            border_thickness,
-            highlight,
-            shadow
-        );
-
-        draw.AddRectFilled(
-            header_suv.p0,
-            header_suv.p1,
-            header_shade
-        );
-
-        draw_highlight_shadow(
-            draw,
-            info_rect.scale_to_aspect(aspect_helper),
-            border_thickness,
-            highlight,
-            shadow
-        );
-
-        switch (FhGlobal.game_id) {
-            case FhGameId.FFX:    ui_save_details_x (save_rect, save); break;
-            case FhGameId.FFX2:   ui_save_details_x2(save_rect, save); break;
-            case FhGameId.FFX2LM: ui_save_details_lm(save_rect, save); break;
-
-            default: throw new UnreachableException();
-        }
-
-        if (save.slot == 0 && is_saving) {
-            ui_newdata(save_rect);
-        }
-
-        /* ===== Cursor ===== */
-        if (_focus == UiFocus.LIST && _scrollable_saves.hovered == index) {
-            save_rect.pos.Y += 28f;
-            ui_cursor(save_rect.scale_to_aspect(aspect_helper).left);
-        }
-
-        // Handle input
-        if (mouse_clicked(save_rect.scale_to_aspect(aspect_helper))) {
-            FhApi.Audio.play_sound(sound_id_action, ACTION_VOLUME);
-            fade_out(() => FhApi.Saves.impl_execute(save.slot));
-        }
     }
 
     private void ui_newdata(Rect save_rect) {

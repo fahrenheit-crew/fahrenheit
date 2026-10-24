@@ -119,6 +119,55 @@ internal sealed unsafe class FhImaging {
         };
     }
 
+    // https://github.com/microsoft/DirectXTK/blob/873aaf3d1e658235bf7e3c153a7361911136b650/Src/LoaderHelpers.h#L1022
+    private static void FitPowerOf2(
+            uint  orig_x,
+            uint  orig_y,
+        ref uint  target_x,
+        ref uint  target_y,
+            nuint maxsize
+    ) {
+        float aspect_ratio_original = orig_x / orig_y;
+        float best_score;
+        nuint x, y;
+
+        if (orig_x > orig_y) {
+            for (x = maxsize; x > 1; x >>= 1) {
+                if (x <= target_x)
+                    break;
+            }
+            target_x = uint.CreateChecked(x);
+
+            best_score = float.MaxValue;
+            for (y = maxsize; y > 0; y >>= 1) {
+                float score = float.Abs((x / y) - aspect_ratio_original);
+
+                if (score < best_score) {
+                    best_score = score;
+                    target_y   = uint.CreateChecked(y);
+                }
+            }
+
+            return;
+        }
+
+        for (y = maxsize; y > 1; y >>= 1) {
+            if (y <= target_y)
+                break;
+        }
+        target_y = uint.CreateChecked(y);
+
+        best_score = float.MaxValue;
+        for (x = maxsize; x > 0; x >>= 1) {
+            float score = float.Abs((x / y) - aspect_ratio_original);
+
+            if (score < best_score) {
+                best_score = score;
+                target_x   = uint.CreateChecked(x);
+            }
+        }
+    }
+
     // https://github.com/microsoft/DirectXTK/blob/873aaf3d1e658235bf7e3c153a7361911136b650/Src/WICTextureLoader.cpp#L155
     // https://github.com/microsoft/DirectXTK/blob/873aaf3d1e658235bf7e3c153a7361911136b650/Src/WICTextureLoader.cpp#L192
     private static IWICImagingFactory2* GetWIC() {
@@ -286,7 +335,7 @@ internal sealed unsafe class FhImaging {
         uint twidth  = width;
         uint theight = height;
         if (flags_load.HasFlag(WIC_LOADER_FLAGS.WIC_LOADER_FIT_POW2)) {
-            // NO-OP
+            FitPowerOf2(width, height, ref twidth, ref theight, maxsize);
         }
         else if (width > maxsize || height > maxsize) {
             float aspect_ratio = height / width;

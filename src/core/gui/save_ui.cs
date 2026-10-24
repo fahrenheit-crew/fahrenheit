@@ -3,7 +3,7 @@
 // This file is part of Fahrenheit, © 2023-2026 The Fahrenheit contributors.
 // It is licensed to you under the GNU Lesser General Public License, version 3.0 or later. See COPYING, COPYING.LESSER.
 
-namespace Fahrenheit;
+namespace Fahrenheit.Gui;
 
 /// <summary>The base class for custom save/load user interfaces.</summary>
 public abstract class FhSaveUi : FhModule {
@@ -47,6 +47,8 @@ public abstract class FhSaveUi : FhModule {
     }
 
     private void post_open(EventArgs e) {
+        FhApi.Saves.sets_query();
+
         /*
          * NOTE:
          *   Unlike in vanilla, Fahrenheit does not allow you to open the Escape menu,

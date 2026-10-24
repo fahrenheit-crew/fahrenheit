@@ -312,7 +312,6 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
         draw.AddImage(battle_kuang, bg_suv.p0, bg_suv.p1, bg_tuv.p0, bg_tuv.p1);
 
-        float   font_size = 43f * font_scale;
         Vector2 text_pos  = bg_screen.center;
 
         //TODO: Add localization

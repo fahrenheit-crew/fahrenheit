@@ -513,7 +513,6 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
             accent_tuv.p1
         );
 
-        float   font_size =  43f * font_scale;
         Vector2 text_pos  =  bg_screen.center;
         text_pos.Y        -= 2f * aspect_scale.Y;
 

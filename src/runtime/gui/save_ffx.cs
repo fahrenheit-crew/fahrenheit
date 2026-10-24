@@ -374,12 +374,21 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
             Alignment2D.LEFT
         );
 
+        string save_text = set.has_autosave
+            ? localize("save_count.separator") + localize("save_count.saves")
+            : localize("save_count.saves");
+
+        save_text = string.Format(
+            save_text,
+            set.has_autosave
+                ? set.count - 1
+                : set.count
+        );
+
         Vector2 save_count_size = FhApi.Gui.draw_text(
             draw,
             save_count_pos,
-            set.has_autosave
-                ? $" + {set.count - 1} saves"
-                : $"{set.count} saves",
+            save_text,
             font_size,
             true,
             Alignment2D.RIGHT
@@ -389,10 +398,12 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
             Vector2 autosave_pos = save_count_pos;
             autosave_pos.X -= save_count_size.X;
 
+            string autosave_text = localize("save_count.autosave");
+
             FhApi.Gui.draw_text(
                 draw,
                 autosave_pos,
-                "A",
+                autosave_text,
                 font_size,
                 true,
                 Alignment2D.RIGHT,

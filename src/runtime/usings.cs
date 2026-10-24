@@ -25,20 +25,10 @@ global using System.Text.Json;                // For JSON (de)serialization, we 
 global using System.Threading;                // Interlocked, Lock, et al.
 
 global using Fahrenheit.Atel;
+global using Fahrenheit.Gui;
 
 global using Hexa.NET.ImGui;                  // ImGui is required to render large parts of the runtime UI.
 
-global using Fahrenheit.Gui;
-
 // Win32/D3D11 typedefs
-global using Windows.Win32;
-global using Windows.Win32.Foundation;
-global using Windows.Win32.Storage.FileSystem;
-global using Windows.Win32.Graphics.Direct3D11;
-global using Windows.Win32.Graphics.Direct3D;
-global using Windows.Win32.Graphics.Dxgi;
-global using Windows.Win32.Graphics.Dxgi.Common;
-global using Windows.Win32.Graphics.Gdi;
-global using Windows.Win32.UI.WindowsAndMessaging;
-global using Windows.Win32.System.Memory;
-global using Windows.Win32.System.Threading;
+global using TerraFX.Interop.Windows;
+global using TerraFX.Interop.DirectX;

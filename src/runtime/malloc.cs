@@ -68,14 +68,14 @@ public unsafe sealed class FhMallocModule : FhModule {
         __ALLOC_STRUCT* alloc_struct = (__ALLOC_STRUCT*) NativeMemory.Alloc(0x30);
         uint            pool_size    = 0x800_0000; // default: 0x3000_0000
 
-        PInvoke.InitializeCriticalSection(&alloc_struct->crit_sec);
+        Windows.InitializeCriticalSection(&alloc_struct->crit_sec);
 
         FhUtil.set_at(FhUtil.select(0x8E901C, 0x9ECBE4, 0x9ECBE4), (uint)alloc_struct);
         _ = FhCall.FUN_00542a40_00477340.fnptr!(&alloc_struct->data, pool_size, 0, uint.CreateChecked( pool_size - 0x100000 ));
 
-        PInvoke.EnterCriticalSection(&alloc_struct->crit_sec);
+        Windows.EnterCriticalSection(&alloc_struct->crit_sec);
         void* rv = FhCall.FUN_00542b60_00477460.fnptr!(&alloc_struct->data, 0x10);
-        PInvoke.LeaveCriticalSection(&alloc_struct->crit_sec);
+        Windows.LeaveCriticalSection(&alloc_struct->crit_sec);
 
         if (rv == null) {
             throw new Exception($"Failed to allocate primary memory pool of size 0x{pool_size:X8}.");
@@ -95,11 +95,11 @@ public unsafe sealed class FhMallocModule : FhModule {
 
     [UnmanagedCallConv(CallConvs = [ typeof(CallConvCdecl) ] )]
     private void* h_mreserve(uint size) {
-        void* rv = PInvoke.VirtualAlloc(
+        void* rv = Windows.VirtualAlloc(
             null,
             size,
-            VIRTUAL_ALLOCATION_TYPE.MEM_RESERVE,
-            PAGE_PROTECTION_FLAGS  .PAGE_NOACCESS
+            MEM .MEM_RESERVE,
+            PAGE.PAGE_NOACCESS
         );
 
         // The game does not track reversed allocations for some reason.

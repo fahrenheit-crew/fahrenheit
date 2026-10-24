@@ -60,7 +60,7 @@ public unsafe sealed class FhResourceLoaderModule : FhModule, IFhResourceLoaderI
     /// <returns>Whether the operation succeeded and <paramref name="texture"/> can be passed to ImGui for rendering.</returns>
     private bool load_texture_disk(FhTexture texture) {
         if (_ptr_device == null || _ptr_context == null) {
-            _logger.Info($"{texture.path} -> system not ready");
+            _logger.Error($"{texture.path} -> system not ready");
             return false;
         }
 
@@ -123,7 +123,7 @@ public unsafe sealed class FhResourceLoaderModule : FhModule, IFhResourceLoaderI
     /// <returns>Whether the operation succeeded and <paramref name="texture"/> can be passed to ImGui for rendering.</returns>
     private bool load_texture_game(FhTexture texture) {
         if (_ptr_device == null || _ptr_context == null) {
-            _logger.Info($"{texture.path} -> system not ready");
+            _logger.Error($"{texture.path} -> system not ready");
             return false;
         }
 

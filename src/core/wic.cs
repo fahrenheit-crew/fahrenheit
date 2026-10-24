@@ -334,10 +334,14 @@ internal sealed unsafe class FhImaging {
                     FhInternal.Log.Error($"Unsupported texture pixel format {format_pixel}");
                     return Windows.HRESULT_FROM_WIN32(ERROR.ERROR_NOT_SUPPORTED);
                 }
+
+                format_convert = format_pixel_nearest;
+                bpp            = WICBitsPerPixel(format_convert);
             }
         }
-
-        bpp = WICBitsPerPixel(format_pixel);
+        else {
+            bpp = WICBitsPerPixel(format_pixel);
+        }
 
         if (format             == DXGI_FORMAT.DXGI_FORMAT_R32G32B32A32_FLOAT
         &&  ptr_device_context != null
@@ -623,6 +627,10 @@ internal sealed unsafe class FhImaging {
         ID3D11Resource**           pp_texture,
         ID3D11ShaderResourceView** pp_srv
     ) {
+        /* [fkelava 24/10/26 19:04]
+         * We have to suppress sRGB processing/promotion, or the texture will be off-color.
+         * See https://github.com/microsoft/DirectXTK/issues/156.
+         */
         return CreateWICTextureFromMemoryEx(
             ptr_device,
             ptr_device_context,
@@ -633,7 +641,7 @@ internal sealed unsafe class FhImaging {
             D3D11_BIND_FLAG.D3D11_BIND_SHADER_RESOURCE,
             0,
             0,
-            WIC_LOADER_FLAGS.WIC_LOADER_DEFAULT,
+            WIC_LOADER_FLAGS.WIC_LOADER_IGNORE_SRGB,
             pp_texture,
             pp_srv
         );
@@ -730,6 +738,10 @@ internal sealed unsafe class FhImaging {
         ID3D11Resource**           pp_texture,
         ID3D11ShaderResourceView** pp_srv
     ) {
+        /* [fkelava 24/10/26 19:04]
+         * We have to suppress sRGB processing/promotion, or the texture will be off-color.
+         * See https://github.com/microsoft/DirectXTK/issues/156.
+         */
         return CreateWICTextureFromFileEx(
             ptr_device,
             ptr_device_context,
@@ -739,7 +751,7 @@ internal sealed unsafe class FhImaging {
             D3D11_BIND_FLAG.D3D11_BIND_SHADER_RESOURCE,
             0,
             0,
-            WIC_LOADER_FLAGS.WIC_LOADER_DEFAULT,
+            WIC_LOADER_FLAGS.WIC_LOADER_IGNORE_SRGB,
             pp_texture,
             pp_srv
         );

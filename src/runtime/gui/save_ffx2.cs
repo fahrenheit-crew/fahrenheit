@@ -1117,7 +1117,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
         info_bounds.size.X -= info_margin_left + info_margin_right;
 
         float info_text_top_y    = float.Lerp(info_bounds.top.Y, info_bounds.bottom.Y, 0.25f);
-        float info_text_bottom_y = float.Lerp(info_bounds.top.Y, info_bounds.bottom.Y, 0.7f);
+        float info_text_bottom_y = float.Lerp(info_bounds.top.Y, info_bounds.bottom.Y, 0.75f);
 
         Vector2 info_text_pos_name = new() {
             X = info_bounds.left.X,
@@ -1309,7 +1309,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
         info_bounds.pos.X  += info_margin_left;
         info_bounds.size.X -= info_margin_left + info_margin_right;
 
-        float info_text_top_y    = float.Lerp(info_bounds.top.Y, info_bounds.bottom.Y, 0.29f);
+        float info_text_top_y    = float.Lerp(info_bounds.top.Y, info_bounds.bottom.Y, 0.25f);
         float info_text_bottom_y = float.Lerp(info_bounds.top.Y, info_bounds.bottom.Y, 0.75f);
 
         Vector2 info_text_pos_name = new() {
@@ -1517,7 +1517,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
         info_bounds.pos.X  += info_margin_left;
         info_bounds.size.X -= info_margin_left + info_margin_right;
 
-        float info_text_top_y    = float.Lerp(info_bounds.top.Y, info_bounds.bottom.Y, 0.29f);
+        float info_text_top_y    = float.Lerp(info_bounds.top.Y, info_bounds.bottom.Y, 0.25f);
         float info_text_bottom_y = float.Lerp(info_bounds.top.Y, info_bounds.bottom.Y, 0.75f);
 
         Vector2 info_text_pos_name = new() {

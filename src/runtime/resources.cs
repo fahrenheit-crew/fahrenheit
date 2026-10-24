@@ -39,11 +39,28 @@ public unsafe sealed class FhResourceLoaderModule : FhModule, IFhResourceLoaderI
         _ptr_context = ptr_device_context;
     }
 
-    bool IFhResourceLoaderImpl.load_texture_from_disk(FhTexture texture) {
-        string file_path = texture.path;
+    bool IFhResourceLoaderImpl.load_texture(FhTexture texture) {
+        return texture.type switch {
+            FhTextureType.DISK            => load_texture_disk(texture),
+            FhTextureType.GAME            => load_texture_game(texture),
 
-        if (_ptr_device == null) {
-            _logger.Info($"{file_path} -> device not ready");
+            FhTextureType.GAME_PHYRE_2D   => load_texture_game<PTexture2D>     (texture),
+            FhTextureType.GAME_PHYRE_3D   => load_texture_game<PTexture3D>     (texture),
+            FhTextureType.GAME_PHYRE_CUBE => load_texture_game<PTextureCubeMap>(texture),
+            _                             => false,
+        };
+    }
+
+    /// <summary>
+    ///     Attempts to load the given <paramref name="texture"/> from disk.
+    /// </summary>
+    /// <remarks>
+    ///     Any format supported by the system's Windows Imaging Component codecs can be loaded.
+    /// </remarks>
+    /// <returns>Whether the operation succeeded and <paramref name="texture"/> can be passed to ImGui for rendering.</returns>
+    private bool load_texture_disk(FhTexture texture) {
+        if (_ptr_device == null || _ptr_context == null) {
+            _logger.Info($"{texture.path} -> system not ready");
             return false;
         }
 
@@ -63,14 +80,17 @@ public unsafe sealed class FhResourceLoaderModule : FhModule, IFhResourceLoaderI
         );
 
         if (hr.FAILED) {
-            _logger.Error($"{file_path} -> load failed with HRESULT 0x{hr:X8}");
+            _logger.Error($"{texture.path} -> load failed with HRESULT 0x{hr:X8}");
 
             texture.unlock();
             return false;
         }
 
-        D3D11_TEXTURE2D_DESC desc;
+        D3D11_TEXTURE2D_DESC     desc;
+        D3D11_RESOURCE_DIMENSION dimension;
+
         ptr_texture->GetDesc(&desc);
+        ptr_texture->GetType(&dimension);
 
         FhTextureMetadata metadata = new(
             desc.Width,
@@ -81,7 +101,7 @@ public unsafe sealed class FhResourceLoaderModule : FhModule, IFhResourceLoaderI
             desc.MiscFlags,
             0,
             desc.Format,
-            D3D11_RESOURCE_DIMENSION.D3D11_RESOURCE_DIMENSION_TEXTURE2D
+            dimension
         );
 
         texture.load(
@@ -93,16 +113,90 @@ public unsafe sealed class FhResourceLoaderModule : FhModule, IFhResourceLoaderI
         return true;
     }
 
-    /* [fkelava 01/05/26 18:47]
-     * These functions deal with game textures and call through the Phyre asset load system.
-     * They have a special rule that the 'file path' parameter has to be in the game's canonical form.
-     */
+    /// <summary>
+    ///     Attempts to load the given non-Phyre <paramref name="texture"/> from the VBF archive.
+    /// </summary>
+    /// <remarks>
+    ///     Any format supported by the system's Windows Imaging Component codecs can be loaded.
+    ///     <see cref="FhTexture.path"/> must be a valid VBF path.
+    /// </remarks>
+    /// <returns>Whether the operation succeeded and <paramref name="texture"/> can be passed to ImGui for rendering.</returns>
+    private bool load_texture_game(FhTexture texture) {
+        if (_ptr_device == null || _ptr_context == null) {
+            _logger.Info($"{texture.path} -> system not ready");
+            return false;
+        }
 
-    bool IFhResourceLoaderImpl.load_game_texture_2d(FhTexture texture) {
+        if (!texture.try_lock())
+            return false;
+
+        using FhVbfFileScope scope = new(texture.path);
+
+        byte[] temp = new byte[ scope.get_file_size() ];
+        scope.read(temp);
+
+        ID3D11Texture2D*          ptr_texture;
+        ID3D11ShaderResourceView* ptr_srv;
+
+        fixed (byte* ptr_temp = temp) {
+            HRESULT hr = FhImaging.CreateWICTextureFromMemory(
+                _ptr_device,
+                _ptr_context,
+                ptr_temp,
+                (nuint) temp.Length,
+                0,
+                (ID3D11Resource**) &ptr_texture,
+                &ptr_srv
+            );
+
+            if (hr.FAILED) {
+                _logger.Error($"{texture.path} -> load failed with HRESULT 0x{hr:X8}");
+
+                texture.unlock();
+                return false;
+            }
+        }
+
+        D3D11_TEXTURE2D_DESC     desc;
+        D3D11_RESOURCE_DIMENSION dimension;
+
+        ptr_texture->GetDesc(&desc);
+        ptr_texture->GetType(&dimension);
+
+        FhTextureMetadata metadata = new(
+            desc.Width,
+            desc.Height,
+            0,
+            desc.ArraySize,
+            desc.MipLevels,
+            desc.MiscFlags,
+            0,
+            desc.Format,
+            dimension
+        );
+
+        texture.load(
+            new ImTextureRef(null, ptr_srv),
+            metadata
+        );
+
+        texture.unlock();
+        return true;
+    }
+
+    /// <summary>
+    ///     Attempts to load the given Phyre <paramref name="texture"/> from the VBF archive.
+    /// </summary>
+    /// <remarks>
+    ///     The <paramref name="texture"/> must have the correct <see cref="FhTextureType"/> selected.
+    ///     <see cref="FhTexture.path"/> must be a valid VBF path.
+    /// </remarks>
+    /// <returns>Whether the operation succeeded and <paramref name="texture"/> can be passed to ImGui for rendering.</returns>
+    private bool load_texture_game<T>(FhTexture texture) where T : unmanaged {
         string tex_path = texture.path;
 
-        if (_ptr_device == null) {
-            _logger.Info($"{tex_path} -> device not ready");
+        if (_ptr_device == null || _ptr_context == null) {
+            _logger.Info($"{tex_path} -> system not ready");
             return false;
         }
 
@@ -121,141 +215,73 @@ public unsafe sealed class FhResourceLoaderModule : FhModule, IFhResourceLoaderI
         FhPDoubleListIterator<PInstanceList> iter_instances = new(&ptr_cluster->__0x1C_instance_lists);
 
         while (iter_instances.next(out PInstanceList* ptr_instance_list)) {
-            if (Marshal.PtrToStringAnsi(ptr_instance_list->__0x08_free_list.__0x10_name) != nameof(PTexture2D))
+            if (Marshal.PtrToStringAnsi(ptr_instance_list->__0x08_free_list.__0x10_name) != typeof(T).Name)
                 continue;
 
-            FhPFilteredInstanceList        <PTexture2D> texture_filter = new(ptr_instance_list);
-            FhPFilteredInstanceListIterator<PTexture2D> texture_iter   = new(texture_filter);
+            FhPFilteredInstanceList        <T> texture_filter = new(ptr_instance_list);
+            FhPFilteredInstanceListIterator<T> texture_iter   = new(texture_filter);
 
             // We don't know (or even care) what happens in the case that the instance list returns multiple texture objects.
-            if (!texture_iter.next(out PTexture2D* ptr_texture)) {
+            if (!texture_iter.next(out T* ptr_texture)) {
                 _logger.Error($"{tex_path} - no texture object found in filtered instance list");
 
                 texture.unlock();
                 return false;
             }
 
-            /* [fkelava 08/05/26 23:41]
-             * https://learn.microsoft.com/en-us/windows/win32/api/d3d11/nf-d3d11-id3d11device-createshaderresourceview
-             * CreateShaderResourceView is meant to return HRESULT. However, the only public overload CsWin32 provides
-             * is one which returns `void` and throws if the HRESULT indicates error, necessitating this ugly workaround.
+            /* [fkelava 24/10/26 21:59]
+             * It would be easier to go from the resource- if we knew where it was in each respective texture type.
+             * When we do, this can be simplified.
              */
 
-            ID3D11ShaderResourceView* srv;
-            try {
-                _ptr_device->CreateShaderResourceView(ptr_texture->base_PTexture2DD3D11.ptr_d3d_resource, null, &srv);
-            }
-            catch {
+            ID3D11ShaderResourceView* srv = default;
+
+            bool is_2d = *ptr_texture is PTexture2D;
+            bool is_3d = *ptr_texture is PTexture3D;
+            bool is_cm = *ptr_texture is PTextureCubeMap;
+
+            HRESULT hr = 0 switch {
+                0 when is_2d => _ptr_device->CreateShaderResourceView( ((PTexture2D*) ptr_texture)->base_PTexture2DD3D11.ptr_d3d_resource, null, &srv),
+                0 when is_3d => E.E_NOINTERFACE,
+                0 when is_cm => E.E_NOINTERFACE,
+                _            => E.E_INVALIDARG
+            };
+
+            if (hr.FAILED) {
                 _logger.Error($"{tex_path} - SRV instantiation failed");
 
                 texture.unlock();
                 return false;
             }
 
+            nuint width  = is_2d || is_3d ? ((PTexture2DBase*) ptr_texture)->m_width  : 0;
+            nuint height = is_2d || is_3d ? ((PTexture2DBase*) ptr_texture)->m_height : 0;
+            uint  mips   = is_2d || is_3d ? ((PTexture2DBase*) ptr_texture)->base_PTextureCommonBase.m_maxMipLevel : 0;
+
+            D3D11_RESOURCE_DIMENSION dimension = D3D11_RESOURCE_DIMENSION.D3D11_RESOURCE_DIMENSION_UNKNOWN;
+            if      (is_2d) dimension = D3D11_RESOURCE_DIMENSION.D3D11_RESOURCE_DIMENSION_TEXTURE2D;
+            else if (is_3d) dimension = D3D11_RESOURCE_DIMENSION.D3D11_RESOURCE_DIMENSION_TEXTURE3D;
+
             // TODO: Can we obtain the rest of the image metadata?
             FhTextureMetadata tex_metadata = new(
-                ptr_texture->base_PTexture2DD3D11.base_PTexture2DBase.m_width,
-                ptr_texture->base_PTexture2DD3D11.base_PTexture2DBase.m_height,
+                width,
+                height,
+                0,
+                1,
+                mips,
                 0,
                 0,
-                ptr_texture->base_PTexture2DD3D11.base_PTexture2DBase.base_PTextureCommonBase.m_maxMipLevel,
-                0,
-                0,
-                DXGI_FORMAT             .DXGI_FORMAT_UNKNOWN,
-                D3D11_RESOURCE_DIMENSION.D3D11_RESOURCE_DIMENSION_TEXTURE2D);
-            ImTextureRef tex_ref = new ImTextureRef(null, srv);
+                DXGI_FORMAT.DXGI_FORMAT_UNKNOWN,
+                dimension
+            );
 
-            texture.load   (tex_ref, tex_metadata);
+            texture.load(
+                new ImTextureRef(null, srv),
+                tex_metadata
+            );
+
             texture.unlock();
             return true;
-        }
-
-        texture.unlock();
-        return false;
-    }
-
-    bool IFhResourceLoaderImpl.load_game_texture_3d(FhTexture texture) {
-        string tex_path = texture.path;
-
-        if (_ptr_device == null) {
-            _logger.Info($"{tex_path} -> device not ready");
-            return false;
-        }
-
-        if (!texture.try_lock())
-            return false;
-
-        using FhPClusterScope cluster_scope = _plm!.cluster_load(tex_path);
-
-        if (!cluster_scope.enter(out PCluster* ptr_cluster)) {
-            _logger.Info($"{tex_path} -> cluster load failed");
-
-            texture.unlock();
-            return false;
-        }
-
-        FhPDoubleListIterator<PInstanceList> iter_instances = new(&ptr_cluster->__0x1C_instance_lists);
-
-        while (iter_instances.next(out PInstanceList* ptr_instance_list)) {
-            if (Marshal.PtrToStringAnsi(ptr_instance_list->__0x08_free_list.__0x10_name) != nameof(PTexture3D))
-                continue;
-
-            FhPFilteredInstanceList        <PTexture3D> texture_filter = new(ptr_instance_list);
-            FhPFilteredInstanceListIterator<PTexture3D> texture_iter   = new(texture_filter);
-
-            // We don't know (or even care) what happens in the case that the instance list returns multiple texture objects.
-            if (!texture_iter.next(out PTexture3D* ptr_texture)) {
-                _logger.Error($"{tex_path} - no texture object found in filtered instance list");
-
-                texture.unlock();
-                return false;
-            }
-
-            // TODO: impl after reversing PTexture3D
-        }
-
-        texture.unlock();
-        return false;
-    }
-
-    bool IFhResourceLoaderImpl.load_game_texture_cubemap(FhTexture texture) {
-        string tex_path = texture.path;
-
-        if (_ptr_device == null) {
-            _logger.Info($"{tex_path} -> device not ready");
-            return false;
-        }
-
-        if (!texture.try_lock())
-            return false;
-
-        using FhPClusterScope cluster_scope = _plm!.cluster_load(tex_path);
-
-        if (!cluster_scope.enter(out PCluster* ptr_cluster)) {
-            _logger.Info($"{tex_path} -> cluster load failed");
-
-            texture.unlock();
-            return false;
-        }
-
-        FhPDoubleListIterator<PInstanceList> iter_instances = new(&ptr_cluster->__0x1C_instance_lists);
-
-        while (iter_instances.next(out PInstanceList* ptr_instance_list)) {
-            if (Marshal.PtrToStringAnsi(ptr_instance_list->__0x08_free_list.__0x10_name) != nameof(PTextureCubeMap))
-                continue;
-
-            FhPFilteredInstanceList        <PTextureCubeMap> texture_filter = new(ptr_instance_list);
-            FhPFilteredInstanceListIterator<PTextureCubeMap> texture_iter   = new(texture_filter);
-
-            // We don't know (or even care) what happens in the case that the instance list returns multiple texture objects.
-            if (!texture_iter.next(out PTextureCubeMap* ptr_texture)) {
-                _logger.Error($"{tex_path} - no texture object found in filtered instance list");
-
-                texture.unlock();
-                return false;
-            }
-
-            // TODO: impl after reversing PTextureCubeMap
         }
 
         texture.unlock();

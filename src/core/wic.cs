@@ -397,17 +397,19 @@ internal sealed unsafe class FhImaging {
         uint row_pitch  = uint.CreateSaturating(bytes_row);
         uint image_size = uint.CreateSaturating(bytes_num);
 
-        byte* temp = (byte*) NativeMemory.AllocZeroed(image_size);
+        byte[] temp = new byte[image_size];
 
         if (format_convert == format_pixel
         &&  twidth         == width
         &&  theight        == height
         ) {
-            // No format conversion or resize needed
-            hr = ptr_frame_decoder->CopyPixels(null, row_pitch, image_size, temp);
+            fixed (byte* ptr_temp = temp) {
+                // No format conversion or resize needed
+                hr = ptr_frame_decoder->CopyPixels(null, row_pitch, image_size, ptr_temp);
 
-            if (hr.FAILED)
-                return hr;
+                if (hr.FAILED)
+                    return hr;
+            }
         }
         else if (twidth != width || theight != height) {
             // Resize
@@ -439,10 +441,12 @@ internal sealed unsafe class FhImaging {
 
             if (format_convert == format_scaler) {
                 // No format conversion required.
-                hr = scaler.Get()->CopyPixels(null, row_pitch, image_size, temp);
+                fixed (byte* ptr_temp = temp) {
+                    hr = scaler.Get()->CopyPixels(null, row_pitch, image_size, ptr_temp);
 
-                if (hr.FAILED)
-                    return hr;
+                    if (hr.FAILED)
+                        return hr;
+                }
             }
             else {
                 using ComPtr<IWICFormatConverter> converter = default;
@@ -469,10 +473,12 @@ internal sealed unsafe class FhImaging {
                 if (hr.FAILED)
                     return hr;
 
-                hr = converter.Get()->CopyPixels(null, row_pitch, image_size, temp);
+                fixed (byte* ptr_temp = temp) {
+                    hr = converter.Get()->CopyPixels(null, row_pitch, image_size, ptr_temp);
 
-                if (hr.FAILED)
-                    return hr;
+                    if (hr.FAILED)
+                        return hr;
+                }
             }
         }
         else {
@@ -505,10 +511,12 @@ internal sealed unsafe class FhImaging {
             if (hr.FAILED)
                 return hr;
 
-            hr = converter.Get()->CopyPixels(null, row_pitch, image_size, temp);
+            fixed (byte* ptr_temp = temp) {
+                hr = converter.Get()->CopyPixels(null, row_pitch, image_size, ptr_temp);
 
-            if (hr.FAILED)
-                return hr;
+                if (hr.FAILED)
+                    return hr;
+            }
         }
 
         // See if format is supported for auto-gen mipmaps (varies by feature level)
@@ -542,19 +550,22 @@ internal sealed unsafe class FhImaging {
             : flags_misc);
 
         D3D11_SUBRESOURCE_DATA init_data;
-        init_data.pSysMem          = temp;
-        init_data.SysMemPitch      = row_pitch;
-        init_data.SysMemSlicePitch = image_size;
+        ID3D11Texture2D*       tex;
 
-        ID3D11Texture2D* tex;
-        hr = ptr_device->CreateTexture2D(
-            &desc,
-            autogen ? null : &init_data,
-            &tex
-        );
+        fixed (byte* ptr_temp = temp) {
+            init_data.pSysMem          = ptr_temp;
+            init_data.SysMemPitch      = row_pitch;
+            init_data.SysMemSlicePitch = image_size;
 
-        if (hr.FAILED || tex == null)
-            return hr;
+            hr = ptr_device->CreateTexture2D(
+                &desc,
+                autogen ? null : &init_data,
+                &tex
+            );
+
+            if (hr.FAILED || tex == null)
+                return hr;
+        }
 
         if (pp_srv == null) {
             if (pp_texture != null) {
@@ -587,16 +598,18 @@ internal sealed unsafe class FhImaging {
         if (autogen) {
             Trace.Assert(ptr_device_context != null);
 
-            ptr_device_context->UpdateSubresource(
-                (ID3D11Resource*) tex,
-                0,
-                null,
-                temp,
-                row_pitch,
-                image_size
-            );
+            fixed (byte* ptr_temp = temp) {
+                ptr_device_context->UpdateSubresource(
+                    (ID3D11Resource*) tex,
+                    0,
+                    null,
+                    ptr_temp,
+                    row_pitch,
+                    image_size
+                );
 
-            ptr_device_context->GenerateMips(*pp_srv);
+                ptr_device_context->GenerateMips(*pp_srv);
+            }
         }
 
         if (pp_texture != null) {

@@ -111,7 +111,7 @@ public unsafe sealed class FhPlatformBindingModule : FhModule {
          * See https://github.com/SpecialKO/SpecialK/blob/main/src/render/d3d11/d3d11.cpp#L8183.
          */
 
-        if (hr != HRESULT.S_OK || ppSwapChain == null || ppDevice == null || ppImmediateContext == null)
+        if (hr != S.S_OK || ppSwapChain == null || ppDevice == null || ppImmediateContext == null)
             return hr;
 
         /* [fkelava 13/02/26 17:46]

@@ -97,6 +97,7 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
 
     protected override Vector2 get_ref_size() => new(1920f, 1080f);
 
+    /// <summary>Initialize data when the UI is opened.</summary>
     private void post_open(EventArgs e) {
         _mode  = UiMode .SAVE_LIST;
         _focus = UiFocus.LIST;
@@ -116,6 +117,7 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
         _fade.restart(COLOR_BLACK, COLOR_TRANS, _fade_length);
     }
 
+    /// <summary>Clean-up data after the UI is closed.</summary>
     private void post_close(EventArgs e) {
         _scrollable_saves.reset();
         _scrollable_sets .reset();
@@ -125,6 +127,8 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
 
     /* ===== Helper methods ===== */
 
+    /// <summary>Begin a fade-out.</summary>
+    /// <param name="action">The action to end the fade-out with.</param>
     protected void fade_out(Action action) {
         _fade.restart(
             _fade.get_color(),
@@ -134,12 +138,16 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
         );
     }
 
+    /// <summary>Get the volume a move sound should play at.</summary>
+    /// <returns>The desired volume.</returns>
     protected float get_move_volume() {
         float min_volume = ACTION_VOLUME * 0.5f;
 
         return min_volume + (1f - _audio_fade_helper.progress) * (1f - min_volume);
     }
 
+    /// <summary>Change the UI mode.</summary>
+    /// <param name="new_mode">The UI mode to switch to.</param>
     protected void change_mode(UiMode new_mode) {
         _scrollable_saves.reset();
         _scrollable_sets .reset();
@@ -147,6 +155,8 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
         _mode  = new_mode;
     }
 
+    /// <summary>Change the active set to the one with the given name.</summary>
+    /// <param name="set_name"></param>
     protected void switch_set(string set_name) {
         FhApi.Saves.sets_switch(set_name);
 
@@ -157,7 +167,7 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
 
     /* ===== Textures ===== */
 
-    /// <summary>Attempt to load all of the textures the renderer requires to display properly.</summary>
+    /// <summary>Attempt to load all of the textures the UI requires to display properly.</summary>
     /// <returns>Whether all textures have been successfully loaded.</returns>
     protected bool try_load_textures() {
         _loaded_all_textures = true;
@@ -170,7 +180,7 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
         return _loaded_all_textures;
     }
 
-    /// <summary>Unload all of the textures the renderer requires to display properly.</summary>
+    /// <summary>Unload all of the textures the UI requires to display properly.</summary>
     protected void unload_textures(Span<FhTexture> texture_list) {
         foreach (FhTexture texture in texture_list) {
             if (FhApi.Resources.unload_texture(texture))
@@ -182,20 +192,31 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
 
     /* ===== Input handling ===== */
 
-    protected bool mouse_hovered(Rect rect, bool require_movement = true) {
+    /// <summary>Detect whether the player hovered an on-screen area with the mouse.</summary>
+    /// <param name="bounds">The area to detect hovering over.</param>
+    /// <param name="require_movement">Whether the method should return <c>false</c> if the mouse is not moving.</param>
+    /// <returns>Whether the specified area was hovered.</returns>
+    protected bool mouse_hovered(Rect bounds, bool require_movement = true) {
         return should_handle_input
-            && FhApi.Gui.mouse_hovering(rect, require_movement);
+            && FhApi.Gui.mouse_hovering(bounds, require_movement);
     }
 
+    /// <summary>Detect whether the player clicked an on-screen area with the mouse.</summary>
+    /// <param name="bounds">The area to detect clicks in.</param>
+    /// <param name="button">The mouse button to detect clicks from.</param>
+    /// <param name="repeat">Whether the method should repeatedly return <c>true</c> for held inputs.</param>
+    /// <returns>Whether the specified click was performed.</returns>
     protected bool mouse_clicked(
-        Rect rect,
+        Rect             bounds,
         ImGuiMouseButton button = ImGuiMouseButton.Left,
-        bool repeat = false
+        bool             repeat = false
     ) {
         return should_handle_input
-            && FhApi.Gui.mouse_clicked(rect, button, repeat);
+            && FhApi.Gui.mouse_clicked(bounds, button, repeat);
     }
 
+    /// <summary>Handle input for the save and set lists.</summary>
+    /// <returns>Whether input handling should be interrupted.</returns>
     protected bool handle_input_list() {
         if (_mode == UiMode.SAVE_LIST) {
             if (_scrollable_saves.max == 0) {
@@ -256,7 +277,9 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
         return false;
     }
 
-    protected bool handle_input_active_set() {
+    /// <summary>Handle input for the Change Set button</summary>
+    /// <returns>Whether input handling should be interrupted.</returns>
+    protected bool handle_input_change_set() {
         if (_mode == UiMode.SAVE_LIST && FhApi.Gui.is_any_pressed(FhApi.Gui.keys_down) && _current_scrollable.max > 0) {
             FhApi.Audio.play_sound(sound_id_action, ACTION_VOLUME);
 
@@ -275,11 +298,13 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
         return false;
     }
 
+    /// <summary>Handle non-mouse input.</summary>
+    /// <remarks>The scroll wheel is handled here as well.</remarks>
     protected void handle_input() {
         if (!should_handle_input) return;
 
         if (_focus == UiFocus.LIST       && handle_input_list())       return;
-        if (_focus == UiFocus.ACTIVE_SET && handle_input_active_set()) return;
+        if (_focus == UiFocus.ACTIVE_SET && handle_input_change_set()) return;
 
         if (FhApi.Gui.is_any_pressed(FhApi.Gui.keys_cancel)) {
             FhApi.Audio.play_sound(sound_id_cancel);
@@ -291,8 +316,87 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
         }
     }
 
-    /* ===== Rendering methods ===== */
+    /* ===== Rendering ===== */
 
+    /// <summary>Render the background.</summary>
+    protected abstract void ui_background();
+
+    /// <summary>Render the help bar and help text.</summary>
+    protected abstract void ui_help();
+
+    /// <summary>Render the active set name and save count.</summary>
+    protected abstract void ui_savecount();
+
+    /// <summary>Render the cursor.</summary>
+    /// <param name="target_pos">The position the cursor should point at.</param>
+    /// <param name="overlap">Whether the cursor should overlap its target a little.</param>
+    protected abstract void ui_cursor(Vector2 target_pos, bool overlap = true);
+
+    /// <summary>Render the Change Set button.</summary>
+    protected abstract void ui_change_set();
+
+    /// <summary>Render the list of available sets.</summary>
+    protected abstract void ui_setlist();
+
+    /// <summary>Render a set in the list of available sets.</summary>
+    /// <param name="set">The set to render a button for.</param>
+    /// <param name="global_idx">The index of the set in the set list.</param>
+    /// <param name="local_idx">The index of the set on screen.</param>
+    protected abstract void ui_set(FhSaveSet set, int global_idx, int local_idx);
+
+    /// <summary>Render the list of saves in the active set.</summary>
+    protected abstract void ui_savelist();
+
+    /// <summary>Render the message displayed when no saves exist in the active set.</summary>
+    protected abstract void ui_no_saves();
+
+    /// <summary>Render a save in the list of saves.</summary>
+    /// <param name="save">The save to render a button for.</param>
+    /// <param name="global_idx">The index of the save in the save list.</param>
+    /// <param name="local_idx">The index of the save on screen.</param>
+    protected abstract void ui_save(FhSaveUiData save, int global_idx, int local_idx);
+
+    /// <summary>Render details for a given FFX save.</summary>
+    /// <param name="save">The save to render details for.</param>
+    /// <param name="save_bounds">The inner bounds of the save.</param>
+    /// <param name="header_bounds">The bounds to fit the header details in.</param>
+    /// <param name="info_bounds">The bounds to fit the info details in.</param>
+    protected abstract void ui_save_details_x(
+        FhSaveUiData save,
+        Rect save_bounds,
+        Rect header_bounds,
+        Rect info_bounds
+    );
+
+    /// <summary>Render details for a given FFX-2 save.</summary>
+    /// <param name="save">The save to render details for.</param>
+    /// <param name="save_bounds">The inner bounds of the save.</param>
+    /// <param name="header_bounds">The bounds to fit the header details in.</param>
+    /// <param name="info_bounds">The bounds to fit the info details in.</param>
+    protected abstract void ui_save_details_x2(
+        FhSaveUiData save,
+        Rect save_bounds,
+        Rect header_bounds,
+        Rect info_bounds
+    );
+
+    /// <summary>Render details for a given FFX-2 LAST MISSION save.</summary>
+    /// <param name="save">The save to render details for.</param>
+    /// <param name="save_bounds">The inner bounds of the save.</param>
+    /// <param name="header_bounds">The bounds to fit the header details in.</param>
+    /// <param name="info_bounds">The bounds to fit the info details in.</param>
+    protected abstract void ui_save_details_lm(
+        FhSaveUiData save,
+        Rect save_bounds,
+        Rect header_bounds,
+        Rect info_bounds
+    );
+
+    /// <summary>Render the New Save Data button.</summary>
+    /// <param name="bounds">The desired bounds of the button.</param>
+    protected abstract void ui_newdata(Rect bounds);
+
+    /// <summary>Render a full-screen fade as provided by <see cref="_fade"/>.</summary>
     protected virtual void ui_fade() {
         if (_fade.is_done) return;
 

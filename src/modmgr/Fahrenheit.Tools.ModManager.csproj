@@ -44,6 +44,16 @@
         <PackageReference Include="Hexa.NET.ImGui.Backends.SDL3" Version="3.1.0-experimental" />
         <PackageReference Include="Hexa.NET.SDL3" Version="1.2.11" />
         <PackageReference Include="Hexa.NET.OpenGL3" Version="1.1.0" />
+        <PackageReference Include="NativeFileDialogCore" Version="1.0.3" />
+    </ItemGroup>
+
+    <!-- FONT ASSETS -->
+    <ItemGroup>
+        <Content Include="..\..\assets\NotoSans-VariableFont_wdth,wght.ttf">
+            <Link>resources\fonts\NotoSans-VariableFont_wdth,wght.ttf</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        </Content>
     </ItemGroup>
 
 </Project>

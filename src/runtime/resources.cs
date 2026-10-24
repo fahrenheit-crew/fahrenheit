@@ -10,7 +10,8 @@ namespace Fahrenheit.Runtime;
 [FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
 [SupportedOSPlatform("windows6.1")] // To satisfy CA1416 warning about invoking D3D/DXGI API which TerraFX annotates as supported only on Windows.
 public unsafe sealed class FhResourceLoaderModule : FhModule, IFhResourceLoaderImpl, IFhPlatformUser {
-    private ID3D11Device* _p_device; // https://learn.microsoft.com/en-us/windows/win32/api/d3d11/nn-d3d11-id3d11device
+    private ID3D11Device*        _ptr_device;  // https://learn.microsoft.com/en-us/windows/win32/api/d3d11/nn-d3d11-id3d11device
+    private ID3D11DeviceContext* _ptr_context; // https://learn.microsoft.com/en-us/windows/win32/api/d3d11/nn-d3d11-id3d11devicecontext
 
     private          FhPhyreLoaderModule? _plm;
     private readonly HashSet<FhTexture>   _release_queue;
@@ -32,21 +33,16 @@ public unsafe sealed class FhResourceLoaderModule : FhModule, IFhResourceLoaderI
         ID3D11Device*        ptr_device,
         ID3D11DeviceContext* ptr_device_context,
         IDXGISwapChain*      ptr_swapchain,
-        HWND                 hWnd) {
-        _p_device = ptr_device;
-    }
-
-    /// <summary>
-    ///     Creates a <see cref="ID3D11ShaderResourceView"/> from a given texture, then assigns it to a <see cref="FhTexture"/>.
-    /// </summary>
-    private bool _helper_create_srv(FhTexture texture) {
-        return true;
+        HWND                 hWnd
+    ) {
+        _ptr_device  = ptr_device;
+        _ptr_context = ptr_device_context;
     }
 
     bool IFhResourceLoaderImpl.load_texture_from_disk(FhTexture texture) {
         string file_path = texture.path;
 
-        if (_p_device == null) {
+        if (_ptr_device == null) {
             _logger.Info($"{file_path} -> device not ready");
             return false;
         }
@@ -54,10 +50,47 @@ public unsafe sealed class FhResourceLoaderModule : FhModule, IFhResourceLoaderI
         if (!texture.try_lock())
             return false;
 
-        bool rv = _helper_create_srv(texture);
+        ID3D11Texture2D*          ptr_texture;
+        ID3D11ShaderResourceView* ptr_srv;
+
+        HRESULT hr = FhImaging.CreateWICTextureFromFile(
+            _ptr_device,
+            _ptr_context,
+            texture.path,
+            0,
+            (ID3D11Resource**) &ptr_texture,
+            &ptr_srv
+        );
+
+        if (hr.FAILED) {
+            _logger.Error($"{file_path} -> load failed with HRESULT 0x{hr:X8}");
+
+            texture.unlock();
+            return false;
+        }
+
+        D3D11_TEXTURE2D_DESC desc;
+        ptr_texture->GetDesc(&desc);
+
+        FhTextureMetadata metadata = new(
+            desc.Width,
+            desc.Height,
+            0,
+            desc.ArraySize,
+            desc.MipLevels,
+            desc.MiscFlags,
+            0,
+            desc.Format,
+            D3D11_RESOURCE_DIMENSION.D3D11_RESOURCE_DIMENSION_TEXTURE2D
+        );
+
+        texture.load(
+            new ImTextureRef(null, ptr_srv),
+            metadata
+        );
 
         texture.unlock();
-        return rv;
+        return true;
     }
 
     /* [fkelava 01/05/26 18:47]
@@ -68,7 +101,7 @@ public unsafe sealed class FhResourceLoaderModule : FhModule, IFhResourceLoaderI
     bool IFhResourceLoaderImpl.load_game_texture_2d(FhTexture texture) {
         string tex_path = texture.path;
 
-        if (_p_device == null) {
+        if (_ptr_device == null) {
             _logger.Info($"{tex_path} -> device not ready");
             return false;
         }
@@ -110,7 +143,7 @@ public unsafe sealed class FhResourceLoaderModule : FhModule, IFhResourceLoaderI
 
             ID3D11ShaderResourceView* srv;
             try {
-                _p_device->CreateShaderResourceView(ptr_texture->base_PTexture2DD3D11.ptr_d3d_resource, null, &srv);
+                _ptr_device->CreateShaderResourceView(ptr_texture->base_PTexture2DD3D11.ptr_d3d_resource, null, &srv);
             }
             catch {
                 _logger.Error($"{tex_path} - SRV instantiation failed");
@@ -144,7 +177,7 @@ public unsafe sealed class FhResourceLoaderModule : FhModule, IFhResourceLoaderI
     bool IFhResourceLoaderImpl.load_game_texture_3d(FhTexture texture) {
         string tex_path = texture.path;
 
-        if (_p_device == null) {
+        if (_ptr_device == null) {
             _logger.Info($"{tex_path} -> device not ready");
             return false;
         }
@@ -188,7 +221,7 @@ public unsafe sealed class FhResourceLoaderModule : FhModule, IFhResourceLoaderI
     bool IFhResourceLoaderImpl.load_game_texture_cubemap(FhTexture texture) {
         string tex_path = texture.path;
 
-        if (_p_device == null) {
+        if (_ptr_device == null) {
             _logger.Info($"{tex_path} -> device not ready");
             return false;
         }

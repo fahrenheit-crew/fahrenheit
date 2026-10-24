@@ -912,14 +912,14 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
         );
 
         // Border highlights/shadows
-        float border_thickness = 5f * aspect_scale.Y;
+        float border_thickness = 5f;
         uint  highlight        = 0x28FFFFFF;
         uint  shadow           = 0x80000000;
 
         draw_highlight_shadow(
             draw,
             header_bounds.scale_to_aspect(aspect_helper),
-            border_thickness,
+            border_thickness * aspect_scale.Y,
             highlight,
             shadow
         );
@@ -933,7 +933,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
         draw_highlight_shadow(
             draw,
             info_bounds.scale_to_aspect(aspect_helper),
-            border_thickness,
+            border_thickness * aspect_scale.Y,
             highlight,
             shadow
         );
@@ -942,6 +942,11 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
             ui_newdata(save_bounds);
         }
         else {
+            Vector2 shrink_size = new(border_thickness * 2f);
+
+            header_bounds = header_bounds.expand(-shrink_size, Alignment2D.CENTER);
+            info_bounds   = info_bounds  .expand(-shrink_size, Alignment2D.CENTER);
+
             switch (FhGlobal.game_id) {
                 case FhGameId.FFX:    ui_save_details_x (save, save_bounds, header_bounds, info_bounds); break;
                 case FhGameId.FFX2:   ui_save_details_x2(save, save_bounds, header_bounds, info_bounds); break;
@@ -994,12 +999,11 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
 
         Vector2 face_size   = new(102f, 96f);
         float   face_gap    = 3f;
-        float   face_offset = 5f;
 
         Rect face = new() {
             pos = info_bounds.bottom_left with {
-                X = info_bounds.bottom_left.X + face_offset,
-                Y = info_bounds.bottom_left.Y - 6f - face_size.Y,
+                X = info_bounds.bottom_left.X,
+                Y = info_bounds.bottom_left.Y - face_size.Y,
             },
             size = face_size,
         };
@@ -1042,13 +1046,12 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
         // }
 
         /* ===== Header Details ===== */
-        float border_thickness =  5f;
         float text_offset      = 13f;
         float text_margin      = 66f;
         float autosave_offset  = 10f;
 
         Vector2 header_text_pos_l = header_bounds.left + new Vector2 {
-            X = border_thickness + text_offset,
+            X = text_offset,
         };
 
         float font_size = 43f * font_scale;
@@ -1090,7 +1093,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
         text_margin = 59f;
 
         Vector2 header_text_pos_r = header_bounds.right + new Vector2 {
-            X = border_thickness - map_icon_size.X - text_margin,
+            X = map_icon_size.X - text_margin,
             Y = -1f,
         };
 
@@ -1107,7 +1110,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
         float margin_face = 38f;
         float margin_map  = 24f;
 
-        float info_margin_left = face_offset + face_size.X * 3 + face_gap * 2 + margin_face;
+        float info_margin_left = face_size.X * 3 + face_gap * 2 + margin_face;
         float info_margin_right = map_icon_size.X + margin_map;
 
         info_bounds.pos.X  += info_margin_left;
@@ -1161,14 +1164,12 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
             size = new(256f, 239f),
         }.as_uv(_tex_face_size);
 
-        Vector2 face_size   = new(102f, 96f);
-        float   face_gap    = 3f;
-        float   face_offset = 5f;
+        Vector2 face_size = new(102f, 96f);
+        float   face_gap  = 3f;
 
         Rect face = new() {
             pos = info_bounds.bottom_left with {
-                X = info_bounds.bottom_left.X + face_offset,
-                Y = info_bounds.bottom_left.Y - 6f - face_size.Y,
+                Y = info_bounds.bottom_left.Y - face_size.Y,
             },
             size = face_size,
         };
@@ -1227,13 +1228,12 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
         // }
 
         /* ===== Header Details ===== */
-        float border_thickness =  5f;
         float text_offset      = 13f;
         float text_margin      = 66f;
         float autosave_offset  = 10f;
 
         Vector2 header_text_pos_l = header_bounds.left + new Vector2{
-            X = border_thickness + text_offset,
+            X = text_offset,
         };
 
         float font_size = 43f * font_scale;
@@ -1275,7 +1275,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
         text_margin = 59f;
 
         Vector2 header_text_pos_r = header_bounds.right - new Vector2 {
-            X = border_thickness + map_icon_size.X + text_margin,
+            X = map_icon_size.X + text_margin,
             Y = 1f,
         };
 
@@ -1293,8 +1293,8 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
         float margin_map  =  57f;
         float cjk_offset  =  92f;
 
-        float info_margin_left  = face_offset + face_size.X * 3 + face_gap * 2f + margin_face;
-        float info_margin_right = border_thickness + map_icon_size.X + margin_map;
+        float info_margin_left  = face_size.X * 3 + face_gap * 2f + margin_face;
+        float info_margin_right = map_icon_size.X + margin_map;
 
         // When running in CJK, we slightly reduce the text margin and hardcode
         // the "STORY COMPLETED" string to shorten it and prevent overlap.
@@ -1387,12 +1387,11 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
 
         Vector2 face_size   = new(102f, 96f);
         float   face_gap    = 25f;
-        float   face_offset =  6f;
 
         Rect face = new() {
             pos = info_bounds.bottom_left with {
-                X = info_bounds.bottom_left.X + face_offset + (3 * face_gap),
-                Y = info_bounds.bottom_left.Y - 6f - face_size.Y,
+                X = info_bounds.bottom_left.X + (3 * face_gap),
+                Y = info_bounds.bottom_left.Y - face_size.Y,
             },
             size = face_size,
         };
@@ -1447,14 +1446,12 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
         // }
 
         /* ===== Header Details ===== */
-        float border_thickness =  5f;
-        float header_size      = 47f;
         float text_offset      = 13f;
         float text_margin      = 65f;
         float autosave_offset  = 27f;
 
         Vector2 header_text_pos_l = header_bounds.left + new Vector2 {
-            X = border_thickness + text_offset,
+            X = text_offset,
         };
 
         float font_size = 43f * font_scale;
@@ -1496,7 +1493,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
         text_margin = 57f;
 
         Vector2 header_text_pos_r = header_bounds.right - new Vector2 {
-            X = border_thickness + map_icon_size.X + text_margin,
+            X = map_icon_size.X + text_margin,
             Y = 1f,
         };
 
@@ -1514,8 +1511,8 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
         float margin_face  = 86f;
         float margin_map   = 57f;
 
-        float info_margin_left  = face_offset + face_size.X + face_gap * 3f + margin_face;
-        float info_margin_right = border_thickness + map_icon_size.X + margin_map;
+        float info_margin_left  = face_size.X + face_gap * 3f + margin_face;
+        float info_margin_right = map_icon_size.X + margin_map;
 
         info_bounds.pos.X  += info_margin_left;
         info_bounds.size.X -= info_margin_left + info_margin_right;

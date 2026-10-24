@@ -33,8 +33,6 @@ public sealed class FhSaveUiSelector : FhModule {
 
     private readonly FhSaveUiSettings _settings = new();
 
-    public FhSaveUiSelector() { }
-
     private string get_default_ui_id() {
         return FhGlobal.game_id switch {
             FhGameId.FFX    => _ui_x! .ModuleType,

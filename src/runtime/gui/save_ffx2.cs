@@ -290,8 +290,6 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
         text_pos.X += 241f * aspect_scale.X;
         text_pos.Y -=   7f * aspect_scale.Y;
 
-        float font_size = 43f * font_scale;
-
         FhApi.Gui.draw_text(
             draw,
             text_pos,
@@ -313,7 +311,8 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
         Vector2 text_pos = new(1717f, 146f);
 
         float line_height = 34f;
-        float font_size   = 37f * font_scale;
+
+        float font_size_savecount = font_size * 0.86f;
 
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
@@ -321,7 +320,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
             draw,
             text_pos * aspect_scale + aspect_helper.pos,
             save_text,
-            font_size,
+            font_size_savecount,
             true,
             Alignment2D.RIGHT
         );
@@ -334,7 +333,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
                 draw,
                 autosave_pos,
                 "A",
-                font_size,
+                font_size_savecount,
                 true,
                 Alignment2D.RIGHT,
                 0xFF19D8FF
@@ -347,7 +346,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
             draw,
             second_line_pos * aspect_scale + aspect_helper.pos,
             set.name,
-            font_size,
+            font_size_savecount,
             true,
             Alignment2D.RIGHT
         );
@@ -587,8 +586,6 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
         ImGuiIOPtr    io   = ImGui.GetIO();
 
-        float font_size = 43f * font_scale;
-
         if (mouse_hovered(button_scaled)) {
             if (_focus != UiFocus.LIST || _scrollable_sets.hovered != global_idx) {
                 FhApi.Audio.play_sound(sound_id_action, ACTION_VOLUME);
@@ -735,8 +732,6 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
         string message = "No saved data. Change set or return to the main menu.";
 
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
-
-        float font_size = 43f * font_scale;
 
         ImGui.PushFont(null, font_size);
         Vector2 text_size = ImGui.CalcTextSize(message);
@@ -1054,8 +1049,6 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
             X = text_offset,
         };
 
-        float font_size = 43f * font_scale;
-
         //TODO: Add localization
         string slot_text   = save.slot == 0 ? "Autosave" : save.slot_str;
         string create_time = save.create_time.ToString(@"yyyy\/M\/d H\:mm\:ss");
@@ -1235,8 +1228,6 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
         Vector2 header_text_pos_l = header_bounds.left + new Vector2{
             X = text_offset,
         };
-
-        float font_size = 43f * font_scale;
 
         //TODO: Add localization
         string slot_text   = save.slot == 0 ? "Autosave" : save.slot_str;
@@ -1454,8 +1445,6 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
             X = text_offset,
         };
 
-        float font_size = 43f * font_scale;
-
         //TODO: Add localization
         string slot_text   = save.slot == 0 ? "Autosave" : save.slot_str;
         string create_time = save.create_time.ToString(@"yyyy\/M\/d H\:mm\:ss");
@@ -1590,8 +1579,6 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
             17f,
             header_height + (bounds.size.Y - header_height) / 2f + 1f
         );
-
-        float font_size = 43f * font_scale;
 
         FhApi.Gui.draw_text(
             draw,

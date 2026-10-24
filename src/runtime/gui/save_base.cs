@@ -81,6 +81,8 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
     protected virtual uint sound_id_cancel     => FFX.Ids.SoundId.UI_CANCEL;
     protected virtual uint sound_id_set_switch => FFX.Ids.SoundId.PAGE_TURN;
 
+    protected float font_size => 43f * font_scale;
+
     protected virtual FhTexture[] textures => [];
 
     protected FhRuntimeSaveUiBase() {

@@ -35,7 +35,10 @@ public sealed record FhTextureMetadata(
     uint                     miscFlags,
     uint                     miscFlags2,
     DXGI_FORMAT              format,
-    D3D11_RESOURCE_DIMENSION dimension);
+    D3D11_RESOURCE_DIMENSION dimension
+) {
+    public Vector2 size => new(width, height);
+}
 
 /// <summary>
 ///     A handle to an image on disk that can be passed to ImGui for rendering.

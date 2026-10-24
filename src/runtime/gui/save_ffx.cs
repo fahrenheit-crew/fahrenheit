@@ -3,8 +3,6 @@
 // This file is part of Fahrenheit, © 2023-2026 The Fahrenheit contributors.
 // It is licensed to you under the GNU Lesser General Public License, version 3.0 or later. See COPYING, COPYING.LESSER.
 
-using Fahrenheit.FFX.Ids;
-
 namespace Fahrenheit.Runtime.Gui;
 
 /*
@@ -31,12 +29,7 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
 
     private readonly Vector2 _tex_map_icon_size  = new(310f, 210f);
 
-    private readonly Vector2 _tex_bg_size           = new(2048f, 1024f);
-    private readonly Vector2 _tex_help_size         = new(2048f, 2048f);
-    private readonly Vector2 _tex_battle_kuang_size = new(2048f, 1024f);
-    private readonly Vector2 _tex_faces_size        = new(1024f,  512f);
     private readonly Vector2 _tex_meswin_size       = new(1024f, 1024f);
-    private readonly Vector2 _tex_summonbg_size     = new(1024f, 1024f);
 
     private readonly FhTexture _texture_ffx2_face_icon_default = new(Path.Join(DIR_X2_FACE_DATA, "mface_000.dds.phyre"), FhTextureType.PHYRE);
     private readonly FhTexture _texture_ffx2_map_icon_default  = new(Path.Join(DIR_X2_MAP_ICONS, "logo_j.png"),          FhTextureType.PNG);
@@ -45,8 +38,6 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
 
     private readonly Vector2 _tex_ffx2_face_size     = new(256f, 256f);
     private readonly Vector2 _tex_ffx2_map_icon_size = new(320f, 176f);
-
-    private readonly Vector2 _tex_freetex_size = new(1024f,  768f);
 
     protected override FhTexture[] textures => [
         _texture_bg,
@@ -73,7 +64,7 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
     }
 
     protected override void ui_background() {
-        if (!_texture_bg.try_use(out ImTextureRef bg, out _)) {
+        if (!_texture_bg.try_use(out ImTextureRef bg, out FhTextureMetadata? bg_meta)) {
             return;
         }
 
@@ -82,7 +73,7 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
         UV tex_uv = new Rect {
             pos  = new(   0f,    0f),
             size = new(1920f, 1024f),
-        }.as_uv(_tex_bg_size);
+        }.as_uv(bg_meta.size);
 
         UV screen_uv = new Rect {
             pos  = new(   0f,    0f),
@@ -93,8 +84,9 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
     }
 
     protected override void ui_help() {
-        if (!_texture_help  .try_use(out ImTextureRef help,   out _)
-         || !_texture_meswin.try_use(out ImTextureRef meswin, out _)
+        if (
+            !_texture_help.try_use(out ImTextureRef help, out FhTextureMetadata? help_meta)
+            || !_texture_meswin.try_use(out ImTextureRef meswin, out FhTextureMetadata? meswin_meta)
         ) {
             return;
         }
@@ -106,7 +98,7 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
         UV bg_tuv = new Rect {
             pos  = new( 154f, 1762f),
             size = new(1740f,  105f),
-        }.as_uv(_tex_help_size);
+        }.as_uv(help_meta.size);
 
         // Saving this one as a rect to more easily calculate the text position later
         Rect bg_screen = new Rect {
@@ -119,7 +111,7 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
         UV title_tuv = new Rect {
             pos  = new(670f, 38f),
             size = new( 74f, 21f),
-        }.as_uv(_tex_meswin_size);
+        }.as_uv(meswin_meta.size);
 
         UV title_suv = new Rect {
             pos  = new(151f, 82f),
@@ -218,7 +210,7 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
     }
 
     protected override void ui_cursor(Vector2 target_pos, bool overlap = true) {
-        if (!_texture_meswin.try_use(out ImTextureRef meswin, out _)) {
+        if (!_texture_meswin.try_use(out ImTextureRef meswin, out FhTextureMetadata? meswin_meta)) {
             return;
         }
 
@@ -227,7 +219,7 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
         UV cursor_tuv = new UV(
             new(157f, 244f),
             new( 90f, 200f)
-        ).map_to(_tex_meswin_size);
+        ).map_to(meswin_meta.size);
 
         Vector2 cursor_size = new Vector2(92f, 61f) * aspect_scale;
 
@@ -259,14 +251,14 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
     }
 
     protected override void ui_change_set() {
-        if (!_texture_battle_kuang.try_use(out ImTextureRef battle_kuang, out _)) {
+        if (!_texture_battle_kuang.try_use(out ImTextureRef battle_kuang, out FhTextureMetadata? battle_kuang_meta)) {
             return;
         }
 
         UV bg_tuv = new Rect {
             pos  = new(  0f, 757f),
             size = new(432f,  12f),
-        }.as_uv(_tex_battle_kuang_size, false);
+        }.as_uv(battle_kuang_meta.size, false);
 
         Rect bg_screen = new Rect {
             pos  = new(660f, 28f),
@@ -315,7 +307,7 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
     }
 
     protected override void ui_set(FhSaveSet set, int global_idx, int local_idx) {
-        if (!_texture_summonbg.try_use(out ImTextureRef summonbg, out _)) {
+        if (!_texture_summonbg.try_use(out ImTextureRef summonbg, out FhTextureMetadata? summonbg_meta)) {
             return;
         }
 
@@ -326,7 +318,7 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
         UV button_tuv = new Rect {
             pos  = new(   0f, 954f - tex_y_diff),
             size = new(1024f,  70f),
-        }.as_uv(_tex_summonbg_size);
+        }.as_uv(summonbg_meta.size);
 
         // Screen coordinates
         Rect button = new Rect {
@@ -683,7 +675,7 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
         Rect header_bounds,
         Rect info_bounds
     ) {
-        if (!_texture_faces.try_use(out ImTextureRef faces, out _)) {
+        if (!_texture_faces.try_use(out ImTextureRef faces, out FhTextureMetadata? faces_meta)) {
             return;
         }
 
@@ -704,7 +696,7 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
             face_tuvs[i] = new UV(
                 new(x1, y1),
                 new(x2, y2)
-            ).map_to(_tex_faces_size);
+            ).map_to(faces_meta.size);
         }
 
         Vector2 face_size = new(info_bounds.size.Y);
@@ -1237,8 +1229,9 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
     }
 
     protected override void ui_newdata(Rect bounds) {
-        if (!_texture_meswin .try_use(out ImTextureRef meswin,  out _)
-         || !_texture_freetex.try_use(out ImTextureRef freetex, out _)
+        if (
+            !_texture_meswin.try_use(out ImTextureRef meswin, out _)
+            || !_texture_freetex.try_use(out ImTextureRef freetex, out FhTextureMetadata? freetex_meta)
         ) {
             return;
         }
@@ -1352,7 +1345,7 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
         // UV plus_tuv = new Rect {
         //     pos  = new(581f, 724f),
         //     size = new( 36f,  36f),
-        // }.as_uv(_tex_freetex_size);
+        // }.as_uv(freetex_meta.size);
         //
         // UV plus_suv = new Rect {
         //     pos  = save_rect.pos + new Vector2(1405f, 56f),

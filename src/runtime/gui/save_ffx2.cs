@@ -3,8 +3,6 @@
 // This file is part of Fahrenheit, © 2023-2026 The Fahrenheit contributors.
 // It is licensed to you under the GNU Lesser General Public License, version 3.0 or later. See COPYING, COPYING.LESSER.
 
-using Fahrenheit.FFX2.Ids;
-
 namespace Fahrenheit.Runtime.Gui;
 
 /*
@@ -34,13 +32,6 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
 
     private readonly Vector2 _tex_face_size     = new(256f, 256f);
     private readonly Vector2 _tex_map_icon_size = new(320f, 176f);
-
-    private readonly Vector2 _tex_menuback_size = new( 512f,  512f);
-    private readonly Vector2 _tex_black0_size   = new(1024f, 1024f);
-    private readonly Vector2 _tex_mahojin_size  = new(2048f, 2048f);
-    private readonly Vector2 _tex_plate_size    = new( 512f,  512f);
-    private readonly Vector2 _tex_freetex_size  = new(1024f,  768f);
-    private readonly Vector2 _tex_x2_bg_size    = new(2048f, 2048f);
 
     private readonly Vector2 _tex_ffx_faces_size = new(1024f, 512f);
 
@@ -89,9 +80,10 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
     }
 
     protected override void ui_background() {
-        if (!_texture_menuback.try_use(out ImTextureRef menuback, out _)
-         || !_texture_black0  .try_use(out ImTextureRef black0,   out _)
-         || !_texture_mahojin .try_use(out ImTextureRef mahojin,  out _)
+        if (
+            !_texture_menuback.try_use(out ImTextureRef menuback, out FhTextureMetadata? menuback_meta)
+            || !_texture_mahojin.try_use(out ImTextureRef mahojin, out FhTextureMetadata? mahojin_meta)
+            || !_texture_black0.try_use(out ImTextureRef black0, out FhTextureMetadata? black0_meta)
         ) {
             return;
         }
@@ -109,7 +101,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
         UV menuback_tuv = new Rect {
             pos  = new(  0f,   0f),
             size = new(512f, 512f),
-        }.as_uv(_tex_menuback_size);
+        }.as_uv(menuback_meta.size);
 
         // Draw the background in 6 left->right chunks, top row, bottom row
         Rect menuback_screen = new Rect {
@@ -134,7 +126,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
         UV mahojin_tuv = new Rect {
             pos  = new(   6f,  529f),
             size = new(1508f, 1509f),
-        }.as_uv(_tex_mahojin_size);
+        }.as_uv(mahojin_meta.size);
 
         UV mahojin_suv = new Rect {
             pos  = new( 374f,  -57f),
@@ -153,7 +145,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
         UV black0_tuv = new Rect {
             pos  = new(   0f,    0f),
             size = new(1024f, 1024f),
-        }.as_uv(_tex_black0_size);
+        }.as_uv(black0_meta.size);
 
         draw.AddImage(
             black0,
@@ -175,9 +167,13 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
     }
 
     protected override void ui_help() {
-        if (!_texture_freetex.try_use(out ImTextureRef freetex, out _)) return;
+        if (!_texture_freetex.try_use(out ImTextureRef freetex, out FhTextureMetadata? freetex_meta)) {
+            return;
+        }
 
-        if (!FhApi.Saves.impl_get_system_mode(out FhSaveSystemMode? system_mode)) return;
+        if (!FhApi.Saves.impl_get_system_mode(out FhSaveSystemMode? system_mode)) {
+            return;
+        }
 
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
@@ -221,7 +217,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
         UV title_tuv = new Rect {
             pos  = new(643f, 576f),
             size = new(140f,  58f),
-        }.as_uv(_tex_freetex_size);
+        }.as_uv(freetex_meta.size);
 
         UV title_suv = new Rect {
             pos  = new(151f, 94f),
@@ -324,14 +320,14 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
     }
 
     protected override void ui_cursor(Vector2 target_pos, bool overlap = true) {
-        if (!_texture_freetex.try_use(out ImTextureRef freetex, out _)) return;
+        if (!_texture_freetex.try_use(out ImTextureRef freetex, out FhTextureMetadata? freetex_meta)) return;
 
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
         UV cursor_tuv = new UV(
             new(  9f, 572f),
             new(180f, 478f)
-        ).map_to(_tex_freetex_size);
+        ).map_to(freetex_meta.size);
 
         Vector2 cursor_size = new Vector2(92f, 55f) * aspect_scale;
 
@@ -426,7 +422,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
     }
 
     protected override void ui_change_set() {
-        if (!_texture_x2_bg.try_use(out ImTextureRef x2_bg, out _)) return;
+        if (!_texture_x2_bg.try_use(out ImTextureRef x2_bg, out FhTextureMetadata? x2_bg_meta)) return;
 
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
@@ -451,7 +447,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
         UV accent_tuv = new Rect {
             pos  = new(1469f, 733f),
             size = new( 286f, 287f),
-        }.as_uv(_tex_x2_bg_size);
+        }.as_uv(x2_bg_meta.size);
 
         Vector2 accent_size = 60f * aspect_scale;
 
@@ -517,7 +513,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
     }
 
     protected override void ui_set(FhSaveSet set, int global_idx, int local_idx) {
-        if (!_texture_plate.try_use(out ImTextureRef plate, out _)) return;
+        if (!_texture_plate.try_use(out ImTextureRef plate, out FhTextureMetadata? plate_meta)) return;
 
         int start_idx = _scrollable_sets.get_clip_start();
 
@@ -528,7 +524,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
         UV plate_tuv = new Rect {
             pos  = new(  0f, plate_max_y - slice_size),
             size = new(512f, slice_size),
-        }.as_uv(_tex_plate_size);
+        }.as_uv(plate_meta.size);
 
         // Screen coordinates
         Rect button = new Rect {
@@ -695,7 +691,9 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
     }
 
     protected override void ui_no_saves() {
-        if (!_texture_x2_bg.try_use(out ImTextureRef x2_bg, out _)) return;
+        if (!_texture_x2_bg.try_use(out ImTextureRef x2_bg, out FhTextureMetadata? x2_bg_meta)) {
+            return;
+        }
 
         string message = localize("popup.no_save_data.menu");
 
@@ -722,16 +720,16 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
         UV accent_tuv = new Rect {
             pos  = new(1469f, 733f),
             size = new( 286f, 287f),
-        }.as_uv(_tex_x2_bg_size);
+        }.as_uv(x2_bg_meta.size);
 
         Vector2 accent_size = 125f * aspect_scale;
 
-        Rect accent_left = new Rect {
+        Rect accent_left = new() {
             pos  = window.bottom_left + new Vector2(-4f, -121f) * aspect_scale,
             size = accent_size,
         };
 
-        Rect accent_right = new Rect {
+        Rect accent_right = new() {
             pos  = window.top_right + new Vector2(3f, 121f) * aspect_scale,
             size = -accent_size,
         };
@@ -766,7 +764,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
     }
 
     protected override void ui_save(FhSaveUiData save, int global_idx, int local_idx) {
-        if (!_texture_plate.try_use(out ImTextureRef plate, out _)) {
+        if (!_texture_plate.try_use(out ImTextureRef plate, out FhTextureMetadata? plate_meta)) {
             return;
         }
 
@@ -824,12 +822,12 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
         UV header_tuv = new Rect {
             pos  = new(  0f,              uv_y_split),
             size = new(512f, uv_y_start - uv_y_split),
-        }.as_uv(_tex_plate_size);
+        }.as_uv(plate_meta.size);
 
         UV info_tuv = new Rect {
             pos  = new(  0f,              uv_y_end),
             size = new(512f, uv_y_split - uv_y_end),
-        }.as_uv(_tex_plate_size);
+        }.as_uv(plate_meta.size);
 
         UV header_suv = header_bounds.scale_to_aspect(aspect_helper).as_uv();
         UV info_suv   = info_bounds  .scale_to_aspect(aspect_helper).as_uv();
@@ -938,9 +936,9 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
         Rect header_bounds,
         Rect info_bounds
     ) {
-        if (save.slot == 0 && is_saving) return;
-
-        if (!_texture_ffx_faces.try_use(out ImTextureRef faces, out _)) return;
+        if (!_texture_ffx_faces.try_use(out ImTextureRef faces, out FhTextureMetadata? faces_meta)) {
+            return;
+        }
 
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
@@ -1114,8 +1112,6 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
         Rect header_bounds,
         Rect info_bounds
     ) {
-        if (save.slot == 0 && is_saving) return;
-
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
         /* ===== Party Icons ===== */
@@ -1332,8 +1328,6 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
         Rect header_bounds,
         Rect info_bounds
     ) {
-        if (save.slot == 0 && is_saving) return;
-
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
         /* ===== Party Icons ===== */
@@ -1530,7 +1524,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
     }
 
     protected override void ui_newdata(Rect bounds) {
-        if (!_texture_freetex.try_use(out ImTextureRef freetex, out _)) return;
+        if (!_texture_freetex.try_use(out ImTextureRef freetex, out FhTextureMetadata? freetex_meta)) return;
 
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
@@ -1574,7 +1568,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
         UV plus_tuv = new Rect {
             pos  = new(581f, 724f),
             size = new( 36f,  36f),
-        }.as_uv(_tex_freetex_size);
+        }.as_uv(freetex_meta.size);
 
         UV plus_suv = new Rect {
             pos  = bounds.top_right + new Vector2(-156f, 56f),

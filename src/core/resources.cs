@@ -9,13 +9,12 @@ namespace Fahrenheit;
 ///     Indicates the type of texture the input to <see cref="IFhResourceLoaderImpl"/> should be interpreted as.
 /// </summary>
 public enum FhTextureType {
-    NULL  = 0,
-    DDS   = 1,
-    TGA   = 2,
-    JPEG  = 3,
-    PNG   = 4,
-    WIC   = 5,
-    PHYRE = 6  // Game texture
+    NULL            = 0,
+    DISK            = 1,
+    GAME            = 2,
+    GAME_PHYRE_2D   = 3,
+    GAME_PHYRE_3D   = 4,
+    GAME_PHYRE_CUBE = 5
 }
 
 /* [fkelava 9/8/25 01:19]
@@ -144,28 +143,10 @@ public sealed record FhTexture(string path, FhTextureType type) {
  */
 internal interface IFhResourceLoaderImpl {
     /// <summary>
-    ///     Attempts to load the user-requested <paramref name="texture"/> from disk.
+    ///     Attempts to load the user-requested <paramref name="texture"/>.
     ///     If successful, it can be passed to ImGui for rendering.
     /// </summary>
-    internal bool load_texture_from_disk(FhTexture texture);
-
-    /// <summary>
-    ///     Attempts to load the user-requested Phyre 2D <paramref name="texture"/>.
-    ///     If successful, it can be passed to ImGui for rendering.
-    /// </summary>
-    internal bool load_game_texture_2d(FhTexture texture);
-
-    /// <summary>
-    ///     Attempts to load the user-requested Phyre 3D <paramref name="texture"/>.
-    ///     If successful, it can be passed to ImGui for rendering.
-    /// </summary>
-    internal bool load_game_texture_3d(FhTexture texture);
-
-    /// <summary>
-    ///     Attempts to load the user-requested Phyre cubemap <paramref name="texture"/>.
-    ///     If successful, it can be passed to ImGui for rendering.
-    /// </summary>
-    internal bool load_game_texture_cubemap(FhTexture texture);
+    internal bool load_texture(FhTexture texture);
 
     /// <summary>
     ///     Unloads a texture attained through any previous load call.
@@ -181,39 +162,11 @@ public sealed class FhResources {
     internal readonly FhRuntimeHandle<IFhResourceLoaderImpl> impl_handle = new(); // RT connects here.
 
     /// <summary>
-    ///     Attempts to load the given <paramref name="texture"/> from disk.
-    /// </summary>
-    /// <remarks>
-    ///     Supported formats are JPEG, DDS, TGA, WIC, and PNG.
-    ///     The <paramref name="texture"/> must have the correct <see cref="FhTextureType"/> selected.
-    /// </remarks>
-    /// <returns>Whether the operation succeeded and <paramref name="texture"/> can be passed to ImGui for rendering.</returns>
-    public bool load_texture_from_disk(FhTexture texture) {
-        return texture.is_loaded() || (impl_handle.get(out IFhResourceLoaderImpl? impl) && impl.load_texture_from_disk(texture));
-    }
-
-    /// <summary>
-    ///     Attempts to load the given 2D Phyre game <paramref name="texture"/>.
+    ///     Attempts to load the given <paramref name="texture"/>.
     /// </summary>
     /// <returns>Whether the operation succeeded and <paramref name="texture"/> can be passed to ImGui for rendering.</returns>
-    public bool load_game_texture_2d(FhTexture texture) {
-        return texture.is_loaded() || (impl_handle.get(out IFhResourceLoaderImpl? impl) && impl.load_game_texture_2d(texture));
-    }
-
-    /// <summary>
-    ///     Attempts to load the given 3D Phyre game <paramref name="texture"/>.
-    /// </summary>
-    /// <returns>Whether the operation succeeded and <paramref name="texture"/> can be passed to ImGui for rendering.</returns>
-    public bool load_game_texture_3d(FhTexture texture) {
-        return texture.is_loaded() || (impl_handle.get(out IFhResourceLoaderImpl? impl) && impl.load_game_texture_3d(texture));
-    }
-
-    /// <summary>
-    ///     Attempts to load the given cubemap Phyre game <paramref name="texture"/>.
-    /// </summary>
-    /// <returns>Whether the operation succeeded and <paramref name="texture"/> can be passed to ImGui for rendering.</returns>
-    public bool load_game_texture_cubemap(FhTexture texture) {
-        return texture.is_loaded() || (impl_handle.get(out IFhResourceLoaderImpl? impl) && impl.load_game_texture_cubemap(texture));
+    public bool load_texture(FhTexture texture) {
+        return texture.is_loaded() || (impl_handle.get(out IFhResourceLoaderImpl? impl) && impl.load_texture(texture));
     }
 
     /// <summary>

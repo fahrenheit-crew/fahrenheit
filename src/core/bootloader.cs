@@ -138,7 +138,7 @@ internal static class FhEnvironment {
     private static bool _init_laa() {
         IMAGE_FILE_HEADER image_header = FhUtil.get_at<IMAGE_FILE_HEADER>(0x15C);
 
-        return image_header.Characteristics.HasFlag(IMAGE_FILE_CHARACTERISTICS.IMAGE_FILE_LARGE_ADDRESS_AWARE);
+        return (image_header.Characteristics & IMAGE.IMAGE_FILE_LARGE_ADDRESS_AWARE) == IMAGE.IMAGE_FILE_LARGE_ADDRESS_AWARE;
     }
 }
 

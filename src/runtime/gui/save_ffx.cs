@@ -71,14 +71,14 @@ public sealed class FhSaveUiX : FhSaveUi {
 
     private bool _loaded_all_textures;
 
-    private readonly FhTexture _texture_map_icon_default = new(Path.Join(DIR_MAP_ICONS, "0.png"), FhTextureType.PNG);
+    private readonly FhTexture _texture_map_icon_default = new(Path.Join(DIR_MAP_ICONS, "0.png"), FhTextureType.GAME_PHYRE_2D);
 
-    private readonly FhTexture _texture_bg           = new(Path.Join(DIR_MENU_D3D11, "ffx_bg.dds.phyre"),        FhTextureType.PHYRE);
-    private readonly FhTexture _texture_help         = new(Path.Join(DIR_HIKU_D3D11, "0_0_512_448_0.dds.phyre"), FhTextureType.PHYRE);
-    private readonly FhTexture _texture_battle_kuang = new(Path.Join(DIR_MENU_D3D11, "battle_kuang.dds.phyre"),  FhTextureType.PHYRE);
-    private readonly FhTexture _texture_faces        = new(Path.Join(DIR_MENU_D3D11, "face_ply.dds.phyre"),      FhTextureType.PHYRE);
-    private readonly FhTexture _texture_meswin       = new(Path.Join(DIR_MENU_D3D11, "meswin.dds.phyre"),        FhTextureType.PHYRE);
-    private readonly FhTexture _texture_summonbg     = new(Path.Join(DIR_MENU_D3D11, "summonbg.dds.phyre"),      FhTextureType.PHYRE);
+    private readonly FhTexture _texture_bg           = new(Path.Join(DIR_MENU_D3D11, "ffx_bg.dds.phyre"),        FhTextureType.GAME_PHYRE_2D);
+    private readonly FhTexture _texture_help         = new(Path.Join(DIR_HIKU_D3D11, "0_0_512_448_0.dds.phyre"), FhTextureType.GAME_PHYRE_2D);
+    private readonly FhTexture _texture_battle_kuang = new(Path.Join(DIR_MENU_D3D11, "battle_kuang.dds.phyre"),  FhTextureType.GAME_PHYRE_2D);
+    private readonly FhTexture _texture_faces        = new(Path.Join(DIR_MENU_D3D11, "face_ply.dds.phyre"),      FhTextureType.GAME_PHYRE_2D);
+    private readonly FhTexture _texture_meswin       = new(Path.Join(DIR_MENU_D3D11, "meswin.dds.phyre"),        FhTextureType.GAME_PHYRE_2D);
+    private readonly FhTexture _texture_summonbg     = new(Path.Join(DIR_MENU_D3D11, "summonbg.dds.phyre"),      FhTextureType.GAME_PHYRE_2D);
 
     private readonly Vector2 _tex_map_icon_size  = new(310f, 210f);
 
@@ -89,10 +89,10 @@ public sealed class FhSaveUiX : FhSaveUi {
     private readonly Vector2 _tex_meswin_size       = new(1024f, 1024f);
     private readonly Vector2 _tex_summonbg_size     = new(1024f, 1024f);
 
-    private readonly FhTexture _texture_ffx2_face_icon_default = new(Path.Join(FFX2_DIR_FACE_DATA, "mface_000.dds.phyre"), FhTextureType.PHYRE);
-    private readonly FhTexture _texture_ffx2_map_icon_default  = new(Path.Join(FFX2_DIR_MAP_ICONS, "logo_j.png"),          FhTextureType.PNG);
+    private readonly FhTexture _texture_ffx2_face_icon_default = new(Path.Join(FFX2_DIR_FACE_DATA, "mface_000.dds.phyre"), FhTextureType.GAME_PHYRE_2D);
+    private readonly FhTexture _texture_ffx2_map_icon_default  = new(Path.Join(FFX2_DIR_MAP_ICONS, "logo_j.png"),          FhTextureType.GAME);
 
-    private readonly FhTexture _texture_freetex = new(Path.Join(FFX2_DIR_MENU_D3D11, "freetex.dds.phyre"), FhTextureType.PHYRE);
+    private readonly FhTexture _texture_freetex = new(Path.Join(FFX2_DIR_MENU_D3D11, "freetex.dds.phyre"), FhTextureType.GAME_PHYRE_2D);
 
     private readonly Vector2 _tex_ffx2_face_size     = new(256f, 256f);
     private readonly Vector2 _tex_ffx2_map_icon_size = new(320f, 176f);
@@ -337,8 +337,9 @@ public sealed class FhSaveUiX : FhSaveUi {
     /// <returns>Whether all textures have been successfully loaded.</returns>
     private bool try_load_textures() {
         _loaded_all_textures = true;
+
         foreach (FhTexture texture in textures) {
-            if (!FhApi.Resources.load_game_texture_2d(texture)) {
+            if (!FhApi.Resources.load_texture(texture)) {
                 _loaded_all_textures = false;
             }
         }

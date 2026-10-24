@@ -1052,7 +1052,6 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
 
         Vector2 header_text_pos_r = header_bounds.right - new Vector2 {
             X = map_icon_size.X + text_margin,
-            Y = 1f,
         };
 
         FhApi.Gui.draw_text(
@@ -1229,7 +1228,6 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
 
         Vector2 header_text_pos_r = header_bounds.right - new Vector2 {
             X = map_icon_size.X + text_margin,
-            Y = 1f,
         };
 
         FhApi.Gui.draw_text(
@@ -1442,7 +1440,6 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
 
         Vector2 header_text_pos_r = header_bounds.right - new Vector2 {
             X = map_icon_size.X + text_margin,
-            Y = 1f,
         };
 
         FhApi.Gui.draw_text(

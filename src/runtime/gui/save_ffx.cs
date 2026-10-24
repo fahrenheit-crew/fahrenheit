@@ -142,9 +142,7 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
 
         string text = localize(text_key);
 
-        Vector2 text_pos = bg_screen.left;
-        text_pos.X += 24f * aspect_scale.X;
-        text_pos.Y -=  1f * aspect_scale.Y;
+        Vector2 text_pos = bg_screen.left + new Vector2(24f, -1f) * aspect_scale;
 
         FhApi.Gui.draw_text(
             draw,
@@ -163,11 +161,16 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
             ? localize("save_count.separator") + localize("save_count.saves")
             : localize("save_count.saves");
 
-        save_text = string.Format(save_text, set.has_autosave ? set.count - 1 : set.count);
+        save_text = string.Format(
+            save_text,
+            set.has_autosave
+                ? set.count - 1
+                : set.count
+        );
 
         Vector2 text_pos = new(1722f, 144f);
 
-        float line_height = 38f;
+        float line_height = font_size - 5f;
 
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
@@ -251,7 +254,10 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
     }
 
     protected override void ui_change_set() {
-        if (!_texture_battle_kuang.try_use(out ImTextureRef battle_kuang, out FhTextureMetadata? battle_kuang_meta)) {
+        if (!_texture_battle_kuang.try_use(
+            out ImTextureRef battle_kuang,
+            out FhTextureMetadata? battle_kuang_meta
+        )) {
             return;
         }
 
@@ -275,7 +281,7 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
         draw.AddImage(battle_kuang, bg_suv.p0, bg_suv.p1, bg_tuv.p0, bg_tuv.p1);
 
-        Vector2 text_pos  = bg_screen.center;
+        Vector2 text_pos = bg_screen.center;
 
         string text = localize("set_list.change_set");
 
@@ -307,7 +313,10 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
     }
 
     protected override void ui_set(FhSaveSet set, int global_idx, int local_idx) {
-        if (!_texture_summonbg.try_use(out ImTextureRef summonbg, out FhTextureMetadata? summonbg_meta)) {
+        if (!_texture_summonbg.try_use(
+            out ImTextureRef summonbg,
+            out FhTextureMetadata? summonbg_meta
+        )) {
             return;
         }
 
@@ -321,7 +330,7 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
         }.as_uv(summonbg_meta.size);
 
         // Screen coordinates
-        Rect button = new Rect {
+        Rect button = new() {
             pos  = new( 348f, 177f),
             size = new(1229f,  84f),
         };
@@ -549,7 +558,7 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
 
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
-        Rect save_outer_bounds = new Rect {
+        Rect save_outer_bounds = new() {
             pos  = new( 160f, 176f), // Topmost position
             size = new(1561f, 152f),
         };
@@ -1249,7 +1258,7 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
 
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
-        Rect save_rect = new Rect {
+        Rect save_rect = new() {
             pos  = new( 160f, 176f),
             size = new(1561f, 152f),
         };

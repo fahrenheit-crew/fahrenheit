@@ -104,7 +104,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
         }.as_uv(menuback_meta.size);
 
         // Draw the background in 6 left->right chunks, top row, bottom row
-        Rect menuback_screen = new Rect {
+        Rect menuback_screen = new() {
             pos  = new(  0f,   0f),
             size = new(948f, 947f),
         };
@@ -451,12 +451,12 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
 
         Vector2 accent_size = 60f * aspect_scale;
 
-        Rect accent_left = new Rect {
+        Rect accent_left = new() {
             pos  = bg_screen.bottom_left + new Vector2(-2f, -58f) * aspect_scale,
             size = accent_size,
         };
 
-        Rect accent_right = new Rect {
+        Rect accent_right = new() {
             pos  = bg_screen.top_right + new Vector2(2f, 58f) * aspect_scale,
             size = -accent_size,
         };
@@ -527,7 +527,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
         }.as_uv(plate_meta.size);
 
         // Screen coordinates
-        Rect button = new Rect {
+        Rect button = new() {
             pos  = new( 347f, 178f),
             size = new(1216f,  84f),
         };
@@ -781,7 +781,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
 
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
-        Rect save_bounds = new Rect {
+        Rect save_bounds = new() {
             pos  = new( 157f, 172f), // Topmost position
             size = new(1565f, 155f),
         };

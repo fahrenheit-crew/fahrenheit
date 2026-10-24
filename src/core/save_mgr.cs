@@ -351,19 +351,19 @@ public sealed class FhSaves {
     private static FhTexture _pal_get_icon_map(in SaveHeader header) {
         bool not_lm = FhGlobal.game_id is not FhGameId.FFX2LM;
 
-        int id_icon_clear = FhGlobal.game_id switch {
-            FhGameId.FFX  => 0x00, // FFX.exe+2F1039
-            FhGameId.FFX2 => 0x17, // FFX-2.exe+11E2AD
-            _             => throw new NotImplementedException("Invalid game type"),
-        };
+        // int id_icon_clear = FhGlobal.game_id switch {
+        //     FhGameId.FFX  => 0x00, // FFX.exe+2F1039
+        //     FhGameId.FFX2 => 0x17, // FFX-2.exe+11E2AD
+        //     _             => throw new NotImplementedException("Invalid game type"),
+        // };
 
         int id_icon_map = not_lm
             ? FhCall.fix_mappic.fnptr!(header.x.id_location) // Location is at the same offset in X and X-2.
             : ((int.Clamp(header.x2.lm_id_location >> 1, 0, 0x50) - 1) / 0x14) + 1;
 
-        if (not_lm && id_icon_map == id_icon_clear && FhCall.isNeedShowJapanLogo.fnptr!() != 0) {
-            id_icon_map = 999;
-        }
+        // if (not_lm && id_icon_map == id_icon_clear && FhCall.isNeedShowJapanLogo.fnptr!() != 0) {
+        //     id_icon_map = 999;
+        // }
 
         string map_dir  = FhGlobal.game_id is FhGameId.FFX
             ? DIR_MAP_ICON_X

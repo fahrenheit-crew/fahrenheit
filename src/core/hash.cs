@@ -12,13 +12,17 @@ internal sealed class FhHasher {
 
     internal const string DEFAULT_HASH_VALUE = "0";
 
-    internal readonly string ModSetHash;
-    internal readonly string SaveSetHash;
+    public FhHasher() { }
 
-    public FhHasher() {
-        ModSetHash  = _init_mod_set_hash ();
-        SaveSetHash = _init_save_set_hash();
-    }
+    /// <summary>
+    ///     Gets the hash which uniquely identifies the mod set for this session.
+    /// </summary>
+    internal string ModSetHash  => field ??= _init_hash_mods();
+
+    /// <summary>
+    ///     Gets the hash which uniquely identifies the current save set.
+    /// </summary>
+    internal string SaveSetHash => field ??= _init_hash_saves();
 
     /// <summary>
     ///     Computes a hash which uniquely identifies the current mod set.
@@ -26,7 +30,7 @@ internal sealed class FhHasher {
     /// <remarks>
     ///     The hash is sensitive to load order.
     /// </remarks>
-    private static string _init_mod_set_hash() {
+    private static string _init_hash_mods() {
         StringBuilder mods = new();
 
         foreach (FhManifest manifest in FhEnvironment.Manifests) {
@@ -52,7 +56,7 @@ internal sealed class FhHasher {
     ///     The hash ignores mods that do not define <see cref="FhManifestFlags.SEPARATE_SAVES"/>.
     ///     In all other respects, it is identical to the mod set hash.
     /// </remarks>
-    private static string _init_save_set_hash() {
+    private static string _init_hash_saves() {
         StringBuilder stateful_mods = new();
 
         foreach (FhManifest manifest in FhEnvironment.Manifests) {

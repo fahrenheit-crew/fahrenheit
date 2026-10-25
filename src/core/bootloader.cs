@@ -93,8 +93,15 @@ internal static class FhEnvironment {
     ///     Reads the load order for this session from disk.
     /// </summary>
     private static string[] _init_load_order() {
-        string load_order_path = Path.Join(Finder.Mods.FullName, "loadorder");
-        return [ "fhr", .. File.ReadAllLines(load_order_path) ];
+        try {
+            string load_order_path = Path.Join(Finder.Mods.FullName, "loadorder");
+            return [ "fhr", .. File.ReadAllLines(load_order_path) ];
+        }
+        catch (Exception e) {
+            FhInternal.Log.Warning("Load order file could not be found or processed. No mods will load.");
+            FhInternal.Log.LogDirect(e.ToString());
+            return [ "fhr" ];
+        }
     }
 
     /// <summary>
@@ -117,9 +124,9 @@ internal static class FhEnvironment {
         FhManifest[] result = new FhManifest[ModPaths.Length];
 
         for (int i = 0; i < ModPaths.Length; i++) {
-            using FileStream manifest_file = File.OpenRead(ModPaths[i].ManifestPath);
-
             try {
+                using FileStream manifest_file = File.OpenRead(ModPaths[i].ManifestPath);
+
                 result[i] = JsonSerializer.Deserialize<FhManifest>(manifest_file, FhUtil.InternalJsonOpts)
                     ?? throw new Exception($"Manifest at {ModPaths[i].ManifestPath} was empty or uninterpretable.");
             }

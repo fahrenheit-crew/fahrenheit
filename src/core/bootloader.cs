@@ -93,8 +93,11 @@ internal static class FhEnvironment {
     ///     Reads the load order for this session from disk.
     /// </summary>
     private static string[] _init_load_order() {
-        string load_order_path = Path.Join(Finder.Mods.FullName, "loadorder");
-        return [ "fhr", .. File.ReadAllLines(load_order_path) ];
+        try {
+            string load_order_path = Path.Join(Finder.Mods.FullName, "loadorder");
+            return [ "fhr", .. File.ReadAllLines(load_order_path) ];
+        }
+        catch { return [ "fhr" ]; }
     }
 
     /// <summary>

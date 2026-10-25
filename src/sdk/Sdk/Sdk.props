@@ -14,17 +14,12 @@
         <DebugType>portable</DebugType>
     </PropertyGroup>
 
-    <!-- NUGET PACKAGE PROPERTIES -->
-    <PropertyGroup>
-        <PackageId>$(AssemblyName)</PackageId>
-        <IncludeSymbols>true</IncludeSymbols>
-        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    </PropertyGroup>
-
     <!-- PACKAGING CONFIGURATION -->
     <PropertyGroup>
         <IsPackable>true</IsPackable>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     </PropertyGroup>
 
     <!-- FAHRENHEIT PACKAGE IMPORT -->

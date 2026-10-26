@@ -258,9 +258,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
             draw,
             text_pos,
             text,
-            font_size,
-            true,
-            Alignment2D.LEFT
+            text_config with { align = Alignment2D.LEFT }
         );
     }
 
@@ -281,13 +279,16 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
 
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
+        FhGui.DrawTextConfig config = text_config with {
+            align     = Alignment2D.RIGHT,
+            font_size = font_size_savecount,
+        };
+
         Vector2 saves_text_size = FhApi.Gui.draw_text(
             draw,
             text_pos * aspect_scale + aspect_helper.pos,
             save_text,
-            font_size_savecount,
-            true,
-            Alignment2D.RIGHT
+            config
         );
 
         if (set.has_autosave) {
@@ -300,10 +301,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
                 draw,
                 autosave_pos,
                 autosave_text,
-                font_size_savecount,
-                true,
-                Alignment2D.RIGHT,
-                0xFF19D8FF
+                config with { color = COLOR_AUTOSAVE }
             );
         }
 
@@ -313,9 +311,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
             draw,
             second_line_pos * aspect_scale + aspect_helper.pos,
             set.name,
-            font_size_savecount,
-            true,
-            Alignment2D.RIGHT
+            config
         );
     }
 
@@ -489,9 +485,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
             draw,
             text_pos,
             text,
-            font_size,
-            true,
-            Alignment2D.CENTER
+            text_config with { align = Alignment2D.CENTER }
         );
 
         if (_focus == UiFocus.ACTIVE_SET) {
@@ -597,9 +591,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
             draw,
             name_pos,
             set.name,
-            font_size,
-            true,
-            Alignment2D.LEFT
+            text_config with { align = Alignment2D.LEFT }
         );
 
         string save_text = set.has_autosave
@@ -617,9 +609,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
             draw,
             save_count_pos,
             save_text,
-            font_size,
-            true,
-            Alignment2D.RIGHT
+            text_config with { align = Alignment2D.RIGHT }
         );
 
         if (set.has_autosave) {
@@ -632,10 +622,10 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
                 draw,
                 autosave_pos,
                 autosave_text,
-                font_size,
-                true,
-                Alignment2D.RIGHT,
-                0xFF19D8FF
+                text_config with {
+                    align = Alignment2D.RIGHT,
+                    color = COLOR_AUTOSAVE,
+                }
             );
         }
 
@@ -768,9 +758,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
             draw,
             window.center,
             message,
-            font_size,
-            true,
-            Alignment2D.CENTER
+            text_config with { align = Alignment2D.CENTER }
         );
     }
 
@@ -1033,10 +1021,10 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
             draw,
             header_text_pos_l * aspect_scale + aspect_helper.pos,
             slot_text,
-            font_size,
-            true,
-            Alignment2D.LEFT,
-            save.slot == 0 ? 0xFF19D8FF : 0xFFFFFFFF // Autosave text is yellow
+            text_config with {
+                align = Alignment2D.LEFT,
+                color = save.slot == 0 ? COLOR_AUTOSAVE : COLOR_WHITE,
+            }
         );
 
         // If location string is "None", don't render
@@ -1053,9 +1041,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
                 draw,
                 header_text_pos_l,
                 save.location,
-                font_size,
-                true,
-                Alignment2D.LEFT
+                text_config with { align = Alignment2D.LEFT }
             );
         }
 
@@ -1069,9 +1055,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
             draw,
             header_text_pos_r * aspect_scale + aspect_helper.pos,
             create_time,
-            font_size,
-            true,
-            Alignment2D.RIGHT
+            text_config with { align = Alignment2D.RIGHT }
         );
 
         /* ===== Info Details ===== */
@@ -1101,18 +1085,14 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
             draw,
             info_text_pos_name * aspect_scale + aspect_helper.pos,
             save.player_name,
-            font_size,
-            true,
-            Alignment2D.LEFT
+            text_config with { align = Alignment2D.LEFT }
         );
 
         FhApi.Gui.draw_text(
             draw,
             info_text_pos_playtime * aspect_scale + aspect_helper.pos,
             save.play_time,
-            font_size,
-            true,
-            Alignment2D.LEFT
+            text_config with { align = Alignment2D.LEFT }
         );
     }
 
@@ -1209,10 +1189,10 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
             draw,
             header_text_pos_l * aspect_scale + aspect_helper.pos,
             slot_text,
-            font_size,
-            true,
-            Alignment2D.LEFT,
-            save.slot == 0 ? 0xFF19D8FF : 0xFFFFFFFF // Autosave text is yellow
+            text_config with {
+                align = Alignment2D.LEFT,
+                color = save.slot == 0 ? COLOR_AUTOSAVE : COLOR_WHITE,
+            }
         );
 
         // If location string is "NONAME", don't render
@@ -1229,9 +1209,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
                 draw,
                 header_text_pos_l,
                 save.location,
-                font_size,
-                true,
-                Alignment2D.LEFT
+                text_config with { align = Alignment2D.LEFT }
             );
         }
 
@@ -1245,9 +1223,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
             draw,
             header_text_pos_r * aspect_scale + aspect_helper.pos,
             create_time,
-            font_size,
-            true,
-            Alignment2D.RIGHT
+            text_config with { align = Alignment2D.RIGHT }
         );
 
         /* ===== Info Details ===== */
@@ -1298,36 +1274,28 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
             draw,
             info_text_pos_name * aspect_scale + aspect_helper.pos,
             save.player_name,
-            font_size,
-            true,
-            Alignment2D.LEFT
+            text_config with { align = Alignment2D.LEFT }
         );
 
         FhApi.Gui.draw_text(
             draw,
             info_text_pos_chapter * aspect_scale + aspect_helper.pos,
             save.chapter,
-            font_size,
-            true,
-            Alignment2D.LEFT
+            text_config with { align = Alignment2D.LEFT }
         );
 
         FhApi.Gui.draw_text(
             draw,
             info_text_pos_completion * aspect_scale + aspect_helper.pos,
             completion,
-            font_size,
-            true,
-            Alignment2D.RIGHT
+            text_config with { align = Alignment2D.RIGHT }
         );
 
         FhApi.Gui.draw_text(
             draw,
             info_text_pos_playtime * aspect_scale + aspect_helper.pos,
             save.play_time,
-            font_size,
-            true,
-            Alignment2D.RIGHT
+            text_config with { align = Alignment2D.RIGHT }
         );
     }
 
@@ -1421,10 +1389,10 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
             draw,
             header_text_pos_l * aspect_scale + aspect_helper.pos,
             slot_text,
-            font_size,
-            true,
-            Alignment2D.LEFT,
-            save.slot == 0 ? 0xFF19D8FF : 0xFFFFFFFF // Autosave text is yellow
+            text_config with {
+                align = Alignment2D.LEFT,
+                color = save.slot == 0 ? COLOR_AUTOSAVE : COLOR_WHITE,
+            }
         );
 
         // If location string is "NONAME", don't render
@@ -1441,9 +1409,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
                 draw,
                 header_text_pos_l,
                 save.location,
-                font_size,
-                true,
-                Alignment2D.LEFT
+                text_config with { align = Alignment2D.LEFT }
             );
         }
 
@@ -1457,9 +1423,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
             draw,
             header_text_pos_r * aspect_scale + aspect_helper.pos,
             create_time,
-            font_size,
-            true,
-            Alignment2D.RIGHT
+            text_config with { align = Alignment2D.RIGHT }
         );
 
         /* ===== Info Details ===== */
@@ -1495,18 +1459,14 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
             draw,
             info_text_pos_name * aspect_scale + aspect_helper.pos,
             save.player_name,
-            font_size,
-            true,
-            Alignment2D.LEFT
+            text_config with { align = Alignment2D.LEFT }
         );
 
         text_size = FhApi.Gui.draw_text(
             draw,
             info_text_pos_job * aspect_scale + aspect_helper.pos,
             save.lm_job,
-            font_size,
-            true,
-            Alignment2D.LEFT
+            text_config with { align = Alignment2D.LEFT }
         );
 
         Vector2 info_text_pos_level = info_text_pos_job * aspect_scale + aspect_helper.pos;
@@ -1516,18 +1476,14 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
             draw,
             info_text_pos_level,
             save.lm_level,
-            font_size,
-            true,
-            Alignment2D.LEFT
+            text_config with { align = Alignment2D.LEFT }
         );
 
         FhApi.Gui.draw_text(
             draw,
             info_text_pos_playtime * aspect_scale + aspect_helper.pos,
             save.play_time,
-            font_size,
-            true,
-            Alignment2D.RIGHT
+            text_config with { align = Alignment2D.RIGHT }
         );
     }
 
@@ -1550,9 +1506,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
             draw,
             text_pos * aspect_scale + aspect_helper.pos,
             text,
-            font_size,
-            true,
-            Alignment2D.LEFT
+            text_config with { align = Alignment2D.LEFT }
         );
 
         /* ===== "+" Icon ===== */

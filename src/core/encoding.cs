@@ -45,9 +45,19 @@ public static class FhEnumExt {
     }
 }
 
+/// <summary>
+///     These flags appear as the third byte of a composite text index. Their purpose is unknown.
+/// </summary>
 [Flags]
 public enum FhTextIndexFlags {
-    NULL = 0
+    NULL = 0,
+    F1   = 0x1,
+    F2   = 0x2,
+    F3   = 0x4,
+    F4   = 0x10,
+    F5   = 0x20,
+    F6   = 0x40,
+    F7   = 0x80
 }
 
 /* [fkelava 16/10/25 19:54]

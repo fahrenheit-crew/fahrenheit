@@ -45,13 +45,18 @@ public static class FhEnumExt {
     }
 }
 
+[Flags]
+public enum FhTextIndexFlags {
+    NULL = 0
+}
+
 /* [fkelava 16/10/25 19:54]
  * Raw text lines are preceded by an array of indices, which embed line offsets,
  * option count for multiple-choice selections, and so on.
  */
 
 public enum FhTextIndexType {
-    COM_X2 = 1, // composite: u16 offset, u8 option_count, u8 unknown
+    COM_X2 = 1, // composite: u16 offset, u8 flags, u8 option_count
     COM_X1 = 2,
     I16_X2 = 3,
     I16_X1 = 4,
@@ -512,7 +517,7 @@ public static class FhEncoding {
         }
 
         if (index_type is FhTextIndexType.COM_X1 or FhTextIndexType.COM_X2) {
-            dest[2] = 0x00; // TODO: check actual purpose
+            dest[2] = 0x00; // flags
             dest[3] = byte.CreateChecked(option_count);
 
             if (index_type is FhTextIndexType.COM_X1) return 4;

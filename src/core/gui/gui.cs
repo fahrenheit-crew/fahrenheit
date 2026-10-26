@@ -352,41 +352,6 @@ public unsafe class FhGui {
         );
     }
 
-    /// <inheritdoc cref="draw_text(string, DrawTextConfig)"/>
-    public void draw_text(
-        ReadOnlySpan<byte>  text,
-        DrawTextConfig config
-    ) {
-        Vector2 position = ImGui.GetContentRegionAvail();
-
-        position.X = config.align.h switch {
-            Alignment.BEGIN  => 0f,
-            Alignment.CENTER => position.X / 2f,
-            Alignment.END    => position.X,
-
-            _ => throw new NotImplementedException(),
-        };
-
-        position.Y = config.align.v switch {
-            Alignment.BEGIN  => 0f,
-            Alignment.CENTER => position.Y / 2f,
-            Alignment.END    => position.Y,
-
-            _ => throw new NotImplementedException(),
-        };
-
-        position += ImGui.GetCursorPos();
-
-        // Instead of repeating the text alignment logic here using ImGui.SetCursorPos,
-        // we call through to the draw list variant with the window's draw list.
-        draw_text(
-            ImGui.GetWindowDrawList(),
-            position,
-            text,
-            config
-        );
-    }
-
     /// <summary>
     ///     Draw text with a given size, alignment, and color at some position in a draw list.
     ///     Optionally, draws a shadow under the text.
@@ -415,49 +380,6 @@ public unsafe class FhGui {
 
         Vector2 position,
         string  text,
-
-        DrawTextConfig config
-    ) {
-        ImGui.PushFont(null, config.font_size);
-
-        Vector2 text_size = ImGui.CalcTextSize(text);
-
-        position.X -= config.align.h switch {
-            Alignment.BEGIN  => 0f,
-            Alignment.CENTER => text_size.X / 2f,
-            Alignment.END    => text_size.X,
-
-            _ => throw new NotImplementedException(),
-        };
-
-        position.Y -= config.align.v switch {
-            Alignment.BEGIN  => 0f,
-            Alignment.CENTER => text_size.Y / 2f,
-            Alignment.END    => text_size.Y,
-
-            _ => throw new NotImplementedException(),
-        };
-
-        if (config.draw_shadow) {
-            // Use the alpha from the provided color
-            uint shadow_color = 0 | (config.color & 0xFF000000);
-
-            draw_list.AddText(position + new Vector2(2f), shadow_color, text);
-        }
-
-        draw_list.AddText(position, config.color, text);
-
-        ImGui.PopFont();
-
-        return text_size;
-    }
-
-    /// <inheritdoc cref="draw_text(ImDrawListPtr, Vector2, string, float, bool, Alignment2D, uint)"/>
-    public Vector2 draw_text(
-        ImDrawListPtr draw_list,
-
-        Vector2            position,
-        ReadOnlySpan<byte> text,
 
         DrawTextConfig config
     ) {

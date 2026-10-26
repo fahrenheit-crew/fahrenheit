@@ -268,7 +268,7 @@ public static class FhEncoding {
     /// </summary>
     /// <remarks>Only valid for Chinese, Japanese, and Korean game languages.</remarks>
     /// <returns>Whether the character was rewritten.</returns>
-    private static bool _extend_cjk(
+    private static void _extend_cjk(
         ref Rune code_point
     ) {
         /* [fkelava 14/07/26 17:23]
@@ -285,7 +285,6 @@ public static class FhEncoding {
         };
 
         code_point = new Rune(extended_scalar);
-        return extended_scalar != unicode_scalar;
     }
 
     /// <summary>
@@ -626,15 +625,7 @@ public static class FhEncoding {
                 continue;
             }
 
-            /* [fkelava 16/07/26 13:10]
-             * When doing implicit CJK extension, we will have to rewrite `bytes` later with a `stackalloc` buffer.
-             * `bytes` is returnable, but a `stackalloc` buffer is not, so the compiler complains.
-             * We mark this span scoped so the compiler knows that such reassignment is valid and `bytes` is nonreturnable.
-             *
-             * See generally https://github.com/dotnet/csharplang/discussions/1130.
-             */
-            scoped ReadOnlySpan<byte> bytes     = src[ src_offset .. (src_offset + consumed) ];
-                   Span        <byte> dst_slice = flags.HasFlag(FhEncodingFlags.IGNORE_DEST_BUFFER) ? dest : dest[ dest_offset .. ];
+            Span<byte> dst_slice = flags.HasFlag(FhEncodingFlags.IGNORE_DEST_BUFFER) ? dest : dest[ dest_offset .. ];
 
             /* [fkelava 14/10/25 19:27]
              * If we have encountered a op statement opener (U+007B '{'), process the op by
@@ -670,17 +661,15 @@ public static class FhEncoding {
              * If the character is NOT an op statement opener, find it in the Shift-JIS table and emit its index.
              */
         encode:
-            if (flags.HasFlag(FhEncodingFlags.IMPLICIT_CJK_EXTENSION) && lang_id.is_cjk && _extend_cjk(ref code_point)) {
-                Span<byte> extend_buf = stackalloc byte[code_point.Utf8SequenceLength];
-                code_point.EncodeToUtf8(extend_buf);
-                bytes = extend_buf;
+            if (flags.HasFlag(FhEncodingFlags.IMPLICIT_CJK_EXTENSION) && lang_id.is_cjk) {
+                _extend_cjk(ref code_point);
             }
 
             ReadOnlySpan<Rune> runes = [ .. sjistbl.EnumerateRunes() ];
             int index = runes.IndexOf(code_point);
 
             if (index == -1) {
-                FhInternal.Log.Error($"sequence {Convert.ToHexString(bytes)} not in sjistbl of lang {lang_id}; aborting (pos {src_offset})");
+                FhInternal.Log.Error($"rune U+{code_point.Value:X4} not in sjistbl of lang {lang_id}; aborting (pos {src_offset})");
                 return dest_offset;
             }
 

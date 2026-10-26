@@ -736,26 +736,25 @@ public static class FhEncoding {
 
             (int src_increment, int dest_increment) = op switch {
                 // 0-arg ops - {PAUSE|LF}
-                0x01 or 0x03          => (1, _decode_op(dst_slice, op)),
+                0x01 or 0x03                 => (1, _decode_op(dst_slice, op)),
                 // 1-arg ops - {COLOR|BTN|KEY}
-                0x0A or 0x0B or 0x23  => (2, _decode_op(dst_slice, op, src[src_offset + 1])),
-                // 1-arg ops with 0x30-based indexing - {SPACE|TIME|CHOICE}
-                0x07 or 0x09 or 0x10  => (2, _decode_op(dst_slice, op, byte.CreateChecked(src[src_offset + 1] - 0x30))),
+                0x0A or 0x0B or 0x23         => (2, _decode_op(dst_slice, op, src[src_offset + 1])),
+                // 1-arg ops with 0x30-based indexing - {SPACE|TIME|CHOICE|VAR}
+                0x07 or 0x09 or 0x10 or 0x12 => (2, _decode_op(dst_slice, op, byte.CreateChecked(src[src_offset + 1] - 0x30))),
                 // 2-arg ops where the op itself is transformed to an argument - {MACRO}
-                >= 0x13 and <= 0x22   => (2, _decode_op(dst_slice, op, byte.CreateChecked(op - 0x13), byte.CreateChecked(src[src_offset + 1] - 0x30))),
+                >= 0x13 and <= 0x22          => (2, _decode_op(dst_slice, op, byte.CreateChecked(op - 0x13), byte.CreateChecked(src[src_offset + 1] - 0x30))),
                 // Multi-byte character expressions - 0x04 is CJK-only, 0x2C-2F for any charset
-                0x04                  => (src[src_offset + 1] < 0x30 ? 3 : 2, _decode_cjk (src[ src_offset .. ], dst_slice, lang_id, game_id)),
-                >= 0x2C and <= 0x2F   => (2,                                  _decode_char(src[ src_offset .. ], dst_slice, lang_id, game_id)),
+                0x04                         => (src[src_offset + 1] < 0x30 ? 3 : 2, _decode_cjk (src[ src_offset .. ], dst_slice, lang_id, game_id)),
+                >= 0x2C and <= 0x2F          => (2,                                  _decode_char(src[ src_offset .. ], dst_slice, lang_id, game_id)),
                 // Unknown 1-arg ops, embedded literally
-                0x02 or 0x05          => (1, _decode_op(dst_slice, op, src[src_offset + 1])),
+                0x02 or 0x05                 => (1, _decode_op(dst_slice, op, src[src_offset + 1])),
                 0x06 or
                 0x08 or
                 (>= 0x0C and <= 0x0F) or
                 0x11 or
-                0x12 or
-                (>= 0x24 and <= 0x2B) => (2, _decode_op(dst_slice, op, op, src[src_offset + 1])),
+                (>= 0x24 and <= 0x2B)        => (2, _decode_op(dst_slice, op, op, src[src_offset + 1])),
                 // fall through: regular character
-                _                     => (1, _decode_char(src[ src_offset .. ], dst_slice, lang_id, game_id))
+                _                            => (1, _decode_char(src[ src_offset .. ], dst_slice, lang_id, game_id))
             };
 
             src_offset  += src_increment;

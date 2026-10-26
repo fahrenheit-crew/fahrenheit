@@ -104,6 +104,8 @@ public enum FhEncodingFlags {
 /// </summary>
 public static class FhEncoding {
 
+    private static readonly Dictionary<FhLangId, Rune[]> _runes = [];
+
     /* [fkelava 14/10/25 14:58]
      * These literals and methods control the plaintext representation of
      * text ops when decoding, and how the encoder shall identify them.
@@ -621,6 +623,10 @@ public static class FhEncoding {
 
         string sjistbl = FhShiftJisTables.get_table(lang_id, game_id);
 
+        if (!_runes.TryGetValue(lang_id, out Rune[]? runes)) {
+            runes = _runes[lang_id] = [ .. sjistbl.EnumerateRunes() ];
+        }
+
         int src_offset, dest_offset;
 
         for (src_offset = 0, dest_offset = 0; src_offset < src.Length; ) {
@@ -679,7 +685,6 @@ public static class FhEncoding {
                 _extend_cjk(ref code_point);
             }
 
-            ReadOnlySpan<Rune> runes = [ .. sjistbl.EnumerateRunes() ];
             int index = runes.IndexOf(code_point);
 
             if (index == -1) {

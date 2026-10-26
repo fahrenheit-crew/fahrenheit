@@ -904,13 +904,15 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
         else {
             Vector2 shrink_size = new(border_thickness * 2f);
 
+            Rect save_inner_bounds = save_bounds.expand(-shrink_size, Alignment2D.CENTER);
+
             header_bounds = header_bounds.expand(-shrink_size, Alignment2D.CENTER);
             info_bounds   = info_bounds  .expand(-shrink_size, Alignment2D.CENTER);
 
             switch (FhGlobal.game_id) {
-                case FhGameId.FFX:    ui_save_details_x (save, save_bounds, header_bounds, info_bounds); break;
-                case FhGameId.FFX2:   ui_save_details_x2(save, save_bounds, header_bounds, info_bounds); break;
-                case FhGameId.FFX2LM: ui_save_details_lm(save, save_bounds, header_bounds, info_bounds); break;
+                case FhGameId.FFX:    ui_save_details_x (save, save_inner_bounds, header_bounds, info_bounds); break;
+                case FhGameId.FFX2:   ui_save_details_x2(save, save_inner_bounds, header_bounds, info_bounds); break;
+                case FhGameId.FFX2LM: ui_save_details_lm(save, save_inner_bounds, header_bounds, info_bounds); break;
 
                 default: throw new UnreachableException();
             }
@@ -986,13 +988,18 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
 
         /* ===== Location Icon ===== */
         FhTexture tex_map       = save.icon_map;
-        Vector2   map_icon_size = new(255f, 144f);
+        Vector2   map_icon_size = new() {
+            X = save_bounds.size.Y * 1.77083f,
+            Y = save_bounds.size.Y,
+        };
 
         if (tex_map.try_use(out ImTextureRef map_icon, out _)) {
             UV tuv = new(Vector2.Zero, Vector2.One);
 
             UV suv = new Rect {
-                pos  = save_bounds.top_right + new Vector2(-260f, 6f),
+                pos  = save_bounds.top_right with {
+                    X = save_bounds.top_right.X - map_icon_size.X,
+                },
                 size = map_icon_size,
             }.scale_to_aspect(aspect_helper).as_uv();
 
@@ -1154,13 +1161,18 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
 
         /* ===== Location Icon ===== */
         FhTexture tex_map       = save.icon_map;
-        Vector2   map_icon_size = new(255f, 144f);
+        Vector2   map_icon_size = new() {
+            X = save_bounds.size.Y * 1.77083f,
+            Y = save_bounds.size.Y,
+        };
 
         if (tex_map.try_use(out ImTextureRef map_icon, out _)) {
             UV tuv = new(Vector2.Zero, Vector2.One);
 
             UV suv = new Rect {
-                pos  = save_bounds.top_right + new Vector2(-260f, 6f),
+                pos  = save_bounds.top_right with {
+                    X = save_bounds.top_right.X - map_icon_size.X,
+                },
                 size = map_icon_size,
             }.scale_to_aspect(aspect_helper).as_uv();
 
@@ -1354,13 +1366,18 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
 
         /* ===== Location Icon ===== */
         FhTexture tex_map       = save.icon_map;
-        Vector2   map_icon_size = new(255f, 144f);
+        Vector2   map_icon_size = new() {
+            X = save_bounds.size.Y * 1.77083f,
+            Y = save_bounds.size.Y,
+        };
 
         if (tex_map.try_use(out ImTextureRef map_icon, out _)) {
             UV tuv = new(Vector2.Zero, Vector2.One);
 
             UV suv = new Rect {
-                pos  = save_bounds.top_right + new Vector2(-260f, 6f),
+                pos  = save_bounds.top_right with {
+                    X = save_bounds.top_right.X - map_icon_size.X,
+                },
                 size = map_icon_size,
             }.scale_to_aspect(aspect_helper).as_uv();
 

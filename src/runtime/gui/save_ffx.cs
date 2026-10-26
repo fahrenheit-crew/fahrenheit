@@ -733,7 +733,10 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
 
         /* ===== Location Icon ===== */
         FhTexture tex_map       = save.icon_map;
-        Vector2   map_icon_size = new(255f, 144f);
+        Vector2   map_icon_size = new() {
+            X = save_bounds.size.Y * 1.77083f,
+            Y = save_bounds.size.Y,
+        };
 
         if (tex_map.try_use(out ImTextureRef map_icon, out _)) {
             UV tuv = new(Vector2.Zero, Vector2.One);
@@ -895,7 +898,10 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
 
         /* ===== Location Icon ===== */
         FhTexture tex_map       = save.icon_map;
-        Vector2   map_icon_size = new(255f, save_bounds.size.Y);
+        Vector2   map_icon_size = new() {
+            X = save_bounds.size.Y * 1.77083f,
+            Y = save_bounds.size.Y,
+        };
 
         if (tex_map.try_use(out ImTextureRef map_icon, out _)) {
             UV tuv = new(Vector2.Zero, Vector2.One);
@@ -1081,7 +1087,10 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
 
         /* ===== Location Icon ===== */
         FhTexture tex_map       = save.icon_map;
-        Vector2   map_icon_size = new(255f, save_bounds.size.Y);
+        Vector2   map_icon_size = new() {
+            X = save_bounds.size.Y * 1.77083f,
+            Y = save_bounds.size.Y,
+        };
 
         if (tex_map.try_use(out ImTextureRef map_icon, out _)) {
             UV tuv = new(Vector2.Zero, Vector2.One);

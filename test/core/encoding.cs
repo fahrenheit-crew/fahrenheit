@@ -23,18 +23,18 @@ public class FhEncodingTests {
     [TestCase(FhLangId.Japanese, FhGameId.FFX2, Ignore = "CJK encodings for FF X-2 are not yet supported.")]
     [TestCase(FhLangId.Korean,   FhGameId.FFX2, Ignore = "CJK encodings for FF X-2 are not yet supported.")]
     public void roundtrip_shift_jis_tables(FhLangId lang, FhGameId game) {
-        ReadOnlySpan<byte> sjistbl      = FhShiftJisTables.get_table(lang, game);
-        string             sjistbl_utf8 = Encoding.UTF8.GetString(sjistbl);
+        string sjistbl      = FhShiftJisTables.get_table(lang, game);
+        byte[] sjistbl_utf8 = Encoding.UTF8.GetBytes(sjistbl);
 
-        byte[] sjistbl_to_game = new byte[ FhEncoding.compute_encode_buffer_size(sjistbl, lang, game, FhEncodingFlags.IGNORE_EXPRESSIONS) ];
-        FhEncoding.encode(sjistbl, sjistbl_to_game, lang, game, FhEncodingFlags.IGNORE_EXPRESSIONS);
+        byte[] to_game = new byte[ FhEncoding.compute_encode_buffer_size(sjistbl_utf8, lang, game, FhEncodingFlags.IGNORE_EXPRESSIONS) ];
+        FhEncoding.encode(sjistbl_utf8, to_game, lang, game, FhEncodingFlags.IGNORE_EXPRESSIONS);
 
-        byte[] game_to_utf8 = new byte[ FhEncoding.compute_decode_buffer_size(sjistbl_to_game, lang, game, FhEncodingFlags.IGNORE_EXPRESSIONS) ];
-        FhEncoding.decode(sjistbl_to_game, game_to_utf8, lang, game);
+        byte[] to_utf8 = new byte[ FhEncoding.compute_decode_buffer_size(to_game, lang, game, FhEncodingFlags.IGNORE_EXPRESSIONS) ];
+        FhEncoding.decode(to_game, to_utf8, lang, game);
 
-        string sjistbl_utf8_roundtripped = Encoding.UTF8.GetString(game_to_utf8);
+        string sjistbl_roundtripped = Encoding.UTF8.GetString(to_utf8);
 
-        Assert.That(sjistbl_utf8.Equals(sjistbl_utf8_roundtripped, StringComparison.CurrentCulture));
+        Assert.That(sjistbl.Equals(sjistbl_roundtripped, StringComparison.CurrentCulture));
     }
 
 }

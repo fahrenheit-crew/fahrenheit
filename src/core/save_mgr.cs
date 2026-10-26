@@ -263,7 +263,7 @@ public sealed class FhSaves {
     /// </summary>
     private static void _pal_cache_tex_load() {
         foreach ((_, FhTexture icon_chr) in _cache_icon_chr) {
-            if (!FhApi.Resources.load_game_texture_2d(icon_chr)) {
+            if (!FhApi.Resources.load_texture(icon_chr)) {
                 FhInternal.Log.Warning($"Failed to load texture {icon_chr}.");
             }
         }
@@ -369,7 +369,7 @@ public sealed class FhSaves {
             ? DIR_MAP_ICON_X
             : DIR_MAP_ICON_X2;
 
-        return (_cache_icon_map[id_icon_map] = new FhTexture($"{map_dir}/{id_icon_map}.png", FhTextureType.PHYRE));
+        return (_cache_icon_map[id_icon_map] = new FhTexture($"{map_dir}/{id_icon_map}.png", FhTextureType.GAME_PHYRE_2D));
     }
 
     /// <summary>Compute the correct filename of a face icon.</summary>
@@ -381,7 +381,7 @@ public sealed class FhSaves {
             if (_cache_icon_chr.TryGetValue((0, 0), out FhTexture? tex_x))
                 return tex_x;
 
-            return (_cache_icon_chr[(0, 0)] = new FhTexture($"{DIR_CHR_ICON_X}/face_ply.dds.phyre", FhTextureType.PHYRE));
+            return (_cache_icon_chr[(0, 0)] = new FhTexture($"{DIR_CHR_ICON_X}/face_ply.dds.phyre", FhTextureType.GAME_PHYRE_2D));
         }
 
         bool is_lm = FhGlobal.game_id is FhGameId.FFX2LM;
@@ -400,7 +400,7 @@ public sealed class FhSaves {
             return tex;
 
         if (job_id == 0x21) {
-            return (_cache_icon_chr[key] = new FhTexture($"{DIR_CHR_ICON_X2}/mface_147.dds.phyre", FhTextureType.PHYRE)); // She-Goon
+            return (_cache_icon_chr[key] = new FhTexture($"{DIR_CHR_ICON_X2}/mface_147.dds.phyre", FhTextureType.GAME_PHYRE_2D)); // She-Goon
         }
 
         string ply = ply_id switch {
@@ -421,7 +421,7 @@ public sealed class FhSaves {
             _  => job_id,
         };
 
-        return (_cache_icon_chr[key] = new FhTexture($"{DIR_CHR_ICON_X2}/{ply}face_{job:D3}.dds.phyre", FhTextureType.PHYRE));
+        return (_cache_icon_chr[key] = new FhTexture($"{DIR_CHR_ICON_X2}/{ply}face_{job:D3}.dds.phyre", FhTextureType.GAME_PHYRE_2D));
     }
 
     /// <summary>

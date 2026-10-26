@@ -378,7 +378,7 @@ public static unsafe partial class FhCall {
     internal delegate nint d_DXGI_IDXGISwapChain_Present(
         IDXGISwapChain* pSwapChain,
         uint            SyncInterval,
-        DXGI_PRESENT    Flags);
+        uint            Flags);
     internal static FhCallHandle<d_DXGI_IDXGISwapChain_Present> DXGI_IDXGISwapChain_Present
         (IDXGISwapChain* ptr_swapchain)
         => new( new FhCallLocation(ptr_swapchain->lpVtbl[8]) );

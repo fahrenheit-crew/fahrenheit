@@ -183,7 +183,7 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
     protected bool try_load_textures() {
         _loaded_all_textures = true;
         foreach (FhTexture texture in textures) {
-            if (!FhApi.Resources.load_game_texture_2d(texture)) {
+            if (!FhApi.Resources.load_texture(texture)) {
                 _loaded_all_textures = false;
             }
         }

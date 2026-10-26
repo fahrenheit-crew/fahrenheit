@@ -18,17 +18,17 @@ namespace Fahrenheit.Runtime.Gui;
 /// <summary>The default save UI renderer for Final Fantasy X-2/Last Mission.</summary>
 [FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
 public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
-    private readonly FhTexture _texture_face_icon_default = new(Path.Join(DIR_X2_FACE_DATA, "mface_000.dds.phyre"), FhTextureType.PHYRE);
-    private readonly FhTexture _texture_map_icon_default  = new(Path.Join(DIR_X2_MAP_ICONS, "logo_j.png"),          FhTextureType.PNG);
+    private readonly FhTexture _texture_face_icon_default = new(Path.Join(DIR_X2_FACE_DATA, "mface_000.dds.phyre"), FhTextureType.GAME_PHYRE_2D);
+    private readonly FhTexture _texture_map_icon_default  = new(Path.Join(DIR_X2_MAP_ICONS, "logo_j.png"),          FhTextureType.GAME);
 
-    private readonly FhTexture _texture_menuback = new(Path.Join(DIR_X2_MENU,    "menuback.dds.phyre"),             FhTextureType.PHYRE);
-    private readonly FhTexture _texture_black0   = new(Path.Join(DIR_X2_PLATE,   "black0.dds.phyre"),               FhTextureType.PHYRE);
-    private readonly FhTexture _texture_mahojin  = new(Path.Join(DIR_X2_MAHOJIN, "14336_19_0_0_512_512.dds.phyre"), FhTextureType.PHYRE);
-    private readonly FhTexture _texture_plate    = new(Path.Join(DIR_X2_PLATE,   "12288_19_0_0_256_256.dds.phyre"), FhTextureType.PHYRE);
-    private readonly FhTexture _texture_freetex  = new(Path.Join(DIR_X2_MENU,    "freetex.dds.phyre"),              FhTextureType.PHYRE);
-    private readonly FhTexture _texture_x2_bg    = new(Path.Join(DIR_X2_MENU,    "x2_bg.dds.phyre"),                FhTextureType.PHYRE);
+    private readonly FhTexture _texture_menuback = new(Path.Join(DIR_X2_MENU,    "menuback.dds.phyre"),             FhTextureType.GAME_PHYRE_2D);
+    private readonly FhTexture _texture_black0   = new(Path.Join(DIR_X2_PLATE,   "black0.dds.phyre"),               FhTextureType.GAME_PHYRE_2D);
+    private readonly FhTexture _texture_mahojin  = new(Path.Join(DIR_X2_MAHOJIN, "14336_19_0_0_512_512.dds.phyre"), FhTextureType.GAME_PHYRE_2D);
+    private readonly FhTexture _texture_plate    = new(Path.Join(DIR_X2_PLATE,   "12288_19_0_0_256_256.dds.phyre"), FhTextureType.GAME_PHYRE_2D);
+    private readonly FhTexture _texture_freetex  = new(Path.Join(DIR_X2_MENU,    "freetex.dds.phyre"),              FhTextureType.GAME_PHYRE_2D);
+    private readonly FhTexture _texture_x2_bg    = new(Path.Join(DIR_X2_MENU,    "x2_bg.dds.phyre"),                FhTextureType.GAME_PHYRE_2D);
 
-    private readonly FhTexture _texture_ffx_faces = new(Path.Join(DIR_X_MENU, "face_ply.dds.phyre"), FhTextureType.PHYRE);
+    private readonly FhTexture _texture_ffx_faces = new(Path.Join(DIR_X_MENU, "face_ply.dds.phyre"), FhTextureType.GAME_PHYRE_2D);
 
     private readonly Vector2 _tex_face_size     = new(256f, 256f);
     private readonly Vector2 _tex_map_icon_size = new(320f, 176f);

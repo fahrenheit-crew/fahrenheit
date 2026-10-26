@@ -45,13 +45,28 @@ public static class FhEnumExt {
     }
 }
 
+/// <summary>
+///     These flags appear as the third byte of a composite text index. Their purpose is unknown.
+/// </summary>
+[Flags]
+public enum FhTextIndexFlags {
+    NULL = 0,
+    F1   = 0x1,
+    F2   = 0x2,
+    F3   = 0x4,
+    F4   = 0x10,
+    F5   = 0x20,
+    F6   = 0x40,
+    F7   = 0x80
+}
+
 /* [fkelava 16/10/25 19:54]
  * Raw text lines are preceded by an array of indices, which embed line offsets,
  * option count for multiple-choice selections, and so on.
  */
 
 public enum FhTextIndexType {
-    COM_X2 = 1, // composite: u16 offset, u8 option_count, u8 unknown
+    COM_X2 = 1, // composite: u16 offset, u8 flags, u8 option_count
     COM_X1 = 2,
     I16_X2 = 3,
     I16_X1 = 4,
@@ -88,6 +103,8 @@ public enum FhEncodingFlags {
 ///     Exposes low-level transforms between UTF-8 and game encoding.
 /// </summary>
 public static class FhEncoding {
+
+    private static readonly Dictionary<FhLangId, Rune[]> _sjistbl_runes = [];
 
     /* [fkelava 14/10/25 14:58]
      * These literals and methods control the plaintext representation of
@@ -264,11 +281,10 @@ public static class FhEncoding {
     }
 
     /// <summary>
-    ///     Attempts to extend an eligible character in the Shift-JIS table to its fullwidth form.
+    ///     Extends an eligible character in the Shift-JIS table to its fullwidth form.
     /// </summary>
     /// <remarks>Only valid for Chinese, Japanese, and Korean game languages.</remarks>
-    /// <returns>Whether the character was rewritten.</returns>
-    private static bool _extend_cjk(
+    private static void _extend_cjk(
         ref Rune code_point
     ) {
         /* [fkelava 14/07/26 17:23]
@@ -285,7 +301,6 @@ public static class FhEncoding {
         };
 
         code_point = new Rune(extended_scalar);
-        return extended_scalar != unicode_scalar;
     }
 
     /// <summary>
@@ -312,8 +327,8 @@ public static class FhEncoding {
            FhGameId           game
     ) {
         // FFX.exe+646250 (DecodingGamecodeJPCHKR) - cleaned up rewrite
-        ReadOnlySpan<byte> sjistbl     = FhShiftJisTables.get_table(lang, game);
-        int                sjistbl_idx = 0; // iVar4
+        string sjistbl     = FhShiftJisTables.get_table(lang, game);
+        int    sjistbl_idx = 0; // iVar4
 
         byte e0 = src[0];             // bVar2
         int  i  = e0 == 0x04 ? 1 : 0; // simulates increment of `src` pointer
@@ -342,23 +357,8 @@ public static class FhEncoding {
             sjistbl_idx += 0x410;
         }
 
-        sjistbl_idx *= 3;
-
-        if (sjistbl_idx > sjistbl.Length) {
-            throw new Exception($"lang {lang}: invalid expr {e0:X2} {e1:X2} {e2:X2}");
-        }
-
-        Range copy_range = sjistbl_idx switch {
-         <= 0x32                                                     => sjistbl_idx       .. (sjistbl_idx + 3),
-            0x33                                                     => sjistbl_idx       .. (sjistbl_idx + 2),
-          > 0x33 when lang is FhLangId.Chinese || sjistbl_idx < 0x78 => (sjistbl_idx - 1) .. (sjistbl_idx + 2),
-            0x78                                                     => (sjistbl_idx - 1) .. (sjistbl_idx + 1),
-            0xBBB when lang is FhLangId.Japanese                     => (sjistbl_idx - 2) .. sjistbl_idx,
-            _                                                        => (sjistbl_idx - 2) .. (sjistbl_idx + 1)
-        };
-
-        sjistbl[copy_range].CopyTo(dest);
-        return copy_range.End.Value - copy_range.Start.Value;
+        Rune rune = Rune.GetRuneAt(sjistbl, sjistbl_idx);
+        return rune.EncodeToUtf8(dest);
     }
 
     /// <summary>
@@ -374,8 +374,8 @@ public static class FhEncoding {
            FhGameId           game
     ) {
         // FFX.exe+6463a0 (DecodingGamecodeUK) - cleaned up rewrite
-        ReadOnlySpan<byte> sjistbl     = FhShiftJisTables.get_table(lang, game);
-        int                sjistbl_idx = 0; // iVar2
+        string sjistbl     = FhShiftJisTables.get_table(lang, game);
+        int    sjistbl_idx = 0; // iVar2
 
         int  i  = 0; // simulates increment of `src` pointer
         byte e0 = src[0];
@@ -388,145 +388,8 @@ public static class FhEncoding {
         byte e1 = src[i];
         sjistbl_idx += (e1 - 0x30);
 
-        Range? copy_range = sjistbl_idx switch {
-          < 0xC  => sjistbl_idx                .. (sjistbl_idx + 0x01),
-            0xC  => 0xC                        .. 0xF,
-          < 0x11 => (sjistbl_idx + 0x02)       .. (sjistbl_idx + 0x03),
-            0x11 => 0x13                       .. 0x16,
-          < 0x3F => (sjistbl_idx + 0x04)       .. (sjistbl_idx + 0x05),
-            0x3F => 0x43                       .. 0x46,
-          < 0x5E => (sjistbl_idx + 0x06)       .. (sjistbl_idx + 0x07),
-            0x5E => (sjistbl_idx + 0x06)       .. (sjistbl_idx + 0x08),
-            0x5F => (sjistbl_idx + 0x07)       .. (sjistbl_idx + 0x0A),
-            0x60 => (sjistbl_idx + 0x09)       .. (sjistbl_idx + 0x0C),
-            0x61 => (sjistbl_idx + 0x0B)       .. (sjistbl_idx + 0x0E),
-            0x62 => (sjistbl_idx + 0x0D)       .. (sjistbl_idx + 0x10),
-            0x63 => (sjistbl_idx + 0x0F)       .. (sjistbl_idx + 0x10),
-            0x64 => (sjistbl_idx + 0x0F)       .. (sjistbl_idx + 0x12),
-            0x65 => (sjistbl_idx + 0x11)       .. (sjistbl_idx + 0x14),
-            0x66 => (sjistbl_idx + 0x13)       .. (sjistbl_idx + 0x16),
-            0x67 => (sjistbl_idx + 0x15)       .. (sjistbl_idx + 0x16),
-            0x68 => (sjistbl_idx + 0x15)       .. (sjistbl_idx + 0x17),
-            0x69 => (sjistbl_idx + 0x16)       .. (sjistbl_idx + 0x19),
-            0x6A => (sjistbl_idx + 0x18)       .. (sjistbl_idx + 0x1B),
-            0x6B => (sjistbl_idx + 0x1A)       .. (sjistbl_idx + 0x1D),
-            0x6C => (sjistbl_idx + 0x1C)       .. (sjistbl_idx + 0x1F),
-          < 0x70 => ((sjistbl_idx * 2) - 0x4F) .. ((sjistbl_idx * 2) - 0x4F + 2),
-            0x70 => 0x91                       .. 0x92,
-         <= 0x9F => ((sjistbl_idx * 2) - 0x50) .. ((sjistbl_idx * 2) - 0x50 + 2),
-            0xA0 => (sjistbl_idx + 0x50)       .. (sjistbl_idx + 0x51),
-            0xA1 => (sjistbl_idx + 0x50)       .. (sjistbl_idx + 0x52),
-            0xA2 => (sjistbl_idx + 0x51)       .. (sjistbl_idx + 0x54),
-            0xA3 => (sjistbl_idx + 0x53)       .. (sjistbl_idx + 0x56),
-            0xA4 => (sjistbl_idx + 0x55)       .. (sjistbl_idx + 0x56),
-            0xA5 => (sjistbl_idx + 0x55)       .. (sjistbl_idx + 0x58),
-            0xA6 => (sjistbl_idx + 0x57)       .. (sjistbl_idx + 0x5A),
-            0xA7 or
-            0xA8 => (sjistbl_idx + 0x59)       .. (sjistbl_idx + 0x5A),
-            0xA9 => (sjistbl_idx + 0x59)       .. (sjistbl_idx + 0x5C),
-            0xAA => (sjistbl_idx + 0x5B)       .. (sjistbl_idx + 0x5C),
-            0xAB => (sjistbl_idx + 0x5B)       .. (sjistbl_idx + 0x5E),
-            0xAC => (sjistbl_idx + 0x5D)       .. (sjistbl_idx + 0x5F),
-            0xAD => (sjistbl_idx + 0x5E)       .. (sjistbl_idx + 0x60),
-            0xAE => (sjistbl_idx + 0x5F)       .. (sjistbl_idx + 0x61),
-            0xAF => (sjistbl_idx + 0x60)       .. (sjistbl_idx + 0x62),
-            0xB0 => (sjistbl_idx + 0x61)       .. (sjistbl_idx + 0x63),
-            0xB1 => (sjistbl_idx + 0x62)       .. (sjistbl_idx + 0x64),
-            0xB2 => (sjistbl_idx + 0x63)       .. (sjistbl_idx + 0x65),
-            0xB3 => (sjistbl_idx + 0x64)       .. (sjistbl_idx + 0x66),
-            0xB4 => (sjistbl_idx + 0x65)       .. (sjistbl_idx + 0x67),
-            0xB5 => (sjistbl_idx + 0x66)       .. (sjistbl_idx + 0x68),
-            0xB6 => (sjistbl_idx + 0x67)       .. (sjistbl_idx + 0x69),
-            0xB7 => (sjistbl_idx + 0x68)       .. (sjistbl_idx + 0x6A),
-            0xB8 => (sjistbl_idx + 0x69)       .. (sjistbl_idx + 0x6C),
-            0xB9 => (sjistbl_idx + 0x6B)       .. (sjistbl_idx + 0x6E),
-            0xBA => (sjistbl_idx + 0x6D)       .. (sjistbl_idx + 0x6E),
-            0xBB => (sjistbl_idx + 0x6D)       .. (sjistbl_idx + 0x6F),
-            0xBC => (sjistbl_idx + 0x6E)       .. (sjistbl_idx + 0x71),
-            0xBD => (sjistbl_idx + 0x70)       .. (sjistbl_idx + 0x73),
-            0xBE => (sjistbl_idx + 0x72)       .. (sjistbl_idx + 0x75),
-            0xBF => (sjistbl_idx + 0x74)       .. (sjistbl_idx + 0x77),
-            _    => null,
-        };
-
-        if (copy_range is not Range valid_range)
-            return 0;
-
-        sjistbl[valid_range].CopyTo(dest);
-        return valid_range.End.Value - valid_range.Start.Value;
-    }
-
-    /* [fkelava 20/10/25 14:03]
-     * Shift-JIS tables can arbitrarily combine ASCII and UTF-8 characters, most prominently
-     * in the Western encoding tables. In the original game they 'account' for this by
-     * manually fixing up the byte offset, as seen above in _decode_cjk() and _decode_us().
-     *
-     * These functions apply the inverse, for encoding purposes.
-     */
-
-    private static int _select_correction_cjk(int index, FhLangId lang) {
-        index += index switch {
-            <= 0x33                                                => 0,
-             > 0x33 when lang is FhLangId.Chinese || index <= 0x78 => 1,
-               _                                                   => 2
-        };
-
-        return index /= 3;
-    }
-
-    private static int _select_correction_we(int index) {
-        return index switch {
-            <= 0xC   => index,
-            <= 0x13  => index - 0x02,
-            <= 0x43  => index - 0x04,
-             < 0x64  => index - 0x06,
-               0x64  => index - 0x06,
-               0x66  => index - 0x07,
-               0x69  => index - 0x09,
-               0x6C  => index - 0x0B,
-               0x6F  => index - 0x0D,
-               0x73  => index - 0x0F,
-               0x76  => index - 0x11,
-               0x79  => index - 0x13,
-               0x7D  => index - 0x15,
-               0x7F  => index - 0x16,
-               0x82  => index - 0x18,
-               0x85  => index - 0x1A,
-               0x88  => index - 0x1C,
-             < 0xBF  => (index + 0x4F + 1) / 2, // +1 to round up
-            <= 0xEF  => (index + 0x50 + 1) / 2,
-               0xF0  => index - 0x50,
-               0xF1  => index - 0x50,
-               0xF3  => index - 0x51,
-               0xF6  => index - 0x53,
-               0xF9  => index - 0x55,
-               0xFA  => index - 0x55,
-               0xFD  => index - 0x57,
-               0x100 or
-               0x101 => index - 0x59,
-               0x102 => index - 0x59,
-               0x106 => index - 0x5B,
-               0x109 => index - 0x5D,
-               0x10B => index - 0x5E,
-               0x10D => index - 0x5F,
-               0x10F => index - 0x60,
-               0x111 => index - 0x61,
-               0x113 => index - 0x62,
-               0x115 => index - 0x63,
-               0x117 => index - 0x64,
-               0x119 => index - 0x65,
-               0x11B => index - 0x66,
-               0x11D => index - 0x67,
-               0x11F => index - 0x68,
-               0x121 => index - 0x69,
-               0x124 => index - 0x6B,
-               0x128 => index - 0x6D,
-               0x12A => index - 0x6E,
-               0x12D => index - 0x70,
-               0x130 => index - 0x72,
-               0x133 => index - 0x74,
-               _     => throw new Exception($"UNREACHABLE ({index:X2})")
-        };
+        Rune rune = Rune.GetRuneAt(sjistbl, sjistbl_idx);
+        return rune.EncodeToUtf8(dest);
     }
 
     /// <summary>
@@ -665,7 +528,7 @@ public static class FhEncoding {
         }
 
         if (index_type is FhTextIndexType.COM_X1 or FhTextIndexType.COM_X2) {
-            dest[2] = 0x00; // TODO: check actual purpose
+            dest[2] = 0x00; // flags
             dest[3] = byte.CreateChecked(option_count);
 
             if (index_type is FhTextIndexType.COM_X1) return 4;
@@ -758,7 +621,11 @@ public static class FhEncoding {
         FhLangId lang_id = lang ?? FhGlobal.lang_id;
         FhGameId game_id = game ?? FhGlobal.game_id;
 
-        ReadOnlySpan<byte> sjistbl = FhShiftJisTables.get_table(lang_id, game_id);
+        string sjistbl = FhShiftJisTables.get_table(lang_id, game_id);
+
+        if (!_sjistbl_runes.TryGetValue(lang_id, out Rune[]? runes)) {
+            runes = _sjistbl_runes[lang_id] = [ .. sjistbl.EnumerateRunes() ];
+        }
 
         int src_offset, dest_offset;
 
@@ -778,15 +645,7 @@ public static class FhEncoding {
                 continue;
             }
 
-            /* [fkelava 16/07/26 13:10]
-             * When doing implicit CJK extension, we will have to rewrite `bytes` later with a `stackalloc` buffer.
-             * `bytes` is returnable, but a `stackalloc` buffer is not, so the compiler complains.
-             * We mark this span scoped so the compiler knows that such reassignment is valid and `bytes` is nonreturnable.
-             *
-             * See generally https://github.com/dotnet/csharplang/discussions/1130.
-             */
-            scoped ReadOnlySpan<byte> bytes     = src[ src_offset .. (src_offset + consumed) ];
-                   Span        <byte> dst_slice = flags.HasFlag(FhEncodingFlags.IGNORE_DEST_BUFFER) ? dest : dest[ dest_offset .. ];
+            Span<byte> dst_slice = flags.HasFlag(FhEncodingFlags.IGNORE_DEST_BUFFER) ? dest : dest[ dest_offset .. ];
 
             /* [fkelava 14/10/25 19:27]
              * If we have encountered a op statement opener (U+007B '{'), process the op by
@@ -822,22 +681,16 @@ public static class FhEncoding {
              * If the character is NOT an op statement opener, find it in the Shift-JIS table and emit its index.
              */
         encode:
-            if (flags.HasFlag(FhEncodingFlags.IMPLICIT_CJK_EXTENSION) && lang_id.is_cjk && _extend_cjk(ref code_point)) {
-                Span<byte> extend_buf = stackalloc byte[code_point.Utf8SequenceLength];
-                code_point.EncodeToUtf8(extend_buf);
-                bytes = extend_buf;
+            if (flags.HasFlag(FhEncodingFlags.IMPLICIT_CJK_EXTENSION) && lang_id.is_cjk) {
+                _extend_cjk(ref code_point);
             }
 
-            int index = sjistbl.IndexOf(bytes);
+            int index = runes.IndexOf(code_point);
 
             if (index == -1) {
-                FhInternal.Log.Error($"sequence {Convert.ToHexString(bytes)} not in sjistbl of lang {lang_id}; aborting (pos {src_offset})");
+                FhInternal.Log.Error($"rune U+{code_point.Value:X4} not in sjistbl of lang {lang_id}; aborting (pos {src_offset})");
                 return dest_offset;
             }
-
-            index = lang_id is FhLangId.Chinese or FhLangId.Japanese or FhLangId.Korean
-                ? _select_correction_cjk(index, lang_id)
-                : _select_correction_we (index);
 
             src_offset  += consumed;
             dest_offset += _encode_char(dst_slice, index);
@@ -902,26 +755,25 @@ public static class FhEncoding {
 
             (int src_increment, int dest_increment) = op switch {
                 // 0-arg ops - {PAUSE|LF}
-                0x01 or 0x03          => (1, _decode_op(dst_slice, op)),
+                0x01 or 0x03                 => (1, _decode_op(dst_slice, op)),
                 // 1-arg ops - {COLOR|BTN|KEY}
-                0x0A or 0x0B or 0x23  => (2, _decode_op(dst_slice, op, src[src_offset + 1])),
-                // 1-arg ops with 0x30-based indexing - {SPACE|TIME|CHOICE}
-                0x07 or 0x09 or 0x10  => (2, _decode_op(dst_slice, op, byte.CreateChecked(src[src_offset + 1] - 0x30))),
+                0x0A or 0x0B or 0x23         => (2, _decode_op(dst_slice, op, src[src_offset + 1])),
+                // 1-arg ops with 0x30-based indexing - {SPACE|TIME|CHOICE|VAR}
+                0x07 or 0x09 or 0x10 or 0x12 => (2, _decode_op(dst_slice, op, byte.CreateChecked(src[src_offset + 1] - 0x30))),
                 // 2-arg ops where the op itself is transformed to an argument - {MACRO}
-                >= 0x13 and <= 0x22   => (2, _decode_op(dst_slice, op, byte.CreateChecked(op - 0x13), byte.CreateChecked(src[src_offset + 1] - 0x30))),
+                >= 0x13 and <= 0x22          => (2, _decode_op(dst_slice, op, byte.CreateChecked(op - 0x13), byte.CreateChecked(src[src_offset + 1] - 0x30))),
                 // Multi-byte character expressions - 0x04 is CJK-only, 0x2C-2F for any charset
-                0x04                  => (src[src_offset + 1] < 0x30 ? 3 : 2, _decode_cjk (src[ src_offset .. ], dst_slice, lang_id, game_id)),
-                >= 0x2C and <= 0x2F   => (2,                                  _decode_char(src[ src_offset .. ], dst_slice, lang_id, game_id)),
+                0x04                         => (src[src_offset + 1] < 0x30 ? 3 : 2, _decode_cjk (src[ src_offset .. ], dst_slice, lang_id, game_id)),
+                >= 0x2C and <= 0x2F          => (2,                                  _decode_char(src[ src_offset .. ], dst_slice, lang_id, game_id)),
                 // Unknown 1-arg ops, embedded literally
-                0x02 or 0x05          => (1, _decode_op(dst_slice, op, src[src_offset + 1])),
+                0x02 or 0x05                 => (1, _decode_op(dst_slice, op, src[src_offset + 1])),
                 0x06 or
                 0x08 or
                 (>= 0x0C and <= 0x0F) or
                 0x11 or
-                0x12 or
-                (>= 0x24 and <= 0x2B) => (2, _decode_op(dst_slice, op, op, src[src_offset + 1])),
+                (>= 0x24 and <= 0x2B)        => (2, _decode_op(dst_slice, op, op, src[src_offset + 1])),
                 // fall through: regular character
-                _                     => (1, _decode_char(src[ src_offset .. ], dst_slice, lang_id, game_id))
+                _                            => (1, _decode_char(src[ src_offset .. ], dst_slice, lang_id, game_id))
             };
 
             src_offset  += src_increment;

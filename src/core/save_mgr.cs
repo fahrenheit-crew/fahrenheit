@@ -78,6 +78,13 @@ public sealed class FhSaves {
     private static readonly string _s_set_path_default;
     private static readonly string _s_set_name_default = "default";
 
+    // Sets defining which location IDs have multiple icons
+    private static readonly HashSet<int> _multi_icon_locations_x = [
+         31, 129, 216, 244,
+        245, 246, 247, 257,
+        284, 348,
+    ];
+
     // Caches for immutable portions of certain templated game strings.
     private static int    _cache_init             = 0;
     private static string _cache_prefix_lm_level  = "";
@@ -269,10 +276,9 @@ public sealed class FhSaves {
         }
 
         foreach ((_, FhTexture icon_map) in _cache_icon_map) {
-            // TODO: How the fuck do we load PNG map icons?
-            //if (!FhApi.Resources.load_game_texture_2d(icon_map)) {
-            //    FhInternal.Log.Warning($"Failed to load texture {icon_map}.");
-            //}
+            if (!FhApi.Resources.load_texture(icon_map)) {
+                FhInternal.Log.Warning($"Failed to load texture {icon_map}.");
+            }
         }
     }
 
@@ -291,8 +297,7 @@ public sealed class FhSaves {
             if (!_cache_icon_map.Remove(tex.Key, out FhTexture? icon_map))
                 throw new Exception("Failed to clear texture cache.");
 
-            // TODO: How the fuck do we load PNG map icons?
-            //FhApi.Resources.unload_texture(icon_map);
+            FhApi.Resources.unload_texture(icon_map);
         }
     }
 
@@ -349,27 +354,59 @@ public sealed class FhSaves {
     ///     Returns the icon filename for the current map in the save with the given <paramref name="header"/>.
     /// </summary>
     private static FhTexture _pal_get_icon_map(in SaveHeader header) {
-        bool not_lm = FhGlobal.game_id is not FhGameId.FFX2LM;
-
-        // int id_icon_clear = FhGlobal.game_id switch {
-        //     FhGameId.FFX  => 0x00, // FFX.exe+2F1039
-        //     FhGameId.FFX2 => 0x17, // FFX-2.exe+11E2AD
-        //     _             => throw new NotImplementedException("Invalid game type"),
-        // };
-
-        int id_icon_map = not_lm
-            ? FhCall.fix_mappic.fnptr!(header.x.id_location) // Location is at the same offset in X and X-2.
-            : ((int.Clamp(header.x2.lm_id_location >> 1, 0, 0x50) - 1) / 0x14) + 1;
-
-        // if (not_lm && id_icon_map == id_icon_clear && FhCall.isNeedShowJapanLogo.fnptr!() != 0) {
-        //     id_icon_map = 999;
-        // }
-
         string map_dir  = FhGlobal.game_id is FhGameId.FFX
             ? DIR_MAP_ICON_X
             : DIR_MAP_ICON_X2;
 
-        return (_cache_icon_map[id_icon_map] = new FhTexture($"{map_dir}/{id_icon_map}.png", FhTextureType.GAME_PHYRE_2D));
+        if (FhGlobal.game_id is FhGameId.FFX2LM) {
+            int icon_id = ((int.Clamp(header.x2.lm_id_location / 2, 0, 80) - 1) / 20) + 1;
+
+            if (_cache_icon_map.TryGetValue(icon_id, out FhTexture? icon_texture_lm)) {
+                return icon_texture_lm;
+            }
+
+            return (_cache_icon_map[icon_id] = new FhTexture($"{map_dir}/logo_j_lm.png", FhTextureType.GAME));
+        }
+
+        int logo_icon_id = FhUtil.select(0, 23, 23);
+
+        int map_icon_id = FhGlobal.game_id is FhGameId.FFX
+            ? header.x .id_location
+            : header.x2.id_map_icon;
+
+        map_icon_id = FhCall.fix_mappic.fnptr!((ushort)map_icon_id);
+
+        if (_cache_icon_map.TryGetValue(map_icon_id, out FhTexture? icon_texture)) {
+            return icon_texture;
+        }
+
+        bool is_jp_logo = map_icon_id == logo_icon_id && FhCall.isNeedShowJapanLogo.fnptr!() != 0;
+
+        string get_icon_name(int icon_id) {
+            if (is_jp_logo) return "logo_j";
+
+            bool has_multiple_icons =
+                FhGlobal.game_id == FhGameId.FFX
+                && (_multi_icon_locations_x.Contains(map_icon_id)
+                ||  _multi_icon_locations_x.Contains(map_icon_id - 1000));
+
+            string suffix = FhGlobal.game_id switch {
+                FhGameId.FFX when has_multiple_icons => icon_id < 1000 ? "_0" : "_1",
+                FhGameId.FFX2                        => icon_id < 1000 ? "_0" : "_1",
+
+                _ => string.Empty,
+            };
+
+            if (suffix != string.Empty && icon_id > 1000) {
+                icon_id -= 1000;
+            }
+
+            return $"{icon_id}{suffix}";
+        }
+
+        string icon_name = get_icon_name(map_icon_id);
+
+        return (_cache_icon_map[map_icon_id] = new FhTexture($"{map_dir}/{icon_name}.png", FhTextureType.GAME));
     }
 
     /// <summary>Compute the correct filename of a face icon.</summary>

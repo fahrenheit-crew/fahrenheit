@@ -1000,22 +1000,22 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
         FhTexture tex_map       = save.icon_map;
         Vector2   map_icon_size = new(255f, 144f);
 
-        // if (tex_map.try_use(out ImTextureRef map_icon, out _)) {
-        //     UV tuv = new(new(0f, 1f), new(1f, 0f));
-        //
-        //     UV suv = new Rect {
-        //         pos  = save_rect.top_right + new Vector2(-260f, 6f),
-        //         size = map_icon_size,
-        //     }.scale_to_aspect(aspect_helper).as_uv();
-        //
-        //     draw.AddImage(
-        //         map_icon,
-        //         suv.p0,
-        //         suv.p1,
-        //         tuv.p0,
-        //         tuv.p1
-        //     );
-        // }
+        if (tex_map.try_use(out ImTextureRef map_icon, out _)) {
+            UV tuv = new(Vector2.Zero, Vector2.One);
+
+            UV suv = new Rect {
+                pos  = save_bounds.top_right + new Vector2(-260f, 6f),
+                size = map_icon_size,
+            }.scale_to_aspect(aspect_helper).as_uv();
+
+            draw.AddImage(
+                map_icon,
+                suv.p0,
+                suv.p1,
+                tuv.p0,
+                tuv.p1
+            );
+        }
 
         /* ===== Header Details ===== */
         float text_offset      = 13f;
@@ -1176,22 +1176,22 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
         FhTexture tex_map       = save.icon_map;
         Vector2   map_icon_size = new(255f, 144f);
 
-        // if (tex_map.try_use(out ImTextureRef map_icon, out _)) {
-        //     UV tuv = new(new(0f, 1f), new(1f, 0f));
-        //
-        //     UV suv = new Rect {
-        //         pos  = save_rect.top_right + new Vector2(-260f, 6f),
-        //         size = map_icon_size,
-        //     }.scale_to_aspect(aspect_helper).as_uv();
-        //
-        //     draw.AddImage(
-        //         map_icon,
-        //         suv.p0,
-        //         suv.p1,
-        //         tuv.p0,
-        //         tuv.p1
-        //     );
-        // }
+        if (tex_map.try_use(out ImTextureRef map_icon, out _)) {
+            UV tuv = new(Vector2.Zero, Vector2.One);
+
+            UV suv = new Rect {
+                pos  = save_bounds.top_right + new Vector2(-260f, 6f),
+                size = map_icon_size,
+            }.scale_to_aspect(aspect_helper).as_uv();
+
+            draw.AddImage(
+                map_icon,
+                suv.p0,
+                suv.p1,
+                tuv.p0,
+                tuv.p1
+            );
+        }
 
         /* ===== Header Details ===== */
         float text_offset      = 13f;
@@ -1388,22 +1388,22 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
         FhTexture tex_map       = save.icon_map;
         Vector2   map_icon_size = new(255f, 144f);
 
-        // if (tex_map.try_use(out ImTextureRef map_icon, out _)) {
-        //     UV tuv = new(new(0f, 1f), new(1f, 0f));
-        //
-        //     UV suv = new Rect {
-        //         pos  = save_rect.top_right + new Vector2(-260f, 6f),
-        //         size = new(255f, 144f),
-        //     }.scale_to_aspect(aspect_helper).as_uv();
-        //
-        //     draw.AddImage(
-        //         map_icon,
-        //         suv.p0,
-        //         suv.p1,
-        //         tuv.p0,
-        //         tuv.p1
-        //     );
-        // }
+        if (tex_map.try_use(out ImTextureRef map_icon, out _)) {
+            UV tuv = new(Vector2.Zero, Vector2.One);
+
+            UV suv = new Rect {
+                pos  = save_bounds.top_right + new Vector2(-260f, 6f),
+                size = map_icon_size,
+            }.scale_to_aspect(aspect_helper).as_uv();
+
+            draw.AddImage(
+                map_icon,
+                suv.p0,
+                suv.p1,
+                tuv.p0,
+                tuv.p1
+            );
+        }
 
         /* ===== Header Details ===== */
         float text_offset      = 13f;
@@ -1556,21 +1556,21 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
         );
 
         /* ===== "+" Icon ===== */
-        uint grad_l = 0xFF191919; // grey
-        uint grad_r = 0xFF252525; // black
-
-        UV suv = new Rect {
+        Rect icon_bounds = new Rect {
             pos  = bounds.top_right + new Vector2(-260f, 6f),
             size = new(255f, 144f),
-        }.scale_to_aspect(aspect_helper).as_uv();
+        }.scale_to_aspect(aspect_helper);
 
-        draw.AddRectFilledMultiColor(
-            suv.p0,
-            suv.p1,
-            grad_r,
-            grad_r,
-            grad_l,
-            grad_l
+        GradientStep[] icon_steps = [
+            new(0.0f, 0xFF252525),
+            new(1.0f, 0xFF191919),
+        ];
+
+        FhApi.Gui.draw_rectangle_gradient(
+            draw,
+            icon_bounds,
+            GradientDirection.DOWN,
+            icon_steps
         );
 
         UV plus_tuv = new Rect {

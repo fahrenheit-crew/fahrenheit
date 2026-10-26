@@ -749,18 +749,18 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
         FhTexture tex_map       = save.icon_map;
         Vector2   map_icon_size = new(255f, 144f);
 
-        // if (tex_map.try_use(out ImTextureRef map_icon, out _)) {
-        //     UV tuv = new(new(0f, 1f), new(1f, 0f));
-        //
-        //     UV suv = new Rect {
-        //         pos = save_bounds.top_right with {
-        //             X = save_bounds.top_right.X - map_icon_size.X,
-        //         },
-        //         size = map_icon_size,
-        //     }.scale_to_aspect(aspect_helper).as_uv();
-        //
-        //     draw.AddImage(map_icon, suv.p0, suv.p1, tuv.p0, tuv.p1);
-        // }
+        if (tex_map.try_use(out ImTextureRef map_icon, out _)) {
+            UV tuv = new(Vector2.Zero, Vector2.One);
+
+            UV suv = new Rect {
+                pos = save_bounds.top_right with {
+                    X = save_bounds.top_right.X - map_icon_size.X,
+                },
+                size = map_icon_size,
+            }.scale_to_aspect(aspect_helper).as_uv();
+
+            draw.AddImage(map_icon, suv.p0, suv.p1, tuv.p0, tuv.p1);
+        }
 
         /* ===== Header Details ===== */
         float text_margin_left    = 12f;
@@ -919,18 +919,18 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
         FhTexture tex_map       = save.icon_map;
         Vector2   map_icon_size = new(255f, save_bounds.size.Y);
 
-        // if (tex_map.try_use(out ImTextureRef map_icon, out _)) {
-        //     UV tuv = new(new(0f, 1f), new(1f, 0f));
-        //
-        //     UV suv = new Rect {
-        //         pos  = save_bounds.top_right with {
-        //             X = save_bounds.top_right.X - map_icon_size.X,
-        //         },
-        //         size = map_icon_size,
-        //     }.scale_to_aspect(aspect_helper).as_uv();
-        //
-        //     draw.AddImage(map_icon, suv.p0, suv.p1, tuv.p0, tuv.p1);
-        // }
+        if (tex_map.try_use(out ImTextureRef map_icon, out _)) {
+            UV tuv = new(Vector2.Zero, Vector2.One);
+
+            UV suv = new Rect {
+                pos = save_bounds.top_right with {
+                    X = save_bounds.top_right.X - map_icon_size.X,
+                },
+                size = map_icon_size,
+            }.scale_to_aspect(aspect_helper).as_uv();
+
+            draw.AddImage(map_icon, suv.p0, suv.p1, tuv.p0, tuv.p1);
+        }
 
         /* ===== Header Details ===== */
         float text_margin_left    = 12f;
@@ -1117,18 +1117,18 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
         FhTexture tex_map       = save.icon_map;
         Vector2   map_icon_size = new(255f, save_bounds.size.Y);
 
-        // if (tex_map.try_use(out ImTextureRef map_icon, out _)) {
-        //     UV tuv = new(new(0f, 1f), new(1f, 0f));
-        //
-        //     UV suv = new Rect {
-        //         pos = save_bounds.top_right with {
-        //             X = save_bounds.top_right.X - map_icon_size.X,
-        //         },
-        //         size = map_icon_size,
-        //     }.scale_to_aspect(aspect_helper).as_uv();
-        //
-        //     draw.AddImage(map_icon, suv.p0, suv.p1, tuv.p0, tuv.p1);
-        // }
+        if (tex_map.try_use(out ImTextureRef map_icon, out _)) {
+            UV tuv = new(Vector2.Zero, Vector2.One);
+
+            UV suv = new Rect {
+                pos = save_bounds.top_right with {
+                    X = save_bounds.top_right.X - map_icon_size.X,
+                },
+                size = map_icon_size,
+            }.scale_to_aspect(aspect_helper).as_uv();
+
+            draw.AddImage(map_icon, suv.p0, suv.p1, tuv.p0, tuv.p1);
+        }
 
         /* ===== Header Details ===== */
         float text_margin_left    = 12f;
@@ -1343,42 +1343,41 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
             Alignment2D.LEFT
         );
 
-        // TODO: Uncomment once map icons can be loaded/rendered.
         /* ===== "+" Icon ===== */
-        // grad_l = 0xFF191919; // grey
-        // grad_r = 0xFF252525; // black
-        //
-        // UV suv = new Rect {
-        //     pos  = save_rect.pos + new Vector2(1302f, 4f),
-        //     size = new(255f, 144f),
-        // }.scale_to_aspect(aspect_helper).as_uv();
-        //
-        // draw.AddRectFilledMultiColor(
-        //     suv.p0,
-        //     suv.p1,
-        //     grad_r,
-        //     grad_r,
-        //     grad_l,
-        //     grad_l
-        // );
-        //
-        // UV plus_tuv = new Rect {
-        //     pos  = new(581f, 724f),
-        //     size = new( 36f,  36f),
-        // }.as_uv(freetex_meta.size);
-        //
-        // UV plus_suv = new Rect {
-        //     pos  = save_rect.pos + new Vector2(1405f, 56f),
-        //     size = new(45f, 47f),
-        // }.scale_to_aspect(aspect_helper).as_uv();
-        //
-        // draw.AddImage(
-        //     freetex,
-        //     plus_suv.p0,
-        //     plus_suv.p1,
-        //     plus_tuv.p0,
-        //     plus_tuv.p1
-        // );
+        Rect icon_bounds = new Rect {
+            pos  = save_rect.pos + new Vector2(1302f, 4f),
+            size = new(255f, 144f),
+        }.scale_to_aspect(aspect_helper);
+
+        GradientStep[] icon_steps = [
+            new(0.0f, 0xFF252525),
+            new(1.0f, 0xFF191919),
+        ];
+
+        FhApi.Gui.draw_rectangle_gradient(
+            draw,
+            icon_bounds,
+            GradientDirection.DOWN,
+            icon_steps
+        );
+
+        UV plus_tuv = new Rect {
+            pos  = new(581f, 724f),
+            size = new( 36f,  36f),
+        }.as_uv(freetex_meta.size);
+
+        UV plus_suv = new Rect {
+            pos  = save_rect.pos + new Vector2(1405f, 56f),
+            size = new(45f, 47f),
+        }.scale_to_aspect(aspect_helper).as_uv();
+
+        draw.AddImage(
+            freetex,
+            plus_suv.p0,
+            plus_suv.p1,
+            plus_tuv.p0,
+            plus_tuv.p1
+        );
 
         /* ===== Cursor ===== */
         if (_focus == UiFocus.LIST && _scrollable_saves.hovered == 0) {

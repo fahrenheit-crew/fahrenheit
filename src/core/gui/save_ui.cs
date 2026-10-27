@@ -47,8 +47,6 @@ public abstract class FhSaveUi : FhModule {
     }
 
     private void post_open(EventArgs e) {
-        FhApi.Saves.sets_query();
-
         /*
          * NOTE:
          *   Unlike in vanilla, Fahrenheit does not allow you to open the Escape menu,

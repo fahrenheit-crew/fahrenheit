@@ -1403,7 +1403,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
         );
 
         /* ===== "+" Icon ===== */
-        GradientStep[] icon_steps = [
+        ReadOnlySpan<GradientStep> icon_steps = [
             new(0.0f, 0xFF252525),
             new(1.0f, 0xFF191919),
         ];

@@ -610,7 +610,7 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
             size = save_bounds.size with { Y = 3f },
         }.scale_to_aspect(aspect_helper);
 
-        GradientStep[] separator_steps = [
+        ReadOnlySpan<GradientStep> separator_steps = [
             new(0.0f, 0x00FBF1F3),
             new(0.2f, 0x40FBF1F3),
             new(0.6f, 0x40FBF1F3),
@@ -1136,7 +1136,7 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
         );
 
         /* ===== "+" Icon ===== */
-        GradientStep[] icon_steps = [
+        ReadOnlySpan<GradientStep> icon_steps = [
             new(0.0f, 0xFF252525),
             new(1.0f, 0xFF191919),
         ];

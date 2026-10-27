@@ -399,7 +399,39 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
     protected abstract void ui_set(FhSaveSet set, int global_idx, int local_idx);
 
     /// <summary>Render the list of saves in the active set.</summary>
-    protected abstract void ui_savelist();
+    protected virtual void ui_savelist() {
+        FhSaveSet set = FhApi.Saves.sets_get_active();
+
+        scrollable_saves.max = is_saving
+            ? set.count + 1 - (set.has_autosave ? 1 : 0) // Add one for New Save Data button
+            : set.count;
+
+        if (!is_saving && set.count == 0) {
+            ui_no_saves();
+            return;
+        }
+
+        int start = scrollable_saves.get_clip_start();
+        int end   = scrollable_saves.get_clip_end();
+
+        int ui_data_start = is_saving && set.has_autosave ? 1 : 0;
+
+        for (int save_idx = start; save_idx < end; save_idx++) {
+            if (is_saving && save_idx == 0) {
+                // New Save Data
+                ui_save(new FhSaveUiData { slot = 0 }, 0, 0);
+                continue;
+            }
+
+            int ui_data_index = is_saving
+                ? ui_data_start + save_idx - 1
+                : ui_data_start + save_idx;
+
+            if (FhApi.Saves.sets_get_ui_data(ui_data_index, out FhSaveUiData save)) {
+                ui_save(save, save_idx, save_idx - start);
+            }
+        }
+    }
 
     /// <summary>Render the message displayed when no saves exist in the active set.</summary>
     protected abstract void ui_no_saves();

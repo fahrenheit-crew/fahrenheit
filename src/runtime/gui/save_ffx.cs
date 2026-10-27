@@ -21,7 +21,8 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
     private readonly FhTexture _texture_bg           = new(Path.Join(DIR_X_MENU, "ffx_bg.dds.phyre"),        FhTextureType.GAME_PHYRE_2D);
     private readonly FhTexture _texture_help         = new(Path.Join(DIR_X_HIKU, "0_0_512_448_0.dds.phyre"), FhTextureType.GAME_PHYRE_2D);
     private readonly FhTexture _texture_battle_kuang = new(Path.Join(DIR_X_MENU, "battle_kuang.dds.phyre"),  FhTextureType.GAME_PHYRE_2D);
-    private readonly FhTexture _texture_faces        = new(Path.Join(DIR_X_MENU, "face_ply.dds.phyre"),      FhTextureType.GAME_PHYRE_2D);
+    private readonly FhTexture _texture_faces_ply    = new(Path.Join(DIR_X_MENU, "face_ply.dds.phyre"),      FhTextureType.GAME_PHYRE_2D);
+    private readonly FhTexture _texture_faces_smn    = new(Path.Join(DIR_X_MENU, "face_smn.dds.phyre"),      FhTextureType.GAME_PHYRE_2D);
     private readonly FhTexture _texture_meswin       = new(Path.Join(DIR_X_MENU, "meswin.dds.phyre"),        FhTextureType.GAME_PHYRE_2D);
     private readonly FhTexture _texture_summonbg     = new(Path.Join(DIR_X_MENU, "summonbg.dds.phyre"),      FhTextureType.GAME_PHYRE_2D);
 
@@ -35,7 +36,8 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
         _texture_bg,
         _texture_help,
         _texture_battle_kuang,
-        _texture_faces,
+        _texture_faces_ply,
+        _texture_faces_smn,
         _texture_meswin,
         _texture_summonbg,
         _texture_freetex,
@@ -799,35 +801,21 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
         Vector2 face_size,
         float   face_gap
     ) {
-        if (!_texture_faces.try_use(out ImTextureRef faces, out FhTextureMetadata? faces_meta)) {
+        if (
+            !_texture_faces_ply.try_use(out ImTextureRef faces_ply, out FhTextureMetadata? faces_ply_meta)
+            || !_texture_faces_smn.try_use(out ImTextureRef faces_smn, out FhTextureMetadata? faces_smn_meta)
+        ) {
             return;
         }
 
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
-
-        Span<UV> face_tuvs = stackalloc UV[8];
-
-        ReadOnlySpan<int> face_pos_xs = [ 1, 201, 400, 600 ];
-
-        for (int i = 0; i < 8; i++) {
-            float x1 = face_pos_xs[i % 4];
-            float x2 = x1 + 198f;
-
-            float y1 = i > 3 ? 311f : 511f;
-            float y2 = y1 - 198f;
-
-            face_tuvs[i] = new UV(
-                new(x1, y1),
-                new(x2, y2)
-            ).map_to(faces_meta.size);
-        }
 
         Rect face_bounds = new() {
             pos = bounds.top_left,
             size = face_size,
         };
 
-        UV face_suv = face_bounds.scale_to_aspect(aspect_helper).as_uv();
+        UV suv = face_bounds.scale_to_aspect(aspect_helper).as_uv();
 
         Vector2 face_screen_offset = new Vector2(face_size.X + face_gap, 0f) * aspect_scale;
 
@@ -836,11 +824,42 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
         foreach (int chr in header.formation[..3]) {
             if (chr == 0xFF) continue;
 
-            UV tuv = face_tuvs[chr];
+            int id = chr;
 
-            draw.AddImage(faces, face_suv.p0, face_suv.p1, tuv.p0, tuv.p1);
+            if (id <= 0x7) {
+                ReadOnlySpan<int> ply_face_tex_xs = [ 1, 201, 400, 600 ];
 
-            face_suv = face_suv.move(face_screen_offset);
+                float x1 = ply_face_tex_xs[id % 4];
+                float x2 = x1 + 198f;
+
+                float y1 = id > 3 ? 311f : 511f;
+                float y2 = y1 - 198f;
+
+                UV tuv = new UV(
+                    new(x1, y1),
+                    new(x2, y2)
+                ).map_to(faces_ply_meta.size);
+
+                draw.AddImage(faces_ply, suv.p0, suv.p1, tuv.p0, tuv.p1);
+            }
+            else {
+                id -= FFX.Ids.PlySaveId.PC_VALEFOR;
+
+                float x1 = 1f + 200f * (id % 5);
+                float x2 = x1 + 198f;
+
+                float y1 = id > 5 ? 311f : 511f;
+                float y2 = y1 - 198f;
+
+                UV tuv = new UV(
+                    new(x1, y1),
+                    new(x2, y2)
+                ).map_to(faces_smn_meta.size);
+
+                draw.AddImage(faces_smn, suv.p0, suv.p1, tuv.p0, tuv.p1);
+            }
+
+            suv = suv.move(face_screen_offset);
         }
     }
 

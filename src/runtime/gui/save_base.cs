@@ -49,35 +49,35 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
     protected static readonly float ACTION_VOLUME =
         FhGlobal.game_id is FhGameId.FFX ? 1f : 0.5f;
 
-    protected UiMode  _mode;
-    protected UiFocus _focus;
+    protected UiMode  mode;
+    protected UiFocus focus;
 
-    protected readonly float      _fade_length = FhUtil.select(0.5f, 0.35f, 0.0f);
-    protected readonly FadeHelper _fade;
+    protected readonly float      fade_length = FhUtil.select(0.5f, 0.35f, 0.0f);
+    protected readonly FadeHelper fade;
 
-    protected readonly Fahrenheit.Gui.Timer _audio_fade_helper = new(30f);
+    protected readonly Fahrenheit.Gui.Timer audio_fade_helper = new(30f);
 
-    protected bool _audio_fade_helper_restart = true;
+    protected bool audio_fade_helper_restart = true;
 
-    protected readonly List<string> _set_list = [ ];
+    protected readonly List<string> set_list = [ ];
 
-    protected bool _loaded_all_textures;
+    protected bool loaded_all_textures;
 
     protected bool is_saving =>
-        FhApi.Saves.impl_get_system_mode(out FhSaveSystemMode? mode) && mode is FhSaveSystemMode.SAVE;
+        FhApi.Saves.impl_get_system_mode(out FhSaveSystemMode? save_mode) && save_mode is FhSaveSystemMode.SAVE;
 
-    protected readonly SteppedScrollable _scrollable_saves = new(visible: 5);
-    protected readonly SteppedScrollable _scrollable_sets  = new(visible: 9);
+    protected readonly SteppedScrollable scrollable_saves = new(visible: 5);
+    protected readonly SteppedScrollable scrollable_sets  = new(visible: 9);
 
-    protected SteppedScrollable _current_scrollable;
+    protected SteppedScrollable current_scrollable;
 
-    protected bool     _scrollbar_dragging;
-    protected Vector2? _scrollbar_held_pos;
+    protected bool     scrollbar_dragging;
+    protected Vector2? scrollbar_held_pos;
 
     // We block input when fading out, for example so you can't requests two loads of a file.
     // We block input when fading in as well, but only for a short time to make the UI feel snappy.
-    protected bool is_fade_blocking_input => !(_fade.is_done || (_fade.color_to == COLOR_TRANS && _fade.progress > 0.3f));
-    protected bool should_handle_input    => !_scrollbar_dragging && !is_fade_blocking_input;
+    protected bool is_fade_blocking_input => !(fade.is_done || (fade.color_to == COLOR_TRANS && fade.progress > 0.3f));
+    protected bool should_handle_input    => !scrollbar_dragging && !is_fade_blocking_input;
 
     protected virtual uint sound_id_move       => FFX.Ids.SoundId.UI_ACTION;
     protected virtual uint sound_id_action     => FFX.Ids.SoundId.UI_ACTION;
@@ -93,9 +93,9 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
     protected virtual FhTexture[] textures => [];
 
     protected FhRuntimeSaveUiBase() {
-        _fade = new(0, 0, _fade_length);
+        fade = new(0, 0, fade_length);
 
-        _current_scrollable = _scrollable_saves;
+        current_scrollable = scrollable_saves;
     }
 
     public override bool init(FhModContext context, FileStream global_state) {
@@ -108,28 +108,28 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
 
     /// <summary>Initialize data when the UI is opened.</summary>
     private void post_open(EventArgs e) {
-        _mode  = UiMode .SAVE_LIST;
-        _focus = UiFocus.LIST;
+        mode  = UiMode .SAVE_LIST;
+        focus = UiFocus.LIST;
 
         try_load_textures();
 
-        _set_list.Clear();
-        _set_list.AddRange(FhApi.Saves.sets_enumerate());
+        set_list.Clear();
+        set_list.AddRange(FhApi.Saves.sets_enumerate());
 
         FhSaveSet set = FhApi.Saves.sets_get_active();
 
-        _scrollable_sets .max = _set_list.Count;
-        _scrollable_saves.max = is_saving
+        scrollable_sets .max = set_list.Count;
+        scrollable_saves.max = is_saving
             ? set.count + 1 - (set.has_autosave ? 1 : 0) // Add one for New Save Data button
             : set.count;
 
-        _fade.restart(COLOR_BLACK, COLOR_TRANS, _fade_length);
+        fade.restart(COLOR_BLACK, COLOR_TRANS, fade_length);
     }
 
     /// <summary>Clean-up data after the UI is closed.</summary>
     private void post_close(EventArgs e) {
-        _scrollable_saves.reset();
-        _scrollable_sets .reset();
+        scrollable_saves.reset();
+        scrollable_sets .reset();
 
         unload_textures(textures);
     }
@@ -147,10 +147,10 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
     /// <summary>Begin a fade-out.</summary>
     /// <param name="action">The action to end the fade-out with.</param>
     protected void fade_out(Action action) {
-        _fade.restart(
-            _fade.get_color(),
+        fade.restart(
+            fade.get_color(),
             COLOR_BLACK,
-            _fade_length * _fade.progress,
+            fade_length * fade.progress,
             action
         );
     }
@@ -160,16 +160,16 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
     protected float get_move_volume() {
         float min_volume = ACTION_VOLUME * 0.5f;
 
-        return min_volume + (1f - _audio_fade_helper.progress) * (1f - min_volume);
+        return min_volume + (1f - audio_fade_helper.progress) * (1f - min_volume);
     }
 
     /// <summary>Change the UI mode.</summary>
     /// <param name="new_mode">The UI mode to switch to.</param>
     protected void change_mode(UiMode new_mode) {
-        _scrollable_saves.reset();
-        _scrollable_sets .reset();
-        _focus = UiFocus.LIST;
-        _mode  = new_mode;
+        scrollable_saves.reset();
+        scrollable_sets .reset();
+        focus = UiFocus.LIST;
+        mode  = new_mode;
     }
 
     /// <summary>Change the active set to the one with the given name.</summary>
@@ -188,21 +188,21 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
     /// <summary>Attempt to load all of the textures the UI requires to display properly.</summary>
     /// <returns>Whether all textures have been successfully loaded.</returns>
     protected bool try_load_textures() {
-        _loaded_all_textures = true;
+        loaded_all_textures = true;
         foreach (FhTexture texture in textures) {
             if (!FhApi.Resources.load_texture(texture)) {
-                _loaded_all_textures = false;
+                loaded_all_textures = false;
             }
         }
 
-        return _loaded_all_textures;
+        return loaded_all_textures;
     }
 
     /// <summary>Unload all of the textures the UI requires to display properly.</summary>
     protected void unload_textures(Span<FhTexture> texture_list) {
         foreach (FhTexture texture in texture_list) {
             if (FhApi.Resources.unload_texture(texture))
-                _loaded_all_textures = false;
+                loaded_all_textures = false;
             else
                 _logger.Warning($"Failed to unload texture: {texture.path}");
         }
@@ -237,38 +237,38 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
     /// <summary>Handle input for the save and set lists.</summary>
     /// <returns>Whether input handling should be interrupted.</returns>
     protected bool handle_input_list() {
-        if (_mode == UiMode.SAVE_LIST) {
-            if (_scrollable_saves.max == 0) {
-                _focus = UiFocus.ACTIVE_SET;
+        if (mode == UiMode.SAVE_LIST) {
+            if (scrollable_saves.max == 0) {
+                focus = UiFocus.ACTIVE_SET;
                 return false;
             }
 
             if (FhApi.Gui.is_any_pressed(FhApi.Gui.keys_up)
-             && _current_scrollable.hovered == 0
+             && current_scrollable.hovered == 0
             ) {
                 FhApi.Audio.play_sound(sound_id_action, ACTION_VOLUME);
-                _focus = UiFocus.ACTIVE_SET;
+                focus = UiFocus.ACTIVE_SET;
                 return true;
             }
         }
 
-        int old_hovered = _current_scrollable.hovered;
+        int old_hovered = current_scrollable.hovered;
 
-        bool scrollable_input_held = _current_scrollable.handle_input();
+        bool scrollable_input_held = current_scrollable.handle_input();
 
-        if (_current_scrollable.hovered != old_hovered) {
+        if (current_scrollable.hovered != old_hovered) {
             FhApi.Audio.play_sound(sound_id_move, volume: get_move_volume());
-            _audio_fade_helper.tick(1f);
+            audio_fade_helper.tick(1f);
         }
 
         if (scrollable_input_held) {
-            _audio_fade_helper_restart = false;
+            audio_fade_helper_restart = false;
         }
 
         if (FhApi.Gui.is_any_pressed(FhApi.Gui.keys_confirm)) {
-            int hovered = _current_scrollable.hovered;
+            int hovered = current_scrollable.hovered;
 
-            if (_mode == UiMode.SAVE_LIST) {
+            if (mode == UiMode.SAVE_LIST) {
                 FhApi.Audio.play_sound(sound_id_action, ACTION_VOLUME);
 
                 if (is_saving && hovered == 0) {
@@ -283,10 +283,10 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
                 return true;
             }
 
-            if (_mode == UiMode.SET_SWAP) {
+            if (mode == UiMode.SET_SWAP) {
                 FhApi.Audio.play_sound(sound_id_set_switch);
 
-                string hovered_set = _set_list[hovered];
+                string hovered_set = set_list[hovered];
                 switch_set(hovered_set);
 
                 return true;
@@ -299,11 +299,11 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
     /// <summary>Handle input for the Change Set button</summary>
     /// <returns>Whether input handling should be interrupted.</returns>
     protected bool handle_input_change_set() {
-        if (_mode == UiMode.SAVE_LIST && FhApi.Gui.is_any_pressed(FhApi.Gui.keys_down) && _current_scrollable.max > 0) {
+        if (mode == UiMode.SAVE_LIST && FhApi.Gui.is_any_pressed(FhApi.Gui.keys_down) && current_scrollable.max > 0) {
             FhApi.Audio.play_sound(sound_id_action, ACTION_VOLUME);
 
-            _focus = UiFocus.LIST;
-            _current_scrollable.hovered = _current_scrollable.current;
+            focus = UiFocus.LIST;
+            current_scrollable.hovered = current_scrollable.current;
 
             return true;
         }
@@ -322,13 +322,13 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
     protected void handle_input() {
         if (!should_handle_input) return;
 
-        if (_focus == UiFocus.LIST       && handle_input_list())       return;
-        if (_focus == UiFocus.ACTIVE_SET && handle_input_change_set()) return;
+        if (focus == UiFocus.LIST       && handle_input_list())       return;
+        if (focus == UiFocus.ACTIVE_SET && handle_input_change_set()) return;
 
         if (FhApi.Gui.is_any_pressed(FhApi.Gui.keys_cancel)) {
             FhApi.Audio.play_sound(sound_id_cancel);
 
-            if (_mode == UiMode.SET_SWAP)
+            if (mode == UiMode.SET_SWAP)
                 change_mode(UiMode.SAVE_LIST);
             else
                 fade_out(() => FhApi.Saves.impl_abort());
@@ -340,21 +340,21 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
 
     /// <summary>Render the UI.</summary>
     protected internal override void render_ui() {
-        _current_scrollable = _mode switch {
-            UiMode.SET_SWAP => _scrollable_sets,
-            _               => _scrollable_saves,
+        current_scrollable = mode switch {
+            UiMode.SET_SWAP => scrollable_sets,
+            _               => scrollable_saves,
         };
 
         if (!try_load_textures()) return;
 
-        _audio_fade_helper_restart = true;
+        audio_fade_helper_restart = true;
 
         handle_input();
 
         ui_background();
         ui_help();
 
-        if (_mode == UiMode.SET_SWAP) {
+        if (mode == UiMode.SET_SWAP) {
             ui_setlist();
         }
         else {
@@ -367,8 +367,8 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
 
         ui_fade();
 
-        if (_audio_fade_helper_restart) {
-            _audio_fade_helper.restart();
+        if (audio_fade_helper_restart) {
+            audio_fade_helper.restart();
         }
     }
 
@@ -484,14 +484,14 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
     /// <param name="icon_bounds">The bounds of the map icon.</param>
     protected abstract void ui_newdata(Rect save_bounds, Rect icon_bounds);
 
-    /// <summary>Render a full-screen fade as provided by <see cref="_fade"/>.</summary>
+    /// <summary>Render a full-screen fade as provided by <see cref="fade"/>.</summary>
     protected virtual void ui_fade() {
-        if (_fade.is_done) return;
+        if (fade.is_done) return;
 
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
-        draw.AddRectFilled(Vector2.Zero, FhApi.Gui.display_size, _fade.get_color());
+        draw.AddRectFilled(Vector2.Zero, FhApi.Gui.display_size, fade.get_color());
 
-        _fade.tick(ImGui.GetIO().DeltaTime);
+        fade.tick(ImGui.GetIO().DeltaTime);
     }
 
     /// <summary>Render the scrollbar.</summary>
@@ -653,21 +653,21 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
         float expanded_track_height = scrollable_track_height + (scaled_track.size.X - scaled_thumb.size.X);
 
         if (mouse_clicked(expanded_thumb)) {
-            _scrollbar_dragging = true;
-            _scrollbar_held_pos = ImGui.GetMousePos() - expanded_thumb.pos;
+            scrollbar_dragging = true;
+            scrollbar_held_pos = ImGui.GetMousePos() - expanded_thumb.pos;
         }
 
-        if (_scrollbar_dragging) {
+        if (scrollbar_dragging) {
             Vector2 new_held_pos = ImGui.GetMousePos() - expanded_thumb.pos;
 
-            float drag_delta     = new_held_pos.Y - _scrollbar_held_pos!.Value.Y;
+            float drag_delta     = new_held_pos.Y - scrollbar_held_pos!.Value.Y;
             float progress_delta = drag_delta / expanded_track_height;
 
             scrollable.set_progress(progress + progress_delta, true);
 
             if (ImGui.IsMouseReleased(ImGuiMouseButton.Left)) {
-                _scrollbar_dragging = false;
-                _scrollbar_held_pos = null;
+                scrollbar_dragging = false;
+                scrollbar_held_pos = null;
             }
 
             return;
@@ -675,14 +675,14 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
 
         if (mouse_clicked(triangle_top, repeat: true)) {
             FhApi.Audio.play_sound(sound_id_move, volume: get_move_volume());
-            _audio_fade_helper.tick(1f);
+            audio_fade_helper.tick(1f);
 
             scrollable.move_hover(-1);
         }
 
         if (mouse_clicked(triangle_bottom, repeat: true)) {
             FhApi.Audio.play_sound(sound_id_move, volume: get_move_volume());
-            _audio_fade_helper.tick(1f);
+            audio_fade_helper.tick(1f);
 
             scrollable.move_hover(1);
         }
@@ -690,7 +690,7 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
         if ((mouse_hovered(triangle_top, false) || mouse_hovered(triangle_bottom, false))
          && ImGui.IsMouseDown(ImGuiMouseButton.Left)
            ) {
-            _audio_fade_helper_restart = false;
+            audio_fade_helper_restart = false;
         }
     }
 }

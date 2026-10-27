@@ -162,7 +162,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
             return;
         }
 
-        if (!FhApi.Saves.impl_get_system_mode(out FhSaveSystemMode? system_mode)) {
+        if (!FhApi.Saves.impl_get_system_mode(out FhSaveSystemMode? save_mode)) {
             return;
         }
 
@@ -223,14 +223,14 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
             title_tuv.p1
         );
 
-        string text_key = _mode switch {
+        string text_key = mode switch {
             UiMode.SET_SWAP => "help.set",
 
             UiMode.SAVE_LIST  or
-                UiMode.SAVE_POPUP => system_mode switch {
+            UiMode.SAVE_POPUP => save_mode switch {
                     FhSaveSystemMode.SAVE => "help.save",
                     FhSaveSystemMode.LOAD or
-                        FhSaveSystemMode.ALBD => "help.load",
+                    FhSaveSystemMode.ALBD => "help.load",
 
                     //TODO-C#16: Remove this, since FhSaveSystemMode should be a `closed enum`.
                     _ => throw new UnreachableException(),
@@ -420,9 +420,9 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
 
         UV bg_suv = bg_screen.as_uv();
 
-        if (mouse_hovered(bg_screen) && _focus != UiFocus.ACTIVE_SET) {
+        if (mouse_hovered(bg_screen) && focus != UiFocus.ACTIVE_SET) {
             FhApi.Audio.play_sound(sound_id_action, ACTION_VOLUME);
-            _focus = UiFocus.ACTIVE_SET;
+            focus = UiFocus.ACTIVE_SET;
         }
 
         draw.AddRectFilled(
@@ -479,7 +479,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
             text_config with { align = Alignment2D.CENTER }
         );
 
-        if (_focus == UiFocus.ACTIVE_SET) {
+        if (focus == UiFocus.ACTIVE_SET) {
             float text_left   = text_pos.X - text_size.X / 2f;
             float text_margin = 33f * aspect_scale.X;
 
@@ -500,7 +500,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
     protected override void ui_set(FhSaveSet set, int global_idx, int local_idx) {
         if (!_texture_plate.try_use(out ImTextureRef plate, out FhTextureMetadata? plate_meta)) return;
 
-        int start_idx = _scrollable_sets.get_clip_start();
+        int start_idx = scrollable_sets.get_clip_start();
 
         // Texture coordinates
         float slice_size  = 64f;
@@ -537,15 +537,15 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
         ImGuiIOPtr    io   = ImGui.GetIO();
 
         if (mouse_hovered(button_scaled)) {
-            if (_focus != UiFocus.LIST || _scrollable_sets.hovered != global_idx) {
+            if (focus != UiFocus.LIST || scrollable_sets.hovered != global_idx) {
                 FhApi.Audio.play_sound(sound_id_action, ACTION_VOLUME);
             }
 
-            _focus = UiFocus.LIST;
-            _scrollable_sets.hovered = global_idx;
+            focus = UiFocus.LIST;
+            scrollable_sets.hovered = global_idx;
         }
 
-        bool hovering = _scrollable_sets.hovered == global_idx;
+        bool hovering = scrollable_sets.hovered == global_idx;
 
         // Shadows behind slots
         Vector2 shadow_offset = 10f * aspect_scale;
@@ -634,13 +634,13 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
     }
 
     protected override void ui_setlist() {
-        if (_mode != UiMode.SET_SWAP) return;
+        if (mode != UiMode.SET_SWAP) return;
 
-        int start_idx = _scrollable_sets.get_clip_start();
-        int end_idx   = _scrollable_sets.get_clip_end();
+        int start_idx = scrollable_sets.get_clip_start();
+        int end_idx   = scrollable_sets.get_clip_end();
 
         for (int set_idx = start_idx; set_idx < end_idx; set_idx++) {
-            string set_name = _set_list[set_idx];
+            string set_name = set_list[set_idx];
 
             if (!FhApi.Saves.sets_get(set_name, out FhSaveSet? set))
                 continue;
@@ -652,7 +652,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
     protected override void ui_savelist() {
         FhSaveSet set = FhApi.Saves.sets_get_active();
 
-        _scrollable_saves.max = is_saving
+        scrollable_saves.max = is_saving
             ? set.count + 1 - (set.has_autosave ? 1 : 0) // Add one for New Save Data button
             : set.count;
 
@@ -661,8 +661,8 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
             return;
         }
 
-        int start = _scrollable_saves.get_clip_start();
-        int end   = _scrollable_saves.get_clip_end();
+        int start = scrollable_saves.get_clip_start();
+        int end   = scrollable_saves.get_clip_end();
 
         int ui_data_start = is_saving && set.has_autosave ? 1 : 0;
 
@@ -771,12 +771,12 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
 
         // We set the hovered state early to potentially use it later.
         if (mouse_hovered(save_outer_bounds.scale_to_aspect(aspect_helper))) {
-            if (_focus != UiFocus.LIST || _scrollable_saves.hovered != global_idx) {
+            if (focus != UiFocus.LIST || scrollable_saves.hovered != global_idx) {
                 FhApi.Audio.play_sound(sound_id_action, ACTION_VOLUME);
             }
 
-            _focus = UiFocus.LIST;
-            _scrollable_saves.hovered = global_idx;
+            focus = UiFocus.LIST;
+            scrollable_saves.hovered = global_idx;
         }
 
         /* ===== Plate Texture ===== */
@@ -916,7 +916,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
             ui_save_details(save, save_bounds, header_bounds, info_bounds, map_bounds);
 
         /* ===== Cursor ===== */
-        if (_focus == UiFocus.LIST && _scrollable_saves.hovered == global_idx) {
+        if (focus == UiFocus.LIST && scrollable_saves.hovered == global_idx) {
             Vector2 cursor_target = save_outer_bounds.left;
             cursor_target.Y += 28f;
 
@@ -1433,7 +1433,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
         float triangle_gap = 13f;
 
         ui_scrollbar(
-            _current_scrollable,
+            current_scrollable,
             track_bounds,
             triangle_gap
         );

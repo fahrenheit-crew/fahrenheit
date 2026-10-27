@@ -80,7 +80,7 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
             return;
         }
 
-        if (!FhApi.Saves.impl_get_system_mode(out FhSaveSystemMode? system_mode)) {
+        if (!FhApi.Saves.impl_get_system_mode(out FhSaveSystemMode? save_mode)) {
             return;
         }
 
@@ -113,11 +113,11 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
 
         draw.AddImage(meswin, title_suv.p0, title_suv.p1, title_tuv.p0, title_tuv.p1);
 
-        string text_key = _mode switch {
+        string text_key = mode switch {
             UiMode.SET_SWAP => "help.set",
 
             UiMode.SAVE_LIST  or
-            UiMode.SAVE_POPUP => system_mode switch {
+            UiMode.SAVE_POPUP => save_mode switch {
                 FhSaveSystemMode.SAVE => "help.save",
                 FhSaveSystemMode.LOAD or
                 FhSaveSystemMode.ALBD => "help.load",
@@ -256,9 +256,9 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
 
         UV bg_suv = bg_screen.as_uv();
 
-        if (mouse_hovered(bg_screen) && _focus != UiFocus.ACTIVE_SET) {
+        if (mouse_hovered(bg_screen) && focus != UiFocus.ACTIVE_SET) {
             FhApi.Audio.play_sound(sound_id_action, ACTION_VOLUME);
-            _focus = UiFocus.ACTIVE_SET;
+            focus = UiFocus.ACTIVE_SET;
         }
 
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
@@ -275,7 +275,7 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
             text_config with { align = Alignment2D.CENTER }
         );
 
-        if (_focus == UiFocus.ACTIVE_SET) {
+        if (focus == UiFocus.ACTIVE_SET) {
             float text_left   = text_pos.X - text_size.X / 2f;
             float text_margin = 40f * aspect_scale.X;
 
@@ -336,15 +336,15 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
         ImGuiIOPtr    io   = ImGui.GetIO();
 
         if (mouse_hovered(button_scaled)) {
-            if (_focus != UiFocus.LIST || _scrollable_sets.hovered != global_idx) {
+            if (focus != UiFocus.LIST || scrollable_sets.hovered != global_idx) {
                 FhApi.Audio.play_sound(sound_id_action, ACTION_VOLUME);
             }
 
-            _focus = UiFocus.LIST;
-            _scrollable_sets.hovered = global_idx;
+            focus = UiFocus.LIST;
+            scrollable_sets.hovered = global_idx;
         }
 
-        bool hovering = _scrollable_sets.hovered == global_idx;
+        bool hovering = scrollable_sets.hovered == global_idx;
 
         draw.AddImage(
             summonbg,
@@ -410,13 +410,13 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
     }
 
     protected override void ui_setlist() {
-        if (_mode != UiMode.SET_SWAP) return;
+        if (mode != UiMode.SET_SWAP) return;
 
-        int start_idx = _scrollable_sets.get_clip_start();
-        int end_idx   = _scrollable_sets.get_clip_end();
+        int start_idx = scrollable_sets.get_clip_start();
+        int end_idx   = scrollable_sets.get_clip_end();
 
         for (int set_idx = start_idx; set_idx < end_idx; set_idx++) {
-            string set_name = _set_list[set_idx];
+            string set_name = set_list[set_idx];
 
             if (!FhApi.Saves.sets_get(set_name, out FhSaveSet? set))
                 continue;
@@ -428,7 +428,7 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
     protected override void ui_savelist() {
         FhSaveSet set = FhApi.Saves.sets_get_active();
 
-        _scrollable_saves.max = is_saving
+        scrollable_saves.max = is_saving
             ? set.count + 1 - (set.has_autosave ? 1 : 0) // Add one for New Save Data button
             : set.count;
 
@@ -437,8 +437,8 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
             return;
         }
 
-        int start = _scrollable_saves.get_clip_start();
-        int end   = _scrollable_saves.get_clip_end();
+        int start = scrollable_saves.get_clip_start();
+        int end   = scrollable_saves.get_clip_end();
 
         int ui_data_start = is_saving && set.has_autosave ? 1 : 0;
 
@@ -463,11 +463,11 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
             return;
         }
 
-        if (!FhApi.Saves.impl_get_system_mode(out FhSaveSystemMode? system_mode)) {
+        if (!FhApi.Saves.impl_get_system_mode(out FhSaveSystemMode? save_mode)) {
             return;
         }
 
-        string message_key =  system_mode switch {
+        string message_key = save_mode switch {
             FhSaveSystemMode.ALBD => "popup.no_save_data",
             FhSaveSystemMode.LOAD => "popup.no_save_data.menu",
 
@@ -544,12 +544,12 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
 
         // We set the hovered state early to potentially use it later.
         if (mouse_hovered(save_outer_bounds.scale_to_aspect(aspect_helper))) {
-            if (_focus != UiFocus.LIST || _scrollable_saves.hovered != global_idx) {
+            if (focus != UiFocus.LIST || scrollable_saves.hovered != global_idx) {
                 FhApi.Audio.play_sound(sound_id_action, ACTION_VOLUME);
             }
 
-            _focus = UiFocus.LIST;
-            _scrollable_saves.hovered = global_idx;
+            focus = UiFocus.LIST;
+            scrollable_saves.hovered = global_idx;
         }
 
         /* ===== Autosave Background ===== */
@@ -653,7 +653,7 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
             ui_save_details(save, save_bounds, header_bounds, info_bounds, map_bounds);
 
         /* ===== Cursor ===== */
-        if (_focus == UiFocus.LIST && _scrollable_saves.hovered == global_idx) {
+        if (focus == UiFocus.LIST && scrollable_saves.hovered == global_idx) {
             Rect save_rect_scaled = save_outer_bounds.scale_to_aspect(aspect_helper);
 
             Vector2 cursor_target = save_rect_scaled.left with {
@@ -1164,7 +1164,7 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
         float triangle_gap = 15f;
 
         ui_scrollbar(
-            _current_scrollable,
+            current_scrollable,
             track_bounds,
             triangle_gap
         );

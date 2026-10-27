@@ -18,8 +18,6 @@ namespace Fahrenheit.Runtime.Gui;
 /// <summary>The default save UI renderer for Final Fantasy X.</summary>
 [FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
 public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
-    private readonly FhTexture _texture_map_icon_default = new(Path.Join(DIR_X_MAP_ICONS, "0.png"), FhTextureType.GAME);
-
     private readonly FhTexture _texture_bg           = new(Path.Join(DIR_X_MENU, "ffx_bg.dds.phyre"),        FhTextureType.GAME_PHYRE_2D);
     private readonly FhTexture _texture_help         = new(Path.Join(DIR_X_HIKU, "0_0_512_448_0.dds.phyre"), FhTextureType.GAME_PHYRE_2D);
     private readonly FhTexture _texture_battle_kuang = new(Path.Join(DIR_X_MENU, "battle_kuang.dds.phyre"),  FhTextureType.GAME_PHYRE_2D);
@@ -27,17 +25,11 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
     private readonly FhTexture _texture_meswin       = new(Path.Join(DIR_X_MENU, "meswin.dds.phyre"),        FhTextureType.GAME_PHYRE_2D);
     private readonly FhTexture _texture_summonbg     = new(Path.Join(DIR_X_MENU, "summonbg.dds.phyre"),      FhTextureType.GAME_PHYRE_2D);
 
-    private readonly Vector2 _tex_map_icon_size  = new(310f, 210f);
-
-    private readonly Vector2 _tex_meswin_size       = new(1024f, 1024f);
-
-    private readonly FhTexture _texture_ffx2_face_icon_default = new(Path.Join(DIR_X2_FACE_DATA, "mface_000.dds.phyre"), FhTextureType.GAME_PHYRE_2D);
-    private readonly FhTexture _texture_ffx2_map_icon_default  = new(Path.Join(DIR_X2_MAP_ICONS, "logo_j.png"),          FhTextureType.GAME);
+    private readonly Vector2 _tex_meswin_size = new(1024f, 1024f);
 
     private readonly FhTexture _texture_freetex = new(Path.Join(DIR_X2_MENU, "freetex.dds.phyre"), FhTextureType.GAME_PHYRE_2D);
 
-    private readonly Vector2 _tex_ffx2_face_size     = new(256f, 256f);
-    private readonly Vector2 _tex_ffx2_map_icon_size = new(320f, 176f);
+    private readonly Vector2 _tex_ffx2_face_size = new(256f, 256f);
 
     protected override FhTexture[] textures => [
         _texture_bg,
@@ -47,9 +39,6 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
         _texture_meswin,
         _texture_summonbg,
         _texture_freetex,
-
-        // _texture_map_icon_default,
-        _texture_ffx2_face_icon_default,
     ];
 
     private readonly NineSliceHelper  _savefile_border_helper;

@@ -18,9 +18,6 @@ namespace Fahrenheit.Runtime.Gui;
 /// <summary>The default save UI renderer for Final Fantasy X-2/Last Mission.</summary>
 [FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
 public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
-    private readonly FhTexture _texture_face_icon_default = new(Path.Join(DIR_X2_FACE_DATA, "mface_000.dds.phyre"), FhTextureType.GAME_PHYRE_2D);
-    private readonly FhTexture _texture_map_icon_default  = new(Path.Join(DIR_X2_MAP_ICONS, "logo_j.png"),          FhTextureType.GAME);
-
     private readonly FhTexture _texture_menuback = new(Path.Join(DIR_X2_MENU,    "menuback.dds.phyre"),             FhTextureType.GAME_PHYRE_2D);
     private readonly FhTexture _texture_black0   = new(Path.Join(DIR_X2_PLATE,   "black0.dds.phyre"),               FhTextureType.GAME_PHYRE_2D);
     private readonly FhTexture _texture_mahojin  = new(Path.Join(DIR_X2_MAHOJIN, "14336_19_0_0_512_512.dds.phyre"), FhTextureType.GAME_PHYRE_2D);
@@ -28,12 +25,9 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
     private readonly FhTexture _texture_freetex  = new(Path.Join(DIR_X2_MENU,    "freetex.dds.phyre"),              FhTextureType.GAME_PHYRE_2D);
     private readonly FhTexture _texture_x2_bg    = new(Path.Join(DIR_X2_MENU,    "x2_bg.dds.phyre"),                FhTextureType.GAME_PHYRE_2D);
 
+    private readonly Vector2 _tex_face_size = new(256f, 256f);
+
     private readonly FhTexture _texture_ffx_faces = new(Path.Join(DIR_X_MENU, "face_ply.dds.phyre"), FhTextureType.GAME_PHYRE_2D);
-
-    private readonly Vector2 _tex_face_size     = new(256f, 256f);
-    private readonly Vector2 _tex_map_icon_size = new(320f, 176f);
-
-    private readonly Vector2 _tex_ffx_faces_size = new(1024f, 512f);
 
     protected override FhTexture[] textures => [
         _texture_menuback,
@@ -43,9 +37,6 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
         _texture_freetex,
         _texture_x2_bg,
         _texture_ffx_faces,
-
-        _texture_face_icon_default,
-        // _texture_map_icon_default,
     ];
 
     /// <summary>Draws the highlights/shadows for the X-2 plate texture.</summary>
@@ -1094,7 +1085,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
             face_tuvs[i] = new UV(
                 new(x1, y1),
                 new(x2, y2)
-            ).map_to(_tex_ffx_faces_size);
+            ).map_to(faces_meta.size);
         }
 
         Rect face = new() {

@@ -146,7 +146,7 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
         FhSaveSet set = FhApi.Saves.sets_get_active();
 
         string save_text = set.has_autosave
-            ? localize("save_count.separator") + localize("save_count.saves")
+            ? $"{localize("save_count.separator")}{localize("save_count.saves")}"
             : localize("save_count.saves");
 
         save_text = string.Format(

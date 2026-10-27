@@ -410,45 +410,79 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
     /// <param name="local_idx">The index of the save on screen.</param>
     protected abstract void ui_save(FhSaveUiData save, int global_idx, int local_idx);
 
-    /// <summary>Render details for a given FFX save.</summary>
+    /// <summary>Render details for a given save.</summary>
     /// <param name="save">The save to render details for.</param>
     /// <param name="save_bounds">The inner bounds of the save.</param>
     /// <param name="header_bounds">The bounds to fit the header details in.</param>
     /// <param name="info_bounds">The bounds to fit the info details in.</param>
-    protected abstract void ui_save_details_x(
+    /// <param name="map_bounds">The bounds to fit the map icon in.</param>
+    protected abstract void ui_save_details(
         FhSaveUiData save,
+
         Rect save_bounds,
         Rect header_bounds,
-        Rect info_bounds
+        Rect info_bounds,
+        Rect map_bounds
     );
 
-    /// <summary>Render details for a given FFX-2 save.</summary>
-    /// <param name="save">The save to render details for.</param>
-    /// <param name="save_bounds">The inner bounds of the save.</param>
-    /// <param name="header_bounds">The bounds to fit the header details in.</param>
-    /// <param name="info_bounds">The bounds to fit the info details in.</param>
-    protected abstract void ui_save_details_x2(
+    /// <summary>Render party icons for a given FFX save.</summary>
+    /// <param name="save">The save to render party icons for.</param>
+    /// <param name="bounds">The bounds to fit the party icons in.</param>
+    /// <param name="face_size">The size of a single party icon.</param>
+    /// <param name="face_gap">The gap between each party icon.</param>
+    protected abstract void ui_save_faces_x(
         FhSaveUiData save,
-        Rect save_bounds,
-        Rect header_bounds,
-        Rect info_bounds
+
+        Rect    bounds,
+        Vector2 face_size,
+        float   face_gap
     );
 
-    /// <summary>Render details for a given FFX-2 LAST MISSION save.</summary>
-    /// <param name="save">The save to render details for.</param>
-    /// <param name="save_bounds">The inner bounds of the save.</param>
-    /// <param name="header_bounds">The bounds to fit the header details in.</param>
-    /// <param name="info_bounds">The bounds to fit the info details in.</param>
-    protected abstract void ui_save_details_lm(
+    /// <summary>Render party icons for a given FFX-2 save.</summary>
+    /// <param name="save">The save to render party icons for.</param>
+    /// <param name="bounds">The bounds to fit the party icons in.</param>
+    /// <param name="face_size">The size of a single party icon.</param>
+    /// <param name="face_gap">The gap between each party icon.</param>
+    protected abstract void ui_save_faces_x2(
         FhSaveUiData save,
-        Rect save_bounds,
-        Rect header_bounds,
-        Rect info_bounds
+
+        Rect    bounds,
+        Vector2 face_size,
+        float   face_gap
     );
+
+    /// <summary>Render party icons for a given FFX-2 LAST MISSION save.</summary>
+    /// <param name="save">The save to render party icons for.</param>
+    /// <param name="bounds">The bounds to fit the party icons in.</param>
+    /// <param name="face_size">The size of a single party icon.</param>
+    /// <param name="face_gap">The gap between each party icon.</param>
+    protected abstract void ui_save_faces_lm(
+        FhSaveUiData save,
+
+        Rect    bounds,
+        Vector2 face_size,
+        float   face_gap
+    );
+
+    /// <summary>Render info text for a given FFX save.</summary>
+    /// <param name="save">The save to render info text for.</param>
+    /// <param name="bounds">The bounds to fit the info text in.</param>
+    protected abstract void ui_save_info_x (FhSaveUiData save, Rect bounds);
+
+    /// <summary>Render info text for a given FFX-2 save.</summary>
+    /// <param name="save">The save to render info text for.</param>
+    /// <param name="bounds">The bounds to fit the info text in.</param>
+    protected abstract void ui_save_info_x2(FhSaveUiData save, Rect bounds);
+
+    /// <summary>Render info text for a given FFX-2 LAST MISSION save.</summary>
+    /// <param name="save">The save to render info text for.</param>
+    /// <param name="bounds">The bounds to fit the info text in.</param>
+    protected abstract void ui_save_info_lm(FhSaveUiData save, Rect bounds);
 
     /// <summary>Render the New Save Data button.</summary>
-    /// <param name="bounds">The desired bounds of the button.</param>
-    protected abstract void ui_newdata(Rect bounds);
+    /// <param name="save_bounds">The bounds of the New Save Data button.</param>
+    /// <param name="icon_bounds">The bounds of the map icon.</param>
+    protected abstract void ui_newdata(Rect save_bounds, Rect icon_bounds);
 
     /// <summary>Render a full-screen fade as provided by <see cref="_fade"/>.</summary>
     protected virtual void ui_fade() {

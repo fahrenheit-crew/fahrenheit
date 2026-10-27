@@ -319,7 +319,7 @@ public unsafe class FhGui {
     /// <param name="text">The text to be drawn.</param>
     /// <param name="config">The configuration to draw the text with.</param>
     public void draw_text(
-        string text,
+        string         text,
         DrawTextConfig config
     ) {
         Vector2 position = ImGui.GetContentRegionAvail();
@@ -367,20 +367,15 @@ public unsafe class FhGui {
     /// <param name="draw_list">The draw list to add the text to.</param>
     /// <param name="position">The position to draw the text at.</param>
     /// <param name="text">The text to be drawn.</param>
-    /// <param name="font_size">The font size to draw the text at.</param>
-    /// <param name="draw_shadow">Whether a shadow should be drawn under the text.</param>
-    /// <param name="align">The alignment of the text relative to the position.</param>
-    /// <param name="color">The color to draw the text using in the format <c>0xAABBGGRR</c>, i.e. RGBA8.</param>
+    /// <param name="config">The configuration to draw the text with.</param>
     /// <returns>The size of the drawn text.</returns>
     /// <seealso cref="ImGui.GetWindowDrawList()"/>
     /// <seealso cref="ImGui.GetBackgroundDrawList()"/>
     /// <seealso cref="ImGui.GetForegroundDrawList()"/>
     public Vector2 draw_text(
-        ImDrawListPtr draw_list,
-
-        Vector2 position,
-        string  text,
-
+        ImDrawListPtr  draw_list,
+        Vector2        position,
+        string         text,
         DrawTextConfig config
     ) {
         ImGui.PushFont(null, config.font_size);
@@ -480,9 +475,8 @@ public unsafe class FhGui {
     }
 
     private void draw_rectangle_gradient_up(
-        ImDrawListPtr draw_list,
-        Rect          bounds,
-
+        ImDrawListPtr              draw_list,
+        Rect                       bounds,
         ReadOnlySpan<GradientStep> steps
     ) {
         for (int i = 1; i < steps.Length; i++)  {
@@ -508,9 +502,8 @@ public unsafe class FhGui {
     }
 
     private void draw_rectangle_gradient_right(
-        ImDrawListPtr draw_list,
-        Rect          bounds,
-
+        ImDrawListPtr              draw_list,
+        Rect                       bounds,
         ReadOnlySpan<GradientStep> steps
     ) {
         for (int i = 1; i < steps.Length; i++)  {
@@ -536,9 +529,8 @@ public unsafe class FhGui {
     }
 
     private void draw_rectangle_gradient_down(
-        ImDrawListPtr draw_list,
-        Rect          bounds,
-
+        ImDrawListPtr              draw_list,
+        Rect                       bounds,
         ReadOnlySpan<GradientStep> steps
     ) {
         for (int i = 1; i < steps.Length; i++)  {
@@ -564,9 +556,8 @@ public unsafe class FhGui {
     }
 
     private void draw_rectangle_gradient_left(
-        ImDrawListPtr draw_list,
-        Rect          bounds,
-
+        ImDrawListPtr              draw_list,
+        Rect                       bounds,
         ReadOnlySpan<GradientStep> steps
     ) {
         for (int i = 1; i < steps.Length; i++)  {
@@ -592,9 +583,8 @@ public unsafe class FhGui {
     }
 
     public void draw_rectangle_gradient(
-        ImDrawListPtr draw_list,
-        Rect          bounds,
-
+        ImDrawListPtr              draw_list,
+        Rect                       bounds,
         GradientDirection          direction,
         ReadOnlySpan<GradientStep> steps
     ) {

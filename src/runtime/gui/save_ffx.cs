@@ -75,8 +75,7 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
     }
 
     protected override void ui_help() {
-        if (
-            !_texture_help.try_use(out ImTextureRef help, out FhTextureMetadata? help_meta)
+        if (!_texture_help     .try_use(out ImTextureRef help,   out FhTextureMetadata? help_meta)
             || !_texture_meswin.try_use(out ImTextureRef meswin, out FhTextureMetadata? meswin_meta)
         ) {
             return;
@@ -674,10 +673,10 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
 
     protected override void ui_save_details(
         FhSaveUiData save,
-        Rect save_bounds,
-        Rect header_bounds,
-        Rect info_bounds,
-        Rect map_bounds
+        Rect         save_bounds,
+        Rect         header_bounds,
+        Rect         info_bounds,
+        Rect         map_bounds
     ) {
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
@@ -796,13 +795,11 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
 
     protected override void ui_save_faces_x(
         FhSaveUiData save,
-
-        Rect    bounds,
-        Vector2 face_size,
-        float   face_gap
+        Rect         bounds,
+        Vector2      face_size,
+        float        face_gap
     ) {
-        if (
-            !_texture_faces_ply.try_use(out ImTextureRef faces_ply, out FhTextureMetadata? faces_ply_meta)
+        if (!_texture_faces_ply   .try_use(out ImTextureRef faces_ply, out FhTextureMetadata? faces_ply_meta)
             || !_texture_faces_smn.try_use(out ImTextureRef faces_smn, out FhTextureMetadata? faces_smn_meta)
         ) {
             return;
@@ -865,10 +862,9 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
 
     protected override void ui_save_faces_x2(
         FhSaveUiData save,
-
-        Rect    bounds,
-        Vector2 face_size,
-        float   face_gap
+        Rect         bounds,
+        Vector2      face_size,
+        float        face_gap
     ) {
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
@@ -919,10 +915,9 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
 
     protected override void ui_save_faces_lm(
         FhSaveUiData save,
-
-        Rect    bounds,
-        Vector2 face_size,
-        float   face_gap
+        Rect         bounds,
+        Vector2      face_size,
+        float        face_gap
     ) {
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 

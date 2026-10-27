@@ -418,11 +418,10 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
     /// <param name="map_bounds">The bounds to fit the map icon in.</param>
     protected abstract void ui_save_details(
         FhSaveUiData save,
-
-        Rect save_bounds,
-        Rect header_bounds,
-        Rect info_bounds,
-        Rect map_bounds
+        Rect         save_bounds,
+        Rect         header_bounds,
+        Rect         info_bounds,
+        Rect         map_bounds
     );
 
     /// <summary>Render party icons for a given FFX save.</summary>
@@ -432,10 +431,9 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
     /// <param name="face_gap">The gap between each party icon.</param>
     protected abstract void ui_save_faces_x(
         FhSaveUiData save,
-
-        Rect    bounds,
-        Vector2 face_size,
-        float   face_gap
+        Rect         bounds,
+        Vector2      face_size,
+        float        face_gap
     );
 
     /// <summary>Render party icons for a given FFX-2 save.</summary>
@@ -445,10 +443,9 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
     /// <param name="face_gap">The gap between each party icon.</param>
     protected abstract void ui_save_faces_x2(
         FhSaveUiData save,
-
-        Rect    bounds,
-        Vector2 face_size,
-        float   face_gap
+        Rect         bounds,
+        Vector2      face_size,
+        float        face_gap
     );
 
     /// <summary>Render party icons for a given FFX-2 LAST MISSION save.</summary>
@@ -458,10 +455,9 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
     /// <param name="face_gap">The gap between each party icon.</param>
     protected abstract void ui_save_faces_lm(
         FhSaveUiData save,
-
-        Rect    bounds,
-        Vector2 face_size,
-        float   face_gap
+        Rect         bounds,
+        Vector2      face_size,
+        float        face_gap
     );
 
     /// <summary>Render info text for a given FFX save.</summary>
@@ -503,8 +499,8 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
     /// <param name="triangle_gap">The gap between the scrollbar's track and its arrows.</param>
     protected virtual void ui_scrollbar(
         SteppedScrollable scrollable,
-        Rect track_bounds,
-        float triangle_gap
+        Rect              track_bounds,
+        float             triangle_gap
     ) {
         if (scrollable.max <= scrollable.visible) {
             return;

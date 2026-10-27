@@ -73,10 +73,9 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
     }
 
     protected override void ui_background() {
-        if (
-            !_texture_menuback.try_use(out ImTextureRef menuback, out FhTextureMetadata? menuback_meta)
-            || !_texture_mahojin.try_use(out ImTextureRef mahojin, out FhTextureMetadata? mahojin_meta)
-            || !_texture_black0.try_use(out ImTextureRef black0, out FhTextureMetadata? black0_meta)
+        if (!_texture_menuback  .try_use(out ImTextureRef menuback, out FhTextureMetadata? menuback_meta)
+            || !_texture_mahojin.try_use(out ImTextureRef mahojin,  out FhTextureMetadata? mahojin_meta)
+            || !_texture_black0 .try_use(out ImTextureRef black0,   out FhTextureMetadata? black0_meta)
         ) {
             return;
         }
@@ -230,13 +229,13 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
 
             UiMode.SAVE_LIST  or
             UiMode.SAVE_POPUP => save_mode switch {
-                    FhSaveSystemMode.SAVE => "help.save",
-                    FhSaveSystemMode.LOAD or
-                    FhSaveSystemMode.ALBD => "help.load",
+                FhSaveSystemMode.SAVE => "help.save",
+                FhSaveSystemMode.LOAD or
+                FhSaveSystemMode.ALBD => "help.load",
 
-                    //TODO-C#16: Remove this, since FhSaveSystemMode should be a `closed enum`.
-                    _ => throw new UnreachableException(),
-                },
+                //TODO-C#16: Remove this, since FhSaveSystemMode should be a `closed enum`.
+                _ => throw new UnreachableException(),
+            },
 
             _ => throw new NotImplementedException(),
         };
@@ -934,11 +933,10 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
 
     protected override void ui_save_details(
         FhSaveUiData save,
-
-        Rect save_bounds,
-        Rect header_bounds,
-        Rect info_bounds,
-        Rect map_bounds
+        Rect         save_bounds,
+        Rect         header_bounds,
+        Rect         info_bounds,
+        Rect         map_bounds
     ) {
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
@@ -1064,13 +1062,11 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
 
     protected override void ui_save_faces_x(
         FhSaveUiData save,
-
-        Rect    bounds,
-        Vector2 face_size,
-        float   face_gap
+        Rect         bounds,
+        Vector2      face_size,
+        float        face_gap
     ) {
-        if (
-            !_texture_ffx_faces_ply.try_use(out ImTextureRef faces_ply, out FhTextureMetadata? faces_ply_meta)
+        if (!_texture_ffx_faces_ply   .try_use(out ImTextureRef faces_ply, out FhTextureMetadata? faces_ply_meta)
             || !_texture_ffx_faces_smn.try_use(out ImTextureRef faces_smn, out FhTextureMetadata? faces_smn_meta)
         ) {
             return;
@@ -1133,10 +1129,9 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
 
     protected override void ui_save_faces_x2(
         FhSaveUiData save,
-
-        Rect    bounds,
-        Vector2 face_size,
-        float   face_gap
+        Rect         bounds,
+        Vector2      face_size,
+        float        face_gap
     ) {
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
@@ -1187,10 +1182,9 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
 
     protected override void ui_save_faces_lm(
         FhSaveUiData save,
-
-        Rect    bounds,
-        Vector2 face_size,
-        float   face_gap
+        Rect         bounds,
+        Vector2      face_size,
+        float        face_gap
     ) {
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 

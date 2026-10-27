@@ -497,6 +497,22 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
         }
     }
 
+    protected override void ui_setlist() {
+        if (mode != UiMode.SET_SWAP) return;
+
+        int start_idx = scrollable_sets.get_clip_start();
+        int end_idx   = scrollable_sets.get_clip_end();
+
+        for (int set_idx = start_idx; set_idx < end_idx; set_idx++) {
+            string set_name = set_list[set_idx];
+
+            if (!FhApi.Saves.sets_get(set_name, out FhSaveSet? set))
+                continue;
+
+            ui_set(set, set_idx, set_idx - start_idx);
+        }
+    }
+
     protected override void ui_set(FhSaveSet set, int global_idx, int local_idx) {
         if (!_texture_plate.try_use(out ImTextureRef plate, out FhTextureMetadata? plate_meta)) return;
 
@@ -630,22 +646,6 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
             io.WantCaptureMouse = true;
             FhApi.Audio.play_sound(sound_id_set_switch);
             switch_set(set.name);
-        }
-    }
-
-    protected override void ui_setlist() {
-        if (mode != UiMode.SET_SWAP) return;
-
-        int start_idx = scrollable_sets.get_clip_start();
-        int end_idx   = scrollable_sets.get_clip_end();
-
-        for (int set_idx = start_idx; set_idx < end_idx; set_idx++) {
-            string set_name = set_list[set_idx];
-
-            if (!FhApi.Saves.sets_get(set_name, out FhSaveSet? set))
-                continue;
-
-            ui_set(set, set_idx, set_idx - start_idx);
         }
     }
 

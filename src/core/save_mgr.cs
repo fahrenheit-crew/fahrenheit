@@ -382,13 +382,17 @@ public sealed class FhSaves {
 
         bool is_jp_logo = map_icon_id == logo_icon_id && FhCall.isNeedShowJapanLogo.fnptr!() != 0;
 
-        string get_icon_name(int icon_id) {
-            if (is_jp_logo) return "logo_j";
+        string icon_name;
 
-            bool has_multiple_icons =
-                FhGlobal.game_id == FhGameId.FFX
-                && (_multi_icon_locations_x.Contains(map_icon_id)
-                ||  _multi_icon_locations_x.Contains(map_icon_id - 1000));
+        if (is_jp_logo) {
+            icon_name = "logo_j";
+        }
+        else {
+            int icon_id = map_icon_id;
+
+            bool has_multiple_icons =FhGlobal.game_id == FhGameId.FFX
+                && (_multi_icon_locations_x.Contains(icon_id)
+                    ||  _multi_icon_locations_x.Contains(icon_id - 1000));
 
             string suffix = FhGlobal.game_id switch {
                 FhGameId.FFX when has_multiple_icons => icon_id < 1000 ? "_0" : "_1",
@@ -401,10 +405,9 @@ public sealed class FhSaves {
                 icon_id -= 1000;
             }
 
-            return $"{icon_id}{suffix}";
+            icon_name = $"{icon_id}{suffix}";
         }
 
-        string icon_name = get_icon_name(map_icon_id);
 
         return (_cache_icon_map[map_icon_id] = new FhTexture($"{map_dir}/{icon_name}.png", FhTextureType.GAME));
     }

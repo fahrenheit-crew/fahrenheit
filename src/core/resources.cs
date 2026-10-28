@@ -36,7 +36,7 @@ public sealed record FhTextureMetadata(
     DXGI_FORMAT              format,
     D3D11_RESOURCE_DIMENSION dimension
 ) {
-    public Vector2 size => new(width, height);
+    public readonly Vector2 size = new(width, height);
 }
 
 /// <summary>

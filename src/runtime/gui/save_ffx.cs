@@ -258,7 +258,7 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
         UV bg_suv = bg_screen.as_uv();
 
         if (mouse_hovered(bg_screen) && focus != UiFocus.ACTIVE_SET) {
-            FhApi.Audio.play_sound(sound_id_action, ACTION_VOLUME);
+            FhApi.Audio.play_sound(SOUND_ID_ACTION, ACTION_VOLUME);
             focus = UiFocus.ACTIVE_SET;
         }
 
@@ -289,7 +289,7 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
 
         // Input handling
         if (mouse_clicked(bg_screen)) {
-            FhApi.Audio.play_sound(sound_id_set_change);
+            FhApi.Audio.play_sound(SOUND_ID_SET_CHANGE);
             change_mode(UiMode.SET_CHANGE);
         }
     }
@@ -354,7 +354,7 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
 
         if (mouse_hovered(button_scaled)) {
             if (focus != UiFocus.LIST || scrollable_sets.hovered != global_idx) {
-                FhApi.Audio.play_sound(sound_id_action, ACTION_VOLUME);
+                FhApi.Audio.play_sound(SOUND_ID_ACTION, ACTION_VOLUME);
             }
 
             focus = UiFocus.LIST;
@@ -421,7 +421,7 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
         // Handle input
         if (mouse_clicked(button_scaled)) {
             io.WantCaptureMouse = true;
-            FhApi.Audio.play_sound(sound_id_set_change);
+            FhApi.Audio.play_sound(SOUND_ID_SET_CHANGE);
             change_set(set.name);
         }
     }
@@ -513,7 +513,7 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
         // We set the hovered state early to potentially use it later.
         if (mouse_hovered(save_outer_bounds.scale_to_aspect(aspect_helper))) {
             if (focus != UiFocus.LIST || scrollable_saves.hovered != global_idx) {
-                FhApi.Audio.play_sound(sound_id_action, ACTION_VOLUME);
+                FhApi.Audio.play_sound(SOUND_ID_ACTION, ACTION_VOLUME);
             }
 
             focus = UiFocus.LIST;
@@ -633,7 +633,7 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
 
         // Handle input
         if (mouse_clicked(save_outer_bounds.scale_to_aspect(aspect_helper))) {
-            FhApi.Audio.play_sound(sound_id_action, ACTION_VOLUME);
+            FhApi.Audio.play_sound(SOUND_ID_ACTION, ACTION_VOLUME);
             fade_out(() => FhApi.Saves.impl_execute(save.slot));
         }
     }

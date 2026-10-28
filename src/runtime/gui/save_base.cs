@@ -35,6 +35,16 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
     protected const float FONT_SIZE_DEFAULT = 43f;
     protected const float FONT_SIZE_SMALL   = 37f;
 
+    protected const uint SOUND_X_MOVE       = FFX.Ids.SoundId.UI_ACTION;
+    protected const uint SOUND_X_ACTION     = FFX.Ids.SoundId.UI_ACTION;
+    protected const uint SOUND_X_CANCEL     = FFX.Ids.SoundId.UI_CANCEL;
+    protected const uint SOUND_X_SET_CHANGE = FFX.Ids.SoundId.PAGE_TURN;
+
+    protected const uint SOUND_X2_MOVE       = FFX2.Ids.SoundId.UI_ACTION;
+    protected const uint SOUND_X2_ACTION     = FFX2.Ids.SoundId.UI_ACTION;
+    protected const uint SOUND_X2_CANCEL     = FFX2.Ids.SoundId.UI_CANCEL;
+    protected const uint SOUND_X2_SET_CHANGE = FFX2.Ids.SoundId.PAGE_TURN;
+
     private const string DIR_X_PS3  = "/FFX_Data/GameData/PS3Data";
     private const string DIR_X2_PS3 = "/FFX-2_Data/GameData/PS3Data";
 
@@ -48,8 +58,12 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
     protected const string DIR_X2_FACE_DATA = $"{DIR_X2_PS3}/menu/face_data/D3D11/";
     protected const string DIR_X2_MAP_ICONS = $"{DIR_X2_PS3}/savedataicons/";
 
-    protected static readonly float ACTION_VOLUME =
-        FhGlobal.game_id is FhGameId.FFX ? 1f : 0.5f;
+    protected static readonly uint SOUND_ID_MOVE       = FhUtil.select(SOUND_X_MOVE,       SOUND_X2_MOVE,       SOUND_X2_MOVE);
+    protected static readonly uint SOUND_ID_ACTION     = FhUtil.select(SOUND_X_ACTION,     SOUND_X2_ACTION,     SOUND_X2_ACTION);
+    protected static readonly uint SOUND_ID_CANCEL     = FhUtil.select(SOUND_X_CANCEL,     SOUND_X2_CANCEL,     SOUND_X2_CANCEL);
+    protected static readonly uint SOUND_ID_SET_CHANGE = FhUtil.select(SOUND_X_SET_CHANGE, SOUND_X2_SET_CHANGE, SOUND_X2_SET_CHANGE);
+
+    protected static readonly float ACTION_VOLUME = FhUtil.select(1f, 0.5f, 0.5f);
 
     protected UiMode  mode;
     protected UiFocus focus;
@@ -81,11 +95,6 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
     // We block input when fading in as well, but only for a short time to make the UI feel snappy.
     protected bool is_fade_blocking_input => !(fade.is_done || (fade.color_to == COLOR_TRANS && fade.progress > 0.3f));
     protected bool should_handle_input    => !scrollbar_dragging && !is_fade_blocking_input;
-
-    protected virtual uint sound_id_move       => FFX.Ids.SoundId.UI_ACTION;
-    protected virtual uint sound_id_action     => FFX.Ids.SoundId.UI_ACTION;
-    protected virtual uint sound_id_cancel     => FFX.Ids.SoundId.UI_CANCEL;
-    protected virtual uint sound_id_set_change => FFX.Ids.SoundId.PAGE_TURN;
 
     protected virtual float font_size       => FONT_SIZE_DEFAULT * font_scale;
     protected virtual float font_size_small => FONT_SIZE_SMALL * font_scale;
@@ -250,7 +259,7 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
             if (FhApi.Gui.is_any_pressed(FhApi.Gui.keys_up)
              && current_scrollable.hovered == 0
             ) {
-                FhApi.Audio.play_sound(sound_id_action, ACTION_VOLUME);
+                FhApi.Audio.play_sound(SOUND_ID_ACTION, ACTION_VOLUME);
                 focus = UiFocus.ACTIVE_SET;
                 return true;
             }
@@ -261,7 +270,7 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
         bool scrollable_input_held = current_scrollable.handle_input();
 
         if (current_scrollable.hovered != old_hovered) {
-            FhApi.Audio.play_sound(sound_id_move, volume: get_move_volume());
+            FhApi.Audio.play_sound(SOUND_ID_MOVE, volume: get_move_volume());
             audio_fade_helper.tick(1f);
         }
 
@@ -273,7 +282,7 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
             int hovered = current_scrollable.hovered;
 
             if (mode == UiMode.SAVE_LIST) {
-                FhApi.Audio.play_sound(sound_id_action, ACTION_VOLUME);
+                FhApi.Audio.play_sound(SOUND_ID_ACTION, ACTION_VOLUME);
 
                 if (is_saving && hovered == 0) {
                     fade_out(() => FhApi.Saves.impl_execute(0));
@@ -288,7 +297,7 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
             }
 
             if (mode == UiMode.SET_CHANGE) {
-                FhApi.Audio.play_sound(sound_id_set_change);
+                FhApi.Audio.play_sound(SOUND_ID_SET_CHANGE);
 
                 string hovered_set = set_list[hovered];
                 change_set(hovered_set);
@@ -304,7 +313,7 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
     /// <returns>Whether input handling should be interrupted.</returns>
     protected bool handle_input_change_set() {
         if (mode == UiMode.SAVE_LIST && FhApi.Gui.is_any_pressed(FhApi.Gui.keys_down) && current_scrollable.max > 0) {
-            FhApi.Audio.play_sound(sound_id_action, ACTION_VOLUME);
+            FhApi.Audio.play_sound(SOUND_ID_ACTION, ACTION_VOLUME);
 
             focus = UiFocus.LIST;
             current_scrollable.hovered = current_scrollable.current;
@@ -313,7 +322,7 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
         }
 
         if (FhApi.Gui.is_any_pressed(FhApi.Gui.keys_confirm)) {
-            FhApi.Audio.play_sound(sound_id_set_change);
+            FhApi.Audio.play_sound(SOUND_ID_SET_CHANGE);
             change_mode(UiMode.SET_CHANGE);
             return true;
         }
@@ -330,7 +339,7 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
         if (focus == UiFocus.ACTIVE_SET && handle_input_change_set()) return;
 
         if (FhApi.Gui.is_any_pressed(FhApi.Gui.keys_cancel)) {
-            FhApi.Audio.play_sound(sound_id_cancel);
+            FhApi.Audio.play_sound(SOUND_ID_CANCEL);
 
             if (mode == UiMode.SET_CHANGE)
                 change_mode(UiMode.SAVE_LIST);
@@ -706,14 +715,14 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
         }
 
         if (mouse_clicked(triangle_top, repeat: true)) {
-            FhApi.Audio.play_sound(sound_id_move, volume: get_move_volume());
+            FhApi.Audio.play_sound(SOUND_ID_MOVE, volume: get_move_volume());
             audio_fade_helper.tick(1f);
 
             scrollable.move_hover(-1);
         }
 
         if (mouse_clicked(triangle_bottom, repeat: true)) {
-            FhApi.Audio.play_sound(sound_id_move, volume: get_move_volume());
+            FhApi.Audio.play_sound(SOUND_ID_MOVE, volume: get_move_volume());
             audio_fade_helper.tick(1f);
 
             scrollable.move_hover(1);

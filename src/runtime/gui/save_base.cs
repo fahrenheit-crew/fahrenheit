@@ -309,7 +309,7 @@ public abstract class FhSaveUiBase : FhSaveUi {
         return false;
     }
 
-    /// <summary>Handle input for the Change Set button</summary>
+    /// <summary>Handle input for the Change Set button.</summary>
     /// <returns>Whether input handling should be interrupted.</returns>
     protected bool handle_input_change_set() {
         if (mode == UiMode.SAVE_LIST && FhApi.Gui.is_any_pressed(FhApi.Gui.keys_down) && current_scrollable.max > 0) {
@@ -355,7 +355,7 @@ public abstract class FhSaveUiBase : FhSaveUi {
     protected internal override void render_ui() {
         current_scrollable = mode switch {
             UiMode.SET_CHANGE => scrollable_sets,
-            _               => scrollable_saves,
+            _                 => scrollable_saves,
         };
 
         if (!try_load_textures()) return;

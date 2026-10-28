@@ -115,7 +115,7 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
         draw.AddImage(meswin, title_suv.p0, title_suv.p1, title_tuv.p0, title_tuv.p1);
 
         string text_key = mode switch {
-            UiMode.SET_SWAP => "help.set",
+            UiMode.SET_CHANGE => "help.set",
 
             UiMode.SAVE_LIST  or
             UiMode.SAVE_POPUP => save_mode switch {
@@ -289,13 +289,13 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
 
         // Input handling
         if (mouse_clicked(bg_screen)) {
-            FhApi.Audio.play_sound(sound_id_set_switch);
-            change_mode(UiMode.SET_SWAP);
+            FhApi.Audio.play_sound(sound_id_set_change);
+            change_mode(UiMode.SET_CHANGE);
         }
     }
 
     protected override void ui_setlist() {
-        if (mode != UiMode.SET_SWAP) return;
+        if (mode != UiMode.SET_CHANGE) return;
 
         int start_idx = scrollable_sets.get_clip_start();
         int end_idx   = scrollable_sets.get_clip_end();
@@ -421,8 +421,8 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
         // Handle input
         if (mouse_clicked(button_scaled)) {
             io.WantCaptureMouse = true;
-            FhApi.Audio.play_sound(sound_id_set_switch);
-            switch_set(set.name);
+            FhApi.Audio.play_sound(sound_id_set_change);
+            change_set(set.name);
         }
     }
 

@@ -12,7 +12,7 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
         SAVE_LIST = 0,
 
         /// <summary>The save set selection window.</summary>
-        SET_SWAP = 1,
+        SET_CHANGE = 1,
 
         /// <summary>The popup for displaying save/load errors and notifications.</summary>
         SAVE_POPUP = 2,
@@ -85,10 +85,10 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
     protected virtual uint sound_id_move       => FFX.Ids.SoundId.UI_ACTION;
     protected virtual uint sound_id_action     => FFX.Ids.SoundId.UI_ACTION;
     protected virtual uint sound_id_cancel     => FFX.Ids.SoundId.UI_CANCEL;
-    protected virtual uint sound_id_set_switch => FFX.Ids.SoundId.PAGE_TURN;
+    protected virtual uint sound_id_set_change => FFX.Ids.SoundId.PAGE_TURN;
 
-    protected float font_size       => FONT_SIZE_DEFAULT * font_scale;
-    protected float font_size_small => FONT_SIZE_SMALL * font_scale;
+    protected virtual float font_size       => FONT_SIZE_DEFAULT * font_scale;
+    protected virtual float font_size_small => FONT_SIZE_SMALL * font_scale;
 
     protected FhGui.DrawTextConfig text_config => new() {
         font_size = font_size,
@@ -177,9 +177,9 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
     }
 
     /// <summary>Change the active set to the one with the given name.</summary>
-    /// <param name="set_name"></param>
-    protected void switch_set(string set_name) {
-        FhApi.Saves.sets_switch(set_name);
+    /// <param name="set_name">The name of the set to change to.</param>
+    protected void change_set(string set_name) {
+        FhApi.Saves.sets_change(set_name);
 
         try_load_textures();
 
@@ -287,11 +287,11 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
                 return true;
             }
 
-            if (mode == UiMode.SET_SWAP) {
-                FhApi.Audio.play_sound(sound_id_set_switch);
+            if (mode == UiMode.SET_CHANGE) {
+                FhApi.Audio.play_sound(sound_id_set_change);
 
                 string hovered_set = set_list[hovered];
-                switch_set(hovered_set);
+                change_set(hovered_set);
 
                 return true;
             }
@@ -313,8 +313,8 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
         }
 
         if (FhApi.Gui.is_any_pressed(FhApi.Gui.keys_confirm)) {
-            FhApi.Audio.play_sound(sound_id_set_switch);
-            change_mode(UiMode.SET_SWAP);
+            FhApi.Audio.play_sound(sound_id_set_change);
+            change_mode(UiMode.SET_CHANGE);
             return true;
         }
 
@@ -332,7 +332,7 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
         if (FhApi.Gui.is_any_pressed(FhApi.Gui.keys_cancel)) {
             FhApi.Audio.play_sound(sound_id_cancel);
 
-            if (mode == UiMode.SET_SWAP)
+            if (mode == UiMode.SET_CHANGE)
                 change_mode(UiMode.SAVE_LIST);
             else
                 fade_out(() => FhApi.Saves.impl_abort());
@@ -345,7 +345,7 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
     /// <summary>Render the UI.</summary>
     protected internal override void render_ui() {
         current_scrollable = mode switch {
-            UiMode.SET_SWAP => scrollable_sets,
+            UiMode.SET_CHANGE => scrollable_sets,
             _               => scrollable_saves,
         };
 
@@ -358,7 +358,7 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
         ui_background();
         ui_help();
 
-        if (mode == UiMode.SET_SWAP) {
+        if (mode == UiMode.SET_CHANGE) {
             ui_setlist();
         }
         else {

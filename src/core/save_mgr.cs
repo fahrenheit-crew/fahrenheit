@@ -853,7 +853,7 @@ public sealed class FhSaves {
     ///     so only do this when you have to.
     /// </remarks>
     /// <param name="set_name">The name of the set to switch to.</param>
-    public void sets_switch(string set_name) {
+    public void sets_change(string set_name) {
         if (Interlocked.CompareExchange(ref _lock, 1, 0) != 0)
             return;
 

@@ -5,7 +5,7 @@
 
 namespace Fahrenheit.Runtime.Gui;
 
-public abstract class FhRuntimeSaveUiBase : FhSaveUi {
+public abstract class FhSaveUiBase : FhSaveUi {
     /// <summary>Possible open windows of the save/load menu.</summary>
     protected enum UiMode {
         /// <summary>The list of saves to save/load/compile from.</summary>
@@ -105,7 +105,7 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
 
     protected virtual FhTexture[] textures => [];
 
-    protected FhRuntimeSaveUiBase() {
+    protected FhSaveUiBase() {
         fade = new(0, 0, fade_length);
 
         current_scrollable = scrollable_saves;

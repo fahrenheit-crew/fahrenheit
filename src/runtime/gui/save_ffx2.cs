@@ -17,7 +17,7 @@ namespace Fahrenheit.Runtime.Gui;
 
 /// <summary>The default save UI renderer for Final Fantasy X-2/Last Mission.</summary>
 [FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
-public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
+public sealed class FhSaveUiX2 : FhSaveUiBase {
     private readonly FhTexture _texture_menuback = new(Path.Join(DIR_X2_MENU,    "menuback.dds.phyre"),             FhTextureType.GAME_PHYRE_2D);
     private readonly FhTexture _texture_black0   = new(Path.Join(DIR_X2_PLATE,   "black0.dds.phyre"),               FhTextureType.GAME_PHYRE_2D);
     private readonly FhTexture _texture_mahojin  = new(Path.Join(DIR_X2_MAHOJIN, "14336_19_0_0_512_512.dds.phyre"), FhTextureType.GAME_PHYRE_2D);

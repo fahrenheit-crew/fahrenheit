@@ -91,7 +91,7 @@ public abstract class FhSaveUiBase : FhSaveUi {
         FhApi.Saves.impl_get_system_mode(out FhSaveSystemMode? save_mode)
         && save_mode is FhSaveSystemMode.SAVE;
 
-    // We block input when fading out, for example so you can't requests two loads of a file.
+    // We block input when fading out, for example so you can't request two loads of a file.
     // We block input when fading in as well, but only for a short time to make the UI feel snappy.
     protected bool is_fade_blocking_input => !(fade.is_done || (fade.color_to == COLOR_TRANS && fade.progress > 0.3f));
     protected bool should_handle_input    => !scrollbar_dragging && !is_fade_blocking_input;
@@ -405,7 +405,7 @@ public abstract class FhSaveUiBase : FhSaveUi {
     /// <summary>Render the list of available sets.</summary>
     protected abstract void ui_setlist();
 
-    /// <summary>Render a set in the list of available sets.</summary>
+    /// <summary>Render a button for choosing a set.</summary>
     /// <param name="set">The set to render a button for.</param>
     /// <param name="global_idx">The index of the set in the set list.</param>
     /// <param name="local_idx">The index of the set on screen.</param>
@@ -449,7 +449,7 @@ public abstract class FhSaveUiBase : FhSaveUi {
     /// <summary>Render the message displayed when no saves exist in the active set.</summary>
     protected abstract void ui_no_saves();
 
-    /// <summary>Render a save in the list of saves.</summary>
+    /// <summary>Render a button for choosing a save.</summary>
     /// <param name="save">The save to render a button for.</param>
     /// <param name="global_idx">The index of the save in the save list.</param>
     /// <param name="local_idx">The index of the save on screen.</param>

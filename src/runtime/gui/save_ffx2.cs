@@ -261,7 +261,12 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
             ? $"{localize("save_count.separator")}{localize("save_count.saves")}"
             : localize("save_count.saves");
 
-        save_text = string.Format(save_text, set.has_autosave ? set.count - 1 : set.count);
+        save_text = string.Format(
+            save_text,
+            set.has_autosave
+                ? set.count - 1
+                : set.count
+        );
 
         Vector2 text_pos = new(1717f, 146f);
 
@@ -1037,7 +1042,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
         Rect face_bounds = new() {
-            pos = bounds.top_left,
+            pos  = bounds.top_left,
             size = face_size,
         };
 

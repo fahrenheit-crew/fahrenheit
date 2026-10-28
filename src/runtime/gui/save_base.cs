@@ -27,10 +27,9 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
         ACTIVE_SET = 1,
     }
 
-    protected const uint COLOR_WHITE = 0xFFFFFFFF;
-    protected const uint COLOR_BLACK = 0xFF000000;
-    protected const uint COLOR_TRANS = 0x00000000;
-
+    protected const uint COLOR_WHITE    = 0xFFFFFFFF;
+    protected const uint COLOR_BLACK    = 0xFF000000;
+    protected const uint COLOR_TRANS    = 0x00000000;
     protected const uint COLOR_AUTOSAVE = 0xFF19D8FF;
 
     protected const float FONT_SIZE_DEFAULT = 43f;
@@ -66,9 +65,6 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
 
     protected bool loaded_all_textures;
 
-    protected bool is_saving =>
-        FhApi.Saves.impl_get_system_mode(out FhSaveSystemMode? save_mode) && save_mode is FhSaveSystemMode.SAVE;
-
     protected readonly SteppedScrollable scrollable_saves = new(visible: 5);
     protected readonly SteppedScrollable scrollable_sets  = new(visible: 9);
 
@@ -76,6 +72,10 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
 
     protected bool     scrollbar_dragging;
     protected Vector2? scrollbar_held_pos;
+
+    protected bool is_saving =>
+        FhApi.Saves.impl_get_system_mode(out FhSaveSystemMode? save_mode)
+        && save_mode is FhSaveSystemMode.SAVE;
 
     // We block input when fading out, for example so you can't requests two loads of a file.
     // We block input when fading in as well, but only for a short time to make the UI feel snappy.

@@ -239,7 +239,7 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
 
     protected override void ui_change_set() {
         if (!_texture_battle_kuang.try_use(
-            out ImTextureRef battle_kuang,
+            out ImTextureRef       battle_kuang,
             out FhTextureMetadata? battle_kuang_meta
         )) {
             return;
@@ -312,7 +312,7 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
 
     protected override void ui_set(FhSaveSet set, int global_idx, int local_idx) {
         if (!_texture_summonbg.try_use(
-            out ImTextureRef summonbg,
+            out ImTextureRef       summonbg,
             out FhTextureMetadata? summonbg_meta
         )) {
             return;
@@ -605,7 +605,7 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
         };
 
         Rect info_bounds = new() {
-            pos  = save_bounds.pos with {
+            pos = save_bounds.pos with {
                 Y = header_bounds.bottom.Y,
             },
 
@@ -648,8 +648,8 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
         /* ===== Party Icons ===== */
-        float   face_height = info_bounds.size.Y;
-        float   face_gap    = FhUtil.select(6f, 3f, 25f);
+        float face_height = info_bounds.size.Y;
+        float face_gap    = FhUtil.select(6f, 3f, 25f);
 
         Vector2 face_size = new() {
             X = face_height * FhUtil.select(1f, 1.0625f, 1.0625f),
@@ -775,7 +775,7 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
         Rect face_bounds = new() {
-            pos = bounds.top_left,
+            pos  = bounds.top_left,
             size = face_size,
         };
 

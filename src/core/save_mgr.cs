@@ -359,13 +359,13 @@ public sealed class FhSaves {
             : DIR_MAP_ICON_X2;
 
         if (FhGlobal.game_id is FhGameId.FFX2LM) {
-            int icon_id = ((int.Clamp(header.x2.lm_id_location / 2, 0, 80) - 1) / 20) + 1;
+            int lm_icon_id = ((int.Clamp(header.x2.lm_id_location / 2, 0, 80) - 1) / 20) + 1;
 
-            if (_cache_icon_map.TryGetValue(icon_id, out FhTexture? icon_texture_lm)) {
+            if (_cache_icon_map.TryGetValue(lm_icon_id, out FhTexture? icon_texture_lm)) {
                 return icon_texture_lm;
             }
 
-            return (_cache_icon_map[icon_id] = new FhTexture($"{map_dir}/logo_j_lm.png", FhTextureType.GAME));
+            return (_cache_icon_map[lm_icon_id] = new FhTexture($"{map_dir}/logo_j_lm.png", FhTextureType.GAME));
         }
 
         int logo_icon_id = FhUtil.select(0, 23, 23);
@@ -382,32 +382,28 @@ public sealed class FhSaves {
 
         bool is_jp_logo = map_icon_id == logo_icon_id && FhCall.isNeedShowJapanLogo.fnptr!() != 0;
 
-        string icon_name;
-
         if (is_jp_logo) {
-            icon_name = "logo_j";
-        }
-        else {
-            int icon_id = map_icon_id;
-
-            bool has_multiple_icons =FhGlobal.game_id == FhGameId.FFX
-                && (_multi_icon_locations_x.Contains(icon_id)
-                    ||  _multi_icon_locations_x.Contains(icon_id - 1000));
-
-            string suffix = FhGlobal.game_id switch {
-                FhGameId.FFX when has_multiple_icons => icon_id < 1000 ? "_0" : "_1",
-                FhGameId.FFX2                        => icon_id < 1000 ? "_0" : "_1",
-
-                _ => string.Empty,
-            };
-
-            if (suffix != string.Empty && icon_id > 1000) {
-                icon_id -= 1000;
-            }
-
-            icon_name = $"{icon_id}{suffix}";
+            return (_cache_icon_map[map_icon_id] = new FhTexture($"{map_dir}/logo_j.png", FhTextureType.GAME));
         }
 
+        int icon_id = map_icon_id;
+
+        bool has_multiple_icons = FhGlobal.game_id == FhGameId.FFX
+            && (_multi_icon_locations_x.Contains(icon_id)
+            ||  _multi_icon_locations_x.Contains(icon_id - 1000));
+
+        string suffix = FhGlobal.game_id switch {
+            FhGameId.FFX when has_multiple_icons => icon_id < 1000 ? "_0" : "_1",
+            FhGameId.FFX2                        => icon_id < 1000 ? "_0" : "_1",
+
+            _ => string.Empty,
+        };
+
+        if (suffix != string.Empty && icon_id > 1000) {
+            icon_id -= 1000;
+        }
+
+        string icon_name = $"{icon_id}{suffix}";
 
         return (_cache_icon_map[map_icon_id] = new FhTexture($"{map_dir}/{icon_name}.png", FhTextureType.GAME));
     }

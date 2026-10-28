@@ -290,14 +290,16 @@ public sealed class FhSaves {
             if (!_cache_icon_chr.Remove(tex.Key, out FhTexture? icon_chr))
                 throw new Exception("Failed to clear texture cache.");
 
-            FhApi.Resources.unload_texture(icon_chr);
+            if (!FhApi.Resources.unload_texture(icon_chr))
+                FhInternal.Log.Warning($"Failed to unload texture {icon_chr}.");
         }
 
         foreach (var tex in _cache_icon_map) {
             if (!_cache_icon_map.Remove(tex.Key, out FhTexture? icon_map))
                 throw new Exception("Failed to clear texture cache.");
 
-            FhApi.Resources.unload_texture(icon_map);
+            if (!FhApi.Resources.unload_texture(icon_map))
+                FhInternal.Log.Warning($"Failed to unload texture {icon_map}.");
         }
     }
 

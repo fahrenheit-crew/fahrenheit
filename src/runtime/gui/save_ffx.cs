@@ -158,7 +158,7 @@ public sealed class FhSaveUiX : FhRuntimeSaveUiBase {
 
         Vector2 text_pos = new(1722f, 144f);
 
-        float line_height = font_size - 5f;
+        float line_height = FONT_SIZE_DEFAULT - 5f;
 
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 

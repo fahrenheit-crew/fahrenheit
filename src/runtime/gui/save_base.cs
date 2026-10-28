@@ -33,6 +33,9 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
 
     protected const uint COLOR_AUTOSAVE = 0xFF19D8FF;
 
+    protected const float FONT_SIZE_DEFAULT = 43f;
+    protected const float FONT_SIZE_SMALL   = 37f;
+
     private const string DIR_X_PS3  = "/FFX_Data/GameData/PS3Data";
     private const string DIR_X2_PS3 = "/FFX-2_Data/GameData/PS3Data";
 
@@ -84,7 +87,8 @@ public abstract class FhRuntimeSaveUiBase : FhSaveUi {
     protected virtual uint sound_id_cancel     => FFX.Ids.SoundId.UI_CANCEL;
     protected virtual uint sound_id_set_switch => FFX.Ids.SoundId.PAGE_TURN;
 
-    protected float font_size => 43f * font_scale;
+    protected float font_size       => FONT_SIZE_DEFAULT * font_scale;
+    protected float font_size_small => FONT_SIZE_SMALL * font_scale;
 
     protected FhGui.DrawTextConfig text_config => new() {
         font_size = font_size,

@@ -265,15 +265,13 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
 
         Vector2 text_pos = new(1717f, 146f);
 
-        float line_height = 34f;
-
-        float font_size_savecount = font_size * 0.86f;
+        float line_height = FONT_SIZE_SMALL - 3f;
 
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
         FhGui.DrawTextConfig config = text_config with {
             align     = Alignment2D.RIGHT,
-            font_size = font_size_savecount,
+            font_size = font_size_small,
         };
 
         Vector2 saves_text_size = FhApi.Gui.draw_text(
@@ -885,10 +883,7 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
 
         /* ===== Cursor ===== */
         if (focus == UiFocus.LIST && scrollable_saves.hovered == global_idx) {
-            Vector2 cursor_target = save_outer_bounds.left;
-            cursor_target.Y += 28f;
-
-            ui_cursor(cursor_target * aspect_scale);
+            ui_cursor(info_outer_bounds.scale_to_aspect(aspect_helper).left);
         }
 
         // Handle input
@@ -1240,8 +1235,8 @@ public sealed class FhSaveUiX2 : FhRuntimeSaveUiBase {
         if (FhGlobal.lang_id.is_cjk) {
             float extra_offset = 92f;
 
-            bounds.pos.X  += extra_offset;
-            bounds.size.X -= extra_offset;
+            bounds.pos.X  -= extra_offset;
+            bounds.size.X += extra_offset;
         }
 
         float top_y    = float.Lerp(bounds.top.Y, bounds.bottom.Y, 0.25f);

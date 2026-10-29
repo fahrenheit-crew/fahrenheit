@@ -26,6 +26,8 @@ public partial class FhGui {
             int           index,
             uint          color,
             float         border_width,
+            uint          border_highlight,
+            uint          border_shadow,
             Vector2       shadow_pos,
             bool          header = false
         ) {
@@ -64,8 +66,8 @@ public partial class FhGui {
                 draw,
                 bounds,
                 border_width,
-                0x28FFFFFF,
-                0x80000000
+                border_highlight,
+                border_shadow
             );
 
             if (header) {
@@ -80,14 +82,14 @@ public partial class FhGui {
         public void draw_plate_edges(
             ImDrawListPtr draw,
             Rect          bounds,
-            float         border_width,
+            float         width,
             uint          highlight,
             uint          shadow
         ) {
             bounds.pos  = Vector2.Round(bounds.pos);
             bounds.size = Vector2.Round(bounds.size);
 
-            float shrink_size  = float .Round(-border_width * 2f);
+            float shrink_size  = float .Round(-width * 2f);
             Rect  inner_bounds = bounds.expand(new(shrink_size), Alignment2D.CENTER);
 
             Span<Vector2> border_top = [

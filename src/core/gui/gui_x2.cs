@@ -6,240 +6,236 @@
 namespace Fahrenheit.Gui;
 
 public partial class FhGui {
-    public FhGuiX2 X2 = new();
+    public struct DrawPlateConfig {
+        /// <summary>The texture to draw.</summary>
+        public FhTexture texture;
 
-    public class FhGuiX2 {
-        public struct DrawPlateConfig {
-            /// <summary>The texture to draw.</summary>
-            public FhTexture texture;
+        /// <summary>The color of the plate, in the format 0xAABBGGRR, i.e. RGBA8.</summary>
+        public uint color = 0xFFE4F0F1;
 
-            /// <summary>The color of the plate, in the format 0xAABBGGRR, i.e. RGBA8.</summary>
-            public uint color = 0xFFE4F0F1;
+        /// <summary>The width of the plate border.</summary>
+        public float border_width = 5f;
 
-            /// <summary>The width of the plate border.</summary>
-            public float border_width = 5f;
+        /// <summary>The color of the border highlight, in the format 0xAABBGGRR, i.e. RGBA8.</summary>
+        public uint border_highlight = 0x28FFFFFF;
 
-            /// <summary>The color of the border highlight, in the format 0xAABBGGRR, i.e. RGBA8.</summary>
-            public uint border_highlight = 0x28FFFFFF;
+        /// <summary>The color of the border shadow, in the format 0xAABBGGRR, i.e. RGBA8.</summary>
+        public uint border_shadow = 0x80000000;
 
-            /// <summary>The color of the border shadow, in the format 0xAABBGGRR, i.e. RGBA8.</summary>
-            public uint border_shadow = 0x80000000;
+        /// <summary>The offset of the plate's shadow from the plate.</summary>
+        public Vector2 shadow_offset = new(0f, 0f);
 
-            /// <summary>The offset of the plate's shadow from the plate.</summary>
-            public Vector2 shadow_offset = new(0f, 0f);
+        /// <summary>Whether to draw the plate in a header-like style.</summary>
+        public bool draw_header = false;
 
-            /// <summary>Whether to draw the plate in a header-like style.</summary>
-            public bool draw_header = false;
-
-            public DrawPlateConfig(FhTexture plate_texture) {
-                texture = plate_texture;
-            }
+        public DrawPlateConfig(FhTexture plate_texture) {
+            texture = plate_texture;
         }
+    }
 
-        /// <summary>Draws a "plate" with a given position, size, color, and shadow.</summary>
-        /// <param name="draw">The draw list to add the texture to.</param>
-        /// <param name="bounds">The position and size of the texture.</param>
-        /// <param name="tex_slice_idx">The number used to calculate the vertical UV coordinates.</param>
-        /// <param name="config">The configuration to draw the plate with.</param>
-        public void draw_plate(
-            ImDrawListPtr   draw,
-            Rect            bounds,
-            int             tex_slice_idx,
-            DrawPlateConfig config
-        ) {
-            if (!config.texture.try_use(out ImTextureRef plate, out FhTextureMetadata? plate_meta)) return;
+    /// <summary>Draws a "plate" with a given position, size, color, and shadow.</summary>
+    /// <param name="draw">The draw list to add the texture to.</param>
+    /// <param name="bounds">The position and size of the texture.</param>
+    /// <param name="tex_slice_idx">The number used to calculate the vertical UV coordinates.</param>
+    /// <param name="config">The configuration to draw the plate with.</param>
+    public void draw_x2_plate(
+        ImDrawListPtr   draw,
+        Rect            bounds,
+        int             tex_slice_idx,
+        DrawPlateConfig config
+    ) {
+        if (!config.texture.try_use(out ImTextureRef plate, out FhTextureMetadata? plate_meta)) return;
 
-            tex_slice_idx    %= (config.draw_header ? 16 : 8);
-            float slice_size  = config.draw_header ? 32f: 64f;
-            float plate_max_y = 512f - (tex_slice_idx * slice_size);
+        tex_slice_idx    %= (config.draw_header ? 16 : 8);
+        float slice_size  = config.draw_header ? 32f: 64f;
+        float plate_max_y = 512f - (tex_slice_idx * slice_size);
 
-            UV plate_tuv = new Rect {
-                pos  = new(  0f, plate_max_y - slice_size),
-                size = new(512f,               slice_size),
-            }.as_uv(plate_meta.size);
+        UV plate_tuv = new Rect {
+            pos  = new(  0f, plate_max_y - slice_size),
+            size = new(512f,               slice_size),
+        }.as_uv(plate_meta.size);
 
-            UV plate_suv = bounds.as_uv();
+        UV plate_suv = bounds.as_uv();
 
-            // Shadow behind plate
+        // Shadow behind plate
+        draw.AddRectFilled(
+            plate_suv.p0 + config.shadow_offset,
+            plate_suv.p1 + config.shadow_offset,
+            0x80000000
+        );
+
+        draw.AddImage(
+            plate,
+            plate_suv.p0,
+            plate_suv.p1,
+            plate_tuv.p0,
+            plate_tuv.p1,
+            config.color
+        );
+
+        draw_x2_plate_edges(
+            draw,
+            bounds,
+            config.border_width,
+            config.border_highlight,
+            config.border_shadow
+        );
+
+        if (config.draw_header) {
             draw.AddRectFilled(
-                plate_suv.p0 + config.shadow_offset,
-                plate_suv.p1 + config.shadow_offset,
-                0x80000000
-            );
-
-            draw.AddImage(
-                plate,
                 plate_suv.p0,
                 plate_suv.p1,
-                plate_tuv.p0,
-                plate_tuv.p1,
-                config.color
+                0x63000000
             );
-
-            draw_plate_edges(
-                draw,
-                bounds,
-                config.border_width,
-                config.border_highlight,
-                config.border_shadow
-            );
-
-            if (config.draw_header) {
-                draw.AddRectFilled(
-                    plate_suv.p0,
-                    plate_suv.p1,
-                    0x63000000
-                );
-            }
         }
+    }
 
-        public void draw_plate_edges(
-            ImDrawListPtr draw,
-            Rect          bounds,
-            float         width,
-            uint          highlight,
-            uint          shadow
-        ) {
-            bounds.pos  = Vector2.Round(bounds.pos);
-            bounds.size = Vector2.Round(bounds.size);
+    public void draw_x2_plate_edges(
+        ImDrawListPtr draw,
+        Rect          bounds,
+        float         width,
+        uint          highlight,
+        uint          shadow
+    ) {
+        bounds.pos  = Vector2.Round(bounds.pos);
+        bounds.size = Vector2.Round(bounds.size);
 
-            float shrink_size  = float .Round(-width * 2f);
-            Rect  inner_bounds = bounds.expand(new(shrink_size), Alignment2D.CENTER);
+        float shrink_size  = float .Round(-width * 2f);
+        Rect  inner_bounds = bounds.expand(new(shrink_size), Alignment2D.CENTER);
 
-            // We define vertices in a clockwise winding order for AddConvexPolyFilled to render them properly.
-            Span<Vector2> border_top = [
-                bounds      .top_left,
-                bounds      .top_right,
-                inner_bounds.top_right,
-                inner_bounds.top_left with { X = bounds.top_left.X },
-            ];
+        // We define vertices in a clockwise winding order for AddConvexPolyFilled to render them properly.
+        Span<Vector2> border_top = [
+            bounds      .top_left,
+            bounds      .top_right,
+            inner_bounds.top_right,
+            inner_bounds.top_left with { X = bounds.top_left.X },
+        ];
 
-            Span<Vector2> border_left = [
-                bounds      .top_left    with { Y = inner_bounds.top_left.Y },
-                inner_bounds.top_left,
-                inner_bounds.bottom_left,
-                bounds      .bottom_left,
-            ];
+        Span<Vector2> border_left = [
+            bounds      .top_left    with { Y = inner_bounds.top_left.Y },
+            inner_bounds.top_left,
+            inner_bounds.bottom_left,
+            bounds      .bottom_left,
+        ];
 
-            Span<Vector2> border_bottom = [
-                bounds      .bottom_left,
-                inner_bounds.bottom_left,
-                inner_bounds.bottom_right,
-                bounds      .bottom_right with { X = inner_bounds.bottom_right.X },
-            ];
+        Span<Vector2> border_bottom = [
+            bounds      .bottom_left,
+            inner_bounds.bottom_left,
+            inner_bounds.bottom_right,
+            bounds      .bottom_right with { X = inner_bounds.bottom_right.X },
+        ];
 
-            Span<Vector2> border_right = [
-                bounds      .top_right,
-                bounds      .bottom_right,
-                inner_bounds.bottom_right with { Y = bounds.bottom_right.Y },
-                inner_bounds.top_right,
-            ];
+        Span<Vector2> border_right = [
+            bounds      .top_right,
+            bounds      .bottom_right,
+            inner_bounds.bottom_right with { Y = bounds.bottom_right.Y },
+            inner_bounds.top_right,
+        ];
 
-            draw.AddConvexPolyFilled(border_top   [0], 4, highlight);
-            draw.AddConvexPolyFilled(border_bottom[0], 4, shadow);
-            draw.AddConvexPolyFilled(border_left  [0], 4, highlight);
-            draw.AddConvexPolyFilled(border_right [0], 4, shadow);
-        }
+        draw.AddConvexPolyFilled(border_top[0], 4, highlight);
+        draw.AddConvexPolyFilled(border_bottom[0], 4, shadow);
+        draw.AddConvexPolyFilled(border_left[0], 4, highlight);
+        draw.AddConvexPolyFilled(border_right[0], 4, shadow);
+    }
 
-        public void draw_cursor(
-            ImDrawListPtr    draw,
-            Vector2          target_pos,
-            DrawCursorConfig config
-        ) {
-            if (!config.texture.try_use(out ImTextureRef freetex, out FhTextureMetadata? freetex_meta)) return;
+    public void draw_x2_cursor(
+        ImDrawListPtr    draw,
+        Vector2          target_pos,
+        DrawCursorConfig config
+    ) {
+        if (!config.texture.try_use(out ImTextureRef freetex, out FhTextureMetadata? freetex_meta)) return;
 
-            UV cursor_tuv = new UV(
-                new(  9f, 572f),
-                new(180f, 478f)
-            ).map_to(freetex_meta.size);
+        UV cursor_tuv = new UV(
+            new(  9f, 572f),
+            new(180f, 478f)
+        ).map_to(freetex_meta.size);
 
-            float overlap_amount = config.overlap ? config.cursor_size.X * 0.1f : 0f;
+        float overlap_amount = config.overlap ? config.cursor_size.X * 0.1f : 0f;
 
-            Vector2 cursor_top_left = new(
-                target_pos.X - config.cursor_size.X + overlap_amount,
-                target_pos.Y - config.cursor_size.Y / 2f + (0.04f * config.cursor_size.X)
-            );
+        Vector2 cursor_top_left = new(
+            target_pos.X - config.cursor_size.X + overlap_amount,
+            target_pos.Y - config.cursor_size.Y / 2f + (0.04f * config.cursor_size.X) // Centers the cursor
+        );
 
-            float loop_time     = (float)(ImGui.GetTime() % 0.53f);
-            float loop_progress = loop_time / 0.53f;
+        float loop_time     = (float)(ImGui.GetTime() % 0.53f);
+        float loop_progress = loop_time / 0.53f;
 
-            // Draw trailing/fade out effect for cursor
-            // Ghost Cursor 1
-            if (loop_progress >= 0.12f) {
-                float offset = -0.05f * config.cursor_size.X;
-                float alpha  = 0.25f;
+        // Draw trailing/fade out effect for cursor
+        // Ghost Cursor 1
+        if (loop_progress >= 0.12f) {
+            float offset = -0.05f * config.cursor_size.X;
+            float alpha  = 0.25f;
 
-                // Sync movement with other cursors
-                if (loop_progress >= 0.48f) {
-                    float fade_time = (loop_progress - 0.48f) / 0.52f;
-                    offset += fade_time * (config.max_offset * 0.55f);
-                    alpha *= 1f - fade_time;
-                }
-
-                UV ghost_suv = new Rect {
-                    pos  = cursor_top_left + new Vector2(offset, 0f),
-                    size = config.cursor_size,
-                }.as_uv();
-
-                uint color = ImGui.ColorConvertFloat4ToU32(new Vector4(1f, 1f, 1f, alpha));
-
-                draw.AddImage(
-                    freetex,
-                    ghost_suv.p0,
-                    ghost_suv.p1,
-                    cursor_tuv.p0,
-                    cursor_tuv.p1,
-                    color
-                );
+            // Sync movement with other cursors
+            if (loop_progress >= 0.48f) {
+                float fade_time = (loop_progress - 0.48f) / 0.52f;
+                offset += fade_time * (config.max_offset * 0.55f);
+                alpha *= 1f - fade_time;
             }
 
-            // Ghost Cursor 2
-            if (loop_progress >= 0.25f) {
-                float offset = -0.04f * config.cursor_size.X;
-                float alpha  = 0.85f;
-
-                // Start moving
-                if (loop_progress >= 0.38f && loop_progress < 0.48f) {
-                    float slide_progress = (loop_progress - 0.38f) / 0.10f;
-                    offset += slide_progress * (config.max_offset * 0.20f);
-                }
-                // Sync movement with other cursors
-                else if (loop_progress >= 0.48f) {
-                    float fade_time = (loop_progress - 0.48f) / 0.52f;
-                    offset += (config.max_offset * 0.20f) + (fade_time * (config.max_offset * 0.55f));
-                    alpha *= 1f - fade_time;
-                }
-
-                UV ghost_suv = new Rect {
-                    pos  = cursor_top_left + new Vector2(offset, 0f),
-                    size = config.cursor_size,
-                }.as_uv();
-
-                uint color = ImGui.ColorConvertFloat4ToU32(new Vector4(1f, 1f, 1f, alpha));
-
-                draw.AddImage(
-                    freetex,
-                    ghost_suv.p0,
-                    ghost_suv.p1,
-                    cursor_tuv.p0,
-                    cursor_tuv.p1,
-                    color
-                );
-            }
-
-            // Main Cursor
-            UV main_suv = new Rect {
-                pos  = cursor_top_left + new Vector2(loop_progress * config.max_offset, 0f),
+            UV ghost_suv = new Rect {
+                pos  = cursor_top_left + new Vector2(offset, 0f),
                 size = config.cursor_size,
             }.as_uv();
 
+            uint color = ImGui.ColorConvertFloat4ToU32(new Vector4(1f, 1f, 1f, alpha));
+
             draw.AddImage(
                 freetex,
-                main_suv.p0,
-                main_suv.p1,
+                ghost_suv.p0,
+                ghost_suv.p1,
                 cursor_tuv.p0,
-                cursor_tuv.p1
+                cursor_tuv.p1,
+                color
             );
         }
+
+        // Ghost Cursor 2
+        if (loop_progress >= 0.25f) {
+            float offset = -0.04f * config.cursor_size.X;
+            float alpha  = 0.85f;
+
+            // Start moving
+            if (loop_progress >= 0.38f && loop_progress < 0.48f) {
+                float slide_progress = (loop_progress - 0.38f) / 0.10f;
+                offset += slide_progress * (config.max_offset * 0.20f);
+            }
+            // Sync movement with other cursors
+            else if (loop_progress >= 0.48f) {
+                float fade_time = (loop_progress - 0.48f) / 0.52f;
+                offset += (config.max_offset * 0.20f) + (fade_time * (config.max_offset * 0.55f));
+                alpha *= 1f - fade_time;
+            }
+
+            UV ghost_suv = new Rect {
+                pos  = cursor_top_left + new Vector2(offset, 0f),
+                size = config.cursor_size,
+            }.as_uv();
+
+            uint color = ImGui.ColorConvertFloat4ToU32(new Vector4(1f, 1f, 1f, alpha));
+
+            draw.AddImage(
+                freetex,
+                ghost_suv.p0,
+                ghost_suv.p1,
+                cursor_tuv.p0,
+                cursor_tuv.p1,
+                color
+            );
+        }
+
+        // Main Cursor
+        UV main_suv = new Rect {
+            pos  = cursor_top_left + new Vector2(loop_progress * config.max_offset, 0f),
+            size = config.cursor_size,
+        }.as_uv();
+
+        draw.AddImage(
+            freetex,
+            main_suv.p0,
+            main_suv.p1,
+            cursor_tuv.p0,
+            cursor_tuv.p1
+        );
     }
 }

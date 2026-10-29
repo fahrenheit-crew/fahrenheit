@@ -251,7 +251,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
                 X = text_left - text_margin,
             };
 
-            FhApi.Gui.X.draw_cursor(
+            FhApi.Gui.draw_x_cursor(
                 draw,
                 cursor_target,
                 cursor_config with {
@@ -452,7 +452,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
         }
 
         if (hovering) {
-            FhApi.Gui.X.draw_cursor(
+            FhApi.Gui.draw_x_cursor(
                 draw,
                 button_no_shadow.scale_to_aspect(aspect_helper).left,
                 cursor_config
@@ -669,7 +669,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
                 Y = save_rect_scaled.left.Y + 4f,
             };
 
-            FhApi.Gui.X.draw_cursor(
+            FhApi.Gui.draw_x_cursor(
                 draw,
                 cursor_target,
                 cursor_config

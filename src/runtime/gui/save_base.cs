@@ -563,6 +563,8 @@ public abstract class FhSaveUiBase : FhSaveUi {
 
         Vector2 thumb_margin = new(2f);
 
+        float thumb_width = track.size.X - thumb_margin.X * 2f;
+
         float scrollable_height  = track.size.Y - thumb_margin.Y * 2;
         float visible_percentage = scrollable.visible / (float)scrollable.max;
 
@@ -575,7 +577,7 @@ public abstract class FhSaveUiBase : FhSaveUi {
             visible_percentage
         );
 
-        Vector2 thumb_size = new(13f, thumb_height);
+        Vector2 thumb_size = new(thumb_width, thumb_height);
 
         uint thumb_color_top    = 0xFFCCCCCC;
         uint thumb_color_bottom = 0xFF808080;

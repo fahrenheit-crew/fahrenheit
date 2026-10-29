@@ -33,8 +33,6 @@ public sealed class FhSaveUiSelector : FhModule {
 
     private readonly FhSaveUiSettings _settings = new();
 
-    public FhSaveUiSelector() { }
-
     private string get_default_ui_id() {
         return FhGlobal.game_id switch {
             FhGameId.FFX    => _ui_x! .ModuleType,
@@ -60,8 +58,7 @@ public sealed class FhSaveUiSelector : FhModule {
     }
 
     public override void render_imgui() {
-        if (
-            !FhApi.Saves.impl_get_system_mode(out FhSaveSystemMode? mode)
+        if (!FhApi.Saves.impl_get_system_mode(out FhSaveSystemMode? mode)
             || mode is FhSaveSystemMode.NULL
         ) {
             return;

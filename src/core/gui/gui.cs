@@ -9,6 +9,21 @@ namespace Fahrenheit.Gui;
 ///     Fonts, style, and helper functions for user interfaces in Fahrenheit.
 /// </summary>
 public unsafe class FhGui {
+    public struct DrawTextConfig {
+        /// <summary>The font size to draw the text at.</summary>
+        public float font_size = 11f;
+
+        /// <summary>The color to draw the text using in the format 0xAABBGGRR, i.e. RGBA8.</summary>
+        public uint color = 0xFFFFFFFF;
+
+        /// <summary>Whether a shadow should be drawn under the text.</summary>
+        public bool draw_shadow = true;
+
+        /// <summary>The alignment of the text inside the available content region.</summary>
+        public Alignment2D align = Alignment2D.TOP_LEFT;
+
+        public DrawTextConfig() { }
+    }
 
     // Fonts for standardized style across Fahrenheit
     public ImFontPtr FONT_DEFAULT;
@@ -302,20 +317,14 @@ public unsafe class FhGui {
     ///     The alignment will use the entire available content region to determine center and end positions.
     /// </remarks>
     /// <param name="text">The text to be drawn.</param>
-    /// <param name="font_size">The font size to draw the text at.</param>
-    /// <param name="draw_shadow">Whether a shadow should be drawn under the text.</param>
-    /// <param name="align">The alignment of the text inside the available content region.</param>
-    /// <param name="color">The color to draw the text using in the format 0xAABBGGRR, i.e. RGBA8.</param>
+    /// <param name="config">The configuration to draw the text with.</param>
     public void draw_text(
-        string      text,
-        float       font_size,
-        bool        draw_shadow = true,
-        Alignment2D align       = default,
-        uint        color       = 0xFFFFFFFF
+        string         text,
+        DrawTextConfig config
     ) {
         Vector2 position = ImGui.GetContentRegionAvail();
 
-        position.X = align.h switch {
+        position.X = config.align.h switch {
             Alignment.BEGIN  => 0f,
             Alignment.CENTER => position.X / 2f,
             Alignment.END    => position.X,
@@ -323,7 +332,7 @@ public unsafe class FhGui {
             _ => throw new NotImplementedException(),
         };
 
-        position.Y = align.v switch {
+        position.Y = config.align.v switch {
             Alignment.BEGIN  => 0f,
             Alignment.CENTER => position.Y / 2f,
             Alignment.END    => position.Y,
@@ -339,51 +348,7 @@ public unsafe class FhGui {
             ImGui.GetWindowDrawList(),
             position,
             text,
-            font_size,
-            draw_shadow,
-            align,
-            color
-        );
-    }
-
-    /// <inheritdoc cref="draw_text(string, float, bool, Alignment2D, uint)"/>
-    public void draw_text(
-        ReadOnlySpan<byte> text,
-        float              font_size,
-        bool               draw_shadow = true,
-        Alignment2D        align       = default,
-        uint               color       = 0xFFFFFFFF
-    ) {
-        Vector2 position = ImGui.GetContentRegionAvail();
-
-        position.X = align.h switch {
-            Alignment.BEGIN  => 0f,
-            Alignment.CENTER => position.X / 2f,
-            Alignment.END    => position.X,
-
-            _ => throw new NotImplementedException(),
-        };
-
-        position.Y = align.v switch {
-            Alignment.BEGIN  => 0f,
-            Alignment.CENTER => position.Y / 2f,
-            Alignment.END    => position.Y,
-
-            _ => throw new NotImplementedException(),
-        };
-
-        position += ImGui.GetCursorPos();
-
-        // Instead of repeating the text alignment logic here using ImGui.SetCursorPos,
-        // we call through to the draw list variant with the window's draw list.
-        draw_text(
-            ImGui.GetWindowDrawList(),
-            position,
-            text,
-            font_size,
-            draw_shadow,
-            align,
-            color
+            config
         );
     }
 
@@ -402,28 +367,22 @@ public unsafe class FhGui {
     /// <param name="draw_list">The draw list to add the text to.</param>
     /// <param name="position">The position to draw the text at.</param>
     /// <param name="text">The text to be drawn.</param>
-    /// <param name="font_size">The font size to draw the text at.</param>
-    /// <param name="draw_shadow">Whether a shadow should be drawn under the text.</param>
-    /// <param name="align">The alignment of the text relative to the position.</param>
-    /// <param name="color">The color to draw the text using in the format <c>0xAABBGGRR</c>, i.e. RGBA8.</param>
+    /// <param name="config">The configuration to draw the text with.</param>
     /// <returns>The size of the drawn text.</returns>
     /// <seealso cref="ImGui.GetWindowDrawList()"/>
     /// <seealso cref="ImGui.GetBackgroundDrawList()"/>
     /// <seealso cref="ImGui.GetForegroundDrawList()"/>
     public Vector2 draw_text(
-        ImDrawListPtr draw_list,
-        Vector2       position,
-        string        text,
-        float         font_size,
-        bool          draw_shadow = false,
-        Alignment2D   align       = default,
-        uint          color       = 0xFFFFFFFF
+        ImDrawListPtr  draw_list,
+        Vector2        position,
+        string         text,
+        DrawTextConfig config
     ) {
-        ImGui.PushFont(null, font_size);
+        ImGui.PushFont(null, config.font_size);
 
         Vector2 text_size = ImGui.CalcTextSize(text);
 
-        position.X -= align.h switch {
+        position.X -= config.align.h switch {
             Alignment.BEGIN  => 0f,
             Alignment.CENTER => text_size.X / 2f,
             Alignment.END    => text_size.X,
@@ -431,7 +390,7 @@ public unsafe class FhGui {
             _ => throw new NotImplementedException(),
         };
 
-        position.Y -= align.v switch {
+        position.Y -= config.align.v switch {
             Alignment.BEGIN  => 0f,
             Alignment.CENTER => text_size.Y / 2f,
             Alignment.END    => text_size.Y,
@@ -439,58 +398,14 @@ public unsafe class FhGui {
             _ => throw new NotImplementedException(),
         };
 
-        if (draw_shadow) {
+        if (config.draw_shadow) {
             // Use the alpha from the provided color
-            uint shadow_color = 0 | (color & 0xFF000000);
+            uint shadow_color = 0 | (config.color & 0xFF000000);
 
             draw_list.AddText(position + new Vector2(2f), shadow_color, text);
         }
 
-        draw_list.AddText(position, color, text);
-
-        ImGui.PopFont();
-
-        return text_size;
-    }
-
-    /// <inheritdoc cref="draw_text(ImDrawListPtr, Vector2, string, float, bool, Alignment2D, uint)"/>
-    public Vector2 draw_text(
-        ImDrawListPtr      draw_list,
-        Vector2            position,
-        ReadOnlySpan<byte> text,
-        float              font_size,
-        bool               draw_shadow = false,
-        Alignment2D        align       = default,
-        uint               color       = 0xFFFFFFFF
-    ) {
-        ImGui.PushFont(null, font_size);
-
-        Vector2 text_size = ImGui.CalcTextSize(text);
-
-        position.X -= align.h switch {
-            Alignment.BEGIN  => 0f,
-            Alignment.CENTER => text_size.X / 2f,
-            Alignment.END    => text_size.X,
-
-            _ => throw new NotImplementedException(),
-        };
-
-        position.Y -= align.v switch {
-            Alignment.BEGIN  => 0f,
-            Alignment.CENTER => text_size.Y / 2f,
-            Alignment.END    => text_size.Y,
-
-            _ => throw new NotImplementedException(),
-        };
-
-        if (draw_shadow) {
-            // Use the alpha from the provided color
-            uint shadow_color = 0 | (color & 0xFF000000);
-
-            draw_list.AddText(position + new Vector2(2f), shadow_color, text);
-        }
-
-        draw_list.AddText(position, color, text);
+        draw_list.AddText(position, config.color, text);
 
         ImGui.PopFont();
 
@@ -560,8 +475,8 @@ public unsafe class FhGui {
     }
 
     private void draw_rectangle_gradient_up(
-        ImDrawListPtr      draw_list,
-        Rect               bounds,
+        ImDrawListPtr              draw_list,
+        Rect                       bounds,
         ReadOnlySpan<GradientStep> steps
     ) {
         for (int i = 1; i < steps.Length; i++)  {
@@ -587,8 +502,8 @@ public unsafe class FhGui {
     }
 
     private void draw_rectangle_gradient_right(
-        ImDrawListPtr      draw_list,
-        Rect               bounds,
+        ImDrawListPtr              draw_list,
+        Rect                       bounds,
         ReadOnlySpan<GradientStep> steps
     ) {
         for (int i = 1; i < steps.Length; i++)  {
@@ -614,8 +529,8 @@ public unsafe class FhGui {
     }
 
     private void draw_rectangle_gradient_down(
-        ImDrawListPtr      draw_list,
-        Rect               bounds,
+        ImDrawListPtr              draw_list,
+        Rect                       bounds,
         ReadOnlySpan<GradientStep> steps
     ) {
         for (int i = 1; i < steps.Length; i++)  {
@@ -641,8 +556,8 @@ public unsafe class FhGui {
     }
 
     private void draw_rectangle_gradient_left(
-        ImDrawListPtr      draw_list,
-        Rect               bounds,
+        ImDrawListPtr              draw_list,
+        Rect                       bounds,
         ReadOnlySpan<GradientStep> steps
     ) {
         for (int i = 1; i < steps.Length; i++)  {

@@ -34,6 +34,7 @@ public abstract class FhSaveUiBase : FhSaveUi {
 
     protected const float FONT_SIZE_DEFAULT = 43f;
     protected const float FONT_SIZE_SMALL   = 37f;
+    protected const float FONT_SIZE_TINY    = 32f;
 
     protected const uint SOUND_X_MOVE       = FFX.Ids.SoundId.UI_ACTION;
     protected const uint SOUND_X_ACTION     = FFX.Ids.SoundId.UI_ACTION;
@@ -79,8 +80,8 @@ public abstract class FhSaveUiBase : FhSaveUi {
 
     protected bool loaded_all_textures;
 
-    protected readonly SteppedScrollable scrollable_saves = new(visible: 5);
-    protected readonly SteppedScrollable scrollable_sets  = new(visible: 9);
+    protected readonly SteppedScrollable scrollable_saves = new(visible:  5);
+    protected readonly SteppedScrollable scrollable_sets  = new(visible: 10);
 
     protected SteppedScrollable current_scrollable;
 
@@ -98,6 +99,7 @@ public abstract class FhSaveUiBase : FhSaveUi {
 
     protected virtual float font_size       => FONT_SIZE_DEFAULT * font_scale;
     protected virtual float font_size_small => FONT_SIZE_SMALL * font_scale;
+    protected virtual float font_size_tiny  => FONT_SIZE_TINY * font_scale;
 
     protected FhGui.DrawTextConfig text_config => new() {
         font_size = font_size,

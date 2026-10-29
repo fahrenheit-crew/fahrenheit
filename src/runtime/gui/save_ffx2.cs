@@ -24,6 +24,7 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
     private readonly FhTexture _texture_plate    = new(Path.Join(DIR_X2_PLATE,   "12288_19_0_0_256_256.dds.phyre"), FhTextureType.GAME_PHYRE_2D);
     private readonly FhTexture _texture_freetex  = new(Path.Join(DIR_X2_MENU,    "freetex.dds.phyre"),              FhTextureType.GAME_PHYRE_2D);
     private readonly FhTexture _texture_x2_bg    = new(Path.Join(DIR_X2_MENU,    "x2_bg.dds.phyre"),                FhTextureType.GAME_PHYRE_2D);
+    private readonly FhTexture _texture_b_menu1  = new(Path.Join(DIR_X2_MENU,    "b_menu1.dds.phyre"),              FhTextureType.GAME_PHYRE_2D);
 
     private readonly Vector2 _tex_face_size = new(256f, 256f);
 
@@ -37,6 +38,7 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         _texture_plate,
         _texture_freetex,
         _texture_x2_bg,
+        _texture_b_menu1,
         _texture_ffx_faces_ply,
         _texture_ffx_faces_smn,
     ];
@@ -401,7 +403,7 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         draw.AddRectFilled(
             bg_suv.p0,
             bg_suv.p1,
-            0x80000000
+            0xA5000000
         );
 
         UV accent_tuv = new Rect {
@@ -473,6 +475,55 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
     protected override void ui_setlist() {
         if (mode != UiMode.SET_CHANGE) return;
 
+        if (!_texture_plate.try_use(out ImTextureRef plate, out FhTextureMetadata? plate_meta)) return;
+
+        // Shadows behind slots
+        Vector2 shadow_offset = 20f * aspect_scale;
+
+        Rect header_bounds = new Rect {
+            pos  = new( 400f, 199f),
+            size = new(1120f,  32f),
+        };
+
+        ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
+
+        float border_width = 5f;
+        uint  highlight    = 0x28FFFFFF;
+        uint  shadow       = 0x80000000;
+
+        FhApi.Gui.X2.draw_plate(
+            draw,
+            plate,
+            header_bounds.scale_to_aspect(aspect_helper),
+            2,
+            0xFFAEBEC3,
+            border_width * aspect_scale.Y,
+            highlight,
+            shadow,
+            shadow_offset,
+            true
+        );
+
+        Vector2 text_pos = header_bounds.left;
+        text_pos.X += 30f;
+        text_pos.Y -= 2f;
+        text_pos = text_pos * aspect_scale + aspect_helper.pos;
+
+        string text = localize("set_list.list_title");
+
+        FhGui.DrawTextConfig config = text_config with {
+            align     = Alignment2D.LEFT,
+            font_size = font_size_tiny,
+            color = 0xFFF7D19C,
+        };
+
+        FhApi.Gui.draw_text(
+            draw,
+            text_pos,
+            text,
+            config
+        );
+
         int start_idx = scrollable_sets.get_clip_start();
         int end_idx   = scrollable_sets.get_clip_end();
 
@@ -491,41 +542,31 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
 
         int start_idx = scrollable_sets.get_clip_start();
 
-        // Texture coordinates
-        float slice_size  = 64f;
-        float plate_max_y = 512f - (((global_idx + 1) % 8) * slice_size);
-
-        UV plate_tuv = new Rect {
-            pos  = new(  0f, plate_max_y - slice_size),
-            size = new(512f, slice_size),
-        }.as_uv(plate_meta.size);
-
         // Screen coordinates
-        Rect button = new() {
-            pos  = new( 347f, 178f),
-            size = new(1216f,  84f),
+        Rect plate_bounds = new() {
+            pos  = new( 400f, 232f),
+            size = new(1120f,  64f),
         };
 
-        button.pos.Y += (button.size.Y + 10f) * local_idx;
+        plate_bounds.pos.Y += (plate_bounds.size.Y + 1f) * local_idx;
 
-        Rect button_no_shadow = button.expand(new Vector2(-6f, -5f), Alignment2D.TOP_LEFT);
-        Rect button_scaled    = button.scale_to_aspect(aspect_helper);
-
-        UV button_suv = button_scaled.as_uv();
-
-        Vector2 name_pos = button_no_shadow.left;
+        Vector2 name_pos = plate_bounds.left;
         name_pos.X += 30f;
+        name_pos.Y -= 1f;
         name_pos = name_pos * aspect_scale + aspect_helper.pos;
 
-        Vector2 save_count_pos = button_no_shadow.right;
+        Vector2 save_count_pos = plate_bounds.right;
         save_count_pos.X -= 40f;
+        save_count_pos.Y -= 1f;
         save_count_pos = save_count_pos * aspect_scale + aspect_helper.pos;
+
+        plate_bounds = plate_bounds.scale_to_aspect(aspect_helper);
 
         // Drawing time
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
         ImGuiIOPtr    io   = ImGui.GetIO();
 
-        if (mouse_hovered(button_scaled)) {
+        if (mouse_hovered(plate_bounds)) {
             if (focus != UiFocus.LIST || scrollable_sets.hovered != global_idx) {
                 FhApi.Audio.play_sound(SOUND_ID_ACTION, ACTION_VOLUME);
             }
@@ -537,35 +578,28 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         bool hovering = scrollable_sets.hovered == global_idx;
 
         // Shadows behind slots
-        Vector2 shadow_offset = 10f * aspect_scale;
+        Vector2 shadow_offset = 20f * aspect_scale;
 
-        draw.AddRectFilled(
-            button_suv.p0 + shadow_offset,
-            button_suv.p1 + shadow_offset,
-            0xA5000000
-        );
-
-        draw.AddImage(
-            plate,
-            button_suv.p0,
-            button_suv.p1,
-            plate_tuv.p0,
-            plate_tuv.p1,
-            hovering ? 0xFFC6B1AF : 0xFFE4F0F1
-        );
-
-        // Draw shading/edges on the plate texture for definition
-        float border_width = 5f;
+        float border_width = 6f;
         uint  highlight    = 0x28FFFFFF;
         uint  shadow       = 0x80000000;
 
-        FhApi.Gui.X2.draw_plate_edges(
+        FhApi.Gui.X2.draw_plate(
             draw,
-            button_scaled,
+            plate,
+            plate_bounds,
+            global_idx,
+            0xFFE4F0F1,
             border_width * aspect_scale.Y,
             highlight,
-            shadow
+            shadow,
+            shadow_offset
         );
+
+        // TODO: Highlight for active set
+        /*if (set.name == FhApi.Saves.sets_get_active().name) {
+
+        }*/
 
         FhApi.Gui.draw_text(
             draw,
@@ -610,12 +644,12 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         }
 
         if (hovering) {
-            ui_cursor(button_no_shadow.scale_to_aspect(aspect_helper).left);
+            ui_cursor(plate_bounds.left);
         }
 
         // Handle input
 
-        if (mouse_clicked(button_scaled)) {
+        if (mouse_clicked(plate_bounds)) {
             io.WantCaptureMouse = true;
             FhApi.Audio.play_sound(SOUND_ID_SET_CHANGE);
             change_set(set.name);
@@ -646,7 +680,7 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         draw.AddRectFilled(
             window.top_left,
             window.bottom_right,
-            0x80000000
+            0xA5000000
         );
 
         UV accent_tuv = new Rect {

@@ -25,6 +25,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
     private readonly FhTexture _texture_faces_smn    = new(Path.Join(DIR_X_MENU, "face_smn.dds.phyre"),      FhTextureType.GAME_PHYRE_2D);
     private readonly FhTexture _texture_meswin       = new(Path.Join(DIR_X_MENU, "meswin.dds.phyre"),        FhTextureType.GAME_PHYRE_2D);
     private readonly FhTexture _texture_summonbg     = new(Path.Join(DIR_X_MENU, "summonbg.dds.phyre"),      FhTextureType.GAME_PHYRE_2D);
+    private readonly FhTexture _texture_battle       = new(Path.Join(DIR_X_MENU, "battle.dds.phyre"),        FhTextureType.GAME_PHYRE_2D);
 
     private readonly Vector2 _tex_meswin_size = new(1024f, 1024f);
 
@@ -40,6 +41,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
         _texture_faces_smn,
         _texture_meswin,
         _texture_summonbg,
+        _texture_battle,
         _texture_freetex,
     ];
 
@@ -297,6 +299,55 @@ public sealed class FhSaveUiX : FhSaveUiBase {
     protected override void ui_setlist() {
         if (mode != UiMode.SET_CHANGE) return;
 
+        if (!_texture_battle_kuang.try_use(
+            out ImTextureRef battle_kuang,
+            out FhTextureMetadata? battle_kuang_meta
+        )) {
+            return;
+        }
+
+        Rect header_bounds = new Rect {
+            pos  = new(350f, 188f),
+            size = new(500f,  40f),
+        };
+
+        UV header_tuv = new Rect {
+            pos  = new(275f, 882f),
+            size = new(365f,  31f),
+        }.as_uv(battle_kuang_meta.size, false);
+
+        UV header_suv = header_bounds.scale_to_aspect(aspect_helper).as_uv();
+
+        ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
+
+        draw.AddImage(
+            battle_kuang,
+            header_suv.p0,
+            header_suv.p1,
+            header_tuv.p0,
+            header_tuv.p1,
+            0xC0FF90FF
+        );
+
+        Vector2 text_pos = header_bounds.left;
+        text_pos.X += 50f;
+        text_pos.Y -= 1f;
+        text_pos = text_pos * aspect_scale + aspect_helper.pos;
+
+        string text = localize("set_list.list_title");
+
+        FhGui.DrawTextConfig config = text_config with {
+            align     = Alignment2D.LEFT,
+            font_size = font_size_tiny,
+        };
+
+        FhApi.Gui.draw_text(
+            draw,
+            text_pos,
+            text,
+            config
+        );
+
         int start_idx = scrollable_sets.get_clip_start();
         int end_idx   = scrollable_sets.get_clip_end();
 
@@ -329,11 +380,11 @@ public sealed class FhSaveUiX : FhSaveUiBase {
 
         // Screen coordinates
         Rect button = new() {
-            pos  = new( 348f, 177f),
-            size = new(1229f,  84f),
+            pos  = new( 350f, 232f),
+            size = new(1224f,  70f),
         };
 
-        button.pos.Y += (button.size.Y + 10f) * local_idx;
+        button.pos.Y += (button.size.Y + 1f) * local_idx;
 
         Rect button_no_shadow = button.expand(new Vector2(-6f, -5f), Alignment2D.TOP_LEFT);
         Rect button_scaled    = button.scale_to_aspect(aspect_helper);
@@ -341,11 +392,11 @@ public sealed class FhSaveUiX : FhSaveUiBase {
         UV button_suv = button_scaled.as_uv();
 
         Vector2 name_pos = button_no_shadow.left;
-        name_pos.X += 36f;
+        name_pos.X += 30f;
         name_pos = name_pos * aspect_scale + aspect_helper.pos;
 
         Vector2 save_count_pos = button_no_shadow.right;
-        save_count_pos.X -= 48f;
+        save_count_pos.X -= 40f;
         save_count_pos = save_count_pos * aspect_scale + aspect_helper.pos;
 
         // Drawing time
@@ -371,6 +422,23 @@ public sealed class FhSaveUiX : FhSaveUiBase {
             button_tuv.p1,
             hovering ? 0xFFFDF5E6 : 0xFFFFFFFF
         );
+
+        if (set.name == FhApi.Saves.sets_get_active().name) {
+            GradientStep[] highlight_steps = [
+                new(0.0f, 0x808FAD5A),
+                new(0.5f, 0x008FAD5A),
+            ];
+
+            FhApi.Gui.draw_rectangle_gradient(
+                draw,
+                button_no_shadow
+                .expand(new(0f, -2f), Alignment2D.TOP)
+                .expand(new(-1f, -2f), Alignment2D.BOTTOM_RIGHT)
+                .scale_to_aspect(aspect_helper),
+                GradientDirection.RIGHT,
+                highlight_steps
+            );
+        }
 
         FhApi.Gui.draw_text(
             draw,

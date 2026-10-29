@@ -10,6 +10,12 @@ public partial class FhGui {
 
     public class FhGuiX2 {
         public struct DrawPlateConfig {
+            /// <summary>The texture to draw.</summary>
+            public FhTexture texture;
+
+            /// <summary>The color of the plate, in the format 0xAABBGGRR, i.e. RGBA8.</summary>
+            public uint color = 0xFFE4F0F1;
+
             /// <summary>The width of the plate border.</summary>
             public float border_width = 5f;
 
@@ -25,24 +31,24 @@ public partial class FhGui {
             /// <summary>Whether to draw the plate in a header-like style.</summary>
             public bool draw_header = false;
 
-            public DrawPlateConfig() { }
+            public DrawPlateConfig(FhTexture _texture_plate) {
+                texture = _texture_plate;
+            }
         }
 
         /// <summary>Draws a "plate" with a given position, size, color, and shadow.</summary>
         /// <param name="draw">The draw list to add the texture to.</param>
-        /// <param name="plate">The texture to be drawn.</param>
         /// <param name="bounds">The position and size of the texture.</param>
         /// <param name="tex_slice_idx">The number used to calculate the vertical UV coordinates.</param>
-        /// <param name="color">The color to draw the texture with in the format <c>0xAABBGGRR</c>, i.e. RGBA8.</param>
         /// <param name="config">The configuration to draw the plate with.</param>
         public void draw_plate(
             ImDrawListPtr   draw,
-            ImTextureRef    plate,
             Rect            bounds,
             int             tex_slice_idx,
-            uint            color,
             DrawPlateConfig config
         ) {
+            if (!config.texture.try_use(out ImTextureRef plate, out FhTextureMetadata? plate_meta)) return;
+
             tex_slice_idx    %= (config.draw_header ? 16 : 8);
             float slice_size  = config.draw_header ? 32f: 64f;
             float plate_max_y = 512f - (tex_slice_idx * slice_size);
@@ -50,7 +56,7 @@ public partial class FhGui {
             UV plate_tuv = new Rect {
                 pos  = new(  0f, plate_max_y - slice_size),
                 size = new(512f,               slice_size),
-            }.as_uv(new(512f));
+            }.as_uv(plate_meta.size);
 
             UV plate_suv = bounds.as_uv();
 
@@ -67,7 +73,7 @@ public partial class FhGui {
                 plate_suv.p1,
                 plate_tuv.p0,
                 plate_tuv.p1,
-                color
+                config.color
             );
 
             draw_plate_edges(

@@ -105,10 +105,6 @@ public abstract class FhSaveUiBase : FhSaveUi {
         font_size = font_size,
     };
 
-    protected FhGui.FhGuiX2.DrawPlateConfig plate_config => new() {
-        shadow_offset = new Vector2(20f) * aspect_scale,
-    };
-
     protected virtual FhTexture[] textures => [];
 
     protected FhSaveUiBase() {

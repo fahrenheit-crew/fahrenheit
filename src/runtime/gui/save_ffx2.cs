@@ -44,6 +44,10 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         _texture_ffx_faces_smn,
     ];
 
+    FhGui.FhGuiX2.DrawPlateConfig plate_config => new(_texture_plate) {
+        shadow_offset = new Vector2(20f) * aspect_scale,
+    };
+
     protected override void ui_background() {
         if (!_texture_menuback  .try_use(out ImTextureRef menuback, out FhTextureMetadata? menuback_meta)
             || !_texture_mahojin.try_use(out ImTextureRef mahojin,  out FhTextureMetadata? mahojin_meta)
@@ -443,8 +447,8 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
             accent_tuv.p1
         );
 
-        Vector2 text_pos  =  bg_screen.center;
-        text_pos.Y        -= 2f * aspect_scale.Y;
+        Vector2 text_pos = bg_screen.center;
+        text_pos.Y      -= 2f * aspect_scale.Y;
 
         string text = localize("set_list.change_set");
 
@@ -487,11 +491,10 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
 
         FhApi.Gui.X2.draw_plate(
             draw,
-            plate,
             header_bounds.scale_to_aspect(aspect_helper),
             2,
-            0xFFAEBEC3,
             plate_config with {
+                color = 0xFFAEBEC3,
                 border_width = 5f * aspect_scale.Y,
                 draw_header = true,
             }
@@ -499,7 +502,7 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
 
         Vector2 text_pos = header_bounds.left;
         text_pos.X += 30f;
-        text_pos.Y -= 2f;
+        text_pos.Y -=  2f;
         text_pos = text_pos * aspect_scale + aspect_helper.pos;
 
         string text = localize("set_list.list_title");
@@ -545,12 +548,12 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
 
         Vector2 name_pos = plate_bounds.left;
         name_pos.X += 30f;
-        name_pos.Y -= 1f;
+        name_pos.Y -=  1f;
         name_pos = name_pos * aspect_scale + aspect_helper.pos;
 
         Vector2 save_count_pos = plate_bounds.right;
         save_count_pos.X -= 40f;
-        save_count_pos.Y -= 1f;
+        save_count_pos.Y -=  1f;
         save_count_pos = save_count_pos * aspect_scale + aspect_helper.pos;
 
         plate_bounds = plate_bounds.scale_to_aspect(aspect_helper);
@@ -572,10 +575,8 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
 
         FhApi.Gui.X2.draw_plate(
             draw,
-            plate,
             plate_bounds,
             global_idx,
-            0xFFE4F0F1,
             plate_config with {
                 border_width = 6f * aspect_scale.Y,
             }

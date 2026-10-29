@@ -10,10 +10,10 @@ namespace Fahrenheit.Gui;
 /// </summary>
 public unsafe partial class FhGui {
     public struct DrawTextConfig {
-        /// <summary>The font size to draw the text at.</summary>
+        /// <summary>The size of the text.</summary>
         public float font_size = 11f;
 
-        /// <summary>The color to draw the text using in the format 0xAABBGGRR, i.e. RGBA8.</summary>
+        /// <summary>The color of the text, in the format 0xAABBGGRR, i.e. RGBA8.</summary>
         public uint color = 0xFFFFFFFF;
 
         /// <summary>Whether a shadow should be drawn under the text.</summary>

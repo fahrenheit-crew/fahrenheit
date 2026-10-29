@@ -10,16 +10,16 @@ public partial class FhGui {
 
     public class FhGuiX2 {
         public struct DrawPlateConfig {
-            /// <summary>The width to draw the plate border with.</summary>
+            /// <summary>The width of the plate border.</summary>
             public float border_width = 5f;
 
-            /// <summary>The color to draw the border highlight using in the format 0xAABBGGRR, i.e. RGBA8.</summary>
+            /// <summary>The color of the border highlight, in the format 0xAABBGGRR, i.e. RGBA8.</summary>
             public uint border_highlight = 0x28FFFFFF;
 
-            /// <summary>The color to draw the border shadow using in the format 0xAABBGGRR, i.e. RGBA8.</summary>
+            /// <summary>The color of the border shadow, in the format 0xAABBGGRR, i.e. RGBA8.</summary>
             public uint border_shadow = 0x80000000;
 
-            /// <summary>The offset from the plate to draw a shadow from behind.</summary>
+            /// <summary>The offset of the plate's shadow from the plate.</summary>
             public Vector2 shadow_offset = new(0f, 0f);
 
             /// <summary>Whether to draw the plate in a header-like style.</summary>

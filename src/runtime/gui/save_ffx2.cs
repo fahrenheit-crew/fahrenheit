@@ -754,12 +754,14 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         }
 
         /* ===== Plate Texture ===== */
-        float header_size    = 47f;
-        float vertical_space =  4f;
+        float header_size    =  47f;
+        float vertical_space =   4f;
+        float map_size       = 269f;
 
         Rect header_outer_bounds = new() {
             pos  = save_outer_bounds.pos,
-            size = save_outer_bounds.size with {
+            size = new() {
+                X = save_outer_bounds.size.X - map_size,
                 Y = header_size,
             },
         };
@@ -770,8 +772,19 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
                 Y = header_outer_bounds.bottom.Y + vertical_space,
             },
             size = new() {
-                X = save_outer_bounds.size.X,
+                X = save_outer_bounds.size.X - map_size,
                 Y = save_outer_bounds.size.Y - header_size - vertical_space,
+            },
+        };
+
+        Rect map_outer_bounds = new() {
+            pos = new() {
+                X = save_outer_bounds.pos.X + save_outer_bounds.size.X - map_size + save_gap,
+                Y = save_outer_bounds.pos.Y,
+            },
+            size = new() {
+                X = map_size - save_gap,
+                Y = save_outer_bounds.size.Y,
             },
         };
 
@@ -793,8 +806,14 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
             size = new(512f, uv_y_split - uv_y_end),
         }.as_uv(plate_meta.size);
 
+        UV map_tuv = new Rect {
+            pos  = new(412f,              uv_y_end),
+            size = new(100f, uv_y_start - uv_y_end),
+        }.as_uv(plate_meta.size);
+
         UV header_suv = header_outer_bounds.scale_to_aspect(aspect_helper).as_uv();
         UV info_suv   = info_outer_bounds  .scale_to_aspect(aspect_helper).as_uv();
+        UV map_suv    = map_outer_bounds   .scale_to_aspect(aspect_helper).as_uv();
 
         // Shadows behind saves
         Vector2 shadow_offset = 10f * aspect_scale;
@@ -808,6 +827,12 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         draw.AddRectFilled(
             info_suv.p0 + shadow_offset,
             info_suv.p1 + shadow_offset,
+            0xA5000000
+        );
+
+        draw.AddRectFilled(
+            map_suv.p0 + shadow_offset,
+            map_suv.p1 + shadow_offset,
             0xA5000000
         );
 
@@ -836,6 +861,15 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
             info_clr
         );
 
+        draw.AddImage(
+            plate,
+            map_suv.p0,
+            map_suv.p1,
+            map_tuv.p0,
+            map_tuv.p1,
+            info_clr
+        );
+
         // Border highlights/shadows
         float border_width = 5f;
         uint  highlight    = 0x28FFFFFF;
@@ -857,32 +891,33 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
             shadow
         );
 
+        FhApi.Gui.X2.draw_plate_edges(
+            draw,
+            map_outer_bounds.scale_to_aspect(aspect_helper),
+            border_width * aspect_scale.Y,
+            highlight,
+            shadow
+        );
+
         draw.AddRectFilled(
             header_suv.p0,
             header_suv.p1,
             header_shade
         );
 
+        draw.AddRectFilled(
+            map_suv.p0,
+            map_suv.p1,
+            0x63000000
+        );
+
         // Details
         Vector2 shrink_size = new(border_width * 2f);
 
-        Rect save_bounds   = save_outer_bounds  .expand(-shrink_size, Alignment2D.CENTER);
-        Rect header_bounds = header_outer_bounds.expand(-shrink_size, Alignment2D.CENTER);
-        Rect info_bounds   = info_outer_bounds  .expand(-shrink_size, Alignment2D.CENTER);
-
-        Vector2 map_icon_size = new() {
-            X = save_bounds.size.Y * 1.77083f,
-            Y = save_bounds.size.Y,
-        };
-
-        Rect map_bounds = new() {
-            pos = save_bounds.top_right with {
-                X = save_bounds.top_right.X - map_icon_size.X,
-            },
-            size = map_icon_size,
-        };
-
-        info_bounds.size.X -= map_bounds.size.X;
+        Rect save_bounds   = save_outer_bounds  .expand(-shrink_size,     Alignment2D.CENTER);
+        Rect header_bounds = header_outer_bounds.expand(-shrink_size,     Alignment2D.CENTER);
+        Rect info_bounds   = info_outer_bounds  .expand(-shrink_size,     Alignment2D.CENTER);
+        Rect map_bounds    = map_outer_bounds   .expand(-shrink_size * 2, Alignment2D.CENTER);
 
         if (save.slot == 0 && is_saving)
             ui_newdata(info_bounds, map_bounds);
@@ -998,10 +1033,10 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
             );
         }
 
-        text_margin = 59f;
+        text_margin = 32f;
 
         Vector2 header_text_pos_r = header_bounds.right - new Vector2 {
-            X = map_bounds.size.X + text_margin,
+            X = text_margin,
         };
 
         FhApi.Gui.draw_text(
@@ -1013,10 +1048,9 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
 
         /* ===== Info Details ===== */
         float margin_face = FhUtil.select(38f, 133f, 86f);
-        float margin_map  = 57f;
 
         float info_margin_left  = faces_bounds.size.X + margin_face;
-        float info_margin_right = margin_map;
+        float info_margin_right = 32f;
 
         info_bounds.pos.X  += info_margin_left;
         info_bounds.size.X -= info_margin_left + info_margin_right;
@@ -1261,7 +1295,7 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         };
 
         Vector2 pos_completion = new() {
-            X = bounds.right.X + 2f,
+            X = bounds.right.X + 1f,
             Y = top_y,
         };
 

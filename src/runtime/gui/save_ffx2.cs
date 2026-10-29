@@ -739,9 +739,10 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         }
 
         /* ===== Plate Texture ===== */
-        float header_size    =  47f;
-        float vertical_space =   4f;
-        float map_size       = 269f;
+        float header_size      =  47f;
+        float horizontal_space =   6f;
+        float vertical_space   =   4f;
+        float map_size         = 265f;
 
         Rect header_outer_bounds = new() {
             pos  = save_outer_bounds.pos,
@@ -764,11 +765,11 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
 
         Rect map_outer_bounds = new() {
             pos = new() {
-                X = save_outer_bounds.pos.X + save_outer_bounds.size.X - map_size + save_gap,
+                X = save_outer_bounds.pos.X + save_outer_bounds.size.X - map_size + horizontal_space,
                 Y = save_outer_bounds.pos.Y,
             },
             size = new() {
-                X = map_size - save_gap,
+                X = map_size - horizontal_space,
                 Y = save_outer_bounds.size.Y,
             },
         };
@@ -1022,7 +1023,7 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
             );
         }
 
-        text_margin = 32f;
+        text_margin = 36f;
 
         Vector2 header_text_pos_r = header_bounds.right - new Vector2 {
             X = text_margin,
@@ -1039,7 +1040,7 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         float margin_face = FhUtil.select(38f, 133f, 86f);
 
         float info_margin_left  = faces_bounds.size.X + margin_face;
-        float info_margin_right = 32f;
+        float info_margin_right = 36f;
 
         info_bounds.pos.X  += info_margin_left;
         info_bounds.size.X -= info_margin_left + info_margin_right;

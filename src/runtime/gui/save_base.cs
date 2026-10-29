@@ -396,11 +396,6 @@ public abstract class FhSaveUiBase : FhSaveUi {
     /// <summary>Render the active set name and save count.</summary>
     protected abstract void ui_savecount();
 
-    /// <summary>Render the cursor.</summary>
-    /// <param name="target_pos">The position the cursor should point at.</param>
-    /// <param name="overlap">Whether the cursor should overlap its target a little.</param>
-    protected abstract void ui_cursor(Vector2 target_pos, bool overlap = true);
-
     /// <summary>Render the Change Set button.</summary>
     protected abstract void ui_change_set();
 

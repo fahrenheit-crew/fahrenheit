@@ -28,7 +28,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
     private readonly FhTexture _texture_battle       = new(Path.Join(DIR_X_MENU, "battle.dds.phyre"),        FhTextureType.GAME_PHYRE_2D);
 
     private readonly Vector2 _tex_meswin_size = new(1024f, 1024f);
-    private readonly Vector2 _tex_map_size    = new(320f, 176f);
+    private readonly Vector2 _tex_map_size    = new( 320f,  176f);
 
     private readonly FhTexture _texture_freetex = new(Path.Join(DIR_X2_MENU, "freetex.dds.phyre"), FhTextureType.GAME_PHYRE_2D);
 
@@ -45,6 +45,11 @@ public sealed class FhSaveUiX : FhSaveUiBase {
         _texture_battle,
         _texture_freetex,
     ];
+
+    FhGui.DrawCursorConfig cursor_config => new(_texture_meswin) {
+        cursor_size = new Vector2(92f, 61f) * aspect_scale,
+        max_offset = 16f * aspect_scale.X,
+    };
 
     private readonly NineSliceHelper  _savefile_border_helper;
 
@@ -199,47 +204,6 @@ public sealed class FhSaveUiX : FhSaveUiBase {
         );
     }
 
-    protected override void ui_cursor(Vector2 target_pos, bool overlap = true) {
-        if (!_texture_meswin.try_use(out ImTextureRef meswin, out FhTextureMetadata? meswin_meta)) {
-            return;
-        }
-
-        ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
-
-        UV cursor_tuv = new UV(
-            new(157f, 244f),
-            new( 90f, 200f)
-        ).map_to(meswin_meta.size);
-
-        Vector2 cursor_size = new Vector2(92f, 61f) * aspect_scale;
-
-        float max_offset   = 16f * aspect_scale.X;
-        float cycle_length = 0.38f;
-
-        // Multiply by pi so cycle_length can be expressed in seconds.
-        float cycle_t = MathF.Sin((float)ImGui.GetTime() * MathF.PI / cycle_length) / 2f + 0.5f;
-        float offset  = -(max_offset * cycle_t);
-
-        float overlap_amount = overlap ? cursor_size.X * 0.1f : 0f;
-
-        Vector2 cursor_center = new(
-            target_pos.X - cursor_size.X / 2f + overlap_amount - offset,
-            target_pos.Y
-        );
-
-        UV cursor_suv = new Rect { pos = cursor_center }
-            .expand(cursor_size, Alignment2D.CENTER)
-            .as_uv();
-
-        draw.AddImage(
-            meswin,
-            cursor_suv.p0,
-            cursor_suv.p1,
-            cursor_tuv.p0,
-            cursor_tuv.p1
-        );
-    }
-
     protected override void ui_change_set() {
         if (!_texture_battle_kuang.try_use(
             out ImTextureRef       battle_kuang,
@@ -287,7 +251,13 @@ public sealed class FhSaveUiX : FhSaveUiBase {
                 X = text_left - text_margin,
             };
 
-            ui_cursor(cursor_target, false);
+            FhApi.Gui.X.draw_cursor(
+                draw,
+                cursor_target,
+                cursor_config with {
+                    overlap = false
+                }
+            );
         }
 
         // Input handling
@@ -482,7 +452,11 @@ public sealed class FhSaveUiX : FhSaveUiBase {
         }
 
         if (hovering) {
-            ui_cursor(button_no_shadow.scale_to_aspect(aspect_helper).left);
+            FhApi.Gui.X.draw_cursor(
+                draw,
+                button_no_shadow.scale_to_aspect(aspect_helper).left,
+                cursor_config
+            );
         }
 
         // Handle input
@@ -695,7 +669,11 @@ public sealed class FhSaveUiX : FhSaveUiBase {
                 Y = save_rect_scaled.left.Y + 4f,
             };
 
-            ui_cursor(cursor_target);
+            FhApi.Gui.X.draw_cursor(
+                draw,
+                cursor_target,
+                cursor_config
+            );
         }
 
         // Handle input

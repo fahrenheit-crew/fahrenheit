@@ -25,6 +25,24 @@ public unsafe partial class FhGui {
         public DrawTextConfig() { }
     }
 
+    public struct DrawCursorConfig {
+        /// <summary>The texture to draw.</summary>
+        public FhTexture texture;
+
+        /// <summary>The size of the cursor.</summary>
+        public Vector2 cursor_size = new Vector2(92f, 55f);
+
+        /// <summary>The maximum distance for the cursor to travel.</summary>
+        public float max_offset = 16f;
+
+        /// <summary>Whether the cursor slightly overlaps its target.</summary>
+        public bool overlap = true;
+
+        public DrawCursorConfig(FhTexture cursor_texture) {
+            texture = cursor_texture;
+        }
+    }
+
     // Fonts for standardized style across Fahrenheit
     public ImFontPtr FONT_DEFAULT;
     public ImFontPtr FONT_JP;

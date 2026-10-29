@@ -48,6 +48,11 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         shadow_offset = new Vector2(20f) * aspect_scale,
     };
 
+    FhGui.DrawCursorConfig cursor_config => new(_texture_freetex) {
+        cursor_size = new Vector2(92f, 55f) * aspect_scale,
+        max_offset = 18f * aspect_scale.X,
+    };
+
     protected override void ui_background() {
         if (!_texture_menuback  .try_use(out ImTextureRef menuback, out FhTextureMetadata? menuback_meta)
             || !_texture_mahojin.try_use(out ImTextureRef mahojin,  out FhTextureMetadata? mahojin_meta)
@@ -286,108 +291,6 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         );
     }
 
-    protected override void ui_cursor(Vector2 target_pos, bool overlap = true) {
-        if (!_texture_freetex.try_use(out ImTextureRef freetex, out FhTextureMetadata? freetex_meta)) return;
-
-        ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
-
-        UV cursor_tuv = new UV(
-            new(  9f, 572f),
-            new(180f, 478f)
-        ).map_to(freetex_meta.size);
-
-        Vector2 cursor_size = new Vector2(92f, 55f) * aspect_scale;
-
-        float overlap_amount = overlap ? cursor_size.X * 0.1f : 0f;
-
-        Vector2 cursor_top_left = new(
-            target_pos.X - cursor_size.X + overlap_amount,
-            target_pos.Y - cursor_size.Y / 2f + (4f * aspect_scale.Y) // "+ 4f" Centers the cursor properly
-        );
-
-        float loop_time     = (float)(ImGui.GetTime() % 0.53f);
-        float loop_progress = loop_time / 0.53f;
-        float travel_dist   = 18f * aspect_scale.X;
-
-        // Draw trailing/fade out effect for cursor
-        // Ghost Cursor 1
-        if (loop_progress >= 0.12f) {
-            float offset = -5f * aspect_scale.X;
-            float alpha  = 0.25f;
-
-            // Sync movement with other cursors
-            if (loop_progress >= 0.48f) {
-                float fade_time = (loop_progress - 0.48f) / 0.52f;
-                offset += fade_time * (travel_dist * 0.55f);
-                alpha  *= 1f - fade_time;
-            }
-
-            UV ghost_suv = new Rect {
-                pos  = cursor_top_left + new Vector2(offset, 0f),
-                size = cursor_size,
-            }.as_uv();
-
-            uint color = ImGui.ColorConvertFloat4ToU32(new Vector4(1f, 1f, 1f, alpha));
-
-            draw.AddImage(
-                freetex,
-                ghost_suv.p0,
-                ghost_suv.p1,
-                cursor_tuv.p0,
-                cursor_tuv.p1,
-                color
-            );
-        }
-
-        // Ghost Cursor 2
-        if (loop_progress >= 0.25f) {
-            float offset = -4f * aspect_scale.X;
-            float alpha  = 0.85f;
-
-            // Start moving
-            if (loop_progress >= 0.38f && loop_progress < 0.48f) {
-                float slide_progress = (loop_progress - 0.38f) / 0.10f;
-                offset += slide_progress * (travel_dist * 0.20f);
-            }
-            // Sync movement with other cursors
-            else if (loop_progress >= 0.48f) {
-                float fade_time = (loop_progress - 0.48f) / 0.52f;
-                offset += (travel_dist * 0.20f) + (fade_time * (travel_dist * 0.55f));
-                alpha  *= 1f - fade_time;
-            }
-
-            UV ghost_suv = new Rect {
-                pos  = cursor_top_left + new Vector2(offset, 0f),
-                size = cursor_size,
-            }.as_uv();
-
-            uint color = ImGui.ColorConvertFloat4ToU32(new Vector4(1f, 1f, 1f, alpha));
-
-            draw.AddImage(
-                freetex,
-                ghost_suv.p0,
-                ghost_suv.p1,
-                cursor_tuv.p0,
-                cursor_tuv.p1,
-                color
-            );
-        }
-
-        // Main Cursor
-        UV main_suv = new Rect {
-            pos  = cursor_top_left + new Vector2(loop_progress * travel_dist, 0f),
-            size = cursor_size,
-        }.as_uv();
-
-        draw.AddImage(
-            freetex,
-            main_suv.p0,
-            main_suv.p1,
-            cursor_tuv.p0,
-            cursor_tuv.p1
-        );
-    }
-
     protected override void ui_change_set() {
         if (!_texture_x2_bg.try_use(out ImTextureRef x2_bg, out FhTextureMetadata? x2_bg_meta)) return;
 
@@ -467,7 +370,13 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
                 X = text_left - text_margin,
             };
 
-            ui_cursor(cursor_target, false);
+            FhApi.Gui.X2.draw_cursor(
+                draw,
+                cursor_target,
+                cursor_config with {
+                    overlap = false
+                }
+            );
         }
 
         // Input handling
@@ -630,7 +539,11 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         }
 
         if (hovering) {
-            ui_cursor(plate_bounds.left);
+            FhApi.Gui.X2.draw_cursor(
+                draw,
+                plate_bounds.left,
+                cursor_config
+            );
         }
 
         // Handle input
@@ -913,7 +826,11 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
 
         /* ===== Cursor ===== */
         if (focus == UiFocus.LIST && scrollable_saves.hovered == global_idx) {
-            ui_cursor(info_outer_bounds.scale_to_aspect(aspect_helper).left);
+            FhApi.Gui.X2.draw_cursor(
+                draw,
+                info_outer_bounds.scale_to_aspect(aspect_helper).left,
+                cursor_config
+            );
         }
 
         // Handle input

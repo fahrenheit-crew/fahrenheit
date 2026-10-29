@@ -140,5 +140,106 @@ public partial class FhGui {
             draw.AddConvexPolyFilled(border_left  [0], 4, highlight);
             draw.AddConvexPolyFilled(border_right [0], 4, shadow);
         }
+
+        public void draw_cursor(
+            ImDrawListPtr    draw,
+            Vector2          target_pos,
+            DrawCursorConfig config
+        ) {
+            if (!config.texture.try_use(out ImTextureRef freetex, out FhTextureMetadata? freetex_meta)) return;
+
+            UV cursor_tuv = new UV(
+                new(  9f, 572f),
+                new(180f, 478f)
+            ).map_to(freetex_meta.size);
+
+            float overlap_amount = config.overlap ? config.cursor_size.X * 0.1f : 0f;
+
+            Vector2 cursor_top_left = new(
+                target_pos.X - config.cursor_size.X + overlap_amount,
+                target_pos.Y - config.cursor_size.Y / 2f + (0.04f * config.cursor_size.X)
+            );
+
+            float loop_time     = (float)(ImGui.GetTime() % 0.53f);
+            float loop_progress = loop_time / 0.53f;
+
+            // Draw trailing/fade out effect for cursor
+            // Ghost Cursor 1
+            if (loop_progress >= 0.12f) {
+                float offset = -0.05f * config.cursor_size.X;
+                float alpha  = 0.25f;
+
+                // Sync movement with other cursors
+                if (loop_progress >= 0.48f) {
+                    float fade_time = (loop_progress - 0.48f) / 0.52f;
+                    offset += fade_time * (config.max_offset * 0.55f);
+                    alpha *= 1f - fade_time;
+                }
+
+                UV ghost_suv = new Rect {
+                    pos  = cursor_top_left + new Vector2(offset, 0f),
+                    size = config.cursor_size,
+                }.as_uv();
+
+                uint color = ImGui.ColorConvertFloat4ToU32(new Vector4(1f, 1f, 1f, alpha));
+
+                draw.AddImage(
+                    freetex,
+                    ghost_suv.p0,
+                    ghost_suv.p1,
+                    cursor_tuv.p0,
+                    cursor_tuv.p1,
+                    color
+                );
+            }
+
+            // Ghost Cursor 2
+            if (loop_progress >= 0.25f) {
+                float offset = -0.04f * config.cursor_size.X;
+                float alpha  = 0.85f;
+
+                // Start moving
+                if (loop_progress >= 0.38f && loop_progress < 0.48f) {
+                    float slide_progress = (loop_progress - 0.38f) / 0.10f;
+                    offset += slide_progress * (config.max_offset * 0.20f);
+                }
+                // Sync movement with other cursors
+                else if (loop_progress >= 0.48f) {
+                    float fade_time = (loop_progress - 0.48f) / 0.52f;
+                    offset += (config.max_offset * 0.20f) + (fade_time * (config.max_offset * 0.55f));
+                    alpha *= 1f - fade_time;
+                }
+
+                UV ghost_suv = new Rect {
+                    pos  = cursor_top_left + new Vector2(offset, 0f),
+                    size = config.cursor_size,
+                }.as_uv();
+
+                uint color = ImGui.ColorConvertFloat4ToU32(new Vector4(1f, 1f, 1f, alpha));
+
+                draw.AddImage(
+                    freetex,
+                    ghost_suv.p0,
+                    ghost_suv.p1,
+                    cursor_tuv.p0,
+                    cursor_tuv.p1,
+                    color
+                );
+            }
+
+            // Main Cursor
+            UV main_suv = new Rect {
+                pos  = cursor_top_left + new Vector2(loop_progress * config.max_offset, 0f),
+                size = config.cursor_size,
+            }.as_uv();
+
+            draw.AddImage(
+                freetex,
+                main_suv.p0,
+                main_suv.p1,
+                cursor_tuv.p0,
+                cursor_tuv.p1
+            );
+        }
     }
 }

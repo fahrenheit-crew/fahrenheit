@@ -360,6 +360,9 @@ static DWORD s0_dbg_w32_exception(
 ) {
     EXCEPTION_RECORD* ptr_exception_record = &ptr_info_exception->ExceptionRecord;
 
+    if (ptr_exception_record->ExceptionCode == 0x406D1388) // MSVS thread rename
+        return DBG_CONTINUE;
+
     /* [fkelava 12/09/26 23:50]
      * https://learn.microsoft.com/en-us/windows/win32/api/minwinbase/ns-minwinbase-exception_debug_info#members
      * > If this member is zero, the debugger has previously encountered the exception.
@@ -439,7 +442,7 @@ static DWORD s0_dbg_w32_exception(
         return DBG_EXCEPTION_NOT_HANDLED;
     }
 
-    return DBG_CONTINUE;
+    return DBG_EXCEPTION_NOT_HANDLED;
 }
 
 /* [fkelava 16/09/26 18:44]

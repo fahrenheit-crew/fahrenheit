@@ -31,8 +31,8 @@ public partial class FhGui {
             /// <summary>Whether to draw the plate in a header-like style.</summary>
             public bool draw_header = false;
 
-            public DrawPlateConfig(FhTexture _texture_plate) {
-                texture = _texture_plate;
+            public DrawPlateConfig(FhTexture plate_texture) {
+                texture = plate_texture;
             }
         }
 

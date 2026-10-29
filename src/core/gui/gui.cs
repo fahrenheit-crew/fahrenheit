@@ -8,7 +8,7 @@ namespace Fahrenheit.Gui;
 /// <summary>
 ///     Fonts, style, and helper functions for user interfaces in Fahrenheit.
 /// </summary>
-public unsafe class FhGui {
+public unsafe partial class FhGui {
     public struct DrawTextConfig {
         /// <summary>The font size to draw the text at.</summary>
         public float font_size = 11f;

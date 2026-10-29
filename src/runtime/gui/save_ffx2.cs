@@ -41,37 +41,6 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         _texture_ffx_faces_smn,
     ];
 
-    /// <summary>Draws the highlights/shadows for the X-2 plate texture.</summary>
-    private void draw_highlight_shadow(ImDrawListPtr draw, Rect bounds, float thickness, uint highlight, uint shadow) {
-        // Top Highlight
-        draw.AddRectFilled(
-            bounds.top_left,
-            new Vector2(bounds.top_right.X, bounds.top_left.Y + thickness),
-            highlight
-        );
-
-        // Left Highlight
-        draw.AddRectFilled(
-            new Vector2(bounds.top_left.X, bounds.top_left.Y + thickness),
-            new Vector2(bounds.top_left.X + thickness, bounds.bottom_left.Y),
-            highlight
-        );
-
-        // Bottom Shadow - intentional overlap with left highlight to mimic the vanilla game!
-        draw.AddRectFilled(
-            new Vector2(bounds.top_left.X, bounds.bottom_left.Y - thickness),
-            bounds.bottom_right,
-            shadow
-        );
-
-        // Right Shadow
-        draw.AddRectFilled(
-            bounds.top_right + new Vector2(-thickness, thickness),
-            new Vector2(bounds.bottom_right.X, bounds.bottom_right.Y - thickness),
-            shadow
-        );
-    }
-
     protected override void ui_background() {
         if (!_texture_menuback  .try_use(out ImTextureRef menuback, out FhTextureMetadata? menuback_meta)
             || !_texture_mahojin.try_use(out ImTextureRef mahojin,  out FhTextureMetadata? mahojin_meta)
@@ -586,14 +555,14 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         );
 
         // Draw shading/edges on the plate texture for definition
-        float border_thickness = 5f * aspect_scale.Y;
-        uint  highlight        = 0x28FFFFFF;
-        uint  shadow           = 0x80000000;
+        float border_width = 5f;
+        uint  highlight    = 0x28FFFFFF;
+        uint  shadow       = 0x80000000;
 
-        draw_highlight_shadow(
+        FhApi.Gui.X2.draw_plate_edges(
             draw,
             button_scaled,
-            border_thickness,
+            border_width * aspect_scale.Y,
             highlight,
             shadow
         );
@@ -834,14 +803,22 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         );
 
         // Border highlights/shadows
-        float border_thickness = 5f;
-        uint  highlight        = 0x28FFFFFF;
-        uint  shadow           = 0x80000000;
+        float border_width = 5f;
+        uint  highlight    = 0x28FFFFFF;
+        uint  shadow       = 0x80000000;
 
-        draw_highlight_shadow(
+        FhApi.Gui.X2.draw_plate_edges(
             draw,
             header_outer_bounds.scale_to_aspect(aspect_helper),
-            border_thickness * aspect_scale.Y,
+            border_width * aspect_scale.Y,
+            highlight,
+            shadow
+        );
+
+        FhApi.Gui.X2.draw_plate_edges(
+            draw,
+            info_outer_bounds.scale_to_aspect(aspect_helper),
+            border_width * aspect_scale.Y,
             highlight,
             shadow
         );
@@ -852,16 +829,8 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
             header_shade
         );
 
-        draw_highlight_shadow(
-            draw,
-            info_outer_bounds.scale_to_aspect(aspect_helper),
-            border_thickness * aspect_scale.Y,
-            highlight,
-            shadow
-        );
-
         // Details
-        Vector2 shrink_size = new(border_thickness * 2f);
+        Vector2 shrink_size = new(border_width * 2f);
 
         Rect save_bounds   = save_outer_bounds  .expand(-shrink_size, Alignment2D.CENTER);
         Rect header_bounds = header_outer_bounds.expand(-shrink_size, Alignment2D.CENTER);

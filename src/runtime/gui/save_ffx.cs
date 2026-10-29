@@ -28,6 +28,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
     private readonly FhTexture _texture_battle       = new(Path.Join(DIR_X_MENU, "battle.dds.phyre"),        FhTextureType.GAME_PHYRE_2D);
 
     private readonly Vector2 _tex_meswin_size = new(1024f, 1024f);
+    private readonly Vector2 _tex_map_size    = new(320f, 176f);
 
     private readonly FhTexture _texture_freetex = new(Path.Join(DIR_X2_MENU, "freetex.dds.phyre"), FhTextureType.GAME_PHYRE_2D);
 
@@ -747,7 +748,11 @@ public sealed class FhSaveUiX : FhSaveUiBase {
         FhTexture tex_map = save.icon_map;
 
         if (tex_map.try_use(out ImTextureRef map_icon, out _)) {
-            UV tuv = new(Vector2.Zero, Vector2.One);
+            UV tuv = new Rect {
+                pos  = new(  2f,   2f),
+                size = new(318f, 174f),
+            }.as_uv(_tex_map_size, false);
+
             UV suv = map_bounds.scale_to_aspect(aspect_helper).as_uv();
 
             draw.AddImage(map_icon, suv.p0, suv.p1, tuv.p0, tuv.p1);

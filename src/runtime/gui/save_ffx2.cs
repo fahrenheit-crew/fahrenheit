@@ -27,6 +27,7 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
     private readonly FhTexture _texture_b_menu1  = new(Path.Join(DIR_X2_MENU,    "b_menu1.dds.phyre"),              FhTextureType.GAME_PHYRE_2D);
 
     private readonly Vector2 _tex_face_size = new(256f, 256f);
+    private readonly Vector2 _tex_map_size  = new(320f, 176f);
 
     private readonly FhTexture _texture_ffx_faces_ply = new(Path.Join(DIR_X_MENU, "face_ply.dds.phyre"), FhTextureType.GAME_PHYRE_2D);
     private readonly FhTexture _texture_ffx_faces_smn = new(Path.Join(DIR_X_MENU, "face_smn.dds.phyre"), FhTextureType.GAME_PHYRE_2D);
@@ -979,7 +980,11 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         FhTexture tex_map = save.icon_map;
 
         if (tex_map.try_use(out ImTextureRef map_icon, out _)) {
-            UV tuv = new(Vector2.Zero, Vector2.One);
+            UV tuv = new Rect {
+                pos  = new(  2f,   2f),
+                size = new(318f, 174f),
+            }.as_uv(_tex_map_size, false);
+
             UV suv = map_bounds.scale_to_aspect(aspect_helper).as_uv();
 
             draw.AddImage(map_icon, suv.p0, suv.p1, tuv.p0, tuv.p1);

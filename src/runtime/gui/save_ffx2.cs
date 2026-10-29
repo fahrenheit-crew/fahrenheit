@@ -478,9 +478,6 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
 
         if (!_texture_plate.try_use(out ImTextureRef plate, out FhTextureMetadata? plate_meta)) return;
 
-        // Shadows behind slots
-        Vector2 shadow_offset = 20f * aspect_scale;
-
         Rect header_bounds = new Rect {
             pos  = new( 400f, 199f),
             size = new(1120f,  32f),
@@ -488,21 +485,16 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
 
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
-        float border_width = 5f;
-        uint  highlight    = 0x28FFFFFF;
-        uint  shadow       = 0x80000000;
-
         FhApi.Gui.X2.draw_plate(
             draw,
             plate,
             header_bounds.scale_to_aspect(aspect_helper),
             2,
             0xFFAEBEC3,
-            border_width * aspect_scale.Y,
-            highlight,
-            shadow,
-            shadow_offset,
-            true
+            plate_config with {
+                border_width = 5f * aspect_scale.Y,
+                draw_header = true,
+            }
         );
 
         Vector2 text_pos = header_bounds.left;
@@ -578,23 +570,15 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
 
         bool hovering = scrollable_sets.hovered == global_idx;
 
-        // Shadows behind slots
-        Vector2 shadow_offset = 20f * aspect_scale;
-
-        float border_width = 6f;
-        uint  highlight    = 0x28FFFFFF;
-        uint  shadow       = 0x80000000;
-
         FhApi.Gui.X2.draw_plate(
             draw,
             plate,
             plate_bounds,
             global_idx,
             0xFFE4F0F1,
-            border_width * aspect_scale.Y,
-            highlight,
-            shadow,
-            shadow_offset
+            plate_config with {
+                border_width = 6f * aspect_scale.Y,
+            }
         );
 
         // TODO: Highlight for active set

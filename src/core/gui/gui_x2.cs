@@ -9,6 +9,24 @@ public partial class FhGui {
     public FhGuiX2 X2 = new();
 
     public class FhGuiX2 {
+        public struct DrawPlateConfig {
+            /// <summary>The width to draw the plate border with.</summary>
+            public float border_width = 5f;
+
+            /// <summary>The color to draw the border highlight using in the format 0xAABBGGRR, i.e. RGBA8.</summary>
+            public uint border_highlight = 0x28FFFFFF;
+
+            /// <summary>The color to draw the border shadow using in the format 0xAABBGGRR, i.e. RGBA8.</summary>
+            public uint border_shadow = 0x80000000;
+
+            /// <summary>The offset from the plate to draw a shadow from behind.</summary>
+            public Vector2 shadow_offset = new(0f, 0f);
+
+            /// <summary>Whether to draw the plate in a header-like style.</summary>
+            public bool draw_header = false;
+
+            public DrawPlateConfig() { }
+        }
 
         /// <summary>Draws a "plate" with a given position, size, color, and shadow.</summary>
         /// <param name="draw">The draw list to add the texture to.</param>
@@ -16,28 +34,18 @@ public partial class FhGui {
         /// <param name="bounds">The position and size of the texture.</param>
         /// <param name="index">The number used to calculate the vertical UV coordinates.</param>
         /// <param name="color">The color to draw the texture with in the format <c>0xAABBGGRR</c>, i.e. RGBA8.</param>
-        /// <param name="border_width">The width of the plate's beveled border accents.</param>
-        /// <param name="shadow_pos">The position of the shadow to draw behind the texture.</param>
-        /// <param name="header">Whether to draw a header plate above the rest.</param>
+        /// <param name="config">The configuration to draw the plate with.</param>
         public void draw_plate(
-            ImDrawListPtr draw,
-            ImTextureRef  plate,
-            Rect          bounds,
-            int           index,
-            uint          color,
-            float         border_width,
-            uint          border_highlight,
-            uint          border_shadow,
-            Vector2       shadow_pos,
-            bool          header = false
+            ImDrawListPtr   draw,
+            ImTextureRef    plate,
+            Rect            bounds,
+            int             index,
+            uint            color,
+            DrawPlateConfig config
         ) {
-            float slice_size  = 64f;
+            float slice_size  = config.draw_header ? 32f: 64f;
+            int   slice_idx   = index % (config.draw_header ? 16 : 8);
             float plate_max_y = 512f - ((index % 8) * slice_size);
-
-            if (header) {
-                slice_size  = 32f;
-                plate_max_y = 512f - ((index % 16) * slice_size);
-            }
 
             UV plate_tuv = new Rect {
                 pos  = new(  0f, plate_max_y - slice_size),
@@ -48,8 +56,8 @@ public partial class FhGui {
 
             // Shadow behind plate
             draw.AddRectFilled(
-                plate_suv.p0 + shadow_pos,
-                plate_suv.p1 + shadow_pos,
+                plate_suv.p0 + config.shadow_offset,
+                plate_suv.p1 + config.shadow_offset,
                 0x80000000
             );
 
@@ -65,12 +73,12 @@ public partial class FhGui {
             draw_plate_edges(
                 draw,
                 bounds,
-                border_width,
-                border_highlight,
-                border_shadow
+                config.border_width,
+                config.border_highlight,
+                config.border_shadow
             );
 
-            if (header) {
+            if (config.draw_header) {
                 draw.AddRectFilled(
                     plate_suv.p0,
                     plate_suv.p1,
@@ -92,6 +100,7 @@ public partial class FhGui {
             float shrink_size  = float .Round(-width * 2f);
             Rect  inner_bounds = bounds.expand(new(shrink_size), Alignment2D.CENTER);
 
+            // We define vertices in a clockwise winding order for AddConvexPolyFilled to render them properly.
             Span<Vector2> border_top = [
                 bounds      .top_left,
                 bounds      .top_right,

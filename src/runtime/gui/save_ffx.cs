@@ -301,7 +301,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
         if (mode != UiMode.SET_CHANGE) return;
 
         if (!_texture_battle_kuang.try_use(
-            out ImTextureRef battle_kuang,
+            out ImTextureRef       battle_kuang,
             out FhTextureMetadata? battle_kuang_meta
         )) {
             return;
@@ -337,16 +337,14 @@ public sealed class FhSaveUiX : FhSaveUiBase {
 
         string text = localize("set_list.list_title");
 
-        FhGui.DrawTextConfig config = text_config with {
-            align     = Alignment2D.LEFT,
-            font_size = font_size_tiny,
-        };
-
         FhApi.Gui.draw_text(
             draw,
             text_pos,
             text,
-            config
+            text_config with {
+                align     = Alignment2D.LEFT,
+                font_size = font_size_tiny,
+            }
         );
 
         int start_idx = scrollable_sets.get_clip_start();
@@ -425,7 +423,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
         );
 
         if (set.name == FhApi.Saves.sets_get_active().name) {
-            GradientStep[] highlight_steps = [
+            ReadOnlySpan<GradientStep> highlight_steps = [
                 new(0.0f, 0x808FAD5A),
                 new(0.5f, 0x008FAD5A),
             ];
@@ -433,9 +431,9 @@ public sealed class FhSaveUiX : FhSaveUiBase {
             FhApi.Gui.draw_rectangle_gradient(
                 draw,
                 button_no_shadow
-                .expand(new(0f, -2f), Alignment2D.TOP)
-                .expand(new(-1f, -2f), Alignment2D.BOTTOM_RIGHT)
-                .scale_to_aspect(aspect_helper),
+                    .expand(new( 0f, -2f), Alignment2D.TOP)
+                    .expand(new(-1f, -2f), Alignment2D.BOTTOM_RIGHT)
+                    .scale_to_aspect(aspect_helper),
                 GradientDirection.RIGHT,
                 highlight_steps
             );
@@ -1248,6 +1246,8 @@ public sealed class FhSaveUiX : FhSaveUiBase {
 
         Vector2 thumb_margin = new(2f);
 
+        float thumb_width = track.size.X - thumb_margin.X * 2f;
+
         float scrollable_height  = track.size.Y - thumb_margin.Y * 2;
         float visible_percentage = scrollable.visible / (float)scrollable.max;
 
@@ -1260,7 +1260,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
             visible_percentage
         );
 
-        Vector2 thumb_size = new(13f, thumb_height);
+        Vector2 thumb_size = new(thumb_width, thumb_height);
 
         uint thumb_color_left  = 0xFFC9ADAD;
         uint thumb_color_right = 0xFFAA8082;

@@ -743,7 +743,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
 
         /* ===== Info Details ===== */
         float margin_face = 38f;
-        float margin_map  = 24f;
+        float margin_map  = 48f;
 
         float info_margin_left  = faces_bounds.size.X + margin_face;
         float info_margin_right = margin_map;

@@ -28,7 +28,6 @@ public sealed class FhSaveUiX : FhSaveUiBase {
     private readonly FhTexture _texture_battle       = new(Path.Join(DIR_X_MENU, "battle.dds.phyre"),        FhTextureType.GAME_PHYRE_2D);
 
     private readonly Vector2 _tex_meswin_size = new(1024f, 1024f);
-    private readonly Vector2 _tex_map_size    = new( 320f,  176f);
 
     private readonly FhTexture _texture_freetex = new(Path.Join(DIR_X2_MENU, "freetex.dds.phyre"), FhTextureType.GAME_PHYRE_2D);
 
@@ -48,7 +47,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
 
     FhGui.DrawCursorConfig cursor_config => new(_texture_meswin) {
         cursor_size = new Vector2(92f, 61f) * aspect_scale,
-        max_offset = 16f * aspect_scale.X,
+        max_offset  = 16f * aspect_scale.X,
     };
 
     private readonly NineSliceHelper  _savefile_border_helper;
@@ -392,7 +391,8 @@ public sealed class FhSaveUiX : FhSaveUiBase {
             hovering ? 0xFFFDF5E6 : 0xFFFFFFFF
         );
 
-        if (set.name == FhApi.Saves.sets_get_active().name) {
+        FhSaveSet active_set = FhApi.Saves.sets_get_active();
+        if (set.name == active_set.name) {
             ReadOnlySpan<GradientStep> highlight_steps = [
                 new(0.0f, 0x808FAD5A),
                 new(0.5f, 0x008FAD5A),
@@ -723,11 +723,11 @@ public sealed class FhSaveUiX : FhSaveUiBase {
         /* ===== Location Icon ===== */
         FhTexture tex_map = save.icon_map;
 
-        if (tex_map.try_use(out ImTextureRef map_icon, out _)) {
+        if (tex_map.try_use(out ImTextureRef map_icon, out FhTextureMetadata? map_icon_meta)) {
             UV tuv = new Rect {
                 pos  = new(  2f,   2f),
                 size = new(318f, 174f),
-            }.as_uv(_tex_map_size, false);
+            }.as_uv(map_icon_meta.size, false);
 
             UV suv = map_bounds.scale_to_aspect(aspect_helper).as_uv();
 
@@ -1207,8 +1207,8 @@ public sealed class FhSaveUiX : FhSaveUiBase {
 
     protected override void ui_scrollbar(
         SteppedScrollable scrollable,
-        Rect track_bounds,
-        float triangle_gap
+        Rect              track_bounds,
+        float             triangle_gap
     ) {
         if (scrollable.max <= scrollable.visible) {
             return;

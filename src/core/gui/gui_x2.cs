@@ -46,7 +46,8 @@ public partial class FhGui {
     ) {
         if (!config.texture.try_use(out ImTextureRef plate, out FhTextureMetadata? plate_meta)) return;
 
-        tex_slice_idx    %= (config.draw_header ? 16 : 8);
+        tex_slice_idx %= (config.draw_header ? 16 : 8);
+
         float slice_size  = config.draw_header ? 32f: 64f;
         float plate_max_y = 512f - (tex_slice_idx * slice_size);
 
@@ -112,7 +113,7 @@ public partial class FhGui {
         ];
 
         Span<Vector2> border_left = [
-            bounds      .top_left    with { Y = inner_bounds.top_left.Y },
+            bounds      .top_left with { Y = inner_bounds.top_left.Y },
             inner_bounds.top_left,
             inner_bounds.bottom_left,
             bounds      .bottom_left,
@@ -132,10 +133,10 @@ public partial class FhGui {
             inner_bounds.top_right,
         ];
 
-        draw.AddConvexPolyFilled(border_top[0], 4, highlight);
+        draw.AddConvexPolyFilled(border_top   [0], 4, highlight);
         draw.AddConvexPolyFilled(border_bottom[0], 4, shadow);
-        draw.AddConvexPolyFilled(border_left[0], 4, highlight);
-        draw.AddConvexPolyFilled(border_right[0], 4, shadow);
+        draw.AddConvexPolyFilled(border_left  [0], 4, highlight);
+        draw.AddConvexPolyFilled(border_right [0], 4, shadow);
     }
 
     public void draw_x2_cursor(

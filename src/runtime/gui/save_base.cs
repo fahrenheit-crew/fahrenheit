@@ -98,8 +98,8 @@ public abstract class FhSaveUiBase : FhSaveUi {
     protected bool should_handle_input    => !scrollbar_dragging && !is_fade_blocking_input;
 
     protected virtual float font_size       => FONT_SIZE_DEFAULT * font_scale;
-    protected virtual float font_size_small => FONT_SIZE_SMALL * font_scale;
-    protected virtual float font_size_tiny  => FONT_SIZE_TINY * font_scale;
+    protected virtual float font_size_small => FONT_SIZE_SMALL   * font_scale;
+    protected virtual float font_size_tiny  => FONT_SIZE_TINY    * font_scale;
 
     protected FhGui.DrawTextConfig text_config => new() {
         font_size = font_size,

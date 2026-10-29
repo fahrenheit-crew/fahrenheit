@@ -27,7 +27,6 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
     private readonly FhTexture _texture_b_menu1  = new(Path.Join(DIR_X2_MENU,    "b_menu1.dds.phyre"),              FhTextureType.GAME_PHYRE_2D);
 
     private readonly Vector2 _tex_face_size = new(256f, 256f);
-    private readonly Vector2 _tex_map_size  = new(320f, 176f);
 
     private readonly FhTexture _texture_ffx_faces_ply = new(Path.Join(DIR_X_MENU, "face_ply.dds.phyre"), FhTextureType.GAME_PHYRE_2D);
     private readonly FhTexture _texture_ffx_faces_smn = new(Path.Join(DIR_X_MENU, "face_smn.dds.phyre"), FhTextureType.GAME_PHYRE_2D);
@@ -50,7 +49,7 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
 
     FhGui.DrawCursorConfig cursor_config => new(_texture_freetex) {
         cursor_size = new Vector2(92f, 55f) * aspect_scale,
-        max_offset = 18f * aspect_scale.X,
+        max_offset  = 18f * aspect_scale.X,
     };
 
     protected override void ui_background() {
@@ -403,9 +402,9 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
             header_bounds.scale_to_aspect(aspect_helper),
             2,
             plate_config with {
-                color = 0xFFAEBEC3,
+                color        = 0xFFAEBEC3,
                 border_width = 5f * aspect_scale.Y,
-                draw_header = true,
+                draw_header  = true,
             }
         );
 
@@ -419,7 +418,7 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         FhGui.DrawTextConfig config = text_config with {
             align     = Alignment2D.LEFT,
             font_size = font_size_tiny,
-            color = 0xFFF7D19C,
+            color     = 0xFFF7D19C,
         };
 
         FhApi.Gui.draw_text(
@@ -492,7 +491,8 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         );
 
         // TODO: Highlight for active set
-        /*if (set.name == FhApi.Saves.sets_get_active().name) {
+        /*FhSaveSet active_set = FhApi.Saves.sets_get_active();
+        if (set.name == active_set.name) {
 
         }*/
 
@@ -889,11 +889,11 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         /* ===== Location Icon ===== */
         FhTexture tex_map = save.icon_map;
 
-        if (tex_map.try_use(out ImTextureRef map_icon, out _)) {
+        if (tex_map.try_use(out ImTextureRef map_icon, out FhTextureMetadata? map_icon_meta)) {
             UV tuv = new Rect {
                 pos  = new(  2f,   2f),
                 size = new(318f, 174f),
-            }.as_uv(_tex_map_size, false);
+            }.as_uv(map_icon_meta.size, false);
 
             UV suv = icon_bounds.scale_to_aspect(aspect_helper).as_uv();
 
@@ -1377,8 +1377,8 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
 
     protected override void ui_scrollbar(
         SteppedScrollable scrollable,
-        Rect track_bounds,
-        float triangle_gap
+        Rect              track_bounds,
+        float             triangle_gap
     ) {
         if (scrollable.max <= scrollable.visible) {
             return;

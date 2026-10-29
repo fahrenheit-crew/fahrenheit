@@ -23,7 +23,7 @@ public partial class FhGui {
         float cycle_length = 0.38f;
 
         // Multiply by pi so cycle_length can be expressed in seconds.
-        float cycle_t = MathF.Sin((float)ImGui.GetTime() * MathF.PI / cycle_length) / 2f + 0.5f;
+        float cycle_t = float.Sin((float)ImGui.GetTime() * float.Pi / cycle_length) / 2f + 0.5f;
         float offset  = -(config.max_offset * cycle_t);
 
         float overlap_amount = config.overlap ? config.cursor_size.X * 0.1f : 0f;

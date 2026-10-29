@@ -739,10 +739,10 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         }
 
         /* ===== Plate Texture ===== */
-        float header_size      =  47f;
-        float horizontal_space =   6f;
-        float vertical_space   =   4f;
-        float map_size         = 265f;
+        float header_size =  47f;
+        float header_gap  =   4f;
+        float map_size    = 265f;
+        float map_gap     =   6f;
 
         Rect header_outer_bounds = new() {
             pos  = save_outer_bounds.pos,
@@ -755,21 +755,21 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         Rect info_outer_bounds = new() {
             pos = new() {
                 X = save_outer_bounds.pos.X,
-                Y = header_outer_bounds.bottom.Y + vertical_space,
+                Y = header_outer_bounds.bottom.Y + header_gap,
             },
             size = new() {
                 X = save_outer_bounds.size.X - map_size,
-                Y = save_outer_bounds.size.Y - header_size - vertical_space,
+                Y = save_outer_bounds.size.Y - header_size - header_gap,
             },
         };
 
         Rect map_outer_bounds = new() {
             pos = new() {
-                X = save_outer_bounds.pos.X + save_outer_bounds.size.X - map_size + horizontal_space,
+                X = save_outer_bounds.pos.X + save_outer_bounds.size.X - map_size + map_gap,
                 Y = save_outer_bounds.pos.Y,
             },
             size = new() {
-                X = map_size - horizontal_space,
+                X = map_size - map_gap,
                 Y = save_outer_bounds.size.Y,
             },
         };
@@ -784,17 +784,17 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
 
         UV header_tuv = new Rect {
             pos  = new(  0f,              uv_y_split),
-            size = new(512f, uv_y_start - uv_y_split),
+            size = new(425f, uv_y_start - uv_y_split),
         }.as_uv(plate_meta.size);
 
         UV info_tuv = new Rect {
             pos  = new(  0f,              uv_y_end),
-            size = new(512f, uv_y_split - uv_y_end),
+            size = new(425f, uv_y_split - uv_y_end),
         }.as_uv(plate_meta.size);
 
         UV map_tuv = new Rect {
-            pos  = new(412f,              uv_y_end),
-            size = new(100f, uv_y_start - uv_y_end),
+            pos  = new(425f,              uv_y_end),
+            size = new( 87f, uv_y_start - uv_y_end),
         }.as_uv(plate_meta.size);
 
         UV header_suv = header_outer_bounds.scale_to_aspect(aspect_helper).as_uv();

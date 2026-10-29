@@ -8,6 +8,7 @@ global using System.Diagnostics;               // [Conditional] et al.
 global using System.Diagnostics.CodeAnalysis;  // [NotNullWhen()] and other nullability static analysis attributes
 global using System.Globalization;             // CultureInfo.InvariantCulture et al.
 global using System.IO;                        // Path, File, and similar
+global using System.IO.MemoryMappedFiles;
 global using System.Numerics;                  // generic math - INumber<T>, IBinaryInteger<T>
 global using System.Reflection;                // Assembly
 global using System.Runtime.CompilerServices;  // [InlineArray]

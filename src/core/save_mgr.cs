@@ -5,6 +5,134 @@
 
 namespace Fahrenheit;
 
+/* [fkelava 28/10/26 14:42]
+ * https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.comparer-1.compare?view=net-10.0#notes-to-implementers
+ * > Comparing null with any reference type is allowed and does not generate an exception.
+ * > A null reference is considered to be less than any reference that is not null.
+ */
+
+/// <summary>
+///     Contains methods for sorting save games.
+/// </summary>
+public static class FhSaveComparers {
+    /// <summary>Sorts save games by their creation time.</summary>
+    public static int compare_create_time(FhSaveUiData? x, FhSaveUiData? y) {
+        if (ReferenceEquals(x, y)) return  0;
+        if (x == null)             return -1;
+        if (y == null)             return  1;
+
+        if (x.slot == 0) return -1; // The autosave must precede any other save.
+        if (y.slot == 0) return  1;
+
+        if      (x.create_time > y.create_time) return -1;
+        else if (x.create_time < y.create_time) return  1;
+
+        return x.slot - y.slot;
+    }
+
+    /// <summary>Sorts save games by their slot index.</summary>
+    public static int compare_slot(FhSaveUiData? x, FhSaveUiData? y) {
+        if (ReferenceEquals(x, y)) return  0;
+        if (x == null)             return -1;
+        if (y == null)             return  1;
+
+        return x.slot - y.slot;
+    }
+}
+
+/// <summary>
+///     The possible states of the game's default save data manager.
+/// </summary>
+public enum SaveSystemState : int {
+    IDLE           = 0x00,
+    SAVE           = 0x01,
+    SAVE_SUCCEED   = 0x02,
+    LOAD           = 0x03,
+    LOAD_SUCCEED   = 0x04,
+    DELETE         = 0x05, // Effectively unused on PC
+    DELETE_SUCCEED = 0x06  // Effectively unused on PC
+}
+
+/// <summary>
+///     The possible states of the game's save/load screen dialog box.
+/// </summary>
+public enum SaveDialogState {
+    CLOSED = 0x00,
+    UNK5   = 0x05
+}
+
+/// <summary>
+///     The possible states of the game's save data screen.
+/// </summary>
+public enum SaveScreenState {
+    CLOSED  = 0x00,
+    OPENING = 0x01,
+    OPEN    = 0x02,
+    UNK3    = 0x03,
+    UNK4    = 0x04
+}
+
+/// <summary>
+///     Combines with a save header to form a save file.
+/// </summary>
+/// <remarks>This is a union type. Only the active game's accessors are valid.</remarks>
+[StructLayout(LayoutKind.Explicit)]
+public struct SaveData {
+    [FieldOffset(0x0)] public FFX .SaveData x;
+    [FieldOffset(0x0)] public FFX2.SaveData x2;
+}
+
+/// <summary>
+///     The core of the game's default save/load system.
+/// </summary>
+/// <remarks>This is a union type. Only the active game's accessors are valid.</remarks>
+[StructLayout(LayoutKind.Explicit)]
+internal struct SaveDataManager {
+    [FieldOffset(0x0)] public FFX .SaveDataManager x;
+    [FieldOffset(0x0)] public FFX2.SaveDataManager x2;
+}
+
+/// <summary>
+///     Combines with save data to form a save file.
+/// </summary>
+/// <remarks>This is a union type. Only the active game's accessors are valid.</remarks>
+[StructLayout(LayoutKind.Explicit)]
+public struct SaveHeader {
+    [FieldOffset(0x0)] public FFX .SaveHeader x;
+    [FieldOffset(0x0)] public FFX2.SaveHeader x2;
+}
+
+/// <summary>
+///     Contains per-save information for save/load UIs.
+/// </summary>
+/// <remarks>
+///     The associated save's header and save data fields are provided for your convenience.
+///     Do not modify them.
+/// </remarks>
+public class FhSaveUiData {
+    [InlineArray(3)]
+    public struct IconChr {
+        private FhTexture _e0;
+    }
+
+    internal FhSaveUiData() { }
+
+    public SaveHeader     header;
+    public SaveData       file;
+    public DateTimeOffset create_time  { get; internal set; } = DateTimeOffset.MinValue;
+    public int            slot         { get; internal set; } = 0xFFFF;
+    public string         slot_str     { get; internal set; } = "";
+    public string         play_time    { get; internal set; } = "";
+    public string         player_name  { get; internal set; } = "";
+    public string         chapter      { get; internal set; } = "";
+    public string         completion   { get; internal set; } = "";
+    public string         location     { get; internal set; } = "";
+    public string         lm_level     { get; internal set; } = "";
+    public string         lm_job       { get; internal set; } = "";
+    public IconChr        icon_chr     { get; internal set; } = new();
+    public FhTexture      icon_map     { get; internal set; } = new("", FhTextureType.NULL);
+}
+
 /// <summary>Represents the current operating mode of the save system.</summary>
 public enum FhSaveSystemMode {
     /// <summary>The save system is not active.</summary>
@@ -105,10 +233,12 @@ public sealed class FhSaves {
     private readonly Dictionary<string, FhSaveSet> _sets; // The available save sets.
     private readonly Dictionary<string, FhSaveUi>  _ui;   // The available save user interfaces.
 
-    private          int                   _lock;
-    private          string                _set_active; // The active set's name.
-    private readonly List   <FhSaveUiData> _ui_data;
-    private readonly HashSet<int>          _slots;      // The slots occupied in the active set.
+    private const int SET_COUNT = 101;
+
+    private          int            _lock;
+    private          string         _set_active; // The active set's name.
+    private readonly FhSaveUiData[] _ui_data;
+    private readonly HashSet<int>   _slots;      // The slots occupied in the active set.
 
     static FhSaves() {
         _s_set_path_base    = Path.Join(FhEnvironment.Finder.Saves.FullName, FhInternal.Hasher.SaveSetHash);
@@ -119,8 +249,8 @@ public sealed class FhSaves {
         _set_active = _s_set_name_default;
         _sets       = [];
         _slots      = [];
-        _ui_data    = [];
         _ui         = [];
+        _ui_data    = new FhSaveUiData[SET_COUNT];
 
         /* [fkelava 19/01/26 18:13]
          * Indexing cannot be done here because game functions
@@ -194,7 +324,11 @@ public sealed class FhSaves {
     }
 
     internal unsafe static Span<byte> pal_get_buf_save() {
-        return new(pal_addr_buf_save(), FhUtil.select(0x6900, 0x166A0, 0x166A0));
+        return new(pal_addr_buf_save(), pal_get_sz_save());
+    }
+
+    internal static int pal_get_sz_save() {
+        return FhUtil.select(0x6900, 0x166A0, 0x166A0);
     }
 
     /// <summary>
@@ -680,51 +814,56 @@ public sealed class FhSaves {
     /// <summary>
     ///     Reads a save file and prepares its display data.
     /// </summary>
-    private async Task _sets_index_single(string save_file_path) {
-        ReadOnlySpan<char> slot_str = save_file_path[ (save_file_path.LastIndexOf('_') + 1) .. ];
+    private async Task _sets_index_single(int index) {
+        string             save_file_path = pal_get_path_for_slot(index);
+        ReadOnlySpan<char> slot_str       = save_file_path[ ^3 .. ];
 
         if (!int.TryParse(slot_str, out int slot))
             return;
 
-        Span<byte> header_bytes = stackalloc byte[0x40];
+        FhSaveUiData ui_data = _ui_data[index] ??= new();
 
-        using (FileStream save_file_stream = File.OpenRead(save_file_path)) {
-            save_file_stream.ReadExactly(header_bytes);
+        try {
+            using MemoryMappedFile         save_file     = MemoryMappedFile.CreateFromFile(save_file_path, FileMode.Open, null, 0, MemoryMappedFileAccess.Read);
+            using MemoryMappedViewAccessor save_accessor = save_file.CreateViewAccessor(0, pal_get_sz_save(), MemoryMappedFileAccess.Read);
+
+            save_accessor.Read(0, out ui_data.header);
+
+            switch (FhGlobal.game_id) {
+                case FhGameId.FFX:                     save_accessor.Read(0x40, out ui_data.file.x ); break;
+                case FhGameId.FFX2 or FhGameId.FFX2LM: save_accessor.Read(0x40, out ui_data.file.x2); break;
+
+                default: break;
+            }
         }
+        catch { return; }
 
-        SaveHeader header = MemoryMarshal.Read<SaveHeader>(header_bytes);
+        FhSaveUiData.IconChr icon_chr = ui_data.icon_chr;
+        icon_chr[0] = _pal_get_icon_chr(ui_data.header, 0);
+        icon_chr[1] = _pal_get_icon_chr(ui_data.header, 1);
+        icon_chr[2] = _pal_get_icon_chr(ui_data.header, 2);
 
-        FhSaveUiData.IconChr icon_chr = new();
-        icon_chr[0] = _pal_get_icon_chr(header, 0);
-        icon_chr[1] = _pal_get_icon_chr(header, 1);
-        icon_chr[2] = _pal_get_icon_chr(header, 2);
+        ui_data.slot        = slot;
+        ui_data.slot_str    = slot.ToString();
+        ui_data.create_time = File.GetLastWriteTime(save_file_path);
+        ui_data.play_time   = _pal_get_play_time  (ui_data.header);
+        ui_data.player_name = _pal_get_player_name(ui_data.header);
+        ui_data.chapter     = _pal_get_chapter    (ui_data.header);
+        ui_data.completion  = _pal_get_completion (ui_data.header);
+        ui_data.location    = _pal_get_location   (ui_data.header);
+        ui_data.lm_level    = _pal_get_lm_level   (ui_data.header);
+        ui_data.lm_job      = _pal_get_lm_job     (ui_data.header);
+        ui_data.icon_map    = _pal_get_icon_map   (ui_data.header);
+        ui_data.icon_chr    = icon_chr;
 
-        FhSaveUiData ui_data = new() {
-            header      = header,
-            slot        = slot,
-            slot_str    = slot.ToString(),
-            create_time = File.GetLastWriteTime(save_file_path),
-            play_time   = _pal_get_play_time  (header),
-            player_name = _pal_get_player_name(header),
-            chapter     = _pal_get_chapter    (header),
-            completion  = _pal_get_completion (header),
-            location    = _pal_get_location   (header),
-            lm_level    = _pal_get_lm_level   (header),
-            lm_job      = _pal_get_lm_job     (header),
-            icon_map    = _pal_get_icon_map   (header),
-            icon_chr    = icon_chr,
-        };
-
-        _slots  .Add(slot);
-        _ui_data.Add(ui_data);
+        _slots.Add(slot);
     }
 
     /// <summary>
     ///     Indexes the active save set. This function must be called under lock.
     /// </summary>
     private void _sets_index() {
-        _ui_data.Clear();
-        _slots  .Clear();
+        _slots.Clear();
 
         string path_set_folder = Path.Join(
             _s_set_path_base,
@@ -741,19 +880,18 @@ public sealed class FhSaves {
          */
         _ = Directory.CreateDirectory(path_set_folder);
 
-        string[] files = [ .. Directory.EnumerateFiles(path_set_folder, _pal_get_save_name_glob()) ];
-        Task  [] tasks = new Task[files.Length];
+        Task[] tasks = new Task[SET_COUNT];
 
-        for (int i = 0; i < files.Length; i++) {
-            tasks[i] = _sets_index_single(files[i]);
+        for (int i = 0; i < SET_COUNT; i++) {
+            tasks[i] = _sets_index_single(i);
         }
 
         Task.WaitAll(tasks);
 
         _sets[_set_active].has_autosave = File.Exists(pal_get_path_for_slot(0));
-        _sets[_set_active].count        = _ui_data.Count;
+        _sets[_set_active].count        = _slots.Count;
 
-        _ui_data.Sort(FhSaveTimeComparer.Instance);
+        _ui_data.Sort(FhSaveComparers.compare_create_time);
     }
 
     /// <summary>
@@ -766,12 +904,15 @@ public sealed class FhSaves {
 
         _ = Directory.CreateDirectory(set_subdir_path);
 
-        ReadOnlySpan<string> saves = [ .. Directory.EnumerateFiles(set_subdir_path, _pal_get_save_name_glob()) ];
+        int count = 0;
+        for (int i = 0; i < SET_COUNT; i++) {
+            if (File.Exists(pal_get_path_for_slot(i, set_name))) count++;
+        }
 
         _sets[set_name] = new FhSaveSet() {
             name         = set_name,
             has_autosave = File.Exists(pal_get_path_for_slot(0, set_name)),
-            count        = saves.Length
+            count        = count
         };
     }
 
@@ -876,9 +1017,9 @@ public sealed class FhSaves {
         return _sets.TryGetValue(set_name, out set);
     }
 
-    public bool sets_get_ui_data(int index, out FhSaveUiData data) {
+    public bool sets_get_ui_data(int index, [NotNullWhen(true)] out FhSaveUiData? data) {
         data = default;
-        if (index >= _ui_data.Count)
+        if (index >= _sets[_set_active].count)
             return false;
 
         data = _ui_data[index];

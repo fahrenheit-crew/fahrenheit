@@ -32,20 +32,20 @@ public partial class FhGui {
         /// <param name="draw">The draw list to add the texture to.</param>
         /// <param name="plate">The texture to be drawn.</param>
         /// <param name="bounds">The position and size of the texture.</param>
-        /// <param name="index">The number used to calculate the vertical UV coordinates.</param>
+        /// <param name="tex_slice_idx">The number used to calculate the vertical UV coordinates.</param>
         /// <param name="color">The color to draw the texture with in the format <c>0xAABBGGRR</c>, i.e. RGBA8.</param>
         /// <param name="config">The configuration to draw the plate with.</param>
         public void draw_plate(
             ImDrawListPtr   draw,
             ImTextureRef    plate,
             Rect            bounds,
-            int             index,
+            int             tex_slice_idx,
             uint            color,
             DrawPlateConfig config
         ) {
+            tex_slice_idx    %= (config.draw_header ? 16 : 8);
             float slice_size  = config.draw_header ? 32f: 64f;
-            int   slice_idx   = index % (config.draw_header ? 16 : 8);
-            float plate_max_y = 512f - ((index % 8) * slice_size);
+            float plate_max_y = 512f - (tex_slice_idx * slice_size);
 
             UV plate_tuv = new Rect {
                 pos  = new(  0f, plate_max_y - slice_size),

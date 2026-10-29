@@ -521,7 +521,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
         }
 
         /* ===== Autosave Background ===== */
-        if (save.slot == 0) {
+        if (save.slot == 0 && !is_saving) {
             UV save_suv = save_outer_bounds.scale_to_aspect(aspect_helper).as_uv();
 
             draw.AddRectFilled(save_suv.p0, save_suv.p1, 0x30F0F0F0);

@@ -1373,8 +1373,8 @@ public sealed class FhSaveUiX : FhSaveUiBase {
         }
 
         if ((mouse_hovered(triangle_top, false) || mouse_hovered(triangle_bottom, false))
-         && ImGui.IsMouseDown(ImGuiMouseButton.Left)
-           ) {
+            && ImGui.IsMouseDown(ImGuiMouseButton.Left)
+        ) {
             audio_fade_helper_restart = false;
         }
     }

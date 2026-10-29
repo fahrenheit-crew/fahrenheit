@@ -1188,12 +1188,12 @@ public sealed class FhSaveUiX : FhSaveUiBase {
     protected override void ui_scrollbar() {
         Rect track_bounds = new() {
             pos  = mode == UiMode.SAVE_LIST
-                ? new(1753f, 209f)
-                : new(1602f, 265f),
+                ? new(1756f, 211f)
+                : new(1595f, 257f),
 
             size = mode == UiMode.SAVE_LIST
-                ? new(17f, 758f)
-                : new(17f, 653f),
+                ? new(17f, 742f)
+                : new(17f, 659f),
         };
 
         float triangle_gap = 13f;

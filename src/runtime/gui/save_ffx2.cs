@@ -392,8 +392,8 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         if (!_texture_plate.try_use(out ImTextureRef plate, out FhTextureMetadata? plate_meta)) return;
 
         Rect header_bounds = new Rect {
-            pos  = new( 400f, 199f),
-            size = new(1120f,  32f),
+            pos  = new( 400f, 196f),
+            size = new(1120f,  34f),
         };
 
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
@@ -450,10 +450,10 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         // Screen coordinates
         Rect plate_bounds = new() {
             pos  = new( 400f, 232f),
-            size = new(1120f,  64f),
+            size = new(1120f,  68f),
         };
 
-        plate_bounds.pos.Y += (plate_bounds.size.Y + 1f) * local_idx;
+        plate_bounds.pos.Y += (plate_bounds.size.Y + 2f) * local_idx;
 
         Vector2 name_pos = plate_bounds.left;
         name_pos.X += 30f;
@@ -1351,12 +1351,12 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
     protected override void ui_scrollbar() {
         Rect track_bounds = new() {
             pos  = mode == UiMode.SAVE_LIST
-                ? new(1753f, 205f)
-                : new(1551f, 232f),
+                ? new(1757f, 207f)
+                : new(1545f, 257f),
 
             size = mode == UiMode.SAVE_LIST
-                ? new(15f, 753f)
-                : new(15f, 620f),
+                ? new(15f, 745f)
+                : new(15f, 648f),
         };
 
         float triangle_gap = 13f;

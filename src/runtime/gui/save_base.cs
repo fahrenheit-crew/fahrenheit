@@ -546,10 +546,11 @@ public abstract class FhSaveUiBase : FhSaveUi {
         float progress       = scrollable.get_progress();
         float hover_progress = scrollable.hovered / (float)(scrollable.max - 1);
 
-        (Rect thumb, Rect hitbox, float track_height) = ui_scrollbar_get_thumb_bounds(
+        (Rect thumb, Rect hitbox) = ui_scrollbar_get_thumb_bounds(
             track_bounds,
             scrollable,
-            progress
+            progress,
+            out float track_height
         );
 
         (Rect arrow_top, Rect arrow_bottom) = ui_scrollbar_get_arrow_bounds(
@@ -612,10 +613,11 @@ public abstract class FhSaveUiBase : FhSaveUi {
         }
     }
 
-    protected virtual (Rect thumb, Rect hitbox, float track_height) ui_scrollbar_get_thumb_bounds(
+    protected virtual (Rect thumb, Rect hitbox) ui_scrollbar_get_thumb_bounds(
         Rect              track_bounds,
         SteppedScrollable scrollable,
-        float             scroll_progress
+        float             scroll_progress,
+        out float         track_height
     ) {
         Rect track = track_bounds;
 
@@ -637,8 +639,8 @@ public abstract class FhSaveUiBase : FhSaveUi {
 
         Vector2 thumb_size = new(thumb_width, thumb_height);
 
-        float scrollable_track_height = track.size.Y - thumb_margin.Y * 2 - thumb_size.Y;
-        float thumb_progress          = scroll_progress * scrollable_track_height;
+        track_height = track.size.Y - thumb_margin.Y * 2 - thumb_size.Y;
+        float thumb_progress          = scroll_progress * track_height;
 
         Rect thumb = new() {
             pos = new(
@@ -655,7 +657,7 @@ public abstract class FhSaveUiBase : FhSaveUi {
         thumb.size.X = float.Round(track.size.X) - float.Round(thumb_margin.X * aspect_scale.X) * 2f;
         thumb.pos.X  = float.Round(track.pos.X) + (float.Round(track.size.X) - thumb.size.X) / 2f;
 
-        scrollable_track_height *= aspect_scale.Y;
+        track_height *= aspect_scale.Y;
 
         // Allow grabbing the thumb on the entire track width (hitbox)
         Rect hitbox = thumb.expand(
@@ -663,14 +665,14 @@ public abstract class FhSaveUiBase : FhSaveUi {
             Alignment2D.CENTER
         );
 
-        return (thumb, hitbox, scrollable_track_height);
+        return (thumb, hitbox);
     }
 
-    protected virtual (Rect arrow_top, Rect arrow_bottom) ui_scrollbar_get_arrow_bounds(
+    protected virtual (Rect arrow_begin, Rect arrow_end) ui_scrollbar_get_arrow_bounds(
         Rect track_bounds
     ) {
-        float arrow_width  = 2.24f * track_bounds.size.X;
-        float arrow_height = 1.4f  * track_bounds.size.X;
+        float arrow_width  = 2.24f  * track_bounds.size.X;
+        float arrow_height = 0.625f * arrow_width;
 
         Vector2 arrow_size = new(arrow_width, arrow_height);
 
@@ -701,8 +703,8 @@ public abstract class FhSaveUiBase : FhSaveUi {
     protected virtual void ui_scrollbar_direct(
         Rect  track_bounds,
         Rect  thumb_bounds,
-        Rect  top_arrow_bounds,
-        Rect  bottom_arrow_bounds,
+        Rect  begin_arrow_bounds,
+        Rect  end_arrow_bounds,
         float progress
     ) {
         uint track_color = 0xFF000000;
@@ -730,12 +732,12 @@ public abstract class FhSaveUiBase : FhSaveUi {
             thumb_color_bottom
         );
 
-        Rect top_arrow_outline_bounds = top_arrow_bounds.expand(
+        Rect top_arrow_outline_bounds = begin_arrow_bounds.expand(
             Vector2.Round(new Vector2(2f, 1f) * new Vector2(1f) * aspect_scale) * 2f,
             Alignment2D.CENTER
         );
 
-        Rect bot_arrow_outline_bounds = bottom_arrow_bounds.expand(
+        Rect bot_arrow_outline_bounds = end_arrow_bounds.expand(
             Vector2.Round(new Vector2(2f, 1f) * new Vector2(1f) * aspect_scale) * 2f,
             Alignment2D.CENTER
         );
@@ -760,7 +762,7 @@ public abstract class FhSaveUiBase : FhSaveUi {
 
         FhApi.Gui.draw_triangle_gradient(
             draw,
-            top_arrow_bounds,
+            begin_arrow_bounds,
             GradientDirection.UP,
             arrow_color_bottom,
             arrow_color_bottom,
@@ -769,7 +771,7 @@ public abstract class FhSaveUiBase : FhSaveUi {
 
         FhApi.Gui.draw_triangle_gradient(
             draw,
-            bottom_arrow_bounds,
+            end_arrow_bounds,
             GradientDirection.DOWN,
             arrow_color_bottom,
             arrow_color_bottom,

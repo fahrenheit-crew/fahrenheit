@@ -43,13 +43,6 @@ public unsafe partial class FhGui {
         }
     }
 
-    [Flags]
-    public enum Axis2D {
-        NONE = 0,
-        X    = (1 << 0),
-        Y    = (1 << 1),
-    }
-
     // Fonts for standardized style across Fahrenheit
     public ImFontPtr FONT_DEFAULT;
     public ImFontPtr FONT_JP;

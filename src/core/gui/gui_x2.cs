@@ -37,9 +37,6 @@ public partial class FhGui {
         /// <summary>The texture to draw.</summary>
         public FhTexture texture;
 
-        /// <summary>The axis the water moves across.</summary>
-        public Axis2D axis = Axis2D.X | Axis2D.Y;
-
         /// <summary>The position to start moving from on the texture UV.</summary>
         public Vector2 move_offset = new(0f);
 
@@ -49,6 +46,12 @@ public partial class FhGui {
         /// <summary>The speed at which the texture fades in and out.</summary>
         public float fade_speed = 0f;
 
+        /// <summary>The minimum alpha the texture can fade to.</summary>
+        public uint min_alpha = 0x00;
+
+        /// <summary>The maximum alpha the texture can fade to.</summary>
+        public uint max_alpha = 0xA0;
+
         /// <summary>The color of the water, in the format 0xAABBGGRR, i.e. RGBA8.</summary>
         public uint color = 0xFFFFFFFF;
 
@@ -57,7 +60,7 @@ public partial class FhGui {
         }
     }
 
-    /// <summary>Draws a plate with a given position, size, color, and shadow.</summary>
+    /// <summary>Render a plate in the style of FFX-2 with a given position, size, color, and shadow.</summary>
     /// <param name="draw">The draw list to add the texture to.</param>
     /// <param name="bounds">The position and size of the texture.</param>
     /// <param name="tex_slice_idx">The number used to calculate the vertical UV coordinates.</param>
@@ -115,7 +118,7 @@ public partial class FhGui {
         }
     }
 
-    /// <summary>Draws the border effect on a plate.</summary>
+    /// <summary>Draws the border effect on an FFX-2 style plate.</summary>
     /// <param name="draw">The draw list to add the texture to.</param>
     /// <param name="bounds">The position to draw the plate borders at.</param>
     /// <param name="width">The width of the plate border.</param>
@@ -169,7 +172,7 @@ public partial class FhGui {
         draw.AddConvexPolyFilled(border_right [0], 4, shadow);
     }
 
-    /// <summary>Render the cursor.</summary>
+    /// <summary>Render a cursor in the style of FFX-2.</summary>
     /// <param name="target_pos">The position the cursor should point at.</param>
     /// <param name="config">The configuration to draw the cursor with.</param>
     public void draw_x2_cursor(
@@ -273,7 +276,7 @@ public partial class FhGui {
         );
     }
 
-    /// <summary>Draws a moving water animation with a given position, size, move speed, and color.</summary>
+    /// <summary>Render an FFX-2 style moving water texture with a given position, size, move speed, and color.</summary>
     /// <param name="draw">The draw list to add the texture to.</param>
     /// <param name="bounds">The position to draw the texture at.</param>
     /// <param name="config">The configuration to draw the water with.</param>
@@ -285,13 +288,19 @@ public partial class FhGui {
         if (!config.texture.try_use(out ImTextureRef water, out FhTextureMetadata? water_meta)) return;
 
         // Fade the wave in and out
-        float alpha = float.Sin((float)ImGui.GetTime() * float.Pi / config.fade_speed) / 2f + 0.5f;
+        float alpha;
+        if (config.fade_speed <= 0f) {
+            alpha = 1f;
+        }
+        else {
+            float fade_progress = float.Sin((float)ImGui.GetTime() * float.Pi / config.fade_speed) / 2f + 0.5f;
+            alpha = float.Lerp(config.min_alpha, config.max_alpha, fade_progress);
+        }
 
-        config.color = ((uint)(0x20 + alpha * 0x80) << 24) | config.color & 0x00FFFFFF;
+        config.color = ((uint)alpha << 24) | (config.color & 0x00FFFFFF);
 
-        // If we only want to move on one axis, set movement on the inactive axis to 0
-        float move_x = config.axis == Axis2D.Y ? 0f : (float)ImGui.GetTime() * config.move_speed.X;
-        float move_y = config.axis == Axis2D.X ? 0f : (float)ImGui.GetTime() * config.move_speed.Y;
+        float move_x = (float)ImGui.GetTime() * config.move_speed.X;
+        float move_y = (float)ImGui.GetTime() * config.move_speed.Y;
 
         // We use % and for loops to seamlessly loop the texture continually and simulate wrapping
         Vector2 wave_offset = new Vector2(
@@ -301,6 +310,8 @@ public partial class FhGui {
 
         float x_offset = bounds.pos.X + wave_offset.X - water_meta.size.X;
         float y_offset = bounds.pos.Y + wave_offset.Y - water_meta.size.Y;
+
+        // TODO-C#15: Use labeled continues to reduce indendation by putting the for loops next to each other.
 
         for (float x = x_offset; x < bounds.pos.X + bounds.size.X; x += water_meta.size.X) {
             float min_x = float.Max(bounds.pos.X, x);

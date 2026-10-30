@@ -51,13 +51,10 @@ public abstract class FhSaveUiBase : FhSaveUi {
 
     protected const string DIR_X_MENU      = $"{DIR_X_PS3}/menu/D3D11/";
     protected const string DIR_X_HIKU      = $"{DIR_X_PS3}/map/hiku/hiku22/2d/tex/D3D11/";
-    protected const string DIR_X_MAP_ICONS = $"{DIR_X_PS3}/savedataicons/";
 
     protected const string DIR_X2_MENU      = $"{DIR_X2_PS3}/menu/D3D11/";
     protected const string DIR_X2_MAHOJIN   = $"{DIR_X2_PS3}/menu/menu_mahojin/tex/D3D11/";
     protected const string DIR_X2_PLATE     = $"{DIR_X2_PS3}/menu/menu_plate/tex/D3D11/";
-    protected const string DIR_X2_FACE_DATA = $"{DIR_X2_PS3}/menu/face_data/D3D11/";
-    protected const string DIR_X2_MAP_ICONS = $"{DIR_X2_PS3}/savedataicons/";
 
     protected static readonly uint SOUND_ID_MOVE       = FhUtil.select(SOUND_X_MOVE,       SOUND_X2_MOVE,       SOUND_X2_MOVE);
     protected static readonly uint SOUND_ID_ACTION     = FhUtil.select(SOUND_X_ACTION,     SOUND_X2_ACTION,     SOUND_X2_ACTION);

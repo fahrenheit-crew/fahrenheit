@@ -481,20 +481,16 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
 
         bool hovering = scrollable_sets.hovered == global_idx;
 
+        FhSaveSet active_set = FhApi.Saves.sets_get_active();
         FhApi.Gui.draw_x2_plate(
             draw,
             plate_bounds,
             global_idx,
             plate_config with {
                 border_width = 6f * aspect_scale.Y,
+                color = set.name == active_set.name ? 0xFFC6B1AF : 0xFFE4F0F1
             }
         );
-
-        // TODO: Highlight for active set
-        /*FhSaveSet active_set = FhApi.Saves.sets_get_active();
-        if (set.name == active_set.name) {
-
-        }*/
 
         FhApi.Gui.draw_text(
             draw,

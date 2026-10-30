@@ -95,7 +95,7 @@ public struct FhMacroDictHeader {
 public enum FhEncodingFlags {
     IGNORE_DEST_BUFFER     = 1,      // `dest` is not iterated through in `encode`/`decode`. Allows size to be calculated with cheap stackalloc buffer.
     IGNORE_EXPRESSIONS     = 1 << 1, // U+007B and U+007D are no longer considered expression opener and closer, respectively.
-    IMPLICIT_END           = 1 << 2, // Do not emit the {END} mark on phrase termination. This output style is not roundtrippable.
+    IMPLICIT_END           = 1 << 2, // Terminate output with a null byte instead of an {END} mark. This output style is not roundtrippable.
     IMPLICIT_CJK_EXTENSION = 1 << 3, // In a CJK language, implicitly extend supported characters to their fullwidth forms to allow the display of English text.
 }
 
@@ -104,7 +104,7 @@ public enum FhEncodingFlags {
 /// </summary>
 public static class FhEncoding {
 
-    private static readonly Dictionary<FhLangId, Rune[]> _sjistbl_runes = [];
+    private static readonly Dictionary<(FhGameId, FhLangId), Rune[]> _sjistbl_runes = [];
 
     /* [fkelava 14/10/25 14:58]
      * These literals and methods control the plaintext representation of
@@ -621,10 +621,11 @@ public static class FhEncoding {
         FhLangId lang_id = lang ?? FhGlobal.lang_id;
         FhGameId game_id = game ?? FhGlobal.game_id;
 
-        string sjistbl = FhShiftJisTables.get_table(lang_id, game_id);
+        string sjistbl  = FhShiftJisTables.get_table(lang_id, game_id);
+        var    rune_key = (game_id, lang_id);
 
-        if (!_sjistbl_runes.TryGetValue(lang_id, out Rune[]? runes)) {
-            runes = _sjistbl_runes[lang_id] = [ .. sjistbl.EnumerateRunes() ];
+        if (!_sjistbl_runes.TryGetValue(rune_key, out Rune[]? runes)) {
+            runes = _sjistbl_runes[rune_key] = [ .. sjistbl.EnumerateRunes() ];
         }
 
         int src_offset, dest_offset;
@@ -746,8 +747,10 @@ public static class FhEncoding {
             Span        <byte> dst_slice = flags.HasFlag(FhEncodingFlags.IGNORE_DEST_BUFFER) ? dest : dest[ dest_offset .. ];
 
             if (op == 0x00) { // {END} - statement terminator
-                if (flags.HasFlag(FhEncodingFlags.IMPLICIT_END))
+                if (flags.HasFlag(FhEncodingFlags.IMPLICIT_END)) {
+                    dest[ dest_offset++ ] = 0;
                     return dest_offset;
+                }
 
                 _newline.CopyTo(dst_slice[ _decode_op(dst_slice, op) .. ]);
                 return dest_offset + _op_end.Length + _newline.Length;

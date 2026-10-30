@@ -5,16 +5,23 @@
 
 namespace Fahrenheit;
 
-/* [fkelava 28/10/26 14:42]
- * https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.comparer-1.compare?view=net-10.0#notes-to-implementers
- * > Comparing null with any reference type is allowed and does not generate an exception.
- * > A null reference is considered to be less than any reference that is not null.
+/* [fkelava 30/10/26 13:13]
+ * Fahrenheit reimplements the base game's save/load system to allow for customizable user interfaces,
+ * save set capability, etc. It also fixes a number of bugs, such as invalid display of player
+ * names in other languages, inability to distinguish wetsuit Rikku from Seymour, and more.
  */
 
 /// <summary>
 ///     Contains methods for sorting save games.
 /// </summary>
 public static class FhSaveComparers {
+
+    /* [fkelava 28/10/26 14:42]
+     * https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.comparer-1.compare?view=net-10.0#notes-to-implementers
+     * > Comparing null with any reference type is allowed and does not generate an exception.
+     * > A null reference is considered to be less than any reference that is not null.
+     */
+
     /// <summary>Sorts save games by their creation time.</summary>
     public static int compare_create_time(FhSaveUiData? x, FhSaveUiData? y) {
         if (ReferenceEquals(x, y)) return  0;
@@ -73,6 +80,16 @@ public enum SaveScreenState {
 }
 
 /// <summary>
+///     Combines with save data to form a save file.
+/// </summary>
+/// <remarks>This is a union type. Only the active game's accessors are valid.</remarks>
+[StructLayout(LayoutKind.Explicit)]
+public struct SaveHeader {
+    [FieldOffset(0x0)] public FFX .SaveHeader x;
+    [FieldOffset(0x0)] public FFX2.SaveHeader x2;
+}
+
+/// <summary>
 ///     Combines with a save header to form a save file.
 /// </summary>
 /// <remarks>This is a union type. Only the active game's accessors are valid.</remarks>
@@ -90,16 +107,6 @@ public struct SaveData {
 internal struct SaveDataManager {
     [FieldOffset(0x0)] public FFX .SaveDataManager x;
     [FieldOffset(0x0)] public FFX2.SaveDataManager x2;
-}
-
-/// <summary>
-///     Combines with save data to form a save file.
-/// </summary>
-/// <remarks>This is a union type. Only the active game's accessors are valid.</remarks>
-[StructLayout(LayoutKind.Explicit)]
-public struct SaveHeader {
-    [FieldOffset(0x0)] public FFX .SaveHeader x;
-    [FieldOffset(0x0)] public FFX2.SaveHeader x2;
 }
 
 /// <summary>
@@ -181,6 +188,7 @@ public sealed class FhSaveSet {
     public string name         { get; internal init; } = "";
     public bool   has_autosave { get; internal set;  }
     public int    count        { get; internal set;  }
+    public bool   is_full      { get; internal set;  }
 }
 
 /* [fkelava 07/11/25 15:01]
@@ -205,13 +213,6 @@ public sealed class FhSaves {
     private static readonly string _s_set_path_base;
     private static readonly string _s_set_path_default;
     private static readonly string _s_set_name_default = "default";
-
-    // Sets defining which location IDs have multiple icons
-    private static readonly HashSet<int> _multi_icon_locations_x = [
-         31, 129, 216, 244,
-        245, 246, 247, 257,
-        284, 348,
-    ];
 
     // Caches for immutable portions of certain templated game strings.
     private static int    _cache_init             = 0;
@@ -358,6 +359,9 @@ public sealed class FhSaves {
      * emit terminating null bytes, so we take care to do so manually in the PAL.
      */
 
+    /// <summary>
+    ///     Prepares runtime-constant strings used by other PAL methods.
+    /// </summary>
     private static unsafe void _pal_cache_init() {
         if (Interlocked.CompareExchange(ref _cache_init, 0, 0) == 1)
             return;
@@ -484,10 +488,20 @@ public sealed class FhSaves {
 
     /* [fkelava 13/11/25 21:59]
      * The following functions are excerpts from FFX.exe+2F0C60 and FFX-2.exe+11DD00.
+     *
+     * In some cases (icon_{map|chr}), they are substantially modified and have
+     * improved function over the base game.
      */
 
     /// <summary>
-    ///     Returns the icon filename for the current map in the save with the given <paramref name="header"/>.
+    ///     Returns whether a map has multiple icons.
+    /// </summary>
+    private static bool _pal_map_has_multiple_icons(int id_map_icon) {
+        return id_map_icon is 31 or 129 or 216 or (>= 244 and <= 247) or 257 or 284 or 348;
+    }
+
+    /// <summary>
+    ///     Returns the map icon for the save with the given <paramref name="header"/>.
     /// </summary>
     private static FhTexture _pal_get_icon_map(in SaveHeader header) {
         string map_dir  = FhGlobal.game_id is FhGameId.FFX
@@ -495,57 +509,54 @@ public sealed class FhSaves {
             : DIR_MAP_ICON_X2;
 
         if (FhGlobal.game_id is FhGameId.FFX2LM) {
-            int lm_icon_id = ((int.Clamp(header.x2.lm_id_location / 2, 0, 80) - 1) / 20) + 1;
+            int id_lm_icon = ((int.Clamp(header.x2.lm_id_location / 2, 0, 80) - 1) / 20) + 1;
 
-            if (_cache_icon_map.TryGetValue(lm_icon_id, out FhTexture? icon_texture_lm)) {
-                return icon_texture_lm;
+            if (_cache_icon_map.TryGetValue(id_lm_icon, out FhTexture? lm_icon)) {
+                return lm_icon;
             }
 
-            return (_cache_icon_map[lm_icon_id] = new FhTexture($"{map_dir}/logo_j_lm.png", FhTextureType.GAME));
+            return (_cache_icon_map[id_lm_icon] = new FhTexture($"{map_dir}/logo_j_lm.png", FhTextureType.GAME));
         }
 
-        int logo_icon_id = FhUtil.select(0, 23, 23);
-
-        int map_icon_id = FhGlobal.game_id is FhGameId.FFX
+        int id_logo_icon = FhUtil.select(0, 23, 23);
+        int id_map_icon  = FhGlobal.game_id is FhGameId.FFX
             ? header.x .id_location
             : header.x2.id_map_icon;
 
-        map_icon_id = FhCall.fix_mappic.fnptr!((ushort)map_icon_id);
+        id_map_icon = FhCall.fix_mappic.fnptr!((ushort)id_map_icon);
 
-        if (_cache_icon_map.TryGetValue(map_icon_id, out FhTexture? icon_texture)) {
+        if (_cache_icon_map.TryGetValue(id_map_icon, out FhTexture? icon_texture)) {
             return icon_texture;
         }
 
-        bool is_jp_logo = map_icon_id == logo_icon_id && FhCall.isNeedShowJapanLogo.fnptr!() != 0;
-
-        if (is_jp_logo) {
-            return (_cache_icon_map[map_icon_id] = new FhTexture($"{map_dir}/logo_j.png", FhTextureType.GAME));
+        if (id_map_icon == id_logo_icon && FhCall.isNeedShowJapanLogo.fnptr!() != 0) {
+            return (_cache_icon_map[id_map_icon] = new FhTexture($"{map_dir}/logo_j.png", FhTextureType.GAME));
         }
 
-        int icon_id = map_icon_id;
-
         bool has_multiple_icons = FhGlobal.game_id == FhGameId.FFX
-            && (_multi_icon_locations_x.Contains(icon_id)
-            ||  _multi_icon_locations_x.Contains(icon_id - 1000));
+            && (_pal_map_has_multiple_icons(id_map_icon)
+            ||  _pal_map_has_multiple_icons(id_map_icon - 1000));
 
         string suffix = FhGlobal.game_id switch {
-            FhGameId.FFX when has_multiple_icons => icon_id < 1000 ? "_0" : "_1",
-            FhGameId.FFX2                        => icon_id < 1000 ? "_0" : "_1",
+            FhGameId.FFX when has_multiple_icons => id_map_icon < 1000 ? "_0" : "_1",
+            FhGameId.FFX2                        => id_map_icon < 1000 ? "_0" : "_1",
 
             _ => string.Empty,
         };
 
-        if (suffix != string.Empty && icon_id > 1000) {
-            icon_id -= 1000;
+        if (suffix != string.Empty && id_map_icon > 1000) {
+            id_map_icon -= 1000;
         }
 
-        string icon_name = $"{icon_id}{suffix}";
+        string icon_name = $"{id_map_icon}{suffix}";
 
-        return (_cache_icon_map[map_icon_id] = new FhTexture($"{map_dir}/{icon_name}.png", FhTextureType.GAME));
+        return (_cache_icon_map[id_map_icon] = new FhTexture($"{map_dir}/{icon_name}.png", FhTextureType.GAME));
     }
 
-    /// <summary>Compute the correct filename of a face icon.</summary>
-    /// <returns>The filename for the face icon.</returns>
+    /// <summary>
+    ///     Returns the icon of the <paramref name="index"/>'th character
+    ///     in the save with the given <paramref name="header"/>.
+    /// </summary>
     private static FhTexture _pal_get_icon_chr(in SaveHeader header, int index) {
         ArgumentOutOfRangeException.ThrowIfGreaterThan(index, 2, nameof(index));
 
@@ -613,7 +624,6 @@ public sealed class FhSaves {
     ///     Returns the player character's name in the save with the given <paramref name="header"/>.
     /// </summary>
     private static unsafe string _pal_get_player_name(in SaveHeader header) {
-        int     len_player_name;
         string? str_loc;
 
         Span<byte> dest = stackalloc byte[0x10];
@@ -623,9 +633,7 @@ public sealed class FhSaves {
             if (_cache_player_name.TryGetValue(0, out str_loc))
                 return str_loc;
 
-            len_player_name = FhEncoding.decode(header.x.player_name, dest, header.x.lang_id, flags: FhEncodingFlags.IMPLICIT_END);
-            dest [ len_player_name ] = 0x00;
-
+            _ = FhEncoding.decode(header.x.player_name, dest, header.x.lang_id, flags: FhEncodingFlags.IMPLICIT_END);
             return (_cache_player_name[0] = Encoding.UTF8.GetString(dest));
         }
 
@@ -634,9 +642,7 @@ public sealed class FhSaves {
 
         FhCall.SaveDataGetLoc.fnptr!(0xDD + header.x2.lm_ply, ptr_player_name_encoded);
 
-        len_player_name = FhEncoding.decode(player_name_encoded, dest, flags: FhEncodingFlags.IMPLICIT_END);
-        dest [ len_player_name ] = 0x00;
-
+        _ = FhEncoding.decode(player_name_encoded, dest, flags: FhEncodingFlags.IMPLICIT_END);
         return (_cache_player_name[header.x2.lm_ply] = Encoding.UTF8.GetString(dest));
     }
 
@@ -658,16 +664,14 @@ public sealed class FhSaves {
         if (_cache_location.TryGetValue(location_id, out string? str_loc))
             return str_loc;
 
-        Span<byte> dest = stackalloc byte[128];
+        Span<byte> dest = stackalloc byte[0x80];
         dest.Clear();
 
         if (FhGlobal.game_id is not FhGameId.FFX2LM) {
             byte*              ptr_location_name = FhCall.AtelGetSaveDicName.fnptr!(location_id, 0);
             ReadOnlySpan<byte> location_name     = new(ptr_location_name, int.MaxValue);
 
-            int len_location = FhEncoding.decode(location_name, dest, flags: FhEncodingFlags.IMPLICIT_END);
-            dest [ len_location ] = 0x00;
-
+            _ = FhEncoding.decode(location_name, dest, flags: FhEncodingFlags.IMPLICIT_END);
             return (_cache_location[location_id] = Encoding.UTF8.GetString(dest));
         }
 
@@ -678,9 +682,7 @@ public sealed class FhSaves {
 
         _pal_fill_template(lm_location_suffix, (byte)(location_id >> 1));
 
-        int len_lm_location = FhEncoding.decode(lm_location_suffix, dest, flags: FhEncodingFlags.IMPLICIT_END);
-        dest [ len_lm_location ] = 0x00;
-
+        _ = FhEncoding.decode(lm_location_suffix, dest, flags: FhEncodingFlags.IMPLICIT_END);
         return (_cache_location[location_id] = $"{_cache_prefix_lm_loc} {Encoding.UTF8.GetString(dest)}");
     }
 
@@ -705,9 +707,7 @@ public sealed class FhSaves {
         FhCall.SaveDataGetLoc.fnptr!(0x4D8, ptr_chapter);
         _pal_fill_template(chapter, chapter_id);
 
-        int len_chapter = FhEncoding.decode(chapter, dest, flags: FhEncodingFlags.IMPLICIT_END);
-        dest[ len_chapter ] = 0x00;
-
+        _ = FhEncoding.decode(chapter, dest, flags: FhEncodingFlags.IMPLICIT_END);
         return (_cache_chapter[chapter_id] = Encoding.UTF8.GetString(dest));
     }
 
@@ -732,9 +732,7 @@ public sealed class FhSaves {
         FhCall.SaveDataGetLoc.fnptr!(0x39A, ptr_completion);
         _pal_fill_template(completion, header.x2.completion);
 
-        int len_completion = FhEncoding.decode(completion, dest, flags: FhEncodingFlags.IMPLICIT_END);
-        dest[ len_completion ] = 0x00;
-
+        _ = FhEncoding.decode(completion, dest, flags: FhEncodingFlags.IMPLICIT_END);
         return (_cache_completion[completion_pct] = Encoding.UTF8.GetString(dest));
     }
 
@@ -756,9 +754,7 @@ public sealed class FhSaves {
         byte*              ptr_lm_job = FFX2.FhCall.GetLastMissionJobName.fnptr!(header.x2.lm_ply, header.x2.lm_job);
         ReadOnlySpan<byte> lm_job     = new(ptr_lm_job, int.MaxValue);
 
-        int len_lm_job = FhEncoding.decode(lm_job, dest, flags: FhEncodingFlags.IMPLICIT_END);
-        dest [ len_lm_job ] = 0x00;
-
+        _ = FhEncoding.decode(lm_job, dest, flags: FhEncodingFlags.IMPLICIT_END);
         return (_cache_lm_job[key] = Encoding.UTF8.GetString(dest));
     }
 

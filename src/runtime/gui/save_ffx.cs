@@ -783,7 +783,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
 
         Vector2 face_screen_offset = new Vector2(face_size.X + face_gap, 0f) * aspect_scale;
 
-        SaveHeaderX header = save.header.x;
+        FFX.SaveHeader header = save.header.x;
 
         foreach (int chr in header.formation[..3]) {
             if (chr == 0xFF) continue;
@@ -851,7 +851,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
 
         Vector2 face_screen_offset = new Vector2(face_size.X + face_gap, 0f) * aspect_scale;
 
-        SaveHeaderX2 header = save.header.x2;
+        FFX2.SaveHeader header = save.header.x2;
 
         for (byte i = 0; i < 3; i++) {
             byte job_id = header.ply_jobs[i];
@@ -905,7 +905,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
 
         Vector2 face_screen_offset = new Vector2(-face_gap, 0f) * aspect_scale;
 
-        SaveHeaderX2 header = save.header.x2;
+        FFX2.SaveHeader header = save.header.x2;
 
         byte job_id = header.lm_job;
 

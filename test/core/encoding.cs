@@ -19,9 +19,9 @@ public class FhEncodingTests {
     [TestCase(FhLangId.Japanese, FhGameId.FFX)]
     [TestCase(FhLangId.Korean,   FhGameId.FFX)]
     [TestCase(FhLangId.English,  FhGameId.FFX2)]
-    [TestCase(FhLangId.Chinese,  FhGameId.FFX2, Ignore = "CJK encodings for FF X-2 are not yet supported.")]
-    [TestCase(FhLangId.Japanese, FhGameId.FFX2, Ignore = "CJK encodings for FF X-2 are not yet supported.")]
-    [TestCase(FhLangId.Korean,   FhGameId.FFX2, Ignore = "CJK encodings for FF X-2 are not yet supported.")]
+    [TestCase(FhLangId.Chinese,  FhGameId.FFX2, Ignore = "Chinese encoding for FF X-2 is not yet supported.")]
+    [TestCase(FhLangId.Japanese, FhGameId.FFX2)]
+    [TestCase(FhLangId.Korean,   FhGameId.FFX2)]
     public void roundtrip_shift_jis_tables(FhLangId lang, FhGameId game) {
         string sjistbl      = FhShiftJisTables.get_table(lang, game);
         byte[] sjistbl_utf8 = Encoding.UTF8.GetBytes(sjistbl);

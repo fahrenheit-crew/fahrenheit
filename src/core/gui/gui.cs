@@ -8,12 +8,12 @@ namespace Fahrenheit.Gui;
 /// <summary>
 ///     Fonts, style, and helper functions for user interfaces in Fahrenheit.
 /// </summary>
-public unsafe class FhGui {
+public unsafe partial class FhGui {
     public struct DrawTextConfig {
-        /// <summary>The font size to draw the text at.</summary>
+        /// <summary>The size of the text.</summary>
         public float font_size = 11f;
 
-        /// <summary>The color to draw the text using in the format 0xAABBGGRR, i.e. RGBA8.</summary>
+        /// <summary>The color of the text, in the format 0xAABBGGRR, i.e. RGBA8.</summary>
         public uint color = 0xFFFFFFFF;
 
         /// <summary>Whether a shadow should be drawn under the text.</summary>
@@ -23,6 +23,24 @@ public unsafe class FhGui {
         public Alignment2D align = Alignment2D.TOP_LEFT;
 
         public DrawTextConfig() { }
+    }
+
+    public struct DrawCursorConfig {
+        /// <summary>The texture to draw.</summary>
+        public FhTexture texture;
+
+        /// <summary>The size of the cursor.</summary>
+        public Vector2 cursor_size = new Vector2(92f, 55f);
+
+        /// <summary>The maximum distance for the cursor to travel.</summary>
+        public float max_offset = 16f;
+
+        /// <summary>Whether the cursor slightly overlaps its target.</summary>
+        public bool overlap = true;
+
+        public DrawCursorConfig(FhTexture cursor_texture) {
+            texture = cursor_texture;
+        }
     }
 
     // Fonts for standardized style across Fahrenheit

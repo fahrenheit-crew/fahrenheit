@@ -24,12 +24,12 @@ namespace Fahrenheit.Runtime;
 ///     Implements Fahrenheit's extended save system.
 /// </summary>
 [FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
-public unsafe sealed class FhSaveExtensionModule : FhModule, IFhSaveSystemImpl {
+public unsafe sealed class FhSaveSystemModule : FhModule, IFhSaveSystemImpl {
 
     private int              _load_pending_slot;
     private FhSaveSystemMode _mode;
 
-    public FhSaveExtensionModule() { }
+    public FhSaveSystemModule() { }
 
     public override bool init(FhModContext mod_context, FileStream global_state_file) {
         FhApi.Saves.impl_handle.set(this);
@@ -137,23 +137,9 @@ public unsafe sealed class FhSaveExtensionModule : FhModule, IFhSaveSystemImpl {
     /* [fkelava 16/01/26 14:29]
      * https://github.com/fahrenheit-crew/fahrenheit/issues/70
      *
-     * Loading in the game is a multi-step process:
-     * 1) Data from the disk is loaded to `SaveDataManager::getRefBuffer`.
-     * 2) CRC checking and other validation is performed on the ref buffer.
-     * 3) If verification passed, the save data is later copied to `save_ram`.
-     * 4) Fahrenheit's SaveData accessors (and the rest of the game) only look at `save_ram`.
-     *
-     * with the following constraints:
-     * - Between 1) and 3) there is at least one main loop iteration of delay.
-     * - SaveData must be inspectable at `load_local_state` time.
-     * - SaveExtensionModule must load into the ref buffer for correctness, because
-     *   `SaveDataCheckCrc` et al. implicitly operate on the ref buffer.
-     * - Information about the slot being loaded is lost after 1).
-     *
-     * Thus we defer `load_local_state` to after 3), storing the pending load slot at 1).
-     *
-     * As the actual function performing the copy to `save_ram` is inlined on some platforms,
-     * we hook its parent function, TkMenuJumpToLoadedScene.
+     * Before being copied into global `save_ram`, save data is loaded into a temporary buffer
+     * where it's validated and CRC-checked. We want the save data to be inspectable at state
+     * load time, so we wait for that copy to occur before proceeding.
      */
 
     [UnmanagedCallConv(CallConvs = [ typeof(CallConvStdcall) ] )]
@@ -199,42 +185,45 @@ public unsafe sealed class FhSaveExtensionModule : FhModule, IFhSaveSystemImpl {
     }
 
     /// <inheritdoc cref="IFhSaveSystemImpl.save"/>
-    void IFhSaveSystemImpl.save(int slot) {
+    bool IFhSaveSystemImpl.save(int slot) {
         if (slot == 0) { // This is a new save, not an overwrite.
             slot = FhApi.Saves.pal_get_open_slot();
         }
 
-        string save_path = FhApi.Saves.pal_get_path_for_slot(slot);
+        string             save_path = FhApi.Saves.pal_get_path_for_slot(slot);
+        ReadOnlySpan<byte> save      = FhSaves.pal_get_buf_save();
 
-        ReadOnlySpan<byte> save = FhSaves.pal_get_buf_save();
-        FhCall.SaveDataWriteCrc.fnptr!(FhSaves.pal_get_addr_save());
+        try {
+            FhCall.SaveDataWriteCrc.fnptr!(FhSaves.pal_get_addr_save());
 
-        // TODO: add popups on success/failure
-
-        using (FileStream save_stream = File.OpenWrite(save_path)) {
+            using FileStream save_stream = File.OpenWrite(save_path);
             save_stream.Write(save);
         }
+        catch { return false; }
 
         FhInternal.State.state_save_slot(slot);
+
         signal_exit_success();
+        return true;
     }
 
     /// <inheritdoc cref="IFhSaveSystemImpl.load"/>
-    void IFhSaveSystemImpl.load(int slot) {
-        string     save_name = FhApi.Saves.pal_get_path_for_slot(slot);
+    bool IFhSaveSystemImpl.load(int slot) {
+        string     save_path = FhApi.Saves.pal_get_path_for_slot(slot);
         Span<byte> save      = FhSaves.pal_get_buf_save();
 
-        // TODO: add popups on success/failure
-        using (FileStream save_stream = File.OpenRead(save_name)) {
+        try {
+            using FileStream save_stream = File.OpenRead(save_path);
             save_stream.ReadExactly(save);
         }
+        catch { return false; }
 
         // From Iggy state handler 0xF
         if (FhCall.SaveDataCheckCrc.fnptr!() == 0) {
             save.Clear();
 
             signal_exit_abort();
-            return;
+            return false;
         }
 
         // FFX.exe+2F022E, FFX-2.exe+11D0BE
@@ -243,25 +232,23 @@ public unsafe sealed class FhSaveExtensionModule : FhModule, IFhSaveSystemImpl {
         );
 
         FhUtil.set_at(FhUtil.select(0xD33350, 0xA0FB70, 0xA0FB70), player_needs_rename);
-
         _load_pending_slot = slot;
-        signal_exit_success(); // TODO: popup if success
+
+        signal_exit_success();
+        return true;
     }
 
     /// <inheritdoc cref="IFhSaveSystemImpl.copy_albd"/>
-    void IFhSaveSystemImpl.copy_albd(int slot) {
-        string save_name = FhApi.Saves.pal_get_path_for_slot(slot);
-
-        //Span<byte> save = new(
-        //    FhUtil.ptr_at<byte>(pal_addr_buf_save()),
-        //    pal_buf_save_size()
-        //    );
+    bool IFhSaveSystemImpl.copy_albd(int slot) {
+        string     save_name = FhApi.Saves.pal_get_path_for_slot(slot);
+        Span<byte> save      = FhSaves.pal_get_buf_save();
 
         //using (FileStream save_stream = File.OpenRead(save_name)) {
         //    save_stream.ReadExactly(save);
         //}
 
         signal_exit_success();
+        return true;
     }
 
     /// <inheritdoc cref="IFhSaveSystemImpl.abort"/>

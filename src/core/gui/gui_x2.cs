@@ -33,6 +33,30 @@ public partial class FhGui {
         }
     }
 
+    public struct DrawWaterConfig {
+        /// <summary>The texture to draw.</summary>
+        public FhTexture texture;
+
+        /// <summary>The axis the water moves across.</summary>
+        public Axis2D axis = Axis2D.X | Axis2D.Y;
+
+        /// <summary>The position to start moving from on the texture UV.</summary>
+        public Vector2 move_offset = new(0f);
+
+        /// <summary>The speed at which the texture moves.</summary>
+        public Vector2 move_speed = new Vector2(0f) * 100;
+
+        /// <summary>The speed at which the texture fades in and out.</summary>
+        public float fade_speed = 0f;
+
+        /// <summary>The color of the water, in the format 0xAABBGGRR, i.e. RGBA8.</summary>
+        public uint color = 0xFFFFFFFF;
+
+        public DrawWaterConfig(FhTexture water_texture) {
+            texture = water_texture;
+        }
+    }
+
     /// <summary>Draws a "plate" with a given position, size, color, and shadow.</summary>
     /// <param name="draw">The draw list to add the texture to.</param>
     /// <param name="bounds">The position and size of the texture.</param>
@@ -238,5 +262,69 @@ public partial class FhGui {
             cursor_tuv.p0,
             cursor_tuv.p1
         );
+    }
+
+    /// <summary>Draws a water texture animation with a given position, size, move speed, and color.</summary>
+    /// <param name="draw">The draw list to add the texture to.</param>
+    /// <param name="bounds">The position to draw the texture at.</param>
+    /// <param name="config">The configuration to draw the plate with.</param>
+    public void draw_x2_water(
+        ImDrawListPtr   draw,
+        Rect            bounds,
+        DrawWaterConfig config
+    ) {
+        if (!config.texture.try_use(out ImTextureRef water, out FhTextureMetadata? water_meta)) return;
+
+        // Fade the wave in and out
+        float alpha = float.Sin((float)ImGui.GetTime() * float.Pi / config.fade_speed) / 2f + 0.5f;
+
+        config.color = ((uint)(0x20 + alpha * 0x80) << 24) | config.color & 0x00FFFFFF;
+
+        // If we only want to move on one axis, set movement on the inactive axis to 0
+        float move_x = config.axis == Axis2D.Y ? 0f : (float)ImGui.GetTime() * config.move_speed.X;
+        float move_y = config.axis == Axis2D.X ? 0f : (float)ImGui.GetTime() * config.move_speed.Y;
+
+        // We use % and for loops to seamlessly loop the texture continually and simulate wrapping
+        Vector2 wave_offset = new Vector2(
+            (config.move_offset.X + move_x) % water_meta.size.X,
+            (config.move_offset.Y + move_y) % water_meta.size.Y
+        );
+
+        float x_offset = bounds.pos.X + wave_offset.X - water_meta.size.X;
+        float y_offset = bounds.pos.Y + wave_offset.Y - water_meta.size.Y;
+
+        for (float x = x_offset; x < bounds.pos.X + bounds.size.X; x += water_meta.size.X) {
+            float min_x = float.Max(bounds.pos.X, x);
+            float max_x = float.Min(bounds.pos.X + bounds.size.X, x + water_meta.size.X);
+
+            if (max_x > min_x) {
+                float uv_x1 = (min_x - x) / water_meta.size.X;
+                float uv_x2 = (max_x - x) / water_meta.size.X;
+
+                for (float y = y_offset; y < bounds.pos.Y + bounds.size.Y; y += water_meta.size.Y) {
+                    float min_y = float.Max(bounds.pos.Y, y);
+                    float max_y = float.Min(bounds.pos.Y + bounds.size.Y, y + water_meta.size.Y);
+
+                    if (max_y > min_y) {
+                        float uv_y1 = (min_y - y) / water_meta.size.Y;
+                        float uv_y2 = (max_y - y) / water_meta.size.Y;
+
+                        Vector2 suv_p0 = new Vector2(min_x, min_y);
+                        Vector2 suv_p1 = new Vector2(max_x, max_y);
+                        Vector2 tuv_p0 = new Vector2(uv_x1, uv_y1);
+                        Vector2 tuv_p1 = new Vector2(uv_x2, uv_y2);
+
+                        draw.AddImage(
+                            water,
+                            suv_p0,
+                            suv_p1,
+                            tuv_p0,
+                            tuv_p1,
+                            config.color
+                        );
+                    }
+                }
+            }
+        }
     }
 }

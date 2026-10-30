@@ -44,7 +44,7 @@ public partial class FhGui {
         public Vector2 move_offset = new(0f);
 
         /// <summary>The speed at which the texture moves.</summary>
-        public Vector2 move_speed = new Vector2(0f) * 100;
+        public Vector2 move_speed = new(0f);
 
         /// <summary>The speed at which the texture fades in and out.</summary>
         public float fade_speed = 0f;

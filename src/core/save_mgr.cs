@@ -31,6 +31,9 @@ public static class FhSaveComparers {
         if (x == null)             return -1;
         if (y == null)             return  1;
 
+        if (x.valid && !y.valid) return -1;
+        if (y.valid && !x.valid) return  1;
+
         if (x.slot == 0) return -1; // The autosave must precede any other save.
         if (y.slot == 0) return  1;
 
@@ -45,6 +48,9 @@ public static class FhSaveComparers {
         if (ReferenceEquals(x, y)) return  0;
         if (x == null)             return -1;
         if (y == null)             return  1;
+
+        if (x.valid && !y.valid) return -1;
+        if (y.valid && !x.valid) return  1;
 
         return x.slot - y.slot;
     }
@@ -126,6 +132,8 @@ public class FhSaveUiData {
     }
 
     internal FhSaveUiData() { }
+
+    internal bool valid;
 
     public SaveHeader     header;
     public SaveData       data;
@@ -822,16 +830,13 @@ public sealed class FhSaves {
         if (!int.TryParse(slot_str, out int slot))
             return;
 
-        FhSaveUiData ui_data = _ui_data[index] ??= new();
-
         /* [fkelava 30/10/26 16:38]
-         * UI data is always sorted at the end. We need to reset sortable attributes
-         * so invalid UI data gets filtered to the top, i.e. the first $SET_COUNT UI data
-         * are the ones for the valid saves.
+         * UI data is sorted at end of indexing. Invalid UI data moves to the end,
+         * i.e. the first `set.count` UI data are the ones for the valid saves.
          */
 
-        ui_data.slot        = 0xFFFF;
-        ui_data.create_time = DateTimeOffset.MinValue;
+        FhSaveUiData ui_data = _ui_data[index] ??= new();
+        ui_data.valid = false;
 
         try {
             using MemoryMappedFile         save_file     = MemoryMappedFile.CreateFromFile(save_file_path, FileMode.Open, null, 0, MemoryMappedFileAccess.Read);
@@ -865,8 +870,11 @@ public sealed class FhSaves {
         ui_data.lm_job      = _pal_get_lm_job     (ui_data.header);
         ui_data.icon_map    = _pal_get_icon_map   (ui_data.header);
         ui_data.icon_chr    = icon_chr;
+        ui_data.valid       = true;
 
         _slots.Add(slot);
+
+
     }
 
     /// <summary>

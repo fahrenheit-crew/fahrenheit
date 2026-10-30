@@ -9,6 +9,9 @@ namespace Fahrenheit;
  * Fahrenheit reimplements the base game's save/load system to allow for customizable user interfaces,
  * save set capability, etc. It also fixes a number of bugs, such as invalid display of player
  * names in other languages, inability to distinguish wetsuit Rikku from Seymour, and more.
+ *
+ * This is broadly subdivided into three parts: the "PAL", which is a set of functions that return
+ * common save attributes in a game-agnostic manner, set controls, and implementation controls.
  */
 
 /// <summary>
@@ -210,9 +213,9 @@ public sealed class FhSaves {
     private const string DIR_CHR_ICON_X  = "/FFX_Data/GameData/PS3Data/menu/D3D11";
     private const string DIR_CHR_ICON_X2 = "/FFX-2_Data/GameData/PS3Data/menu/face_data/D3D11";
 
-    private static readonly string _s_set_path_base;
-    private static readonly string _s_set_path_default;
-    private static readonly string _s_set_name_default = "default";
+    private static readonly string _sets_path_base;
+    private static readonly string _sets_path_default;
+    private static readonly string _sets_name_default = "default";
 
     // Caches for immutable portions of certain templated game strings.
     private static int    _cache_init             = 0;
@@ -237,21 +240,21 @@ public sealed class FhSaves {
     private const int SET_COUNT = 101;
 
     private          int            _lock;
-    private          string         _set_active; // The active set's name.
+    private          string         _sets_name_active; // The active set's name.
     private readonly FhSaveUiData[] _ui_data;
     private readonly HashSet<int>   _slots;      // The slots occupied in the active set.
 
     static FhSaves() {
-        _s_set_path_base    = Path.Join(FhEnvironment.Finder.Saves.FullName, FhInternal.Hasher.SaveSetHash);
-        _s_set_path_default = Path.Join(_s_set_path_base, _s_set_name_default, pal_get_save_subfolder());
+        _sets_path_base    = Path.Join(FhEnvironment.Finder.Saves.FullName, FhInternal.Hasher.SaveSetHash);
+        _sets_path_default = Path.Join(_sets_path_base, _sets_name_default, pal_get_save_subfolder());
     }
 
     public FhSaves() {
-        _set_active = _s_set_name_default;
-        _sets       = [];
-        _slots      = [];
-        _ui         = [];
-        _ui_data    = new FhSaveUiData[SET_COUNT];
+        _sets_name_active = _sets_name_default;
+        _sets             = [];
+        _slots            = [];
+        _ui               = [];
+        _ui_data          = new FhSaveUiData[SET_COUNT];
 
         /* [fkelava 19/01/26 18:13]
          * Indexing cannot be done here because game functions
@@ -778,8 +781,8 @@ public sealed class FhSaves {
     /// </summary>
     internal string pal_get_path_for_slot(int slot, string? set = null) {
         return Path.Join(
-            _s_set_path_base,
-            set ?? _set_active,
+            _sets_path_base,
+            set ?? _sets_name_active,
             pal_get_save_subfolder(),
             pal_get_save_name_for_slot(slot));
     }
@@ -804,7 +807,7 @@ public sealed class FhSaves {
     ///     Ensures the default save set exists.
     /// </summary>
     private void _sets_create_default() {
-        _ = Directory.CreateDirectory(_s_set_path_default);
+        _ = Directory.CreateDirectory(_sets_path_default);
     }
 
     /// <summary>
@@ -862,8 +865,8 @@ public sealed class FhSaves {
         _slots.Clear();
 
         string path_set_folder = Path.Join(
-            _s_set_path_base,
-            _set_active,
+            _sets_path_base,
+            _sets_name_active,
             pal_get_save_subfolder());
 
         /* [fkelava 08/02/26 15:00]
@@ -884,8 +887,8 @@ public sealed class FhSaves {
 
         Task.WaitAll(tasks);
 
-        _sets[_set_active].has_autosave = File.Exists(pal_get_path_for_slot(0));
-        _sets[_set_active].count        = _slots.Count;
+        _sets[_sets_name_active].has_autosave = File.Exists(pal_get_path_for_slot(0));
+        _sets[_sets_name_active].count        = _slots.Count;
 
         _ui_data.Sort(FhSaveComparers.compare_create_time);
     }
@@ -918,7 +921,7 @@ public sealed class FhSaves {
     private void _sets_query() {
         _sets.Clear();
 
-        string[] sets  = [ .. Directory.EnumerateDirectories(_s_set_path_base) ];
+        string[] sets  = [ .. Directory.EnumerateDirectories(_sets_path_base) ];
         Task  [] tasks = new Task[sets.Length];
 
         for (int i = 0; i < sets.Length; i++) {
@@ -932,17 +935,17 @@ public sealed class FhSaves {
          * and we fall back to it if the active set was torched.
          */
 
-        if (!_sets.TryGetValue(_set_active, out _)) {
-            FhInternal.Log.Warning($"Active set {_set_active} was deleted; falling back to default.");
+        if (!_sets.TryGetValue(_sets_name_active, out _)) {
+            FhInternal.Log.Warning($"Active set {_sets_name_active} was deleted; falling back to default.");
 
-            if (!_sets.TryGetValue(_s_set_name_default, out _)) {
+            if (!_sets.TryGetValue(_sets_name_default, out _)) {
                 FhInternal.Log.Error("Default set was deleted; forcibly re-generating.");
 
                 _sets_create_default();
                 _sets_query();
             }
 
-            _set_active = _s_set_name_default;
+            _sets_name_active = _sets_name_default;
         }
     }
 
@@ -997,7 +1000,7 @@ public sealed class FhSaves {
 
         _pal_cache_tex_unload();
 
-        _set_active = set_name;
+        _sets_name_active = set_name;
         _sets_index();
 
         _pal_cache_tex_load();
@@ -1006,7 +1009,7 @@ public sealed class FhSaves {
     }
 
     /// <summaryRetrieve the active set.</summary>
-    public FhSaveSet sets_get_active() => _sets[_set_active];
+    public FhSaveSet sets_get_active() => _sets[_sets_name_active];
 
     /// <summaryRetrieve a specific set.</summary>
     public bool sets_get(string set_name, [NotNullWhen(true)] out FhSaveSet? set) {
@@ -1015,7 +1018,7 @@ public sealed class FhSaves {
 
     public bool sets_get_ui_data(int index, [NotNullWhen(true)] out FhSaveUiData? data) {
         data = default;
-        if (index >= _sets[_set_active].count)
+        if (index >= _sets[_sets_name_active].count)
             return false;
 
         data = _ui_data[index];

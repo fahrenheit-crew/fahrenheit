@@ -95,7 +95,7 @@ public struct FhMacroDictHeader {
 public enum FhEncodingFlags {
     IGNORE_DEST_BUFFER     = 1,      // `dest` is not iterated through in `encode`/`decode`. Allows size to be calculated with cheap stackalloc buffer.
     IGNORE_EXPRESSIONS     = 1 << 1, // U+007B and U+007D are no longer considered expression opener and closer, respectively.
-    IMPLICIT_END           = 1 << 2, // Terminate output with a null byte instead of an {END} mark. This output style is not roundtrippable.
+    IMPLICIT_END           = 1 << 2, // Do not emit the {END} mark on phrase termination. This output style is not roundtrippable.
     IMPLICIT_CJK_EXTENSION = 1 << 3, // In a CJK language, implicitly extend supported characters to their fullwidth forms to allow the display of English text.
 }
 

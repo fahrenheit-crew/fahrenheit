@@ -550,7 +550,7 @@ public abstract class FhSaveUiBase : FhSaveUi {
             track_bounds,
             scrollable,
             progress,
-            out float track_height
+            out float scrollable_height
         );
 
         (Rect arrow_top, Rect arrow_bottom) = ui_scrollbar_get_arrow_bounds(
@@ -569,7 +569,7 @@ public abstract class FhSaveUiBase : FhSaveUi {
         );
 
         // Handle input
-        float expanded_track_height = track_height + (track.size.X - thumb.size.X);
+        float expanded_track_height = scrollable_height + (track.size.X - thumb.size.X);
 
         if (mouse_clicked(hitbox)) {
             scrollbar_dragging = true;
@@ -639,8 +639,8 @@ public abstract class FhSaveUiBase : FhSaveUi {
 
         Vector2 thumb_size = new(thumb_width, thumb_height);
 
-        track_height = track.size.Y - thumb_margin.Y * 2 - thumb_size.Y;
-        float thumb_progress          = scroll_progress * track_height;
+        track_height         = track.size.Y - thumb_margin.Y * 2 - thumb_size.Y;
+        float thumb_progress = scroll_progress * track_height;
 
         Rect thumb = new() {
             pos = new(

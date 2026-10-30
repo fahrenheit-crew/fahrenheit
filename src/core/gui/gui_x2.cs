@@ -41,13 +41,13 @@ public partial class FhGui {
         public Vector2 move_offset = new(0f);
 
         /// <summary>The speed at which the texture moves.</summary>
-        public Vector2 move_speed = new(0f);
+        public Vector2 move_speed = new Vector2(1f) * 100;
 
         /// <summary>The speed at which the texture fades in and out.</summary>
-        public float fade_speed = 0f;
+        public float fade_speed = 0.66f;
 
         /// <summary>The minimum alpha the texture can fade to.</summary>
-        public uint min_alpha = 0x00;
+        public uint min_alpha = 0x20;
 
         /// <summary>The maximum alpha the texture can fade to.</summary>
         public uint max_alpha = 0xA0;

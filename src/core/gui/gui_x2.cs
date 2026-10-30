@@ -57,7 +57,7 @@ public partial class FhGui {
         }
     }
 
-    /// <summary>Draws a "plate" with a given position, size, color, and shadow.</summary>
+    /// <summary>Draws a plate with a given position, size, color, and shadow.</summary>
     /// <param name="draw">The draw list to add the texture to.</param>
     /// <param name="bounds">The position and size of the texture.</param>
     /// <param name="tex_slice_idx">The number used to calculate the vertical UV coordinates.</param>
@@ -116,8 +116,8 @@ public partial class FhGui {
     }
 
     /// <summary>Draws the border effect on a plate.</summary>
-    /// <param name="draw">The drawlist to add the texture to.</param>
-    /// <param name="bounds">The position to draw the borders at.</param>
+    /// <param name="draw">The draw list to add the texture to.</param>
+    /// <param name="bounds">The position to draw the plate borders at.</param>
     /// <param name="width">The width of the plate border.</param>
     /// <param name="highlight">The color of the top and left edges, in the format 0xAABBGGRR, i.e. RGBA8.</param>
     /// <param name="shadow">The color of the bottom and right edges, in the format 0xAABBGGRR, i.e. RGBA8.</param>
@@ -273,10 +273,10 @@ public partial class FhGui {
         );
     }
 
-    /// <summary>Draws a water texture animation with a given position, size, move speed, and color.</summary>
+    /// <summary>Draws a moving water animation with a given position, size, move speed, and color.</summary>
     /// <param name="draw">The draw list to add the texture to.</param>
     /// <param name="bounds">The position to draw the texture at.</param>
-    /// <param name="config">The configuration to draw the plate with.</param>
+    /// <param name="config">The configuration to draw the water with.</param>
     public void draw_x2_water(
         ImDrawListPtr   draw,
         Rect            bounds,

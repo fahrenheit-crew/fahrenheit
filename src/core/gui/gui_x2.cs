@@ -42,6 +42,7 @@ public partial class FhGui {
 
         /// <summary>The speed at which the texture moves.</summary>
         public Vector2 move_speed = new Vector2(1f) * 100;
+
         /// <summary>The amount of time, in seconds, in which the texture fades in and out.</summary>
         public float fade_cycle_length = 0.66f;
 
@@ -288,11 +289,11 @@ public partial class FhGui {
 
         // Fade the wave in and out
         float alpha;
-        if (config.fade_speed <= 0f) {
+        if (config.fade_cycle_length <= 0f) {
             alpha = 1f;
         }
         else {
-            float fade_progress = float.Sin((float)ImGui.GetTime() * float.Pi / config.fade_speed) / 2f + 0.5f;
+            float fade_progress = float.Sin((float)ImGui.GetTime() * float.Pi / config.fade_cycle_length) / 2f + 0.5f;
             alpha = float.Lerp(config.min_alpha, config.max_alpha, fade_progress);
         }
 

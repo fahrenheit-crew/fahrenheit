@@ -306,33 +306,33 @@ public partial class FhGui {
             float min_x = float.Max(bounds.pos.X, x);
             float max_x = float.Min(bounds.pos.X + bounds.size.X, x + water_meta.size.X);
 
-            if (max_x > min_x) {
-                float uv_x1 = (min_x - x) / water_meta.size.X;
-                float uv_x2 = (max_x - x) / water_meta.size.X;
+            if (max_x <= min_x) continue;
 
-                for (float y = y_offset; y < bounds.pos.Y + bounds.size.Y; y += water_meta.size.Y) {
-                    float min_y = float.Max(bounds.pos.Y, y);
-                    float max_y = float.Min(bounds.pos.Y + bounds.size.Y, y + water_meta.size.Y);
+            float uv_x1 = (min_x - x) / water_meta.size.X;
+            float uv_x2 = (max_x - x) / water_meta.size.X;
 
-                    if (max_y > min_y) {
-                        float uv_y1 = (min_y - y) / water_meta.size.Y;
-                        float uv_y2 = (max_y - y) / water_meta.size.Y;
+            for (float y = y_offset; y < bounds.pos.Y + bounds.size.Y; y += water_meta.size.Y) {
+                float min_y = float.Max(bounds.pos.Y, y);
+                float max_y = float.Min(bounds.pos.Y + bounds.size.Y, y + water_meta.size.Y);
 
-                        Vector2 suv_p0 = new Vector2(min_x, min_y);
-                        Vector2 suv_p1 = new Vector2(max_x, max_y);
-                        Vector2 tuv_p0 = new Vector2(uv_x1, uv_y1);
-                        Vector2 tuv_p1 = new Vector2(uv_x2, uv_y2);
+                if (max_y <= min_y) continue;
 
-                        draw.AddImage(
-                            water,
-                            suv_p0,
-                            suv_p1,
-                            tuv_p0,
-                            tuv_p1,
-                            config.color
-                        );
-                    }
-                }
+                float uv_y1 = (min_y - y) / water_meta.size.Y;
+                float uv_y2 = (max_y - y) / water_meta.size.Y;
+
+                Vector2 suv_p0 = new Vector2(min_x, min_y);
+                Vector2 suv_p1 = new Vector2(max_x, max_y);
+                Vector2 tuv_p0 = new Vector2(uv_x1, uv_y1);
+                Vector2 tuv_p1 = new Vector2(uv_x2, uv_y2);
+
+                draw.AddImage(
+                    water,
+                    suv_p0,
+                    suv_p1,
+                    tuv_p0,
+                    tuv_p1,
+                    config.color
+                );
             }
         }
     }

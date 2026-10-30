@@ -43,7 +43,7 @@ public struct SaveHeader {
 [StructLayout(LayoutKind.Sequential, Size = 0x488)]
 internal unsafe struct SaveDataManager {
     public int                  save_enabled;
-    public int                  cb_result;
+    public int                  callback_result;
     public SaveSystemState      state;
     public int                  __0xC;
     public InlineArray64 <byte> game_name;

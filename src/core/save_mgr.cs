@@ -128,7 +128,7 @@ public class FhSaveUiData {
     internal FhSaveUiData() { }
 
     public SaveHeader     header;
-    public SaveData       file;
+    public SaveData       data;
     public DateTimeOffset create_time  { get; internal set; } = DateTimeOffset.MinValue;
     public int            slot         { get; internal set; } = 0xFFFF;
     public string         slot_str     { get; internal set; } = "";
@@ -237,7 +237,7 @@ public sealed class FhSaves {
     private readonly Dictionary<string, FhSaveSet> _sets; // The available save sets.
     private readonly Dictionary<string, FhSaveUi>  _ui;   // The available save user interfaces.
 
-    private const int SET_COUNT = 101;
+    private const int MAX_SAVES_PER_SET = 101;
 
     private          int            _lock;
     private          string         _sets_name_active; // The active set's name.
@@ -254,7 +254,7 @@ public sealed class FhSaves {
         _sets             = [];
         _slots            = [];
         _ui               = [];
-        _ui_data          = new FhSaveUiData[SET_COUNT];
+        _ui_data          = new FhSaveUiData[MAX_SAVES_PER_SET];
 
         /* [fkelava 19/01/26 18:13]
          * Indexing cannot be done here because game functions
@@ -323,16 +323,16 @@ public sealed class FhSaves {
         }
     }
 
-    internal unsafe static byte* pal_addr_buf_save() {
+    internal unsafe static byte* pal_get_addr_save() {
         return FhUtil.ptr_at<byte>(FhUtil.select(0x1197F70, 0xF9D500, 0xF9D500));
-    }
-
-    internal unsafe static Span<byte> pal_get_buf_save() {
-        return new(pal_addr_buf_save(), pal_get_sz_save());
     }
 
     internal static int pal_get_sz_save() {
         return FhUtil.select(0x6900, 0x166A0, 0x166A0);
+    }
+
+    internal unsafe static Span<byte> pal_get_buf_save() {
+        return new(pal_get_addr_save(), pal_get_sz_save());
     }
 
     /// <summary>
@@ -497,10 +497,14 @@ public sealed class FhSaves {
      */
 
     /// <summary>
-    ///     Returns whether a map has multiple icons.
+    ///     Returns whether the map with the given ID has multiple map icons.
     /// </summary>
-    private static bool _pal_map_has_multiple_icons(int id_map_icon) {
-        return id_map_icon is 31 or 129 or 216 or (>= 244 and <= 247) or 257 or 284 or 348;
+    private static bool _pal_map_has_multiple_icons(int id_map) {
+        if (FhGlobal.game_id is not FhGameId.FFX)
+            return false;
+
+        ReadOnlySpan<int> maps = [ 31, 129, 216, 244, 245, 246, 247, 257, 284, 348 ];
+        return maps.Contains(id_map) || maps.Contains(id_map - 1000);
     }
 
     /// <summary>
@@ -522,43 +526,41 @@ public sealed class FhSaves {
         }
 
         int id_logo_icon = FhUtil.select(0, 23, 23);
-        int id_map_icon  = FhGlobal.game_id is FhGameId.FFX
+        int id_map       = FhGlobal.game_id is FhGameId.FFX
             ? header.x .id_location
             : header.x2.id_map_icon;
 
-        id_map_icon = FhCall.fix_mappic.fnptr!((ushort)id_map_icon);
+        id_map = FhCall.fix_mappic.fnptr!((ushort)id_map);
 
-        if (_cache_icon_map.TryGetValue(id_map_icon, out FhTexture? icon_texture)) {
+        if (_cache_icon_map.TryGetValue(id_map, out FhTexture? icon_texture)) {
             return icon_texture;
         }
 
-        if (id_map_icon == id_logo_icon && FhCall.isNeedShowJapanLogo.fnptr!() != 0) {
-            return (_cache_icon_map[id_map_icon] = new FhTexture($"{map_dir}/logo_j.png", FhTextureType.GAME));
+        if (id_map == id_logo_icon && FhCall.isNeedShowJapanLogo.fnptr!() != 0) {
+            return (_cache_icon_map[id_map] = new FhTexture($"{map_dir}/logo_j.png", FhTextureType.GAME));
         }
 
-        bool has_multiple_icons = FhGlobal.game_id == FhGameId.FFX
-            && (_pal_map_has_multiple_icons(id_map_icon)
-            ||  _pal_map_has_multiple_icons(id_map_icon - 1000));
+        int id_icon = id_map;
 
         string suffix = FhGlobal.game_id switch {
-            FhGameId.FFX when has_multiple_icons => id_map_icon < 1000 ? "_0" : "_1",
-            FhGameId.FFX2                        => id_map_icon < 1000 ? "_0" : "_1",
+            FhGameId.FFX when _pal_map_has_multiple_icons(id_icon) => id_icon < 1000 ? "_0" : "_1",
+            FhGameId.FFX2                                          => id_icon < 1000 ? "_0" : "_1",
 
             _ => string.Empty,
         };
 
-        if (suffix != string.Empty && id_map_icon > 1000) {
-            id_map_icon -= 1000;
+        if (suffix != string.Empty && id_icon > 1000) {
+            id_icon -= 1000;
         }
 
-        string icon_name = $"{id_map_icon}{suffix}";
+        string icon_name = $"{id_icon}{suffix}";
 
-        return (_cache_icon_map[id_map_icon] = new FhTexture($"{map_dir}/{icon_name}.png", FhTextureType.GAME));
+        return (_cache_icon_map[id_map] = new FhTexture($"{map_dir}/{icon_name}.png", FhTextureType.GAME));
     }
 
     /// <summary>
-    ///     Returns the icon of the <paramref name="index"/>'th character
-    ///     in the save with the given <paramref name="header"/>.
+    ///     Returns the icon for a character in the save
+    ///     with the given <paramref name="header"/>.
     /// </summary>
     private static FhTexture _pal_get_icon_chr(in SaveHeader header, int index) {
         ArgumentOutOfRangeException.ThrowIfGreaterThan(index, 2, nameof(index));
@@ -822,6 +824,15 @@ public sealed class FhSaves {
 
         FhSaveUiData ui_data = _ui_data[index] ??= new();
 
+        /* [fkelava 30/10/26 16:38]
+         * UI data is always sorted at the end. We need to reset sortable attributes
+         * so invalid UI data gets filtered to the top, i.e. the first $SET_COUNT UI data
+         * are the ones for the valid saves.
+         */
+
+        ui_data.slot        = 0xFFFF;
+        ui_data.create_time = DateTimeOffset.MinValue;
+
         try {
             using MemoryMappedFile         save_file     = MemoryMappedFile.CreateFromFile(save_file_path, FileMode.Open, null, 0, MemoryMappedFileAccess.Read);
             using MemoryMappedViewAccessor save_accessor = save_file.CreateViewAccessor(0, pal_get_sz_save(), MemoryMappedFileAccess.Read);
@@ -829,8 +840,8 @@ public sealed class FhSaves {
             save_accessor.Read(0, out ui_data.header);
 
             switch (FhGlobal.game_id) {
-                case FhGameId.FFX:                     save_accessor.Read(0x40, out ui_data.file.x ); break;
-                case FhGameId.FFX2 or FhGameId.FFX2LM: save_accessor.Read(0x40, out ui_data.file.x2); break;
+                case FhGameId.FFX:                     save_accessor.Read(0x40, out ui_data.data.x ); break;
+                case FhGameId.FFX2 or FhGameId.FFX2LM: save_accessor.Read(0x40, out ui_data.data.x2); break;
 
                 default: break;
             }
@@ -879,9 +890,9 @@ public sealed class FhSaves {
          */
         _ = Directory.CreateDirectory(path_set_folder);
 
-        Task[] tasks = new Task[SET_COUNT];
+        Task[] tasks = new Task[MAX_SAVES_PER_SET];
 
-        for (int i = 0; i < SET_COUNT; i++) {
+        for (int i = 0; i < MAX_SAVES_PER_SET; i++) {
             tasks[i] = _sets_index_single(i);
         }
 
@@ -904,7 +915,7 @@ public sealed class FhSaves {
         _ = Directory.CreateDirectory(set_subdir_path);
 
         int count = 0;
-        for (int i = 0; i < SET_COUNT; i++) {
+        for (int i = 0; i < MAX_SAVES_PER_SET; i++) {
             if (File.Exists(pal_get_path_for_slot(i, set_name))) count++;
         }
 

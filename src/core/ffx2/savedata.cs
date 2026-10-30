@@ -54,7 +54,7 @@ public struct SaveHeader {
 internal unsafe struct SaveDataManager {
     public SaveSystemState      state;
     public int                  save_enabled;
-    public int                  cb_result;
+    public int                  callback_result;
     public InlineArray64 <byte> game_name;
     public InlineArray128<byte> description;
     public InlineArray512<byte> description_detailed;

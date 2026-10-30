@@ -608,8 +608,8 @@ public abstract class FhSaveUiBase : FhSaveUi {
         }
 
         if ((mouse_hovered(arrow_top, false) || mouse_hovered(arrow_bottom, false))
-         && ImGui.IsMouseDown(ImGuiMouseButton.Left)
-           ) {
+            && ImGui.IsMouseDown(ImGuiMouseButton.Left)
+        ) {
             audio_fade_helper_restart = false;
         }
     }

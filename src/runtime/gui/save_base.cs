@@ -546,7 +546,8 @@ public abstract class FhSaveUiBase : FhSaveUi {
             return;
         }
 
-        float progress = scrollable.get_progress();
+        float progress       = scrollable.get_progress();
+        float hover_progress = scrollable.hovered / (float)(scrollable.max - 1);
 
         (Rect thumb, Rect hitbox, float track_height) = ui_scrollbar_get_thumb_bounds(
             track_bounds,
@@ -566,7 +567,7 @@ public abstract class FhSaveUiBase : FhSaveUi {
             thumb,
             arrow_top,
             arrow_bottom,
-            progress
+            hover_progress
         );
 
         // Handle input
@@ -593,14 +594,14 @@ public abstract class FhSaveUiBase : FhSaveUi {
             return;
         }
 
-        if (progress > 0f && mouse_clicked(arrow_top, repeat: true)) {
+        if (hover_progress > 0f && mouse_clicked(arrow_top, repeat: true)) {
             FhApi.Audio.play_sound(SOUND_ID_MOVE, volume: get_move_volume());
             audio_fade_helper.tick(1f);
 
             scrollable.move_hover(-1);
         }
 
-        if (progress < 1f && mouse_clicked(arrow_bottom, repeat: true)) {
+        if (hover_progress < 1f && mouse_clicked(arrow_bottom, repeat: true)) {
             FhApi.Audio.play_sound(SOUND_ID_MOVE, volume: get_move_volume());
             audio_fade_helper.tick(1f);
 

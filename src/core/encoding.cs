@@ -747,10 +747,8 @@ public static class FhEncoding {
             Span        <byte> dst_slice = flags.HasFlag(FhEncodingFlags.IGNORE_DEST_BUFFER) ? dest : dest[ dest_offset .. ];
 
             if (op == 0x00) { // {END} - statement terminator
-                if (flags.HasFlag(FhEncodingFlags.IMPLICIT_END)) {
-                    dest[ dest_offset++ ] = 0;
+                if (flags.HasFlag(FhEncodingFlags.IMPLICIT_END))
                     return dest_offset;
-                }
 
                 _newline.CopyTo(dst_slice[ _decode_op(dst_slice, op) .. ]);
                 return dest_offset + _op_end.Length + _newline.Length;

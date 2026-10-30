@@ -617,7 +617,7 @@ public sealed class FhSaves {
         if (_cache_play_time.TryGetValue(t_sec, out string? str_loc))
             return str_loc;
 
-        return (_cache_play_time[t_sec] = $"{_cache_prefix_play_time}  {t_min / 60:D3}:{t_min % 60:D2}:{t_sec % 60:D2}\0");
+        return (_cache_play_time[t_sec] = $"{_cache_prefix_play_time}  {t_min / 60:D3}:{t_min % 60:D2}:{t_sec % 60:D2}");
     }
 
     /// <summary>
@@ -769,7 +769,7 @@ public sealed class FhSaves {
         if (_cache_lm_level.TryGetValue(lm_level, out string? str_loc))
             return str_loc;
 
-        return (_cache_lm_level[lm_level] = $"{_cache_prefix_lm_level} {lm_level}\0");
+        return (_cache_lm_level[lm_level] = $"{_cache_prefix_lm_level} {lm_level}");
     }
 
     /// <summary>

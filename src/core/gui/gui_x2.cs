@@ -115,6 +115,12 @@ public partial class FhGui {
         }
     }
 
+    /// <summary>Draws the border effect on a plate.</summary>
+    /// <param name="draw">The drawlist to add the texture to.</param>
+    /// <param name="bounds">The position to draw the borders at.</param>
+    /// <param name="width">The width of the plate border.</param>
+    /// <param name="highlight">The color of the top and left edges, in the format 0xAABBGGRR, i.e. RGBA8.</param>
+    /// <param name="shadow">The color of the bottom and right edges, in the format 0xAABBGGRR, i.e. RGBA8.</param>
     public void draw_x2_plate_edges(
         ImDrawListPtr draw,
         Rect          bounds,
@@ -163,6 +169,9 @@ public partial class FhGui {
         draw.AddConvexPolyFilled(border_right [0], 4, shadow);
     }
 
+    /// <summary>Render the cursor.</summary>
+    /// <param name="target_pos">The position the cursor should point at.</param>
+    /// <param name="config">The configuration to draw the cursor with.</param>
     public void draw_x2_cursor(
         ImDrawListPtr    draw,
         Vector2          target_pos,

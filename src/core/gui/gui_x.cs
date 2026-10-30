@@ -6,6 +6,9 @@
 namespace Fahrenheit.Gui;
 
 public partial class FhGui {
+    /// <summary>Render the cursor.</summary>
+    /// <param name="target_pos">The position the cursor should point at.</param>
+    /// <param name="config">The configuration to draw the cursor with.</param>
     public void draw_x_cursor(
         ImDrawListPtr    draw,
         Vector2          target_pos,

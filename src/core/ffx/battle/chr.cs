@@ -133,7 +133,7 @@ public unsafe struct Chr {
     [FieldOffset(0x3F5)] public byte      death_pattern;
     [FieldOffset(0x3F8)] public bool      stat_center_chr_flag;
     [FieldOffset(0x3F9)] public byte      stat_death_return;
-    [FieldOffset(0x400)] public byte      motion_speed_normal;
+    [FieldOffset(0x400)] public ushort    motion_speed_normal;
     [FieldOffset(0x402)] public ushort    motion_speed_effect;
     [FieldOffset(0x404)] public byte      motion_speed_effect_nonzero;
     [FieldOffset(0x405)] public byte      motion_speed_normal_init;

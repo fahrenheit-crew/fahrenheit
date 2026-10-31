@@ -535,7 +535,7 @@ public static partial class FhCall {
     public static FhCallHandle<d_MsLimitUp> MsLimitUp
         => new( new FhCallLocation("FFX.exe", 0x3B1590) );
 
-    [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate int d_MsCalcWeakLevel(int hp, int max_hp);
     public static FhCallHandle<d_MsCalcWeakLevel> MsCalcWeakLevel
         => new( new FhCallLocation("FFX.exe", 0x38BF00) );

@@ -1021,7 +1021,7 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
                     // We have to fetch Seymour's face from X-2
                     tuv = new Rect {
                         pos  = new( 36f,  19f),
-                        size = new(192f, 192f),
+                        size = new(182f, 192f),
                     }.as_uv(face_meta.size);
                 }
                 else {

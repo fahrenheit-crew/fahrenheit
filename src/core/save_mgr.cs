@@ -309,9 +309,9 @@ public sealed partial class FhSaves {
         catch { return Task.CompletedTask; }
 
         FhSaveUiData.IconChr icon_chr = ui_data.icon_chr;
-        icon_chr[0] = _pal_get_icon_chr(ui_data.header, 0);
-        icon_chr[1] = _pal_get_icon_chr(ui_data.header, 1);
-        icon_chr[2] = _pal_get_icon_chr(ui_data.header, 2);
+        icon_chr[0] = _pal_get_icon_chr(ui_data.header, ui_data.data, 0);
+        icon_chr[1] = _pal_get_icon_chr(ui_data.header, ui_data.data, 1);
+        icon_chr[2] = _pal_get_icon_chr(ui_data.header, ui_data.data, 2);
 
         ui_data.slot        = slot;
         ui_data.slot_str    = slot.ToString();

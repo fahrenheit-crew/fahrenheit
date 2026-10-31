@@ -340,7 +340,11 @@ public sealed partial class FhSaves {
     /// <summary>
     ///     Returns the icon for a character in the save with the given <paramref name="header"/>.
     /// </summary>
-    private static FhTexture _pal_get_icon_chr(in SaveHeader header, int index) {
+    private static FhTexture _pal_get_icon_chr(
+        in SaveHeader header,
+        in SaveData   data,
+           int        index
+    ) {
         ArgumentOutOfRangeException.ThrowIfGreaterThan(index, 2, nameof(index));
 
         if (FhGlobal.game_id is FhGameId.FFX) {
@@ -348,10 +352,10 @@ public sealed partial class FhSaves {
              * In FFX the player and aeon icons are grouped into atlases, _except_ for Seymour.
              * So we map the character's ID to one of these three textures until we devise FhTextureClip.
              */
-            byte chr_id = header.x.formation[index];
+            byte chr_id = data.x.party_frontline[index];
             byte key_id = chr_id switch {
-                <  0x7  => 0,
-                   0x7  => 1,
+                <  0x07 => 0,
+                   0x07 => 1,
                 <= 0x11 => 2,
                 _       => 0
             };

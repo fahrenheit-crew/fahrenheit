@@ -24,6 +24,7 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
     private readonly FhTexture _texture_plate    = new(Path.Join(DIR_X2_PLATE,   "12288_19_0_0_256_256.dds.phyre"), FhTextureType.GAME_PHYRE_2D);
     private readonly FhTexture _texture_freetex  = new(Path.Join(DIR_X2_MENU,    "freetex.dds.phyre"),              FhTextureType.GAME_PHYRE_2D);
     private readonly FhTexture _texture_x2_bg    = new(Path.Join(DIR_X2_MENU,    "x2_bg.dds.phyre"),                FhTextureType.GAME_PHYRE_2D);
+    private readonly FhTexture _texture_b_menu1  = new(Path.Join(DIR_X2_MENU,    "b_menu1.dds.phyre"),              FhTextureType.GAME_PHYRE_2D);
 
     private readonly Vector2 _tex_face_size = new(256f, 256f);
 
@@ -37,40 +38,19 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         _texture_plate,
         _texture_freetex,
         _texture_x2_bg,
+        _texture_b_menu1,
         _texture_ffx_faces_ply,
         _texture_ffx_faces_smn,
     ];
 
-    /// <summary>Draws the highlights/shadows for the X-2 plate texture.</summary>
-    private void draw_highlight_shadow(ImDrawListPtr draw, Rect bounds, float thickness, uint highlight, uint shadow) {
-        // Top Highlight
-        draw.AddRectFilled(
-            bounds.top_left,
-            new Vector2(bounds.top_right.X, bounds.top_left.Y + thickness),
-            highlight
-        );
+    FhGui.DrawPlateConfig plate_config => new(_texture_plate) {
+        shadow_offset = new Vector2(10f) * aspect_scale,
+    };
 
-        // Left Highlight
-        draw.AddRectFilled(
-            new Vector2(bounds.top_left.X, bounds.top_left.Y + thickness),
-            new Vector2(bounds.top_left.X + thickness, bounds.bottom_left.Y),
-            highlight
-        );
-
-        // Bottom Shadow - intentional overlap with left highlight to mimic the vanilla game!
-        draw.AddRectFilled(
-            new Vector2(bounds.top_left.X, bounds.bottom_left.Y - thickness),
-            bounds.bottom_right,
-            shadow
-        );
-
-        // Right Shadow
-        draw.AddRectFilled(
-            bounds.top_right + new Vector2(-thickness, thickness),
-            new Vector2(bounds.bottom_right.X, bounds.bottom_right.Y - thickness),
-            shadow
-        );
-    }
+    FhGui.DrawCursorConfig cursor_config => new(_texture_freetex) {
+        cursor_size = new Vector2(92f, 55f) * aspect_scale,
+        max_offset  = 18f * aspect_scale.X,
+    };
 
     protected override void ui_background() {
         if (!_texture_menuback  .try_use(out ImTextureRef menuback, out FhTextureMetadata? menuback_meta)
@@ -310,108 +290,6 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         );
     }
 
-    protected override void ui_cursor(Vector2 target_pos, bool overlap = true) {
-        if (!_texture_freetex.try_use(out ImTextureRef freetex, out FhTextureMetadata? freetex_meta)) return;
-
-        ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
-
-        UV cursor_tuv = new UV(
-            new(  9f, 572f),
-            new(180f, 478f)
-        ).map_to(freetex_meta.size);
-
-        Vector2 cursor_size = new Vector2(92f, 55f) * aspect_scale;
-
-        float overlap_amount = overlap ? cursor_size.X * 0.1f : 0f;
-
-        Vector2 cursor_top_left = new(
-            target_pos.X - cursor_size.X + overlap_amount,
-            target_pos.Y - cursor_size.Y / 2f + (4f * aspect_scale.Y) // "+ 4f" Centers the cursor properly
-        );
-
-        float loop_time     = (float)(ImGui.GetTime() % 0.53f);
-        float loop_progress = loop_time / 0.53f;
-        float travel_dist   = 18f * aspect_scale.X;
-
-        // Draw trailing/fade out effect for cursor
-        // Ghost Cursor 1
-        if (loop_progress >= 0.12f) {
-            float offset = -5f * aspect_scale.X;
-            float alpha  = 0.25f;
-
-            // Sync movement with other cursors
-            if (loop_progress >= 0.48f) {
-                float fade_time = (loop_progress - 0.48f) / 0.52f;
-                offset += fade_time * (travel_dist * 0.55f);
-                alpha  *= 1f - fade_time;
-            }
-
-            UV ghost_suv = new Rect {
-                pos  = cursor_top_left + new Vector2(offset, 0f),
-                size = cursor_size,
-            }.as_uv();
-
-            uint color = ImGui.ColorConvertFloat4ToU32(new Vector4(1f, 1f, 1f, alpha));
-
-            draw.AddImage(
-                freetex,
-                ghost_suv.p0,
-                ghost_suv.p1,
-                cursor_tuv.p0,
-                cursor_tuv.p1,
-                color
-            );
-        }
-
-        // Ghost Cursor 2
-        if (loop_progress >= 0.25f) {
-            float offset = -4f * aspect_scale.X;
-            float alpha  = 0.85f;
-
-            // Start moving
-            if (loop_progress >= 0.38f && loop_progress < 0.48f) {
-                float slide_progress = (loop_progress - 0.38f) / 0.10f;
-                offset += slide_progress * (travel_dist * 0.20f);
-            }
-            // Sync movement with other cursors
-            else if (loop_progress >= 0.48f) {
-                float fade_time = (loop_progress - 0.48f) / 0.52f;
-                offset += (travel_dist * 0.20f) + (fade_time * (travel_dist * 0.55f));
-                alpha  *= 1f - fade_time;
-            }
-
-            UV ghost_suv = new Rect {
-                pos  = cursor_top_left + new Vector2(offset, 0f),
-                size = cursor_size,
-            }.as_uv();
-
-            uint color = ImGui.ColorConvertFloat4ToU32(new Vector4(1f, 1f, 1f, alpha));
-
-            draw.AddImage(
-                freetex,
-                ghost_suv.p0,
-                ghost_suv.p1,
-                cursor_tuv.p0,
-                cursor_tuv.p1,
-                color
-            );
-        }
-
-        // Main Cursor
-        UV main_suv = new Rect {
-            pos  = cursor_top_left + new Vector2(loop_progress * travel_dist, 0f),
-            size = cursor_size,
-        }.as_uv();
-
-        draw.AddImage(
-            freetex,
-            main_suv.p0,
-            main_suv.p1,
-            cursor_tuv.p0,
-            cursor_tuv.p1
-        );
-    }
-
     protected override void ui_change_set() {
         if (!_texture_x2_bg.try_use(out ImTextureRef x2_bg, out FhTextureMetadata? x2_bg_meta)) return;
 
@@ -432,7 +310,7 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         draw.AddRectFilled(
             bg_suv.p0,
             bg_suv.p1,
-            0x80000000
+            0xA5000000
         );
 
         UV accent_tuv = new Rect {
@@ -471,8 +349,8 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
             accent_tuv.p1
         );
 
-        Vector2 text_pos  =  bg_screen.center;
-        text_pos.Y        -= 2f * aspect_scale.Y;
+        Vector2 text_pos = bg_screen.center;
+        text_pos.Y      -= 2f * aspect_scale.Y;
 
         string text = localize("set_list.change_set");
 
@@ -491,7 +369,13 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
                 X = text_left - text_margin,
             };
 
-            ui_cursor(cursor_target, false);
+            FhApi.Gui.draw_x2_cursor(
+                draw,
+                cursor_target,
+                cursor_config with {
+                    overlap = false
+                }
+            );
         }
 
         // Input handling
@@ -503,6 +387,44 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
 
     protected override void ui_setlist() {
         if (mode != UiMode.SET_CHANGE) return;
+
+        if (!_texture_plate.try_use(out ImTextureRef plate, out FhTextureMetadata? plate_meta)) return;
+
+        Rect header_bounds = new Rect {
+            pos  = new( 400f, 196f),
+            size = new(1120f,  34f),
+        };
+
+        ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
+
+        FhApi.Gui.draw_x2_plate(
+            draw,
+            header_bounds.scale_to_aspect(aspect_helper),
+            2,
+            plate_config with {
+                color        = 0xFFAEBEC3,
+                border_width = 5f * aspect_scale.Y,
+                draw_header  = true,
+            }
+        );
+
+        Vector2 text_pos = header_bounds.left;
+        text_pos.X += 30f;
+        text_pos.Y -=  2f;
+        text_pos = text_pos * aspect_scale + aspect_helper.pos;
+
+        string text = localize("set_list.list_title");
+
+        FhApi.Gui.draw_text(
+            draw,
+            text_pos,
+            text,
+            text_config with {
+                align     = Alignment2D.LEFT,
+                font_size = font_size_tiny,
+                color     = 0xFFF7D19C,
+            }
+        );
 
         int start_idx = scrollable_sets.get_clip_start();
         int end_idx   = scrollable_sets.get_clip_end();
@@ -522,41 +444,31 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
 
         int start_idx = scrollable_sets.get_clip_start();
 
-        // Texture coordinates
-        float slice_size  = 64f;
-        float plate_max_y = 512f - (((global_idx + 1) % 8) * slice_size);
-
-        UV plate_tuv = new Rect {
-            pos  = new(  0f, plate_max_y - slice_size),
-            size = new(512f, slice_size),
-        }.as_uv(plate_meta.size);
-
         // Screen coordinates
-        Rect button = new() {
-            pos  = new( 347f, 178f),
-            size = new(1216f,  84f),
+        Rect plate_bounds = new() {
+            pos  = new( 400f, 232f),
+            size = new(1120f,  68f),
         };
 
-        button.pos.Y += (button.size.Y + 10f) * local_idx;
+        plate_bounds.pos.Y += (plate_bounds.size.Y + 2f) * local_idx;
 
-        Rect button_no_shadow = button.expand(new Vector2(-6f, -5f), Alignment2D.TOP_LEFT);
-        Rect button_scaled    = button.scale_to_aspect(aspect_helper);
-
-        UV button_suv = button_scaled.as_uv();
-
-        Vector2 name_pos = button_no_shadow.left;
+        Vector2 name_pos = plate_bounds.left;
         name_pos.X += 30f;
+        name_pos.Y -=  1f;
         name_pos = name_pos * aspect_scale + aspect_helper.pos;
 
-        Vector2 save_count_pos = button_no_shadow.right;
+        Vector2 save_count_pos = plate_bounds.right;
         save_count_pos.X -= 40f;
+        save_count_pos.Y -=  1f;
         save_count_pos = save_count_pos * aspect_scale + aspect_helper.pos;
+
+        plate_bounds = plate_bounds.scale_to_aspect(aspect_helper);
 
         // Drawing time
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
         ImGuiIOPtr    io   = ImGui.GetIO();
 
-        if (mouse_hovered(button_scaled)) {
+        if (mouse_hovered(plate_bounds)) {
             if (focus != UiFocus.LIST || scrollable_sets.hovered != global_idx) {
                 FhApi.Audio.play_sound(SOUND_ID_ACTION, ACTION_VOLUME);
             }
@@ -567,35 +479,15 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
 
         bool hovering = scrollable_sets.hovered == global_idx;
 
-        // Shadows behind slots
-        Vector2 shadow_offset = 10f * aspect_scale;
-
-        draw.AddRectFilled(
-            button_suv.p0 + shadow_offset,
-            button_suv.p1 + shadow_offset,
-            0xA5000000
-        );
-
-        draw.AddImage(
-            plate,
-            button_suv.p0,
-            button_suv.p1,
-            plate_tuv.p0,
-            plate_tuv.p1,
-            hovering ? 0xFFC6B1AF : 0xFFE4F0F1
-        );
-
-        // Draw shading/edges on the plate texture for definition
-        float border_thickness = 5f * aspect_scale.Y;
-        uint  highlight        = 0x28FFFFFF;
-        uint  shadow           = 0x80000000;
-
-        draw_highlight_shadow(
+        FhSaveSet active_set = FhApi.Saves.sets_get_active();
+        FhApi.Gui.draw_x2_plate(
             draw,
-            button_scaled,
-            border_thickness,
-            highlight,
-            shadow
+            plate_bounds,
+            global_idx,
+            plate_config with {
+                border_width = 6f * aspect_scale.Y,
+                color        = set.name == active_set.name ? 0xFFC6B1AF : 0xFFE4F0F1
+            }
         );
 
         FhApi.Gui.draw_text(
@@ -641,12 +533,16 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         }
 
         if (hovering) {
-            ui_cursor(button_no_shadow.scale_to_aspect(aspect_helper).left);
+            FhApi.Gui.draw_x2_cursor(
+                draw,
+                plate_bounds.left,
+                cursor_config
+            );
         }
 
         // Handle input
 
-        if (mouse_clicked(button_scaled)) {
+        if (mouse_clicked(plate_bounds)) {
             io.WantCaptureMouse = true;
             FhApi.Audio.play_sound(SOUND_ID_SET_CHANGE);
             change_set(set.name);
@@ -677,7 +573,7 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         draw.AddRectFilled(
             window.top_left,
             window.bottom_right,
-            0x80000000
+            0xA5000000
         );
 
         UV accent_tuv = new Rect {
@@ -751,12 +647,15 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         }
 
         /* ===== Plate Texture ===== */
-        float header_size    = 47f;
-        float vertical_space =  4f;
+        float header_size =  47f;
+        float header_gap  =   4f;
+        float map_size    = 265f;
+        float map_gap     =   6f;
 
         Rect header_outer_bounds = new() {
             pos  = save_outer_bounds.pos,
-            size = save_outer_bounds.size with {
+            size = new() {
+                X = save_outer_bounds.size.X - map_size,
                 Y = header_size,
             },
         };
@@ -764,11 +663,22 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         Rect info_outer_bounds = new() {
             pos = new() {
                 X = save_outer_bounds.pos.X,
-                Y = header_outer_bounds.bottom.Y + vertical_space,
+                Y = header_outer_bounds.bottom.Y + header_gap,
             },
             size = new() {
-                X = save_outer_bounds.size.X,
-                Y = save_outer_bounds.size.Y - header_size - vertical_space,
+                X = save_outer_bounds.size.X - map_size,
+                Y = save_outer_bounds.size.Y - header_size - header_gap,
+            },
+        };
+
+        Rect map_outer_bounds = new() {
+            pos = new() {
+                X = save_outer_bounds.pos.X + save_outer_bounds.size.X - map_size + map_gap,
+                Y = save_outer_bounds.pos.Y,
+            },
+            size = new() {
+                X = map_size - map_gap,
+                Y = save_outer_bounds.size.Y,
             },
         };
 
@@ -782,16 +692,22 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
 
         UV header_tuv = new Rect {
             pos  = new(  0f,              uv_y_split),
-            size = new(512f, uv_y_start - uv_y_split),
+            size = new(425f, uv_y_start - uv_y_split),
         }.as_uv(plate_meta.size);
 
         UV info_tuv = new Rect {
             pos  = new(  0f,              uv_y_end),
-            size = new(512f, uv_y_split - uv_y_end),
+            size = new(425f, uv_y_split - uv_y_end),
+        }.as_uv(plate_meta.size);
+
+        UV map_tuv = new Rect {
+            pos  = new(425f,              uv_y_end),
+            size = new( 87f, uv_y_start - uv_y_end),
         }.as_uv(plate_meta.size);
 
         UV header_suv = header_outer_bounds.scale_to_aspect(aspect_helper).as_uv();
         UV info_suv   = info_outer_bounds  .scale_to_aspect(aspect_helper).as_uv();
+        UV map_suv    = map_outer_bounds   .scale_to_aspect(aspect_helper).as_uv();
 
         // Shadows behind saves
         Vector2 shadow_offset = 10f * aspect_scale;
@@ -805,6 +721,12 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         draw.AddRectFilled(
             info_suv.p0 + shadow_offset,
             info_suv.p1 + shadow_offset,
+            0xA5000000
+        );
+
+        draw.AddRectFilled(
+            map_suv.p0 + shadow_offset,
+            map_suv.p1 + shadow_offset,
             0xA5000000
         );
 
@@ -833,15 +755,40 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
             info_clr
         );
 
-        // Border highlights/shadows
-        float border_thickness = 5f;
-        uint  highlight        = 0x28FFFFFF;
-        uint  shadow           = 0x80000000;
+        draw.AddImage(
+            plate,
+            map_suv.p0,
+            map_suv.p1,
+            map_tuv.p0,
+            map_tuv.p1,
+            info_clr
+        );
 
-        draw_highlight_shadow(
+        // Border highlights/shadows
+        float border_width = 5f;
+        uint  highlight    = 0x28FFFFFF;
+        uint  shadow       = 0x80000000;
+
+        FhApi.Gui.draw_x2_plate_edges(
             draw,
             header_outer_bounds.scale_to_aspect(aspect_helper),
-            border_thickness * aspect_scale.Y,
+            border_width * aspect_scale.Y,
+            highlight,
+            shadow
+        );
+
+        FhApi.Gui.draw_x2_plate_edges(
+            draw,
+            info_outer_bounds.scale_to_aspect(aspect_helper),
+            border_width * aspect_scale.Y,
+            highlight,
+            shadow
+        );
+
+        FhApi.Gui.draw_x2_plate_edges(
+            draw,
+            map_outer_bounds.scale_to_aspect(aspect_helper),
+            border_width * aspect_scale.Y,
             highlight,
             shadow
         );
@@ -852,43 +799,39 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
             header_shade
         );
 
-        draw_highlight_shadow(
-            draw,
-            info_outer_bounds.scale_to_aspect(aspect_helper),
-            border_thickness * aspect_scale.Y,
-            highlight,
-            shadow
+        draw.AddRectFilled(
+            map_suv.p0,
+            map_suv.p1,
+            0x63000000
         );
 
         // Details
-        Vector2 shrink_size = new(border_thickness * 2f);
+        Vector2 shrink_size = new(border_width * 2f);
 
         Rect save_bounds   = save_outer_bounds  .expand(-shrink_size, Alignment2D.CENTER);
         Rect header_bounds = header_outer_bounds.expand(-shrink_size, Alignment2D.CENTER);
         Rect info_bounds   = info_outer_bounds  .expand(-shrink_size, Alignment2D.CENTER);
+        Rect map_bounds    = map_outer_bounds   .expand(-shrink_size, Alignment2D.CENTER);
 
-        Vector2 map_icon_size = new() {
-            X = save_bounds.size.Y * 1.77083f,
-            Y = save_bounds.size.Y,
+        Vector2 map_offset = new(5f);
+
+        Rect icon_bounds = new() {
+            pos  = map_bounds.pos  + map_offset,
+            size = map_bounds.size - (map_offset * 2)
         };
-
-        Rect map_bounds = new() {
-            pos = save_bounds.top_right with {
-                X = save_bounds.top_right.X - map_icon_size.X,
-            },
-            size = map_icon_size,
-        };
-
-        info_bounds.size.X -= map_bounds.size.X;
 
         if (save.slot == 0 && is_saving)
-            ui_newdata(info_bounds, map_bounds);
+            ui_newdata(info_bounds, icon_bounds);
         else
-            ui_save_details(save, save_bounds, header_bounds, info_bounds, map_bounds);
+            ui_save_details(save, save_bounds, header_bounds, info_bounds, icon_bounds);
 
         /* ===== Cursor ===== */
         if (focus == UiFocus.LIST && scrollable_saves.hovered == global_idx) {
-            ui_cursor(info_outer_bounds.scale_to_aspect(aspect_helper).left);
+            FhApi.Gui.draw_x2_cursor(
+                draw,
+                info_outer_bounds.scale_to_aspect(aspect_helper).left,
+                cursor_config
+            );
         }
 
         // Handle input
@@ -903,7 +846,7 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         Rect         save_bounds,
         Rect         header_bounds,
         Rect         info_bounds,
-        Rect         map_bounds
+        Rect         icon_bounds
     ) {
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
@@ -940,9 +883,13 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         /* ===== Location Icon ===== */
         FhTexture tex_map = save.icon_map;
 
-        if (tex_map.try_use(out ImTextureRef map_icon, out _)) {
-            UV tuv = new(Vector2.Zero, Vector2.One);
-            UV suv = map_bounds.scale_to_aspect(aspect_helper).as_uv();
+        if (tex_map.try_use(out ImTextureRef map_icon, out FhTextureMetadata? map_icon_meta)) {
+            UV tuv = new Rect {
+                pos  = new(  2f,   2f),
+                size = new(318f, 174f),
+            }.as_uv(map_icon_meta.size, false);
+
+            UV suv = icon_bounds.scale_to_aspect(aspect_helper).as_uv();
 
             draw.AddImage(map_icon, suv.p0, suv.p1, tuv.p0, tuv.p1);
         }
@@ -995,10 +942,10 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
             );
         }
 
-        text_margin = 59f;
+        text_margin = 36f;
 
         Vector2 header_text_pos_r = header_bounds.right - new Vector2 {
-            X = map_bounds.size.X + text_margin,
+            X = text_margin,
         };
 
         FhApi.Gui.draw_text(
@@ -1010,10 +957,9 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
 
         /* ===== Info Details ===== */
         float margin_face = FhUtil.select(38f, 133f, 86f);
-        float margin_map  = 57f;
 
         float info_margin_left  = faces_bounds.size.X + margin_face;
-        float info_margin_right = margin_map;
+        float info_margin_right = 36f;
 
         info_bounds.pos.X  += info_margin_left;
         info_bounds.size.X -= info_margin_left + info_margin_right;
@@ -1258,7 +1204,7 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         };
 
         Vector2 pos_completion = new() {
-            X = bounds.right.X + 2f,
+            X = bounds.right.X + 1f,
             Y = top_y,
         };
 
@@ -1405,16 +1351,67 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
 
     protected override void ui_scrollbar() {
         Rect track_bounds = new() {
-            pos  = new(1753f, 205f),
-            size = new(  17f, 753f),
-        };
+            pos  = mode == UiMode.SAVE_LIST
+                ? new(1757f, 207f)
+                : new(1545f, 257f),
 
-        float triangle_gap = 13f;
+            size = mode == UiMode.SAVE_LIST
+                ? new(15f, 745f)
+                : new(15f, 648f),
+        };
 
         ui_scrollbar(
             current_scrollable,
-            track_bounds,
-            triangle_gap
+            track_bounds
+        );
+    }
+
+    protected override void ui_scrollbar_direct(
+        ref ScrollbarData data
+    ) {
+        if (!_texture_b_menu1.try_use(out ImTextureRef b_menu1, out FhTextureMetadata? b_menu1_meta)) return;
+
+        uint track_color = 0xFF010101;
+        uint thumb_color = 0xFFFCFCFC;
+
+        ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
+
+        draw.AddRectFilled(
+            data.bounds_track.top_left,
+            data.bounds_track.bottom_right,
+            track_color
+        );
+
+        draw.AddRectFilled(
+            data.bounds_thumb.top_left,
+            data.bounds_thumb.bottom_right,
+            thumb_color
+        );
+
+        UV triangle_top_suv    = data.bounds_arrow_begin.as_uv();
+        UV triangle_bottom_suv = data.bounds_arrow_end  .as_uv();
+
+        UV triangle_tuv = new Rect {
+            pos  = new(965f, 913f),
+            size = new( 54f,  30f),
+        }.as_uv(b_menu1_meta.size);
+
+        draw.AddImage(
+            b_menu1,
+            triangle_top_suv.p0,
+            triangle_top_suv.p1,
+            triangle_tuv.p1,
+            triangle_tuv.p0,
+            data.hover_progress > 0f ? 0xFFFFFFFF : 0x90D0D0D0
+        );
+
+        draw.AddImage(
+            b_menu1,
+            triangle_bottom_suv.p0,
+            triangle_bottom_suv.p1,
+            triangle_tuv.p0,
+            triangle_tuv.p1,
+            data.hover_progress < 1f ? 0xFFFFFFFF : 0x90D0D0D0
         );
     }
 }

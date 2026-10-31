@@ -300,7 +300,7 @@ public abstract class FhSaveUiBase : FhSaveUi {
                     fade_out(() => FhApi.Saves.impl_execute(0));
                 }
                 else {
-                    if (FhApi.Saves.sets_get_ui_data(hovered, out FhSaveUiData data)) {
+                    if (FhApi.Saves.ui_get_data(hovered, out FhSaveUiData? data)) {
                         fade_out(() => FhApi.Saves.impl_execute(data.slot));
                     }
                 }
@@ -447,7 +447,7 @@ public abstract class FhSaveUiBase : FhSaveUi {
                 ? ui_data_start + save_idx - 1
                 : ui_data_start + save_idx;
 
-            if (FhApi.Saves.sets_get_ui_data(ui_data_index, out FhSaveUiData save)) {
+            if (FhApi.Saves.ui_get_data(ui_data_index, out FhSaveUiData? save)) {
                 ui_save(save, save_idx, save_idx - start);
             }
         }

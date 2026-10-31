@@ -5,6 +5,66 @@
 
 namespace Fahrenheit.FFX2;
 
+/// <summary>
+///     The save game header for FF X-2.
+/// </summary>
+[StructLayout(LayoutKind.Sequential)]
+public struct SaveHeader {
+    [InlineArray(0x3)]
+    public struct Party {
+        private byte _e0;
+    }
+
+    public uint     __0x00;
+    public byte     __0x04;
+    public Party    ply;
+    public Party    ply_levels;
+    public byte     chapter;
+    public byte     completion;
+    public Party    ply_jobs;
+    public uint     playtime_secs;
+    public uint     gil;
+    public ushort   id_location;
+    public ushort   __0x1A;
+    public uint     __0x1C;
+    public byte     times_played;
+    public byte     lm_ply;
+    public byte     lm_ply_level;
+    public byte     lm_job;
+    public byte     lm_job_level;
+    public byte     lm_id_location;
+    public byte     lm_retry;
+    public byte     __0x27;
+    public FhLangId lang_id;
+    public byte     __0x29;
+    public ushort   id_map_icon;
+    public uint     __0x2C;
+    public uint     __0x30;
+    public uint     __0x34;
+    public uint     __0x38;
+    public uint     __0x3C;
+
+    public bool is_new_game_plus => times_played > 1;
+}
+
+/// <summary>
+///     The game's default save data manager structure for FF X-2.
+/// </summary>
+[StructLayout(LayoutKind.Sequential, Size = 0x4B0)]
+internal unsafe struct SaveDataManager {
+    public SaveSystemState      state;
+    public int                  save_enabled;
+    public int                  callback_result;
+    public InlineArray64 <byte> game_name;
+    public InlineArray128<byte> description;
+    public InlineArray512<byte> description_detailed;
+    public InlineArray64 <byte> path_icon_1;
+    public InlineArray64 <byte> path_icon_2;
+    public byte*                ref_buffer;
+    public int                  ref_buffer_size;
+    public int                  operation_canceled;
+}
+
 [StructLayout(LayoutKind.Explicit, Pack = 4, Size = 0x16660)]
 public unsafe struct SaveData {
     public struct Name {

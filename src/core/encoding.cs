@@ -104,7 +104,7 @@ public enum FhEncodingFlags {
 /// </summary>
 public static class FhEncoding {
 
-    private static readonly Dictionary<FhLangId, Rune[]> _sjistbl_runes = [];
+    private static readonly Dictionary<(FhGameId, FhLangId), Rune[]> _sjistbl_runes = [];
 
     /* [fkelava 14/10/25 14:58]
      * These literals and methods control the plaintext representation of
@@ -621,10 +621,11 @@ public static class FhEncoding {
         FhLangId lang_id = lang ?? FhGlobal.lang_id;
         FhGameId game_id = game ?? FhGlobal.game_id;
 
-        string sjistbl = FhShiftJisTables.get_table(lang_id, game_id);
+        string sjistbl  = FhShiftJisTables.get_table(lang_id, game_id);
+        var    rune_key = (game_id, lang_id);
 
-        if (!_sjistbl_runes.TryGetValue(lang_id, out Rune[]? runes)) {
-            runes = _sjistbl_runes[lang_id] = [ .. sjistbl.EnumerateRunes() ];
+        if (!_sjistbl_runes.TryGetValue(rune_key, out Rune[]? runes)) {
+            runes = _sjistbl_runes[rune_key] = [ .. sjistbl.EnumerateRunes() ];
         }
 
         int src_offset, dest_offset;

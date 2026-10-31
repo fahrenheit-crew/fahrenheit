@@ -354,10 +354,10 @@ public sealed partial class FhSaves {
              */
             byte chr_id = data.x.party_frontline[index];
             byte key_id = chr_id switch {
-                <  0x07 => 0,
-                   0x07 => 1,
-                <= 0x11 => 2,
-                _       => 0
+                <= FFX.Ids.PlySaveId.PC_RIKKU   => 0,
+                   FFX.Ids.PlySaveId.PC_SEYMOUR => 1,
+                <= FFX.Ids.PlySaveId.PC_MAGUS3  => 2,
+                _                               => 0
             };
 
             if (_cache_icon_chr.TryGetValue((key_id, 0), out FhTexture? tex_x))

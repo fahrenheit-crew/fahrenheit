@@ -415,17 +415,15 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
 
         string text = localize("set_list.list_title");
 
-        FhGui.DrawTextConfig config = text_config with {
-            align     = Alignment2D.LEFT,
-            font_size = font_size_tiny,
-            color     = 0xFFF7D19C,
-        };
-
         FhApi.Gui.draw_text(
             draw,
             text_pos,
             text,
-            config
+            text_config with {
+                align     = Alignment2D.LEFT,
+                font_size = font_size_tiny,
+                color     = 0xFFF7D19C,
+            }
         );
 
         int start_idx = scrollable_sets.get_clip_start();
@@ -488,7 +486,7 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
             global_idx,
             plate_config with {
                 border_width = 6f * aspect_scale.Y,
-                color = set.name == active_set.name ? 0xFFC6B1AF : 0xFFE4F0F1
+                color        = set.name == active_set.name ? 0xFFC6B1AF : 0xFFE4F0F1
             }
         );
 
@@ -1369,11 +1367,7 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
     }
 
     protected override void ui_scrollbar_direct(
-        Rect  track_bounds,
-        Rect  thumb_bounds,
-        Rect  top_arrow_bounds,
-        Rect  bottom_arrow_bounds,
-        float progress
+        ref ScrollbarData data
     ) {
         if (!_texture_b_menu1.try_use(out ImTextureRef b_menu1, out FhTextureMetadata? b_menu1_meta)) return;
 
@@ -1383,19 +1377,19 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
         draw.AddRectFilled(
-            track_bounds.top_left,
-            track_bounds.bottom_right,
+            data.bounds_track.top_left,
+            data.bounds_track.bottom_right,
             track_color
         );
 
         draw.AddRectFilled(
-            thumb_bounds.top_left,
-            thumb_bounds.bottom_right,
+            data.bounds_thumb.top_left,
+            data.bounds_thumb.bottom_right,
             thumb_color
         );
 
-        UV triangle_top_suv    = top_arrow_bounds   .as_uv();
-        UV triangle_bottom_suv = bottom_arrow_bounds.as_uv();
+        UV triangle_top_suv    = data.bounds_arrow_begin.as_uv();
+        UV triangle_bottom_suv = data.bounds_arrow_end  .as_uv();
 
         UV triangle_tuv = new Rect {
             pos  = new(965f, 913f),
@@ -1408,7 +1402,7 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
             triangle_top_suv.p1,
             triangle_tuv.p1,
             triangle_tuv.p0,
-            progress > 0f ? 0xFFFFFFFF : 0xFFA0A0A0
+            data.hover_progress > 0f ? 0xFFFFFFFF : 0xFFA0A0A0
         );
 
         draw.AddImage(
@@ -1417,7 +1411,7 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
             triangle_bottom_suv.p1,
             triangle_tuv.p0,
             triangle_tuv.p1,
-            progress < 1f ? 0xFFFFFFFF : 0xFFA0A0A0
+            data.hover_progress < 1f ? 0xFFFFFFFF : 0xFFA0A0A0
         );
     }
 }

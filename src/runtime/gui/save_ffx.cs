@@ -1203,11 +1203,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
     }
 
     protected override void ui_scrollbar_direct(
-        Rect  track_bounds,
-        Rect  thumb_bounds,
-        Rect  top_arrow_bounds,
-        Rect  bottom_arrow_bounds,
-        float progress
+        ref ScrollbarData data
     ) {
         if (!_texture_battle.try_use(out ImTextureRef battle, out FhTextureMetadata? battle_meta)) {
             return;
@@ -1221,22 +1217,22 @@ public sealed class FhSaveUiX : FhSaveUiBase {
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
         draw.AddRectFilled(
-            track_bounds.top_left,
-            track_bounds.bottom_right,
+            data.bounds_track.top_left,
+            data.bounds_track.bottom_right,
             track_color
         );
 
         draw.AddRectFilledMultiColor(
-            thumb_bounds.top_left,
-            thumb_bounds.bottom_right,
+            data.bounds_thumb.top_left,
+            data.bounds_thumb.bottom_right,
             thumb_color_left,
             thumb_color_right,
             thumb_color_right,
             thumb_color_left
         );
 
-        UV triangle_top_suv    = top_arrow_bounds   .as_uv();
-        UV triangle_bottom_suv = bottom_arrow_bounds.as_uv();
+        UV triangle_top_suv    = data.bounds_arrow_begin.as_uv();
+        UV triangle_bottom_suv = data.bounds_arrow_end  .as_uv();
 
         UV triangle_tuv = new Rect {
             pos  = new(708f, 425f),
@@ -1249,7 +1245,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
             triangle_top_suv.p1,
             triangle_tuv.p1,
             triangle_tuv.p0,
-            progress > 0f ? 0xFFFFFFFF : 0x90D0D0D0
+            data.hover_progress > 0f ? 0xFFFFFFFF : 0x90D0D0D0
         );
 
         draw.AddImage(
@@ -1258,7 +1254,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
             triangle_bottom_suv.p1,
             triangle_tuv.p0,
             triangle_tuv.p1,
-            progress < 1f ? 0xFFFFFFFF : 0x90D0D0D0
+            data.hover_progress < 1f ? 0xFFFFFFFF : 0x90D0D0D0
         );
     }
 }

@@ -92,20 +92,81 @@ public class FhSaveUiData {
     /// </summary>
     internal bool valid;
 
-    public SaveHeader     header;
-    public SaveData       data;
-    public DateTimeOffset create_time  { get; internal set; } = DateTimeOffset.MinValue;
-    public int            slot         { get; internal set; } = 0xFFFF;
-    public string         slot_str     { get; internal set; } = "";
-    public string         play_time    { get; internal set; } = "";
-    public string         player_name  { get; internal set; } = "";
-    public string         chapter      { get; internal set; } = "";
-    public string         completion   { get; internal set; } = "";
-    public string         location     { get; internal set; } = "";
-    public string         lm_level     { get; internal set; } = "";
-    public string         lm_job       { get; internal set; } = "";
-    public IconChr        icon_chr     { get; internal set; } = new();
-    public FhTexture      icon_map     { get; internal set; } = new("", FhTextureType.NULL);
+    /// <summary>
+    ///     A copy of the save's header.
+    /// </summary>
+    /// <remarks>Do not modify its contents.</remarks>
+    public SaveHeader header;
+
+    /// <summary>
+    ///     A copy of the save's data.
+    /// </summary>
+    /// <remarks>Do not modify its contents.</remarks>
+    public SaveData data;
+
+    /// <summary>
+    ///     The slot that this save occupies.
+    /// </summary>
+    public int    slot         { get; internal set; } = 0xFFFF;
+
+    /// <summary>
+    ///     The slot that this save occupies, as a string.
+    /// </summary>
+    public string slot_str     { get; internal set; } = "";
+
+    /// <summary>
+    ///     The time spent in this save.
+    /// </summary>
+    public string play_time    { get; internal set; } = "";
+
+    /// <summary>
+    ///     The name of the primary player character in this save.
+    /// </summary>
+    public string player_name  { get; internal set; } = "";
+
+    /// <summary>
+    ///     The active story chapter in this save.
+    /// </summary>
+    /// <remarks>Only valid in FF X-2.</remarks>
+    public string chapter      { get; internal set; } = "";
+
+    /// <summary>
+    ///     The story completion, as a percentage, in this save.
+    /// </summary>
+    /// <remarks>Only valid in FF X-2.</remarks>
+    public string completion   { get; internal set; } = "";
+
+    /// <summary>
+    ///     The name of the current location in this save.
+    /// </summary>
+    public string location     { get; internal set; } = "";
+
+    /// <summary>
+    ///     The level of the player character in this save.
+    /// </summary>
+    /// <remarks>Only valid in FF X-2 LM.</remarks>
+    public string lm_level     { get; internal set; } = "";
+
+    /// <summary>
+    ///     The job of the player character in this save.
+    /// </summary>
+    /// <remarks>Only valid in FF X-2 LM.</remarks>
+    public string lm_job       { get; internal set; } = "";
+
+    /// <summary>
+    ///     A set of icons for the player party in this save.
+    /// </summary>
+    public IconChr icon_chr    { get; internal set; } = new();
+
+    /// <summary>
+    ///    The icon for the current location in this save.
+    /// </summary>
+    public FhTexture icon_map  { get; internal set; } = new("", FhTextureType.NULL);
+
+    /// <summary>
+    ///     The local time at which this save was last written to.
+    /// </summary>
+    public DateTimeOffset create_time { get; internal set; } = DateTimeOffset.MinValue;
 }
 
 /// <summary>Represents the current operating mode of the save system.</summary>
@@ -173,36 +234,31 @@ public sealed partial class FhSaves {
 
     internal readonly FhRuntimeHandle<IFhSaveSystemImpl> impl_handle = new();
 
-    private const string DIR_MAP_ICON_X  = "/FFX_Data/GameData/PS3Data/savedataicons";
-    private const string DIR_MAP_ICON_X2 = "/FFX-2_Data/GameData/PS3Data/savedataicons";
-    private const string DIR_CHR_ICON_X  = "/FFX_Data/GameData/PS3Data/menu/D3D11";
-    private const string DIR_CHR_ICON_X2 = "/FFX-2_Data/GameData/PS3Data/menu/face_data/D3D11";
-
     private const int MAX_SAVES_PER_SET = 101;
 
     private static readonly string _sets_path_base;
     private static readonly string _sets_path_default;
     private static readonly string _sets_name_default = "default";
-    private                 string _sets_name_active; // The active set's name.
+    private static          string _sets_name_active; // The active set's name.
 
     private readonly Dictionary<string, FhSaveSet> _sets; // The available save sets.
     private readonly Dictionary<string, FhSaveUi>  _ui;   // The available save user interfaces.
+    private readonly FhSaveUiData[]                _ui_data;
 
-    private          int            _lock;
-    private readonly FhSaveUiData[] _ui_data;
-    private readonly HashSet<int>   _slots; // The slots occupied in the active set.
+    private          int          _lock;
+    private readonly HashSet<int> _slots; // The slots occupied in the active set.
 
     static FhSaves() {
         _sets_path_base    = Path.Join(FhEnvironment.Finder.Saves.FullName, FhInternal.Hasher.SaveSetHash);
         _sets_path_default = Path.Join(_sets_path_base, _sets_name_default, pal_get_save_subfolder());
+        _sets_name_active  = _sets_name_default;
     }
 
     public FhSaves() {
-        _sets_name_active = _sets_name_default;
-        _sets             = [];
-        _slots            = [];
-        _ui               = [];
-        _ui_data          = new FhSaveUiData[MAX_SAVES_PER_SET];
+        _slots   = [];
+        _sets    = [];
+        _ui      = [];
+        _ui_data = new FhSaveUiData[MAX_SAVES_PER_SET];
 
         /* [fkelava 19/01/26 18:13]
          * Indexing cannot be done here because game functions
@@ -210,7 +266,7 @@ public sealed partial class FhSaves {
          *
          * It is instead performed just in time when we switch to save/load mode.
          */
-        _sets_query();
+        _sets_query_all();
     }
 
     /// <summary>
@@ -223,7 +279,7 @@ public sealed partial class FhSaves {
     /// <summary>
     ///     Reads a save file and prepares its display data.
     /// </summary>
-    private Task _sets_index_single(int index) {
+    private Task _sets_index_save(int index) {
         string             save_file_path = pal_get_path_for_slot(index);
         ReadOnlySpan<char> slot_str       = save_file_path[ ^3 .. ];
 
@@ -300,7 +356,7 @@ public sealed partial class FhSaves {
         Task[] tasks = new Task[MAX_SAVES_PER_SET];
 
         for (int i = 0; i < MAX_SAVES_PER_SET; i++) {
-            tasks[i] = _sets_index_single(i);
+            tasks[i] = _sets_index_save(i);
         }
 
         Task.WaitAll(tasks);
@@ -315,7 +371,7 @@ public sealed partial class FhSaves {
     ///     Registers basic information about a given save set directory.
     /// </summary>
     /// <param name="set_dir_path">The absolute path to the save set directory.</param>
-    private Task _sets_query_single(string set_dir_path) {
+    private Task _sets_query(string set_dir_path) {
         string set_name        = Path.GetFileName(set_dir_path);
         string set_subdir_path = Path.Join       (set_dir_path, pal_get_save_subfolder());
 
@@ -335,14 +391,14 @@ public sealed partial class FhSaves {
     /// <summary>
     ///     Queries the disk for available save sets.
     /// </summary>
-    private void _sets_query() {
+    private void _sets_query_all() {
         _sets.Clear();
 
         string[] sets  = [ .. Directory.EnumerateDirectories(_sets_path_base) ];
         Task  [] tasks = new Task[sets.Length];
 
         for (int i = 0; i < sets.Length; i++) {
-            tasks[i] = _sets_query_single(sets[i]);
+            tasks[i] = _sets_query(sets[i]);
         }
 
         Task.WaitAll(tasks);
@@ -359,7 +415,7 @@ public sealed partial class FhSaves {
                 FhInternal.Log.Error("Default set was deleted; forcibly re-generating.");
 
                 _sets_create_default();
-                _sets_query();
+                _sets_query_all();
             }
 
             _sets_name_active = _sets_name_default;
@@ -394,7 +450,7 @@ public sealed partial class FhSaves {
         if (Interlocked.CompareExchange(ref _lock, 1, 0) != 0)
             return;
 
-        _sets_query();
+        _sets_query_all();
 
         Interlocked.Decrement(ref _lock);
     }

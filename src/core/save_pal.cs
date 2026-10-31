@@ -16,6 +16,11 @@ namespace Fahrenheit;
 
 public sealed partial class FhSaves {
 
+    private const string DIR_MAP_ICON_X  = "/FFX_Data/GameData/PS3Data/savedataicons";
+    private const string DIR_MAP_ICON_X2 = "/FFX-2_Data/GameData/PS3Data/savedataicons";
+    private const string DIR_CHR_ICON_X  = "/FFX_Data/GameData/PS3Data/menu/D3D11";
+    private const string DIR_CHR_ICON_X2 = "/FFX-2_Data/GameData/PS3Data/menu/face_data/D3D11";
+
     // Caches for immutable portions of certain templated game strings.
     private static int    _cache_init             = 0;
     private static string _cache_prefix_lm_level  = "";
@@ -333,17 +338,33 @@ public sealed partial class FhSaves {
     }
 
     /// <summary>
-    ///     Returns the icon for a character in the save
-    ///     with the given <paramref name="header"/>.
+    ///     Returns the icon for a character in the save with the given <paramref name="header"/>.
     /// </summary>
     private static FhTexture _pal_get_icon_chr(in SaveHeader header, int index) {
         ArgumentOutOfRangeException.ThrowIfGreaterThan(index, 2, nameof(index));
 
         if (FhGlobal.game_id is FhGameId.FFX) {
-            if (_cache_icon_chr.TryGetValue((0, 0), out FhTexture? tex_x))
+            /* [fkelava 31/10/26 00:35]
+             * In FFX the player and aeon icons are grouped into atlases, _except_ for Seymour.
+             * So we map the character's ID to one of these three textures until we devise FhTextureClip.
+             */
+            byte chr_id = header.x.formation[index];
+            byte key_id = chr_id switch {
+                <  0x7  => 0,
+                   0x7  => 1,
+                <= 0x11 => 2,
+                _       => 0
+            };
+
+            if (_cache_icon_chr.TryGetValue((key_id, 0), out FhTexture? tex_x))
                 return tex_x;
 
-            return (_cache_icon_chr[(0, 0)] = new FhTexture($"{DIR_CHR_ICON_X}/face_ply.dds.phyre", FhTextureType.GAME_PHYRE_2D));
+            return key_id switch {
+                0 => (_cache_icon_chr[(key_id, 0)] = new FhTexture($"{DIR_CHR_ICON_X}/face_ply.dds.phyre", FhTextureType.GAME_PHYRE_2D)),
+                1 => (_cache_icon_chr[(key_id, 0)] = new FhTexture($"{DIR_CHR_ICON_X}/face_ply.dds.phyre", FhTextureType.GAME_PHYRE_2D)),
+                2 => (_cache_icon_chr[(key_id, 0)] = new FhTexture($"{DIR_CHR_ICON_X}/face_smn.dds.phyre", FhTextureType.GAME_PHYRE_2D)),
+                _ => throw new UnreachableException()
+            };
         }
 
         bool is_lm = FhGlobal.game_id is FhGameId.FFX2LM;

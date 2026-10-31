@@ -360,9 +360,9 @@ public sealed partial class FhSaves {
                 return tex_x;
 
             return key_id switch {
-                0 => (_cache_icon_chr[(key_id, 0)] = new FhTexture($"{DIR_CHR_ICON_X}/face_ply.dds.phyre", FhTextureType.GAME_PHYRE_2D)),
-                1 => (_cache_icon_chr[(key_id, 0)] = new FhTexture($"{DIR_CHR_ICON_X}/face_ply.dds.phyre", FhTextureType.GAME_PHYRE_2D)),
-                2 => (_cache_icon_chr[(key_id, 0)] = new FhTexture($"{DIR_CHR_ICON_X}/face_smn.dds.phyre", FhTextureType.GAME_PHYRE_2D)),
+                0 => (_cache_icon_chr[(key_id, 0)] = new FhTexture($"{DIR_CHR_ICON_X}/face_ply.dds.phyre",   FhTextureType.GAME_PHYRE_2D)),
+                1 => (_cache_icon_chr[(key_id, 0)] = new FhTexture($"{DIR_CHR_ICON_X2}/mface_182.dds.phyre", FhTextureType.GAME_PHYRE_2D)),
+                2 => (_cache_icon_chr[(key_id, 0)] = new FhTexture($"{DIR_CHR_ICON_X}/face_smn.dds.phyre",   FhTextureType.GAME_PHYRE_2D)),
                 _ => throw new UnreachableException()
             };
         }

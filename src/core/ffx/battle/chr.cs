@@ -129,9 +129,6 @@ public unsafe struct Chr {
     [FieldOffset(0x2D)]  public bool      stat_bodyhit_flag;
     [FieldOffset(0x3B)]  public bool      eternal_autolife;
     [FieldOffset(0x48)]  public nint      ptr_mon_wep_bin;
-    [FieldOffset(0x182)] public byte      grav_mode;
-    [FieldOffset(0x185)] public byte      field_mode;
-    [FieldOffset(0x186)] public byte      motion_type;
     [FieldOffset(0x3F4)] public byte      death_level;
     [FieldOffset(0x3F5)] public byte      death_pattern;
     [FieldOffset(0x3F8)] public bool      stat_center_chr_flag;

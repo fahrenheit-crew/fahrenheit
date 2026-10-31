@@ -856,8 +856,8 @@ public sealed class FhSaveUiX : FhSaveUiBase {
                 else if (id == 0x7) {
                     // We have to fetch Seymour's face from X-2
                     tuv = new Rect {
-                        pos = new(34f, 19f),
-                        size = new(194f, 194f),
+                        pos  = new( 36f,  19f),
+                        size = new(192f, 192f),
                     }.as_uv(face_meta.size);
                 }
                 else {

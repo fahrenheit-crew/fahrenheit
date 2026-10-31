@@ -177,7 +177,7 @@ public unsafe struct Chr {
     [FieldOffset(0x4B9)] public byte      stat_attack_inc_speed;
     [FieldOffset(0x4BA)] public byte      stat_attack_dec_speed;
     [FieldOffset(0x4BB)] public byte      stat_motion_num;
-    [FieldOffset(0x4FC)] public ushort    area;
+    [FieldOffset(0x4FC)] public sbyte     area;
     [FieldOffset(0x4FE)] public byte      pos;
     [FieldOffset(0x4FF)] public byte      stat_far;
     [FieldOffset(0x504)] public byte      stat_group;

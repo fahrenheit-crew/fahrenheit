@@ -979,12 +979,6 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         Vector2      face_size,
         float        face_gap
     ) {
-        if (!_texture_ffx_faces_ply   .try_use(out ImTextureRef faces_ply, out FhTextureMetadata? faces_ply_meta)
-            || !_texture_ffx_faces_smn.try_use(out ImTextureRef faces_smn, out FhTextureMetadata? faces_smn_meta)
-        ) {
-            return;
-        }
-
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
         Rect face_bounds = new() {
@@ -993,50 +987,68 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         };
 
         UV suv = face_bounds.scale_to_aspect(aspect_helper).as_uv();
+        UV tuv;
 
         Vector2 face_screen_offset = new Vector2(face_size.X + face_gap, 0f) * aspect_scale;
 
-        FFX.SaveHeader header = save.header.x;
+        for (byte i = 0; i < 3; i++) {
+            int id = save.data.x.party_frontline[i];
 
-        foreach (int chr in header.formation[..3]) {
-            if (chr == 0xFF) continue;
+            if (id == 0xFF) continue;
 
-            int id = chr;
+            FhTexture portrait = save.icon_chr[i];
 
-            if (id <= 0x7) {
-                ReadOnlySpan<int> ply_face_tex_xs = [ 1, 201, 400, 600 ];
+            if (portrait.try_use(out ImTextureRef face, out FhTextureMetadata? face_meta)) {
+                if (id <= 0x6) {
+                    if (id == 0x6 && save.data.x.albhed_rikku != 0) {
+                        id = 0x7;
+                    }
 
-                float x1 = ply_face_tex_xs[id % 4];
-                float x2 = x1 + 198f;
+                    ReadOnlySpan<int> ply_face_tex_xs = [ 1, 201, 400, 600 ];
 
-                float y1 = id > 3 ? 311f : 511f;
-                float y2 = y1 - 198f;
+                    float x1 = ply_face_tex_xs[id % 4];
+                    float x2 = x1 + 198f;
 
-                UV tuv = new UV(
-                    new(x1, y1),
-                    new(x2, y2)
-                ).map_to(faces_ply_meta.size);
+                    float y1 = id > 3 ? 311f : 511f;
+                    float y2 = y1 - 198f;
 
-                draw.AddImage(faces_ply, suv.p0, suv.p1, tuv.p0, tuv.p1);
+                    tuv = new UV(
+                        new(x1, y1),
+                        new(x2, y2)
+                    ).map_to(face_meta.size);
+                }
+                else if (id == 0x7) {
+                    // We have to fetch Seymour's face from X-2
+                    tuv = new Rect {
+                        pos = new(34f, 19f),
+                        size = new(194f, 194f),
+                    }.as_uv(face_meta.size);
+                }
+                else {
+                    id -= FFX.Ids.PlySaveId.PC_VALEFOR;
+
+                    float x1 = 1f + 200f * (id % 5);
+                    float x2 = x1 + 198f;
+
+                    float y1 = id > 5 ? 311f : 511f;
+                    float y2 = y1 - 198f;
+
+                    tuv = new UV(
+                        new(x1, y1),
+                        new(x2, y2)
+                    ).map_to(face_meta.size);
+                }
+
+                draw.AddImage(
+                    face,
+                    suv.p0,
+                    suv.p1,
+                    tuv.p0,
+                    tuv.p1
+                );
+
+                suv = suv.move(face_screen_offset);
             }
-            else {
-                id -= FFX.Ids.PlySaveId.PC_VALEFOR;
-
-                float x1 = 1f + 200f * (id % 5);
-                float x2 = x1 + 198f;
-
-                float y1 = id > 5 ? 311f : 511f;
-                float y2 = y1 - 198f;
-
-                UV tuv = new UV(
-                    new(x1, y1),
-                    new(x2, y2)
-                ).map_to(faces_smn_meta.size);
-
-                draw.AddImage(faces_smn, suv.p0, suv.p1, tuv.p0, tuv.p1);
-            }
-
-            suv = suv.move(face_screen_offset);
         }
     }
 

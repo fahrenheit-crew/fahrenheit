@@ -1402,7 +1402,7 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
             triangle_top_suv.p1,
             triangle_tuv.p1,
             triangle_tuv.p0,
-            data.hover_progress > 0f ? 0xFFFFFFFF : 0xFFA0A0A0
+            data.hover_progress > 0f ? 0xFFFFFFFF : 0x90D0D0D0
         );
 
         draw.AddImage(
@@ -1411,7 +1411,7 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
             triangle_bottom_suv.p1,
             triangle_tuv.p0,
             triangle_tuv.p1,
-            data.hover_progress < 1f ? 0xFFFFFFFF : 0xFFA0A0A0
+            data.hover_progress < 1f ? 0xFFFFFFFF : 0x90D0D0D0
         );
     }
 }

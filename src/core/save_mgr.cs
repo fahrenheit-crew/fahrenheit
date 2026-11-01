@@ -266,6 +266,8 @@ public sealed partial class FhSaves {
          *
          * It is instead performed just in time when we switch to save/load mode.
          */
+
+        _sets_create_default();
     }
 
     /// <summary>

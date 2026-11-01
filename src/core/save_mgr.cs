@@ -394,12 +394,15 @@ public sealed partial class FhSaves {
 
         _ = Directory.CreateDirectory(set_subdir_path);
 
-        ReadOnlySpan<string> files = [ .. Directory.EnumerateFiles(set_subdir_path, _pal_get_save_name_glob()) ];
+        int count = 0;
+        for (int i = 0; i < MAX_SAVES_PER_SET; i++) {
+            if (File.Exists(pal_get_path_for_slot(i, set_name))) count++;
+        }
 
         _sets[set_name] = new FhSaveSet() {
             name         = set_name,
             has_autosave = File.Exists(pal_get_path_for_slot(0, set_name)),
-            count        = int.Min(MAX_SAVES_PER_SET, files.Length)
+            count        = count
         };
 
         return Task.CompletedTask;

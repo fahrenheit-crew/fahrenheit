@@ -132,13 +132,6 @@ public sealed partial class FhSaves {
         return $"{prefix}_{slot:D3}";
     }
 
-    /// <summary>
-    ///     Gets a glob string for save game names for the currently loaded game.
-    /// </summary>
-    private static string _pal_get_save_name_glob() {
-        return FhUtil.select("ffx_???", "ffx2_???", "ffx2_???");
-    }
-
     /* [fkelava 18/11/25 21:27]
      * Both Iggy and ImGui take null-terminated UTF-8 strings. Neither FhEncoding nor Encoding.UTF8
      * emit terminating null bytes, so we take care to do so manually in the PAL.

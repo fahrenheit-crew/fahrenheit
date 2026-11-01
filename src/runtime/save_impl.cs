@@ -108,6 +108,8 @@ public unsafe sealed class FhSaveSystemModule : FhModule, IFhSaveSystemImpl {
     ///     Signals to the game that the pending save/load operation ended in failure.
     /// </summary>
     internal void signal_exit_abort() {
+        _mode = FhSaveSystemMode.NULL;
+
         FhSaves.pal_state_cancel = 1;
         FhSaves.pal_state_dialog = SaveDialogState.CLOSED;
 
@@ -123,6 +125,8 @@ public unsafe sealed class FhSaveSystemModule : FhModule, IFhSaveSystemImpl {
     ///     Signals to the game that the pending save/load operation ended in success.
     /// </summary>
     internal void signal_exit_success() {
+        _mode = FhSaveSystemMode.NULL;
+
         FhSaves.pal_state_cancel = 0;
         FhSaves.pal_state_dialog = SaveDialogState.CLOSED;
 

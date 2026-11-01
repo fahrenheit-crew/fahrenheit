@@ -296,8 +296,24 @@ public sealed partial class FhSaves {
             return Task.CompletedTask;
 
         try {
-            using MemoryMappedFile         save_file     = MemoryMappedFile.CreateFromFile(save_file_path);
-            using MemoryMappedViewAccessor save_accessor = save_file.CreateViewAccessor(0, pal_get_sz_save());
+            /* [fkelava 01/11/26 14:55]
+             * Memory-mapped files are opened R/W by default, and the memory view is flushed to disk when closing.
+             * The upshot is that the last write time will be changed even when opening it purely for reading
+             * unless we only pass R as the access flag.
+             */
+            using MemoryMappedFile save_file = MemoryMappedFile.CreateFromFile(
+                save_file_path,
+                FileMode.Open,
+                null,
+                0,
+                MemoryMappedFileAccess.Read
+            );
+
+            using MemoryMappedViewAccessor save_accessor = save_file.CreateViewAccessor(
+                0,
+                pal_get_sz_save(),
+                MemoryMappedFileAccess.Read
+            );
 
             save_accessor.Read(0, out ui_data.header);
 

@@ -280,7 +280,7 @@ public sealed partial class FhSaves {
     /// <summary>
     ///     Reads a save file and prepares its display data.
     /// </summary>
-    private Task _sets_index_save(int index) {
+    private void _sets_index_save(int index) {
         string             save_file_path = pal_get_path_for_slot(index);
         ReadOnlySpan<char> slot_str       = save_file_path[ ^3 .. ];
 
@@ -293,7 +293,7 @@ public sealed partial class FhSaves {
         ui_data.valid = false;
 
         if (!int.TryParse(slot_str, out int slot))
-            return Task.CompletedTask;
+            return;
 
         try {
             /* [fkelava 01/11/26 14:55]
@@ -324,7 +324,7 @@ public sealed partial class FhSaves {
                 default: break;
             }
         }
-        catch { return Task.CompletedTask; }
+        catch { return; }
 
         FhSaveUiData.IconChr icon_chr = ui_data.icon_chr;
         icon_chr[0] = _pal_get_icon_chr(ui_data.header, ui_data.data, 0);
@@ -346,7 +346,6 @@ public sealed partial class FhSaves {
         ui_data.valid       = true;
 
         _slots.Add(slot);
-        return Task.CompletedTask;
     }
 
     /// <summary>
@@ -370,16 +369,13 @@ public sealed partial class FhSaves {
          */
         _ = Directory.CreateDirectory(path_set_folder);
 
-        Task[] tasks = new Task[MAX_SAVES_PER_SET];
-
         for (int i = 0; i < MAX_SAVES_PER_SET; i++) {
-            tasks[i] = _sets_index_save(i);
+            _sets_index_save(i);
         }
-
-        Task.WaitAll(tasks);
 
         _sets[_sets_name_active].has_autosave = File.Exists(pal_get_path_for_slot(0));
         _sets[_sets_name_active].count        = _slots.Count;
+        _sets[_sets_name_active].is_full      = _slots.Count == MAX_SAVES_PER_SET;
 
         _ui_data.Sort(_pal_sort_create_time);
     }
@@ -388,7 +384,7 @@ public sealed partial class FhSaves {
     ///     Registers basic information about a given save set directory.
     /// </summary>
     /// <param name="set_dir_path">The absolute path to the save set directory.</param>
-    private Task _sets_query(string set_dir_path) {
+    private void _sets_query(string set_dir_path) {
         string set_name        = Path.GetFileName(set_dir_path);
         string set_subdir_path = Path.Join       (set_dir_path, pal_get_save_subfolder());
 
@@ -404,8 +400,6 @@ public sealed partial class FhSaves {
             has_autosave = File.Exists(pal_get_path_for_slot(0, set_name)),
             count        = count
         };
-
-        return Task.CompletedTask;
     }
 
     /// <summary>
@@ -414,14 +408,9 @@ public sealed partial class FhSaves {
     private void _sets_query_all() {
         _sets.Clear();
 
-        string[] sets  = [ .. Directory.EnumerateDirectories(_sets_path_base) ];
-        Task  [] tasks = new Task[sets.Length];
-
-        for (int i = 0; i < sets.Length; i++) {
-            tasks[i] = _sets_query(sets[i]);
+        foreach (string set in Directory.EnumerateDirectories(_sets_path_base)) {
+            _sets_query(set);
         }
-
-        Task.WaitAll(tasks);
 
         /* [fkelava 19/01/26 14:50]
          * The default set is forcibly regenerated if it does not exist,

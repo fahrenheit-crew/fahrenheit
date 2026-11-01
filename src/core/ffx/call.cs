@@ -387,7 +387,7 @@ public static partial class FhCall {
         => new( new FhCallLocation("FFX.exe", 0x5055C0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate void d_ToMakeBtlEasyDigit2(int param_1, float x, float y, byte color_id, float scale, float param_5);
+    public delegate void d_ToMakeBtlEasyDigit2(int param_1, float x, float y, byte color_id, float scale);
     public static FhCallHandle<d_ToMakeBtlEasyDigit2> ToMakeBtlEasyDigit2
         => new( new FhCallLocation("FFX.exe", 0x505550) );
 
@@ -583,7 +583,7 @@ public static partial class FhCall {
         => new( new FhCallLocation("FFX.exe", 0x4E0BA0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate void d_TkMn2DrawCrossCharFace(uint param_1, float param_2, float param_3, float param_4, float param_5);
+    public delegate void d_TkMn2DrawCrossCharFace(uint ply_id, float x, float y, float w, float h);
     public static FhCallHandle<d_TkMn2DrawCrossCharFace> TkMn2DrawCrossCharFace
         => new( new FhCallLocation("FFX.exe", 0x4C0250) );
 

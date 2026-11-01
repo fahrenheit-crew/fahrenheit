@@ -26,7 +26,7 @@ namespace Fahrenheit.Runtime;
 [FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
 public unsafe sealed class FhSaveSystemModule : FhModule, IFhSaveSystemImpl {
 
-    private int              _load_pending_slot;
+    private int              _load_pending_slot = -1;
     private FhSaveSystemMode _mode;
 
     public FhSaveSystemModule() { }

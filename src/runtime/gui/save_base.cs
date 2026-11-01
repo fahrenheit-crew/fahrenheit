@@ -437,7 +437,7 @@ public abstract class FhSaveUiBase : FhSaveUi {
         int ui_data_start = is_saving && set.has_autosave ? 1 : 0;
 
         for (int save_idx = start; save_idx < end; save_idx++) {
-            if (is_saving && save_idx == 0) {
+            if (is_saving && save_idx == 0 && !set.is_full) {
                 // New Save Data
                 ui_save(new FhSaveUiData { slot = 0 }, 0, 0);
                 continue;

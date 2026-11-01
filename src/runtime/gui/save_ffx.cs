@@ -815,12 +815,6 @@ public sealed class FhSaveUiX : FhSaveUiBase {
         Vector2      face_size,
         float        face_gap
     ) {
-        if (!_texture_faces_ply   .try_use(out ImTextureRef faces_ply, out FhTextureMetadata? faces_ply_meta)
-            || !_texture_faces_smn.try_use(out ImTextureRef faces_smn, out FhTextureMetadata? faces_smn_meta)
-        ) {
-            return;
-        }
-
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
         Rect face_bounds = new() {
@@ -829,17 +823,24 @@ public sealed class FhSaveUiX : FhSaveUiBase {
         };
 
         UV suv = face_bounds.scale_to_aspect(aspect_helper).as_uv();
+        UV tuv;
 
         Vector2 face_screen_offset = new Vector2(face_size.X + face_gap, 0f) * aspect_scale;
 
-        FFX.SaveHeader header = save.header.x;
+        for (byte i = 0; i < 3; i++) {
+            int id = save.data.x.party_frontline[i];
 
-        foreach (int chr in header.formation[..3]) {
-            if (chr == 0xFF) continue;
+            if (id == 0xFF) continue;
 
-            int id = chr;
+            FhTexture portrait = save.icon_chr[i];
 
-            if (id <= 0x7) {
+            if (!portrait.try_use(out ImTextureRef face, out FhTextureMetadata? face_meta)) continue;
+
+            if (id <= 0x6) {
+                if (id == 0x6 && save.data.x.albhed_rikku != 0) {
+                    id = 0x7;
+                }
+
                 ReadOnlySpan<int> ply_face_tex_xs = [ 1, 201, 400, 600 ];
 
                 float x1 = ply_face_tex_xs[id % 4];
@@ -848,12 +849,17 @@ public sealed class FhSaveUiX : FhSaveUiBase {
                 float y1 = id > 3 ? 311f : 511f;
                 float y2 = y1 - 198f;
 
-                UV tuv = new UV(
+                tuv = new UV(
                     new(x1, y1),
                     new(x2, y2)
-                ).map_to(faces_ply_meta.size);
-
-                draw.AddImage(faces_ply, suv.p0, suv.p1, tuv.p0, tuv.p1);
+                ).map_to(face_meta.size);
+            }
+            else if (id == 0x7) {
+                // We have to fetch Seymour's face from X-2
+                tuv = new Rect {
+                    pos  = new( 36f,  19f),
+                    size = new(182f, 192f),
+                }.as_uv(face_meta.size);
             }
             else {
                 id -= FFX.Ids.PlySaveId.PC_VALEFOR;
@@ -864,13 +870,19 @@ public sealed class FhSaveUiX : FhSaveUiBase {
                 float y1 = id > 5 ? 311f : 511f;
                 float y2 = y1 - 198f;
 
-                UV tuv = new UV(
+                tuv = new UV(
                     new(x1, y1),
                     new(x2, y2)
-                ).map_to(faces_smn_meta.size);
-
-                draw.AddImage(faces_smn, suv.p0, suv.p1, tuv.p0, tuv.p1);
+                ).map_to(face_meta.size);
             }
+
+            draw.AddImage(
+                face,
+                suv.p0,
+                suv.p1,
+                tuv.p0,
+                tuv.p1
+            );
 
             suv = suv.move(face_screen_offset);
         }

@@ -345,7 +345,7 @@ public sealed partial class FhSaves {
         ui_data.icon_chr    = icon_chr;
         ui_data.valid       = true;
 
-        _slots.Add(slot);
+        _ = _slots.Add(slot);
     }
 
     /// <summary>
@@ -373,9 +373,11 @@ public sealed partial class FhSaves {
             _sets_index_save(i);
         }
 
-        _sets[_sets_name_active].has_autosave = File.Exists(pal_get_path_for_slot(0));
+        bool has_autosave = File.Exists(pal_get_path_for_slot(0));
+
+        _sets[_sets_name_active].has_autosave = has_autosave;
         _sets[_sets_name_active].count        = _slots.Count;
-        _sets[_sets_name_active].is_full      = _slots.Count == MAX_SAVES_PER_SET;
+        _sets[_sets_name_active].is_full      = _slots.Count == MAX_SAVES_PER_SET - (has_autosave ? 0 : 1);
 
         _ui_data.Sort(_pal_sort_create_time);
     }

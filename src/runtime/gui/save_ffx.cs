@@ -540,6 +540,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
             return;
         }
 
+        FhSaveSet     set  = FhApi.Saves.sets_get_active();
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
         Rect save_outer_bounds = new() {
@@ -656,7 +657,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
             },
         };
 
-        if (save.slot == 0 && is_saving)
+        if (save.slot == 0 && is_saving && !set.is_full)
             ui_newdata(info_bounds, map_bounds);
         else
             ui_save_details(save, save_bounds, header_bounds, info_bounds, map_bounds);

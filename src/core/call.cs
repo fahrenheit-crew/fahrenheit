@@ -44,8 +44,8 @@ public static unsafe partial class FhCall {
     // Seymour
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public unsafe delegate int d_FUN_0048e750_0034c250(int param_1);
-    public static FhCallHandle<d_FUN_0048e750_0034c250> FUN_0048e750_0034c250 =>
+    public unsafe delegate int d_TkMenuGetRatio2(int param_1);
+    public static FhCallHandle<d_TkMenuGetRatio2> TkMenuGetRatio2 =>
         new( new FhCallLocation(0x48E750, 0x34C250) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -59,8 +59,8 @@ public static unsafe partial class FhCall {
         new( new FhCallLocation(0x386950, 0x20EAF0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public unsafe delegate int d_FUN_0048e730_0034c230(int param_1);
-    public static FhCallHandle<d_FUN_0048e730_0034c230> FUN_0048e730_0034c230 =>
+    public unsafe delegate int d_TkMenuGetRatio(int param_1);
+    public static FhCallHandle<d_TkMenuGetRatio> TkMenuGetRatio =>
         new( new FhCallLocation(0x48E730, 0x34C230) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]

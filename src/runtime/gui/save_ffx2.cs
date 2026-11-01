@@ -998,57 +998,57 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
 
             FhTexture portrait = save.icon_chr[i];
 
-            if (portrait.try_use(out ImTextureRef face, out FhTextureMetadata? face_meta)) {
-                if (id <= 0x6) {
-                    if (id == 0x6 && save.data.x.albhed_rikku != 0) {
-                        id = 0x7;
-                    }
+            if (!portrait.try_use(out ImTextureRef face, out FhTextureMetadata? face_meta)) continue;
 
-                    ReadOnlySpan<int> ply_face_tex_xs = [ 1, 201, 400, 600 ];
-
-                    float x1 = ply_face_tex_xs[id % 4];
-                    float x2 = x1 + 198f;
-
-                    float y1 = id > 3 ? 311f : 511f;
-                    float y2 = y1 - 198f;
-
-                    tuv = new UV(
-                        new(x1, y1),
-                        new(x2, y2)
-                    ).map_to(face_meta.size);
-                }
-                else if (id == 0x7) {
-                    // We have to fetch Seymour's face from X-2
-                    tuv = new Rect {
-                        pos  = new( 36f,  19f),
-                        size = new(182f, 192f),
-                    }.as_uv(face_meta.size);
-                }
-                else {
-                    id -= FFX.Ids.PlySaveId.PC_VALEFOR;
-
-                    float x1 = 1f + 200f * (id % 5);
-                    float x2 = x1 + 198f;
-
-                    float y1 = id > 5 ? 311f : 511f;
-                    float y2 = y1 - 198f;
-
-                    tuv = new UV(
-                        new(x1, y1),
-                        new(x2, y2)
-                    ).map_to(face_meta.size);
+            if (id <= 0x6) {
+                if (id == 0x6 && save.data.x.albhed_rikku != 0) {
+                    id = 0x7;
                 }
 
-                draw.AddImage(
-                    face,
-                    suv.p0,
-                    suv.p1,
-                    tuv.p0,
-                    tuv.p1
-                );
+                ReadOnlySpan<int> ply_face_tex_xs = [ 1, 201, 400, 600 ];
 
-                suv = suv.move(face_screen_offset);
+                float x1 = ply_face_tex_xs[id % 4];
+                float x2 = x1 + 198f;
+
+                float y1 = id > 3 ? 311f : 511f;
+                float y2 = y1 - 198f;
+
+                tuv = new UV(
+                    new(x1, y1),
+                    new(x2, y2)
+                ).map_to(face_meta.size);
             }
+            else if (id == 0x7) {
+                // We have to fetch Seymour's face from X-2
+                tuv = new Rect {
+                    pos  = new( 36f,  19f),
+                    size = new(182f, 192f),
+                }.as_uv(face_meta.size);
+            }
+            else {
+                id -= FFX.Ids.PlySaveId.PC_VALEFOR;
+
+                float x1 = 1f + 200f * (id % 5);
+                float x2 = x1 + 198f;
+
+                float y1 = id > 5 ? 311f : 511f;
+                float y2 = y1 - 198f;
+
+                tuv = new UV(
+                    new(x1, y1),
+                    new(x2, y2)
+                ).map_to(face_meta.size);
+            }
+
+            draw.AddImage(
+                face,
+                suv.p0,
+                suv.p1,
+                tuv.p0,
+                tuv.p1
+            );
+
+            suv = suv.move(face_screen_offset);
         }
     }
 

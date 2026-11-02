@@ -373,31 +373,46 @@ public sealed partial class FhSaves {
 
         bool is_lm = FhGlobal.game_id is FhGameId.FFX2LM;
 
-        byte job_id = is_lm
-            ? header.x2.lm_job
-            : header.x2.ply_jobs[index];
+        byte chr = data.x2.extend_party[index];
+
+        if (chr >= FFX2.Ids.PlySaveId.PC_CREATURE1 && chr <= FFX2.Ids.PlySaveId.PC_CREATURE8) {
+            int model_id = data.x2.ply_saves[chr].creature_data.creature;
+
+            byte id = pal_remap_creature_icon(model_id);
+
+            (byte, byte) chr_key = (chr, id);
+
+            if (_cache_icon_chr.TryGetValue(chr_key, out FhTexture? tex_mon))
+                return tex_mon;
+
+            return (_cache_icon_chr[chr_key] = new FhTexture($"{DIR_CHR_ICON_X2}/mface_{id:D3}.dds.phyre", FhTextureType.GAME_PHYRE_2D));
+        }
+
+        byte ply = data.x2.party[index];
 
         byte ply_id = is_lm
             ? header.x2.lm_ply
-            : header.x2.ply[index];
+            : ply;
 
-        (byte, byte) key = (ply_id, job_id);
+        byte job_id = is_lm
+            ? header.x2.lm_job
+            : header.x2.ply_jobs[ply];
 
-        if (_cache_icon_chr.TryGetValue(key, out FhTexture? tex))
+        (byte, byte) ply_key = (ply_id, job_id);
+
+        if (_cache_icon_chr.TryGetValue(ply_key, out FhTexture? tex))
             return tex;
 
-        if (job_id == 0x21) {
-            return (_cache_icon_chr[key] = new FhTexture($"{DIR_CHR_ICON_X2}/mface_147.dds.phyre", FhTextureType.GAME_PHYRE_2D)); // She-Goon
-        }
+        if (job_id == 0x21)
+            return (_cache_icon_chr[ply_key] = new FhTexture($"{DIR_CHR_ICON_X2}/mface_147.dds.phyre", FhTextureType.GAME_PHYRE_2D)); // She-Goon
 
-        string ply = ply_id switch {
-            0 => "yuna",
+        string ply_name = ply_id switch {
             1 => "rikku",
             2 => "paine",
-            _ => "m",
+            _ => "yuna",
         };
 
-        // Rewires Rikku's and Paine's job IDs to match original filenames
+        // Remaps Rikku and Paine's job IDs to correctly match the icon's filenames
         byte job = job_id switch {
             24 or 25       => 12, // Trainer
             26 or 27       => 14, // Mascot
@@ -408,7 +423,14 @@ public sealed partial class FhSaves {
             _  => job_id,
         };
 
-        return (_cache_icon_chr[key] = new FhTexture($"{DIR_CHR_ICON_X2}/{ply}face_{job:D3}.dds.phyre", FhTextureType.GAME_PHYRE_2D));
+        /* We have to remap Paine's "default" icon to her "Warrior" icon
+         * because her default icon is 128x128, not 256x256.
+         */
+        if (ply_id == FFX2.Ids.PlySaveId.PC_PAINE && job_id == 0x0) {
+            job = 0x4;
+        }
+
+        return (_cache_icon_chr[ply_key] = new FhTexture($"{DIR_CHR_ICON_X2}/{ply_name}face_{job:D3}.dds.phyre", FhTextureType.GAME_PHYRE_2D));
     }
 
     /// <summary>
@@ -635,4 +657,28 @@ public sealed partial class FhSaves {
         return target_slot;
     }
 
+    internal static byte pal_remap_creature_icon(int model_id) {
+        return model_id switch {
+            0x1081 => 173, // Ormi
+            0x1082 => 174, // Logos
+            0x1083 => 175, // Leblanc
+            0x1134 => 176, // Brother
+            0x1135 => 177, // Buddy
+            0x1137 => 178, // Auron
+            0x1139 => 179, // Kimahri
+            0x113B => 180, // Lulu
+            0x113D => 181, // Tidus
+            0x113F => 182, // Seymour
+            0x1141 => 183, // Baralai
+            0x1142 => 184, // Nooj
+            0x1143 => 185, // Gippal
+            0x1144 => 186, // Garik
+            0x1145 => 187, // Yaibal
+            0x1146 => 188, // Lucil
+            0x1147 => 189, // Elma
+            0x1148 => 190, // Trema
+            0x1149 => 191, // Shinra
+            _      => 0    // None
+        };
+    }
 }

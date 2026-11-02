@@ -45,38 +45,38 @@ public static unsafe partial class FhCall {
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public unsafe delegate int d_TkMenuGetRatio2(int param_1);
-    public static FhCallHandle<d_TkMenuGetRatio2> TkMenuGetRatio2 =>
-        new( new FhCallLocation(0x48E750, 0x34C250) );
+    public static FhCallHandle<d_TkMenuGetRatio2> TkMenuGetRatio2
+        => new( new FhCallLocation(0x48E750, 0x34C250) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate ushort d_AtelGetSaveDic();
-    public static FhCallHandle<d_AtelGetSaveDic> AtelGetSaveDic =>
-        new( new FhCallLocation(0x46C410, 0x326B00) );
+    public static FhCallHandle<d_AtelGetSaveDic> AtelGetSaveDic
+        => new( new FhCallLocation(0x46C410, 0x326B00) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public unsafe delegate void d_MsSetSavePartyMember(uint param_1, uint param_2, uint param_3);
-    public static FhCallHandle<d_MsSetSavePartyMember> MsSetSavePartyMember =>
-        new( new FhCallLocation(0x386950, 0x20EAF0) );
+    public static FhCallHandle<d_MsSetSavePartyMember> MsSetSavePartyMember
+        => new( new FhCallLocation(0x386950, 0x20EAF0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public unsafe delegate int d_TkMenuGetRatio(int param_1);
-    public static FhCallHandle<d_TkMenuGetRatio> TkMenuGetRatio =>
-        new( new FhCallLocation(0x48E730, 0x34C230) );
+    public static FhCallHandle<d_TkMenuGetRatio> TkMenuGetRatio
+        => new( new FhCallLocation(0x48E730, 0x34C230) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public unsafe delegate uint d_MsGetSaveItemNum(uint param_1);
-    public static FhCallHandle<d_MsGetSaveItemNum> MsGetSaveItemNum =>
-        new( new FhCallLocation(0x3904B0, 0x220BA0) );
+    public static FhCallHandle<d_MsGetSaveItemNum> MsGetSaveItemNum
+        => new( new FhCallLocation(0x3904B0, 0x220BA0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate byte d_AtelPushMember();
-    public static FhCallHandle<d_AtelPushMember> AtelPushMember =>
-        new( new FhCallLocation(0x46E310, 0x328D40) );
+    public static FhCallHandle<d_AtelPushMember> AtelPushMember
+        => new( new FhCallLocation(0x46E310, 0x328D40) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate byte d_AtelPopMember();
-    public static FhCallHandle<d_AtelPopMember> AtelPopMember =>
-        new( new FhCallLocation(0x46DDB0, 0x328780) );
+    public static FhCallHandle<d_AtelPopMember> AtelPopMember
+        => new( new FhCallLocation(0x46DDB0, 0x328780) );
 
     // RT - Soft-reset
 
@@ -99,100 +99,100 @@ public static unsafe partial class FhCall {
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public unsafe delegate int d_FUN_00207c40_00490dc0(byte* ptr_path, byte* arg2, byte* arg3);
-    public static FhCallHandle<d_FUN_00207c40_00490dc0> FUN_00207c40_00490dc0 =>
-        new( new FhCallLocation(0x207C40, 0x490DC0) );
+    public static FhCallHandle<d_FUN_00207c40_00490dc0> FUN_00207c40_00490dc0
+        => new( new FhCallLocation(0x207C40, 0x490DC0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public unsafe delegate void d_FUN_00607d50_00890fa0(byte* ptr_path);
-    public static FhCallHandle<d_FUN_00607d50_00890fa0> FUN_00207d50_00490fa0 =>
-        new( new FhCallLocation(0x207D50, 0x490FA0) );
+    public static FhCallHandle<d_FUN_00607d50_00890fa0> FUN_00207d50_00490fa0
+        => new( new FhCallLocation(0x207D50, 0x490FA0) );
 
     [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
     internal unsafe delegate PCluster* d_ClusterManager_getPClusterByName(uint ptr_this, byte* ptr_name);
-    internal static FhCallHandle<d_ClusterManager_getPClusterByName> ClusterManager_getPClusterByName =>
-        new( new FhCallLocation(0x29B4B0, 0x09E360) );
+    internal static FhCallHandle<d_ClusterManager_getPClusterByName> ClusterManager_getPClusterByName
+        => new( new FhCallLocation(0x29B4B0, 0x09E360) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal unsafe delegate BigFileStream* d_BigFileStream_get();
-    internal static FhCallHandle<d_BigFileStream_get> BigFileStream_get =>
-        new( new FhCallLocation(0x21BDB0, 0x5428A0) );
+    internal static FhCallHandle<d_BigFileStream_get> BigFileStream_get
+        => new( new FhCallLocation(0x21BDB0, 0x5428A0) );
 
     [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
     internal unsafe delegate void d_BigFileStream_ctor(BigFileStream* ptr_this);
-    internal static FhCallHandle<d_BigFileStream_ctor> BigFileStream_ctor =>
-        new( new FhCallLocation(0x21BDD0, 0x5428C0) );
+    internal static FhCallHandle<d_BigFileStream_ctor> BigFileStream_ctor
+        => new( new FhCallLocation(0x21BDD0, 0x5428C0) );
 
     [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
     internal unsafe delegate void d_BigFileStream_setStreamPrefix(BigFileStream* ptr_this, byte* ptr_stream_prefix);
-    internal static FhCallHandle<d_BigFileStream_setStreamPrefix> BigFileStream_setStreamPrefix =>
-        new( new FhCallLocation(0x21C3A0, 0x542E90) );
+    internal static FhCallHandle<d_BigFileStream_setStreamPrefix> BigFileStream_setStreamPrefix
+        => new( new FhCallLocation(0x21C3A0, 0x542E90) );
 
     [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
     internal unsafe delegate int d_BigFileStream_registerBigFile(BigFileStream* ptr_this, byte* ptr_vbf_name);
-    internal static FhCallHandle<d_BigFileStream_registerBigFile> BigFileStream_registerBigFile =>
-        new( new FhCallLocation(0x21C150, 0x542C40) );
+    internal static FhCallHandle<d_BigFileStream_registerBigFile> BigFileStream_registerBigFile
+        => new( new FhCallLocation(0x21C150, 0x542C40) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal unsafe delegate byte* d_Phyre_PSerialization_PStreamFile_GetStreamPrefix();
-    internal static FhCallHandle<d_Phyre_PSerialization_PStreamFile_GetStreamPrefix> Phyre_PSerialization_PStreamFile_GetStreamPrefix =>
-        new( new FhCallLocation(0x207D30, 0x490EB0) );
+    internal static FhCallHandle<d_Phyre_PSerialization_PStreamFile_GetStreamPrefix> Phyre_PSerialization_PStreamFile_GetStreamPrefix
+        => new( new FhCallLocation(0x207D30, 0x490EB0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal unsafe delegate void d_Phyre_PSerialization_PStreamFile_SetStreamPrefix(byte* ptr_stream_prefix);
-    internal static FhCallHandle<d_Phyre_PSerialization_PStreamFile_SetStreamPrefix> Phyre_PSerialization_PStreamFile_SetStreamPrefix =>
-        new( new FhCallLocation(0x207D40, 0x490F90) );
+    internal static FhCallHandle<d_Phyre_PSerialization_PStreamFile_SetStreamPrefix> Phyre_PSerialization_PStreamFile_SetStreamPrefix
+        => new( new FhCallLocation(0x207D40, 0x490F90) );
 
     [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
     internal unsafe delegate VFile* d_BigFileStream_openFile(BigFileStream* ptr_this, byte* ptr_file_name);
-    internal static FhCallHandle<d_BigFileStream_openFile> BigFileStream_openFile =>
-        new( new FhCallLocation(0x21BF10, 0x542A00) );
+    internal static FhCallHandle<d_BigFileStream_openFile> BigFileStream_openFile
+        => new( new FhCallLocation(0x21BF10, 0x542A00) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal unsafe delegate void d_fiosUnifyFilename(byte* src, byte* dest, int size);
-    internal static FhCallHandle<d_fiosUnifyFilename> fiosUnifyFilename =>
-        new( new FhCallLocation(0x279820, 0x94F10) );
+    internal static FhCallHandle<d_fiosUnifyFilename> fiosUnifyFilename
+        => new( new FhCallLocation(0x279820, 0x94F10) );
 
     // RT - Allocator fix
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal delegate void* d__VirtualAlloc_Commit_RW(void* ptr, uint size);
-    internal static FhCallHandle<d__VirtualAlloc_Commit_RW> _VirtualAlloc_Commit_RW =>
-       new( new FhCallLocation(0x5438B0, 0x4781C0) );
+    internal static FhCallHandle<d__VirtualAlloc_Commit_RW> _VirtualAlloc_Commit_RW
+        => new( new FhCallLocation(0x5438B0, 0x4781C0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal delegate bool d__VirtualFree_Decommit(void* ptr, uint size);
-    internal static FhCallHandle<d__VirtualFree_Decommit> _VirtualFree_Decommit =>
-        new( new FhCallLocation(0x5438E0, 0x4781F0) );
+    internal static FhCallHandle<d__VirtualFree_Decommit> _VirtualFree_Decommit
+        => new( new FhCallLocation(0x5438E0, 0x4781F0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal delegate void* d__VirtualAlloc_Reserve_NA(uint size);
-    internal static FhCallHandle<d__VirtualAlloc_Reserve_NA> _VirtualAlloc_Reserve_NA =>
-        new( new FhCallLocation(0x5439A0, 0x4782B0) );
+    internal static FhCallHandle<d__VirtualAlloc_Reserve_NA> _VirtualAlloc_Reserve_NA
+        => new( new FhCallLocation(0x5439A0, 0x4782B0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal delegate void* d__VirtualAlloc_ReserveCommit_TopDown_RW(uint size);
-    internal static FhCallHandle<d__VirtualAlloc_ReserveCommit_TopDown_RW> _VirtualAlloc_ReserveCommit_TopDown_RW =>
-        new( new FhCallLocation(0x2EBBC0, 0x1133C0) );
+    internal static FhCallHandle<d__VirtualAlloc_ReserveCommit_TopDown_RW> _VirtualAlloc_ReserveCommit_TopDown_RW
+        => new( new FhCallLocation(0x2EBBC0, 0x1133C0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal delegate void d__malloc_pool_init();
-    internal static FhCallHandle<d__malloc_pool_init> _malloc_pool_init =>
-        new( new FhCallLocation(0x2FB9B0, 0x122040) );
+    internal static FhCallHandle<d__malloc_pool_init> _malloc_pool_init
+        => new( new FhCallLocation(0x2FB9B0, 0x122040) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     internal delegate void d_FUN_005428a0_008771a0();
-    internal static FhCallHandle<d_FUN_005428a0_008771a0> FUN_005428a0_008771a0 =>
-        new( new FhCallLocation(0x5428A0, 0x4771A0) );
+    internal static FhCallHandle<d_FUN_005428a0_008771a0> FUN_005428a0_008771a0
+        => new( new FhCallLocation(0x5428A0, 0x4771A0) );
 
     [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
     internal delegate __ALLOC_DATA* d_FUN_00542a40_00477340(__ALLOC_DATA* ptr_this, uint size, uint p2, uint p3);
-    internal static FhCallHandle<d_FUN_00542a40_00477340> FUN_00542a40_00477340 =>
-        new( new FhCallLocation(0x542A40, 0x477340) );
+    internal static FhCallHandle<d_FUN_00542a40_00477340> FUN_00542a40_00477340
+        => new( new FhCallLocation(0x542A40, 0x477340) );
 
     [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
     internal delegate void* d_FUN_00542b60_00477460(__ALLOC_DATA* ptr_this, uint arg2);
-    internal static FhCallHandle<d_FUN_00542b60_00477460> FUN_00542b60_00477460 =>
-        new( new FhCallLocation(0x542B60, 0x477460) );
+    internal static FhCallHandle<d_FUN_00542b60_00477460> FUN_00542b60_00477460
+        => new( new FhCallLocation(0x542B60, 0x477460) );
 
     // Frame limiter
 
@@ -337,8 +337,8 @@ public static unsafe partial class FhCall {
 
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
     internal delegate void d_AtelExec_Internal_871d10();
-    internal static FhCallHandle<d_AtelExec_Internal_871d10> AtelExec_Internal_871d10 =>
-        new( new FhCallLocation(0x471D70, 0x32CE30) );
+    internal static FhCallHandle<d_AtelExec_Internal_871d10> AtelExec_Internal_871d10
+        => new( new FhCallLocation(0x471D70, 0x32CE30) );
 
     // RT - Platform bind
 
@@ -359,8 +359,8 @@ public static unsafe partial class FhCall {
         ID3D11Device**        ppDevice,
         D3D_FEATURE_LEVEL*    pFeatureLevel,
         ID3D11DeviceContext** ppImmediateContext);
-    internal static FhCallHandle<d_D3D11_D3D11CreateDeviceAndSwapChain> D3D11_D3D11CreateDeviceAndSwapChain =>
-        new( new FhCallLocation("D3D11.dll", "D3D11CreateDeviceAndSwapChain") );
+    internal static FhCallHandle<d_D3D11_D3D11CreateDeviceAndSwapChain> D3D11_D3D11CreateDeviceAndSwapChain
+        => new( new FhCallLocation("D3D11.dll", "D3D11CreateDeviceAndSwapChain") );
 
     // RT - Game UI
 
@@ -602,16 +602,16 @@ public static unsafe partial class FhCall {
         nint va8,  nint va9,  nint va10, nint va11,
         nint va12, nint va13, nint va14, nint va15);
 
-    public static FhCallHandle<d__Printf> dbgPrintf =>
-        new( new FhCallLocation(0x22F500, 0x9AE50) );
-    public static FhCallHandle<d__Printf> scePrintf =>
-        new( new FhCallLocation(0x22FBF0, 0x9B530) );
-    public static FhCallHandle<d__Printf> AtelPs2DebugString =>
-        new( new FhCallLocation(0x473C70, 0x30E960) );
-    public static FhCallHandle<d__Printf> AtelPs2DebugString2 =>
-        new( new FhCallLocation(0x473C80, 0x30E970) );
-    public static FhCallHandle<d__Printf> rcPrint =>
-        new( new FhCallLocation(0x527550, 0x3D9610) );
+    public static FhCallHandle<d__Printf> dbgPrintf
+        => new( new FhCallLocation(0x22F500, 0x9AE50) );
+    public static FhCallHandle<d__Printf> scePrintf
+        => new( new FhCallLocation(0x22FBF0, 0x9B530) );
+    public static FhCallHandle<d__Printf> AtelPs2DebugString
+        => new( new FhCallLocation(0x473C70, 0x30E960) );
+    public static FhCallHandle<d__Printf> AtelPs2DebugString2
+        => new( new FhCallLocation(0x473C80, 0x30E970) );
+    public static FhCallHandle<d__Printf> rcPrint
+        => new( new FhCallLocation(0x527550, 0x3D9610) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void d_Phyre_PhyrePrintf(int sev, byte* fmt,
@@ -620,18 +620,18 @@ public static unsafe partial class FhCall {
         nint va8,  nint va9,  nint va10, nint va11,
         nint va12, nint va13, nint va14, nint va15);
 
-    public static FhCallHandle<d_Phyre_PhyrePrintf> Phyre_PhyrePrintf =>
-        new ( new FhCallLocation(0x352F0, 0x48CB70) );
+    public static FhCallHandle<d_Phyre_PhyrePrintf> Phyre_PhyrePrintf
+        => new ( new FhCallLocation(0x352F0, 0x48CB70) );
 
     [UnmanagedFunctionPointer(CallingConvention.StdCall)]
     public delegate void d_FUN_000354f0_0048cd70(int sev, byte* buf);
-    public static FhCallHandle<d_FUN_000354f0_0048cd70> FUN_000354f0_0048cd70 =>
-        new( new FhCallLocation(0x354F0, 0x48CD70) );
+    public static FhCallHandle<d_FUN_000354f0_0048cd70> FUN_000354f0_0048cd70
+        => new( new FhCallLocation(0x354F0, 0x48CD70) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void d_FUN_0046a130_00324820();
-    public static FhCallHandle<d_FUN_0046a130_00324820> FUN_0046a130_00324820 =>
-        new( new FhCallLocation(0x46A130, 0x324820) );
+    public static FhCallHandle<d_FUN_0046a130_00324820> FUN_0046a130_00324820
+        => new( new FhCallLocation(0x46A130, 0x324820) );
 
     // PUBLIC/UNRESTRICTED - END
 

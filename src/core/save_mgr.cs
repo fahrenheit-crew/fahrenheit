@@ -369,11 +369,19 @@ public sealed partial class FhSaves {
             _sets_index_save(i);
         }
 
+        int count = _slots.Count;
+
         bool has_autosave = File.Exists(pal_get_path_for_slot(0));
+        bool is_saving    = pal_state_system is SaveSystemState.SAVE;
+        bool is_full      = count == MAX_SAVES_PER_SET - (has_autosave ? 0 : 1);
 
         _sets[_sets_name_active].has_autosave = has_autosave;
-        _sets[_sets_name_active].count        = _slots.Count;
-        _sets[_sets_name_active].is_full      = _slots.Count == MAX_SAVES_PER_SET - (has_autosave ? 0 : 1);
+        _sets[_sets_name_active].count        = count;
+        _sets[_sets_name_active].is_full      = is_full;
+
+        if (is_saving && !is_full) {
+            _ui_data[0].valid = true;
+        }
 
         _ui_data.Sort(_pal_sort_create_time);
     }

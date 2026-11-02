@@ -992,9 +992,11 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         for (byte i = 0; i < 3; i++) {
             int id = save.data.x.party_frontline[i];
 
+            if (id == 0xFF) continue;
+
             FhTexture portrait = save.icon_chr[i];
 
-            if (id == 0xFF || !portrait.try_use(out ImTextureRef face, out FhTextureMetadata? face_meta)) continue;
+            if (!portrait.try_use(out ImTextureRef face, out FhTextureMetadata? face_meta)) continue;
 
             if (id <= 0x6) {
                 if (id == 0x6 && save.data.x.albhed_rikku != 0) {

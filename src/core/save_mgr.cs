@@ -280,20 +280,16 @@ public sealed partial class FhSaves {
     /// <summary>
     ///     Reads a save file and prepares its display data.
     /// </summary>
-    private void _sets_index_save(int index) {
-        string             save_file_path = pal_get_path_for_slot(index);
-        ReadOnlySpan<char> slot_str       = save_file_path[ ^3 .. ];
+    private void _sets_index_save(int slot) {
+        string save_file_path = pal_get_path_for_slot(slot);
 
         /* [fkelava 30/10/26 16:38]
          * UI data is sorted at end of indexing. Invalid UI data moves to the end,
          * i.e. the first `set.count` UI data are the ones for the valid saves.
          */
 
-        FhSaveUiData ui_data = _ui_data[index] ??= new();
+        FhSaveUiData ui_data = _ui_data[slot] ??= new();
         ui_data.valid = false;
-
-        if (!int.TryParse(slot_str, out int slot))
-            return;
 
         try {
             /* [fkelava 01/11/26 14:55]

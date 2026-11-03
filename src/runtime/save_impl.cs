@@ -62,11 +62,11 @@ public unsafe sealed class FhSaveSystemModule : FhModule, IFhSaveSystemImpl {
     private void signal_enter_save() {
         FhApi.Input.lock_on();
 
-        FhApi.Saves.sets_query();
-        FhApi.Saves.sets_index();
-
         _mode = FhSaveSystemMode.SAVE;
         FhSaves.pal_state_system = SaveSystemState.SAVE;
+
+        FhApi.Saves.sets_query();
+        FhApi.Saves.sets_index();
 
         FhApi.Events.Common.GameLoop.PostOpenSaveMenu.invoke(EventArgs.Empty);
     }
@@ -78,11 +78,11 @@ public unsafe sealed class FhSaveSystemModule : FhModule, IFhSaveSystemImpl {
     private void signal_enter_load() {
         FhApi.Input.lock_on();
 
-        FhApi.Saves.sets_query();
-        FhApi.Saves.sets_index();
-
         _mode = FhSaveSystemMode.LOAD;
         FhSaves.pal_state_system = SaveSystemState.LOAD;
+
+        FhApi.Saves.sets_query();
+        FhApi.Saves.sets_index();
 
         FhApi.Events.Common.GameLoop.PostOpenSaveMenu.invoke(EventArgs.Empty);
     }
@@ -95,11 +95,11 @@ public unsafe sealed class FhSaveSystemModule : FhModule, IFhSaveSystemImpl {
     private void signal_enter_albd() {
         FhApi.Input.lock_on();
 
-        FhApi.Saves.sets_query();
-        FhApi.Saves.sets_index();
-
         _mode = FhSaveSystemMode.ALBD;
         FhSaves.pal_state_system = SaveSystemState.LOAD;
+
+        FhApi.Saves.sets_query();
+        FhApi.Saves.sets_index();
 
         FhApi.Events.Common.GameLoop.PostOpenSaveMenu.invoke(EventArgs.Empty);
     }

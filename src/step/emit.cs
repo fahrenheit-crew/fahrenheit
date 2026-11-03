@@ -149,11 +149,6 @@ internal abstract class FhStepGenerator(
     }
 
     /// <summary>
-    ///     Converts an offset back into its Ghidra equivalent.
-    /// </summary>
-    protected static int addr_to_ghidra(int address) => address + 0x400000;
-
-    /// <summary>
     ///     Convert from a C++/Ghidra calling convention specifier to the equivalent C# attribute for delegates.
     /// </summary>
     /// <param name="call_conv">The C++/Ghidra-style calling convention specifier.</param>
@@ -244,7 +239,7 @@ internal sealed class FhGameSpecificGenerator(
     /// <param name="signature_data">The signature data associated with the function.</param>
     /// <returns>A valid C# delegate declaration and associated function address constant.</returns>
     private void emit_function(FhFuncDecl function, FhFuncSignatureData signature_data) {
-        int addr_label = addr_to_ghidra(function.Location);
+        int addr_label = function.Location;
 
         string module = _game switch {
             FhGameId.FFX    => "FFX.exe",
@@ -268,7 +263,7 @@ internal sealed class FhGameSpecificGenerator(
                  // Unannotated function:
                  // {function.CallConv} {function.Signature} at {addr_label:x8}
 
-                 public static FhMethodHandle<Fahrenheit.FhCall.d_UnknownFn> {function.Name} => new( new FhMethodLocation("{module}", 0x{function.Location:X}) );
+                 public static FhCallHandle<Fahrenheit.FhCall.d_UnknownFn> {function.Name} => new( new FhCallLocation("{module}", 0x{function.Location:X}) );
 
              """);
             _line_count += 5;
@@ -281,7 +276,7 @@ internal sealed class FhGameSpecificGenerator(
 
              {emit_callconv_attr(function.CallConv)}
              public unsafe delegate {signature_data.ReturnType} d_{function.FuncName}{get_params_string(signature_data.Parameters)};
-             public static FhMethodHandle<d_{function.FuncName}> {function.Name} => new( new FhMethodLocation("{module}", 0x{function.Location:X}) );
+             public static FhCallHandle<d_{function.FuncName}> {function.Name} => new( new FhCallLocation("{module}", 0x{function.Location:X}) );
 
          """);
         _line_count += 7;
@@ -293,7 +288,7 @@ internal sealed class FhGameSpecificGenerator(
     /// <param name="global">A global symbol provided by Ghidra</param>
     /// <returns>A valid C# const declaration for the given global</returns>
     private void emit_global(FhDataLabelDecl global) {
-        int                addr_label = addr_to_ghidra(global.Location);
+        int                addr_label = global.Location;
         ReadOnlySpan<char> type       = remap_type    (global.DataType);
 
         if (_reject.Contains(global.Location))
@@ -330,7 +325,7 @@ internal sealed class FhGameSpecificGenerator(
 
             if (!should_interpret(func)) {
                 _output.AppendLine($"    // Symbol skipped (deemed uninterpretable):");
-                _output.AppendLine($"    // {func.CallConv} {func.Signature} at {addr_to_ghidra(func.Location):x8}");
+                _output.AppendLine($"    // {func.CallConv} {func.Signature} at {func.Location:x8}");
                 _output.AppendLine();
 
                 _line_count += 3;
@@ -376,7 +371,7 @@ internal sealed class FhGameSpecificGenerator(
 
             if (!should_interpret(global)) {
                 _output.AppendLine($"    // Global skipped (deemed uninterpretable):");
-                _output.AppendLine($"    // {global.DataType} {global.Name} at {addr_to_ghidra(global.Location):x8}");
+                _output.AppendLine($"    // {global.DataType} {global.Name} at {global.Location:x8}");
                 _output.AppendLine();
 
                 _line_count += 3;
@@ -413,8 +408,8 @@ internal sealed class FhCommonGenerator(
     /// <param name="common_data">Data describing which two functions are being fused.</param>
     /// <returns>A valid C# delegate declaration and associated function address constant.</returns>
     private void emit_common_function(FhFuncDecl function, FhFuncSignatureData signature_data, FhCommonFuncDecl common_data) {
-        int addr_label_src = addr_to_ghidra(common_data.SourceAddress);
-        int addr_label_dst = addr_to_ghidra(common_data.DestAddress);
+        int addr_label_src = common_data.SourceAddress;
+        int addr_label_dst = common_data.DestAddress;
 
         string fused_label = $"FUN_{addr_label_src:X8}_{addr_label_dst:X8}";
 
@@ -433,7 +428,7 @@ internal sealed class FhCommonGenerator(
                  // Fused unannotated identical entry: {function.CallConv} {function.Signature}
                  // at (FFX.exe+{addr_label_src:X}, FFX-2.exe+{addr_label_dst:X})
 
-                 public static FhMethodHandle<Fahrenheit.FhCall.d_UnknownFn> {fused_label} => new( new FhMethodLocation(0x{common_data.SourceAddress:X}, 0x{common_data.DestAddress:X}) );
+                 public static FhCallHandle<Fahrenheit.FhCall.d_UnknownFn> {fused_label} => new( new FhCallLocation(0x{common_data.SourceAddress:X}, 0x{common_data.DestAddress:X}) );
 
              """);
             _line_count += 5;
@@ -446,7 +441,7 @@ internal sealed class FhCommonGenerator(
 
              {emit_callconv_attr(function.CallConv)}
              public unsafe delegate {signature_data.ReturnType} d_{fused_label}{get_params_string(signature_data.Parameters)};
-             public static FhMethodHandle<d_{fused_label}> {fused_label} => new( new FhMethodLocation(0x{common_data.SourceAddress:X}, 0x{common_data.DestAddress:X}) );
+             public static FhCallHandle<d_{fused_label}> {fused_label} => new( new FhCallLocation(0x{common_data.SourceAddress:X}, 0x{common_data.DestAddress:X}) );
 
          """);
          _line_count += 7;
@@ -469,8 +464,8 @@ internal sealed class FhCommonGenerator(
             }
 
             if (!should_interpret(func)) {
-                int addr_label_src = addr_to_ghidra(common_data.SourceAddress);
-                int addr_label_dst = addr_to_ghidra(common_data.DestAddress);
+                int addr_label_src = common_data.SourceAddress;
+                int addr_label_dst = common_data.DestAddress;
 
                 _output.AppendLine($"    // Identical entry skipped (deemed uninterpretable):");
                 _output.AppendLine($"    // {func.CallConv} {func.Signature} at (FFX.exe+{addr_label_src:X}, FFX-2.exe+{addr_label_dst:X})");

@@ -18,16 +18,16 @@ public unsafe struct VpaTri {
     public  InlineArray3<short> neighbour_indices;
     private int                 data;
 
-    public readonly VpaVertex* vertex_by_index   (int idx) => Globals.Map.vertices + vertex_indices   [idx];
-    public readonly VpaTri*    neighbour_by_index(int idx) => Globals.Map.tris     + neighbour_indices[idx];
+    //public readonly VpaVertex* vertex_by_index   (int idx) => Globals.Map.vertices + vertex_indices   [idx];
+    //public readonly VpaTri*    neighbour_by_index(int idx) => Globals.Map.tris     + neighbour_indices[idx];
 
-    public readonly VpaVertex* vert_a { get { return Globals.Map.vertices + vertex_indices[0]; } }
-    public readonly VpaVertex* vert_b { get { return Globals.Map.vertices + vertex_indices[1]; } }
-    public readonly VpaVertex* vert_c { get { return Globals.Map.vertices + vertex_indices[2]; } }
+    //public readonly VpaVertex* vert_a { get { return Globals.Map.vertices + vertex_indices[0]; } }
+    //public readonly VpaVertex* vert_b { get { return Globals.Map.vertices + vertex_indices[1]; } }
+    //public readonly VpaVertex* vert_c { get { return Globals.Map.vertices + vertex_indices[2]; } }
 
-    public readonly VpaTri* neighbour_a { get { return Globals.Map.tris + neighbour_indices[0]; } }
-    public readonly VpaTri* neighbour_b { get { return Globals.Map.tris + neighbour_indices[1]; } }
-    public readonly VpaTri* neighbour_c { get { return Globals.Map.tris + neighbour_indices[2]; } }
+    //public readonly VpaTri* neighbour_a { get { return Globals.Map.tris + neighbour_indices[0]; } }
+    //public readonly VpaTri* neighbour_b { get { return Globals.Map.tris + neighbour_indices[1]; } }
+    //public readonly VpaTri* neighbour_c { get { return Globals.Map.tris + neighbour_indices[2]; } }
 
     public VpaTriCollisionGroup collision_group { readonly get { return (VpaTriCollisionGroup)data.get_bits(0, 7); } set { data.set_bits(0,  7,  (int)value); } }
     public int                  battle_zone     { readonly get { return data.get_bits(7,  2);                      } set { data.set_bits(7,  2,  value);      } }

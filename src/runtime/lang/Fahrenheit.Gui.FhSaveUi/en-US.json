@@ -1,0 +1,18 @@
+{
+  "help.set": "Select save set",
+  "help.save": "Select save area",
+  "help.load": "Select save data",
+
+  "save_count.saves": "{0} saves",
+  "save_count.separator": " + ",
+  "save_count.autosave": "A",
+
+  "details.autosave": "Autosave",
+  "details.new_save_data": "New Save Data",
+
+  "set_list.change_set": "Change Set",
+  "set_list.list_title": "Available Sets",
+
+  "popup.no_save_data": "No saved data. Change set or return.",
+  "popup.no_save_data.menu": "No saved data. Change set or return to the main menu."
+}

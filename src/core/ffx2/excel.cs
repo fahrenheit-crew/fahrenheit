@@ -25,8 +25,8 @@ public struct ExcelProlog {
     ///     Both the games and Fahrenheit support amounts higher than 1.
     /// </remarks>
     public  uint header_count;
-    private uint _0x04;
-    private uint _0x08;
+    private uint __0x04;
+    private uint __0x08;
 }
 
 /// <summary>

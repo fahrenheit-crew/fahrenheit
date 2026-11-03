@@ -63,7 +63,6 @@ public sealed record FhManifest(
     string          Version,
     string          Link,
     string[]        Dependencies,
-    string[]        LoadAfter,
     FhManifestFlags Flags);
 
 /// <summary>

@@ -1,4 +1,7 @@
-﻿// SPDX-License-Identifier: MIT
+﻿// SPDX-License-Identifier: LGPL-3.0-or-later
+//
+// This file is part of Fahrenheit, © 2023-2026 The Fahrenheit contributors.
+// It is licensed to you under the GNU Lesser General Public License, version 3.0 or later. See COPYING, COPYING.LESSER.
 
 namespace Fahrenheit;
 
@@ -9,18 +12,25 @@ internal sealed class FhHasher {
 
     internal const string DEFAULT_HASH_VALUE = "0";
 
-    internal readonly string ModSetHash;
-    internal readonly string SaveSetHash;
-
-    public FhHasher() {
-        ModSetHash  = _init_mod_set_hash ();
-        SaveSetHash = _init_save_set_hash();
-    }
+    public FhHasher() { }
 
     /// <summary>
-    ///     Computes a hash which uniquely identifies the current mod set, accounting for load order.
+    ///     Gets the hash which uniquely identifies the mod set for this session.
     /// </summary>
-    private static string _init_mod_set_hash() {
+    internal string ModSetHash  => field ??= _init_hash_mods();
+
+    /// <summary>
+    ///     Gets the hash which uniquely identifies the current save set.
+    /// </summary>
+    internal string SaveSetHash => field ??= _init_hash_saves();
+
+    /// <summary>
+    ///     Computes a hash which uniquely identifies the current mod set.
+    /// </summary>
+    /// <remarks>
+    ///     The hash is sensitive to load order.
+    /// </remarks>
+    private static string _init_hash_mods() {
         StringBuilder mods = new();
 
         foreach (FhManifest manifest in FhEnvironment.Manifests) {
@@ -40,10 +50,13 @@ internal sealed class FhHasher {
     }
 
     /// <summary>
-    ///     Computes the hash which uniquely identifies the current save set. That is,
-    ///     mods that do not define <see cref="FhManifestFlags.SEPARATE_SAVES"/> are disregarded.
+    ///     Computes the hash which uniquely identifies the current save set.
     /// </summary>
-    private static string _init_save_set_hash() {
+    /// <remarks>
+    ///     The hash ignores mods that do not define <see cref="FhManifestFlags.SEPARATE_SAVES"/>.
+    ///     In all other respects, it is identical to the mod set hash.
+    /// </remarks>
+    private static string _init_hash_saves() {
         StringBuilder stateful_mods = new();
 
         foreach (FhManifest manifest in FhEnvironment.Manifests) {

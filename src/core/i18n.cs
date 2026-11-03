@@ -9,18 +9,24 @@ namespace Fahrenheit;
  * A locale file takes the name {LANG_ID}.json, where {LANG_ID} is a ISO 639 ID.
  * https://www.localeplanet.com/icu/ can help you refer to them.
  *
- * It is to contain a flat map with string keys and string values.
+ * It must contain a flat map with string keys and string values.
  */
 using LocaleData = Dictionary<string, string>;
 
+/// <summary>
+///     Provides methods for retrieving localization data.
+/// </summary>
 public sealed partial class FhLocalization {
 
     /* [fkelava 08/07/26 00:07]
      * For initialization, see `i18n_cctor.cs`.
      */
 
-    private readonly static string[]                       _s_locale_ids;
-    private readonly static Dictionary<string, LocaleData> _s_locales = [];
+    private static readonly string[] _s_locale_ids;
+    private static readonly string   _s_locale_default = _init_locale_default();
+    private static readonly string   _s_loc_kit_path   = _init_loc_kit_path();
+
+    private static readonly Dictionary<string, LocaleData> _s_locales = [];
 
     /* [fkelava 30/09/26 19:47]
      * One of the rare differences between previous and later remaster
@@ -30,9 +36,10 @@ public sealed partial class FhLocalization {
      */
 
     /// <summary>
-    ///     Returns the ISO 639 language ID for the current game language.
+    ///     Gets the default localization language for the current game language.
     /// </summary>
-    private string get_default_lang_id() {
+    /// <returns>The ISO 639 language ID of the default localization language.</returns>
+    private static string _init_locale_default() {
         return FhGlobal.lang_id switch {
             FhLangId.English  => "en-US",
             FhLangId.French   => "fr-FR",
@@ -48,40 +55,48 @@ public sealed partial class FhLocalization {
     }
 
     /// <summary>
-    ///     Loads localization data for all mods.
+    ///     Gets the path of the LocKit binary for the active game and language.
     /// </summary>
-    internal void initialize() {
-        /* [fkelava 07/07/26 23:44]
-         * The expected directory structure is mods/{MOD_ID}/lang/{MODULE_TYPE_NAME}/{LANG_ID}.json,
-         * ex. `mods/fhtemplate/lang/Fahrenheit.Modules.TemplateModule/en_US.json`
-         *
-         * Since this results in quite a bit of nesting, loading is broken up into multiple methods
-         * to avoid three levels of `foreach` in a single method.
-         */
+    /// <returns>The relative path of the active LocKit binary file in the VBF.</returns>
+    private static string _init_loc_kit_path() {
+        ReadOnlySpan<char> game = FhUtil.select("ffx", "ffx2", "ffx2");
+        ReadOnlySpan<char> lang = FhGlobal.lang_id switch {
+            FhLangId.English  => "us",
+            FhLangId.French   => "fr",
+            FhLangId.Spanish  => "sp",
+            FhLangId.German   => "de",
+            FhLangId.Italian  => "it",
+            FhLangId.Japanese or
+            FhLangId.Debug    => "jp",
+            FhLangId.Chinese  => "ch",
+            FhLangId.Korean   => "kr",
+            _                 => "us"
+        };
 
-        foreach (FhModContext mod in FhApi.Mods.get_mods()) {
-            load_for_mod(mod);
-        }
+        return $"/{game}_data/gamedata/ps3data/lockit/{game}_loc_kit_ps3_{lang}.bin";
     }
 
     /// <summary>
-    ///     Loads localization data for the given <paramref name="mod"/>.
+    ///     Loads localization data for a given mod.
     /// </summary>
-    internal void load_for_mod(FhModContext mod) {
+    /// <param name="mod">The context of the mod to load localization data for.</param>
+    private void _init_mod(FhModContext mod) {
         foreach (DirectoryInfo module_lang_dir in mod.Paths.LangDir.EnumerateDirectories()) {
-            load_for_module(mod, module_lang_dir);
+            _init_module(mod, module_lang_dir);
         }
     }
 
     /// <summary>
-    ///     Loads localization data for a given <paramref name="mod"/>'s module.
+    ///     Loads localization data for a given mod's module.
     /// </summary>
-    internal void load_for_module(FhModContext mod, DirectoryInfo module_dir) {
-        foreach (FileInfo lang_file in module_dir.EnumerateFiles("*.json", SearchOption.TopDirectoryOnly)) {
+    /// <param name="mod">The context of the mod the module belongs to.</param>
+    /// <param name="module_lang_dir">The directory containing the module's localization data.</param>
+    private void _init_module(FhModContext mod, DirectoryInfo module_lang_dir) {
+        foreach (FileInfo lang_file in module_lang_dir.EnumerateFiles("*.json", SearchOption.TopDirectoryOnly)) {
             string lang_id = Path.GetFileNameWithoutExtension(lang_file.FullName);
 
             string mod_name    = mod.Manifest.Id;
-            string module_name = module_dir.Name; // ex. Fahrenheit.Runtime.FhSaveUiModule
+            string module_name = module_lang_dir.Name; // ex. Fahrenheit.Runtime.FhSaveUiModule
 
             if (!_s_locales.TryGetValue(lang_id, out LocaleData? locale)) {
                 FhInternal.Log.Warning($"Mod '{mod_name}', module '{module_name}': ignoring unknown locale '{lang_id}'.");
@@ -119,21 +134,47 @@ public sealed partial class FhLocalization {
         }
     }
 
+
     /// <summary>
-    ///     Attempts to retrieve the string with ID <paramref name="id"/>
-    ///     for the locale with ID <paramref name="lang_id"/>,
-    ///     falling back to <paramref name="id"/> if unavailable.
+    ///     Loads localization data for all mods.
     /// </summary>
+    internal void initialize() {
+        /* [fkelava 07/07/26 23:44]
+         * The expected directory structure is mods/{MOD_ID}/lang/{MODULE_TYPE_NAME}/{LANG_ID}.json,
+         * ex. `mods/fhtemplate/lang/Fahrenheit.Modules.TemplateModule/en_US.json`
+         *
+         * Since this results in quite a bit of nesting, loading is broken up into multiple methods
+         * to avoid three levels of `foreach` in a single method.
+         */
+
+        foreach (FhModContext mod in FhApi.Mods.get_mods()) {
+            _init_mod(mod);
+        }
+    }
+
+    /// <summary>
+    ///     Retrieves a localized string with the given ID, for the given language.
+    /// </summary>
+    /// <param name="id">The ID of the localized string.</param>
+    /// <param name="owner">The module containing the localization.</param>
+    /// <param name="lang_id">The ISO 639 language ID of the language to get the string in.</param>
+    /// <returns>The localized string, or the ID if unavailable.</returns>
+    /// <remarks>
+    ///     You may pass either a fully qualified ID, or a short ID
+    ///     and a non-<c>null</c> <paramref name="owner"/>.
+    ///     <para/>
+    ///     If no <paramref name="lang_id"/> is specified, the current game language is used.
+    /// </remarks>
     public string localize(
         string    id,
-        FhModule? caller  = null,
+        FhModule? owner   = null,
         string?   lang_id = null
     ) {
-        string composite_id = (caller == null)
+        string composite_id = (owner == null)
             ? id
-            : $"{caller.ModuleType}.{id}";
+            : $"{owner.ModuleType}.{id}";
 
-        lang_id ??= get_default_lang_id();
+        lang_id ??= _s_locale_default;
         return _s_locales.TryGetValue(lang_id, out LocaleData? locale) && locale.TryGetValue(composite_id, out string? localized_string)
             ? localized_string
             : id;

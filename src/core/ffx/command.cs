@@ -14,7 +14,7 @@ public struct PCommand {
 public struct PCommandData {
     public  byte   ordering_idx;
     public  byte   sphere_grid_role;
-    private ushort _0x02;
+    private ushort __0x02;
 }
 
 [StructLayout(LayoutKind.Sequential)]

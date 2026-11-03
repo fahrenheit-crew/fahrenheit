@@ -26,14 +26,12 @@ public sealed class FhSaveUiSelector : FhModule {
         //TODO: Change this to a Set-based dropdown once that's created.
         public readonly FhSettingText selected_ui = new("selected_ui", "");
 
-        internal override IEnumerable<FhSetting> get() {
+        internal protected override IEnumerable<FhSetting> get() {
             return [ selected_ui ];
         }
     }
 
     private readonly FhSaveUiSettings _settings = new();
-
-    public FhSaveUiSelector() { }
 
     private string get_default_ui_id() {
         return FhGlobal.game_id switch {
@@ -60,27 +58,27 @@ public sealed class FhSaveUiSelector : FhModule {
     }
 
     public override void render_imgui() {
-        if (FhApi.Saves.get_system_mode(out FhSaveSystemMode? mode)
-            && mode is FhSaveSystemMode.NULL
+        if (!FhApi.Saves.impl_get_system_mode(out FhSaveSystemMode? mode)
+            || mode is FhSaveSystemMode.NULL
         ) {
             return;
         }
 
-        if (!FhApi.Saves.get_ui(_settings.selected_ui.get(), out FhSaveUi? ui)) {
+        if (!FhApi.Saves.ui_get(_settings.selected_ui.get(), out FhSaveUi? ui)) {
             // Previous UI is missing (provider mod updated and broke API?)
             // So we try to fall back to default
             _logger.Warning($"Failed to find desired save/load UI \"{_settings.selected_ui.get()}\", falling back to default.");
 
             _settings.selected_ui.set(get_default_ui_id());
 
-            if (!FhApi.Saves.get_ui(_settings.selected_ui.get(), out ui)) {
+            if (!FhApi.Saves.ui_get(_settings.selected_ui.get(), out ui)) {
                 // Something has gone disastrously wrong – we're missing our default UI!
                 _logger.Error("Failed to find default save/load UI.");
                 throw new NotImplementedException("Failed to find default save/load UI.");
             }
         }
 
-        if (FhSavePal.pal_get_screen_state() is FhSaveScreenState.OPEN) {
+        if (FhSaves.pal_state_screen is SaveScreenState.OPEN) {
             ui.render_ui();
         }
     }

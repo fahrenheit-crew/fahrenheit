@@ -39,11 +39,11 @@ public struct StatGrowthGeneric {
     public byte quadratic_div_b;
 }
 
-/// <remarks>  
-///     The meaning of the fields is contextual. `ability` can be a command or auto-ability.  
-///     `requirement` can be the index of a Garment Grid gate, a minimum AP requirement,  
-///     or a level requirement for creatures.  
-/// </remarks>  
+/// <remarks>
+///     The meaning of the fields is contextual. `ability` can be a command or auto-ability.
+///     `requirement` can be the index of a Garment Grid gate, a minimum AP requirement,
+///     or a level requirement for creatures.
+/// </remarks>
 [StructLayout(LayoutKind.Sequential, Size = 0x4)]
 public struct UnlockableAbility {
     public ushort requirement;
@@ -78,11 +78,11 @@ public struct JobWeapons {
 [StructLayout(LayoutKind.Explicit, Size = 0x38)]
 public struct JobCreatureData {
     [FieldOffset(0x00)] public ExcelTextOffset help;
-    
+
     [FieldOffset(0x04)] public InlineArray2<UnlockableAbility> abilities;
 
     [FieldOffset(0x1C)] public StatChanges stat_changes;
-    
+
     [FieldOffset(0x28)] public FeedStatChanges level_growth; // Which stat increases on Level Up
 }
 

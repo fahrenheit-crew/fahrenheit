@@ -40,14 +40,6 @@ internal static class FhEnvironment {
     internal static readonly bool         LargeAddressAware;
 
     static FhEnvironment() {
-        /* [fkelava 10/06/26 18:53]
-         * https://learn.microsoft.com/en-us/dotnet/api/system.appdomain?view=net-10.0#remarks
-         * > On .NET Core and .NET 5+ {...} These versions have exactly one AppDomain.
-         *
-         * In other words, AppDomain.CurrentDomain is the _only_ domain in existence.
-         * See the comments on FhExceptionHandler for the peculiar nature of events here.
-         */
-        ExceptionHandling.SetUnhandledExceptionHandler(FhExceptionHandler.eh_unhandled);
         // ExceptionHandling.SetFatalErrorHandler(FhExceptionHandler.eh_fatal); // Uncomment when added in .NET 11/12.
 
         Finder            = new();
@@ -70,7 +62,7 @@ internal static class FhEnvironment {
         FhApi     .Mods        .initialize();
 
         // post-init - may require later editing
-        FhInternal.Methods.commit();
+        FhInternal.Calls.chain_finalize();
     }
 
     /* [fkelava 28/09/26 23:12]
@@ -101,8 +93,15 @@ internal static class FhEnvironment {
     ///     Reads the load order for this session from disk.
     /// </summary>
     private static string[] _init_load_order() {
-        string load_order_path = Path.Join(Finder.Mods.FullName, "loadorder");
-        return [ "fhr", .. File.ReadAllLines(load_order_path) ];
+        try {
+            string load_order_path = Path.Join(Finder.Mods.FullName, "loadorder");
+            return [ "fhr", .. File.ReadAllLines(load_order_path) ];
+        }
+        catch (Exception e) {
+            FhInternal.Log.Warning("Load order file could not be found or processed. No mods will load.");
+            FhInternal.Log.LogDirect(e.ToString());
+            return [ "fhr" ];
+        }
     }
 
     /// <summary>
@@ -125,9 +124,9 @@ internal static class FhEnvironment {
         FhManifest[] result = new FhManifest[ModPaths.Length];
 
         for (int i = 0; i < ModPaths.Length; i++) {
-            using FileStream manifest_file = File.OpenRead(ModPaths[i].ManifestPath);
-
             try {
+                using FileStream manifest_file = File.OpenRead(ModPaths[i].ManifestPath);
+
                 result[i] = JsonSerializer.Deserialize<FhManifest>(manifest_file, FhUtil.InternalJsonOpts)
                     ?? throw new Exception($"Manifest at {ModPaths[i].ManifestPath} was empty or uninterpretable.");
             }
@@ -146,7 +145,7 @@ internal static class FhEnvironment {
     private static bool _init_laa() {
         IMAGE_FILE_HEADER image_header = FhUtil.get_at<IMAGE_FILE_HEADER>(0x15C);
 
-        return image_header.Characteristics.HasFlag(IMAGE_FILE_CHARACTERISTICS.IMAGE_FILE_LARGE_ADDRESS_AWARE);
+        return (image_header.Characteristics & IMAGE.IMAGE_FILE_LARGE_ADDRESS_AWARE) == IMAGE.IMAGE_FILE_LARGE_ADDRESS_AWARE;
     }
 }
 
@@ -160,9 +159,10 @@ public sealed class FhLoadAttribute(FhGameId supported_games) : Attribute {
 }
 
 /// <summary>
-///     Resolves the .NET or native dependencies of a given Fahrenheit mod by adding its directory to the library search path.
+///     A scope for loading and resolving a Fahrenheit mod DLL and its dependencies.
 /// </summary>
 internal sealed class FhLoadContext(string context_name, string fh_dll_path) : AssemblyLoadContext(context_name) {
+    private readonly string                     _dll_path = fh_dll_path;
     private readonly AssemblyDependencyResolver _resolver = new AssemblyDependencyResolver(fh_dll_path);
 
     protected override Assembly? Load(AssemblyName assembly_name) {
@@ -177,6 +177,9 @@ internal sealed class FhLoadContext(string context_name, string fh_dll_path) : A
         string? dll_path = _resolver.ResolveUnmanagedDllToPath(dll_name);
         return dll_path != null ? LoadUnmanagedDllFromPath(dll_path) : nint.Zero;
     }
+
+    /// <summary>Loads the targeted Fahrenheit mod DLL.</summary>
+    internal Assembly load() => this.LoadFromAssemblyPath(_dll_path);
 }
 
 /// <summary>
@@ -203,33 +206,36 @@ internal sealed class FhLoader {
     ///     in a given session, and is shared among all of its users.
     /// </remarks>
     internal Assembly? get_shared_assembly(AssemblyName assembly_name) {
-        if (!_load_contexts.TryGetValue(assembly_name.Name ?? "", out FhLoadContext? load_context)) return null;
+        return _load_contexts.TryGetValue(assembly_name.Name ?? "", out FhLoadContext? load_context)
+            ? load_context.load()
+            : null;
+    }
 
-        foreach (Assembly assembly in load_context.Assemblies) {
-            AssemblyName loaded_assembly_name = assembly.GetName();
-            if (loaded_assembly_name.FullName == assembly_name.FullName) return assembly;
+    /// <summary>
+    ///     Creates the <see cref="FhLoadContext"/>s for all mod DLLs for this session.
+    /// </summary>
+    internal void prepare(IEnumerable<FhManifest> manifests) {
+        foreach (FhManifest manifest in manifests) {
+            string dll_path = FhEnvironment.Finder.get_for_dll(manifest.Id);
+
+            if (!File.Exists(dll_path))
+                continue;
+
+            _load_contexts[manifest.Id] = new FhLoadContext(manifest.Id, dll_path);
         }
-
-        return null;
     }
 
     /// <summary>
     ///     Performs DLL loading for a mod, returning the <see cref="FhModuleContext"/>s of the instantiated mods.
     /// </summary>
     internal IEnumerable<FhModuleContext> load_mod(FhManifest manifest) {
-        string dll_path = FhEnvironment.Finder.get_for_dll(manifest.Id);
-
         /* [fkelava 02/04/26 00:44]
          * Fahrenheit supports file-only mods. Such mods contain no DLL, ergo there are no modules in their mod context.
          */
-
-        if (!File.Exists(dll_path))
+        if (!_load_contexts.TryGetValue(manifest.Id, out FhLoadContext? load_context))
             yield break;
 
-        FhLoadContext load_context = new FhLoadContext(manifest.Id, dll_path);
-        Assembly      assembly     = load_context.LoadFromAssemblyPath(dll_path);
-
-        _load_contexts[manifest.Id] = load_context;
+        Assembly assembly = load_context.load();
 
         foreach (Type type in assembly.GetExportedTypes()) {
             if (!type.IsSubclassOf(typeof(FhModule))) continue;

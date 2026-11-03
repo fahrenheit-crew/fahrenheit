@@ -10,7 +10,12 @@ namespace Fahrenheit;
 /// </summary>
 public unsafe class FhInput {
 
-    private static readonly nint _ptr_input_raw = FhUtil.select(0xF27080, 0xD94A8C, 0xD94A8C);
+    public class InputAction(ushort mask) {
+        public bool is_pressed => (*raw & mask) != 0;
+    }
+
+    private static readonly nint _ptr_input_raw = FhUtil.select(0xF270C0, 0xD93A90, 0xD93A90);
+    private                 uint _input_lock    = 0;
 
     public readonly InputAction l2       = new(0x1);
     public readonly InputAction r2       = new(0x2);
@@ -27,13 +32,33 @@ public unsafe class FhInput {
     public readonly InputAction down     = new(0x4000);
     public readonly InputAction left     = new(0x8000);
 
-    public static ushort* raw { get { return FhUtil.ptr_at<ushort>(_ptr_input_raw); } }
+    public static ushort* raw => FhUtil.ptr_at<ushort>(_ptr_input_raw);
 
     public void consume_all() {
         *raw = 0;
     }
 
-    public class InputAction(ushort mask) {
-        public bool is_pressed { get { return (*raw & mask) != 0; } }
-    }
+    /* [fkelava 04/10/26 14:42]
+     * The input lock is used while displaying full-screen ImGui interfaces,
+     * to block the game from responding to any input.
+     */
+
+    /// <summary>
+    ///     Returns whether the input lock is asserted.
+    ///     While it is, inputs are not forwarded to the game.
+    /// </summary>
+    internal bool lock_get() => _input_lock != 0;
+
+    /// <summary>
+    ///     Asserts the input lock, blocking the game from receiving input.
+    /// </summary>
+    /// <remarks>The call must be paired with a call to <see cref="lock_off"/>.</remarks>
+    internal void lock_on() => Interlocked.Increment(ref _input_lock);
+
+    /// <summary>
+    ///     Releases the input lock, unblocking the game from receiving input.
+    /// </summary>
+    /// <remarks>The call must be paired with a call to <see cref="lock_on"/>.</remarks>
+    internal void lock_off() => uint.Max(0, Interlocked.Decrement(ref _input_lock));
+
 }

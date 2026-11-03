@@ -23,4 +23,16 @@ public enum Alignment {
 public readonly record struct Alignment2D (
     Alignment h,
     Alignment v
-);
+) {
+    public static readonly Alignment2D TOP_LEFT     = new(Alignment.BEGIN, Alignment.BEGIN);
+    public static readonly Alignment2D TOP_RIGHT    = new(Alignment.END,   Alignment.BEGIN);
+    public static readonly Alignment2D BOTTOM_LEFT  = new(Alignment.BEGIN, Alignment.END);
+    public static readonly Alignment2D BOTTOM_RIGHT = new(Alignment.END,   Alignment.END);
+
+    public static readonly Alignment2D TOP    = new(Alignment.CENTER, Alignment.BEGIN);
+    public static readonly Alignment2D LEFT   = new(Alignment.BEGIN,  Alignment.CENTER);
+    public static readonly Alignment2D BOTTOM = new(Alignment.CENTER, Alignment.END);
+    public static readonly Alignment2D RIGHT  = new(Alignment.END,    Alignment.CENTER);
+
+    public static readonly Alignment2D CENTER = new(Alignment.CENTER, Alignment.CENTER);
+}

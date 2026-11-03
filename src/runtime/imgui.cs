@@ -7,7 +7,7 @@ namespace Fahrenheit.Runtime;
 
 /* [fkelava 11/02/26 04:19]
  * One of the essential features of any mod framework is the ability to display custom UI
- * to the user. For this, we offer the Dear ImGui toolkit (https://github.com/ocornut/imgui),
+ * to the user. We offer the Dear ImGui toolkit (https://github.com/ocornut/imgui),
  * exposed through the Hexa.NET.ImGui bindings (https://github.com/HexaEngine/Hexa.NET.ImGui).
  *
  * On every frame presentation, a callback is invoked in every module that adds ImGui primitives
@@ -64,12 +64,12 @@ public unsafe sealed class FhImguiModule : FhModule, IFhPlatformUser {
         ID3D11Device*        ptr_device,
         ID3D11DeviceContext* ptr_device_context,
         IDXGISwapChain*      ptr_swapchain,
-        HWND                 hWnd) {
-
+        HWND                 hWnd
+    ) {
         _hWnd          = hWnd;
         _ptr_h_WndProc = Marshal.GetFunctionPointerForDelegate(_h_WndProc);
-        _ptr_o_WndProc = PInvoke.GetWindowLongW(_hWnd, WINDOW_LONG_PTR_INDEX.GWLP_WNDPROC);
-        _              = PInvoke.SetWindowLongW(_hWnd, WINDOW_LONG_PTR_INDEX.GWLP_WNDPROC, (int)_ptr_h_WndProc);
+        _ptr_o_WndProc = Windows.GetWindowLongW(_hWnd, GWLP.GWLP_WNDPROC);
+        _              = Windows.SetWindowLongW(_hWnd, GWLP.GWLP_WNDPROC, (int)_ptr_h_WndProc);
 
         _ptr_swapchain  = ptr_swapchain;
         _ptr_device     = ptr_device;
@@ -87,8 +87,13 @@ public unsafe sealed class FhImguiModule : FhModule, IFhPlatformUser {
         // Enable features
         io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
 
-        io.ConfigDpiScaleFonts     = true;
-        io.ConfigDpiScaleViewports = true;
+        /* [fkelava 23/10/26 22:05]
+         * The game is NOT DPI-aware. If we set otherwise,
+         * we'll get bad results when the user sets a custom
+         * display scale, which is common on hi-res displays.
+         */
+        io.ConfigDpiScaleFonts     = false;
+        io.ConfigDpiScaleViewports = false;
 
         ImGui.StyleColorsDark();
 
@@ -155,14 +160,14 @@ public unsafe sealed class FhImguiModule : FhModule, IFhPlatformUser {
         if (viewport.PlatformHandleRaw == null)
             return;
 
-        SET_WINDOW_POS_FLAGS flags =
-            SET_WINDOW_POS_FLAGS.SWP_ASYNCWINDOWPOS |
-            SET_WINDOW_POS_FLAGS.SWP_NOSIZE         |
-            SET_WINDOW_POS_FLAGS.SWP_NOMOVE;
+        uint flags =
+            SWP.SWP_ASYNCWINDOWPOS |
+            SWP.SWP_NOSIZE         |
+            SWP.SWP_NOMOVE;
 
-        PInvoke.SetWindowPos       ((HWND)viewport.PlatformHandleRaw, HWND.HWND_TOP, 0, 0, 0, 0, flags);
-        PInvoke.SetForegroundWindow((HWND)viewport.PlatformHandleRaw);
-        PInvoke.SetFocus           ((HWND)viewport.PlatformHandleRaw);
+        Windows.SetWindowPos       ((HWND)viewport.PlatformHandleRaw, HWND.HWND_TOP, 0, 0, 0, 0, flags);
+        Windows.SetForegroundWindow((HWND)viewport.PlatformHandleRaw);
+        Windows.SetFocus           ((HWND)viewport.PlatformHandleRaw);
     }
 
     /// <summary>
@@ -173,7 +178,7 @@ public unsafe sealed class FhImguiModule : FhModule, IFhPlatformUser {
     private LRESULT h_wndproc(HWND hWnd, uint msg, WPARAM wParam, LPARAM lParam) {
         return ImGuiImplWin32.WndProcHandler(hWnd, msg, wParam, lParam) == 1
              ? new LRESULT(1)
-             : PInvoke.CallWindowProcW((delegate* unmanaged[Stdcall] <HWND, uint, WPARAM, LPARAM, LRESULT>)_ptr_o_WndProc, hWnd, msg, wParam, lParam);
+             : Windows.CallWindowProcW((delegate* unmanaged <HWND, uint, WPARAM, LPARAM, LRESULT>)_ptr_o_WndProc, hWnd, msg, wParam, lParam);
     }
 
     /// <summary>
@@ -187,7 +192,7 @@ public unsafe sealed class FhImguiModule : FhModule, IFhPlatformUser {
             return FhCall.Phyre_PFramework_PInput_Update.chain_from(h_pinput).fnptr!();
 
         ImGuiIOPtr io = ImGui.GetIO();
-        return io.WantCaptureKeyboard || io.WantCaptureMouse
+        return FhApi.Input.lock_get() || io.WantCaptureKeyboard || io.WantCaptureMouse
             ? 0
             : FhCall.Phyre_PFramework_PInput_Update.chain_from(h_pinput).fnptr!();
     }
@@ -202,7 +207,8 @@ public unsafe sealed class FhImguiModule : FhModule, IFhPlatformUser {
         uint            Width,
         uint            Height,
         DXGI_FORMAT     NewFormat,
-        uint            SwapChainFlags) {
+        uint            SwapChainFlags
+    ) {
         if (_ptr_rtv != null) {
             _ptr_device_ctx->OMSetRenderTargets(0, null, null);
             _ptr_rtv       ->Release();
@@ -221,13 +227,13 @@ public unsafe sealed class FhImguiModule : FhModule, IFhPlatformUser {
     private nint h_present(
         IDXGISwapChain* pSwapChain,
         uint            SyncInterval,
-        DXGI_PRESENT    Flags) {
+        uint            Flags
+    ) {
         if (Interlocked.CompareExchange(ref _rtv_generated, 1, 0) == 0) {
             ID3D11Resource* ptr_backbuffer;
 
-            fixed (ID3D11RenderTargetView** ppRTView = &_ptr_rtv)
-            fixed (Guid*                    pIID     = &ID3D11Texture2D.IID_Guid) {
-                _ptr_swapchain->GetBuffer(0, pIID, (void**)&ptr_backbuffer);
+            fixed (ID3D11RenderTargetView** ppRTView = &_ptr_rtv) {
+                _ptr_swapchain->GetBuffer(0, Windows.__uuidof<ID3D11Texture2D>(), (void**)&ptr_backbuffer);
                 _ptr_device   ->CreateRenderTargetView(ptr_backbuffer, null, ppRTView);
                 ptr_backbuffer->Release();
             }

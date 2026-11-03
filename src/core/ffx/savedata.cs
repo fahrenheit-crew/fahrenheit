@@ -7,6 +7,55 @@ using Fahrenheit.FFX.Ids;
 
 namespace Fahrenheit.FFX;
 
+/// <summary>
+///     The save game header for FF X.
+/// </summary>
+[StructLayout(LayoutKind.Sequential)]
+public struct SaveHeader {
+    [InlineArray(0x20)]
+    public struct FhSavePlayerName {
+        private byte _b;
+    }
+
+    [InlineArray(0x7)]
+    public struct Formation {
+        private byte _e0;
+    }
+
+    public uint             __0x00;
+    public byte             __0x04;
+    public Formation        formation;
+    public FhLangId         lang_id;
+    public byte             __0x0D;
+    public ushort           __0x0E;
+    public uint             playtime_secs;
+    public uint             gil;
+    public ushort           id_location;
+    public ushort           __0x1A;
+    public ushort           __0x1C;
+    public ushort           __0x1E;
+    public FhSavePlayerName player_name;
+};
+
+/// <summary>
+///     The game's default save data manager structure for FF X.
+/// </summary>
+[StructLayout(LayoutKind.Sequential, Size = 0x488)]
+internal unsafe struct SaveDataManager {
+    public int                  save_enabled;
+    public int                  callback_result;
+    public SaveSystemState      state;
+    public int                  __0xC;
+    public InlineArray64 <byte> game_name;
+    public InlineArray128<byte> description;
+    public InlineArray512<byte> description_detailed;
+    public InlineArray64 <byte> path_icon_1;
+    public InlineArray64 <byte> path_icon_2;
+    public byte*                ref_buffer;
+    public int                  ref_buffer_size;
+    public int                  operation_canceled;
+}
+
 [StructLayout(LayoutKind.Explicit, Pack = 4, Size = 0x68C0)]
 public unsafe struct SaveData {
     [InlineArray(20)]

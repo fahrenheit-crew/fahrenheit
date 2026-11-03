@@ -548,10 +548,10 @@ public sealed partial class FhSaves {
         Interlocked.Decrement(ref _lock);
     }
 
-    /// <summaryRetrieve the active set.</summary>
+    /// <summary>Retrieve the active set.</summary>
     public FhSaveSet sets_get_active() => _sets[_sets_name_active];
 
-    /// <summaryRetrieve a specific set.</summary>
+    /// <summary>Retrieve a specific set.</summary>
     public bool sets_get(string set_name, [NotNullWhen(true)] out FhSaveSet? set) {
         return _sets.TryGetValue(set_name, out set);
     }

@@ -410,17 +410,20 @@ public sealed partial class FhSaves {
         /* [fkelava 03/11/26 14:43]
          * The manager handles two edge cases to avoid spilling nonsense into the consuming UI.
          *
-         * - The autosave is ignored for display purposes when saving.
+         * - The autosave is ignored for display count purposes, and not displayed when saving.
          * - When saving and the set isn't full, we insert a dummy for the 'New Save Data' button.
          *
          * UI data with slot 0 when saving must be interpreted as a placeholder for it.
          */
 
-        if (is_saving && has_autosave) {
-            set.count_ui_data -= 1;
-            set.count_saves   -= 1;
+        if (has_autosave) {
+            set.count_saves -= 1;
 
-            _ui_data[0].valid = false;
+            if (is_saving) {
+                set.count_ui_data -= 1;
+
+                _ui_data[0].valid = false;
+            }
         }
 
         if (is_saving && !is_full) {

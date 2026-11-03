@@ -241,12 +241,7 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
             ? $"{localize("save_count.separator")}{localize("save_count.saves")}"
             : localize("save_count.saves");
 
-        save_text = string.Format(
-            save_text,
-            set.has_autosave
-                ? set.count_saves - 1
-                : set.count_saves
-        );
+        save_text = string.Format(save_text, set.count_saves);
 
         Vector2 text_pos = new(1717f, 146f);
 
@@ -501,12 +496,7 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
             ? $"{localize("save_count.separator")}{localize("save_count.saves")}"
             : localize("save_count.saves");
 
-        save_text = string.Format(
-            save_text,
-            set.has_autosave
-                ? set.count_saves - 1
-                : set.count_saves
-        );
+        save_text = string.Format(save_text, set.count_saves);
 
         Vector2 save_count_size = FhApi.Gui.draw_text(
             draw,

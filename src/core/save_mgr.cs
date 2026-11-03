@@ -255,7 +255,7 @@ public sealed partial class FhSaves {
 
     internal readonly FhRuntimeHandle<IFhSaveSystemImpl> impl_handle = new();
 
-    private const int MAX_SAVES_PER_SET = 101;
+    private const int SLOTS_PER_SET = 101;
 
     private static readonly string _sets_path_base;
     private static readonly string _sets_path_default;
@@ -279,7 +279,7 @@ public sealed partial class FhSaves {
         _slots   = [];
         _sets    = [];
         _ui      = [];
-        _ui_data = new FhSaveUiData[MAX_SAVES_PER_SET];
+        _ui_data = new FhSaveUiData[SLOTS_PER_SET];
 
         /* [fkelava 19/01/26 18:13]
          * Indexing cannot be done here because game functions
@@ -387,27 +387,50 @@ public sealed partial class FhSaves {
          */
         _ = Directory.CreateDirectory(path_set_folder);
 
-        bool is_saving = pal_state_system is SaveSystemState.SAVE;
 
-        for (int slot = 0; slot < MAX_SAVES_PER_SET; slot++) {
+        for (int slot = 0; slot < SLOTS_PER_SET; slot++) {
             _sets_index_save(slot);
         }
 
         bool has_autosave = _slots.Contains(0);
 
-        int  count      = _slots.Count;
-        int  count_full = MAX_SAVES_PER_SET - (has_autosave ? 0 : 1);
-        bool full       = count == count_full;
+        int count = _slots.Count;
+        int limit = SLOTS_PER_SET - (has_autosave ? 0 : 1);
+
+        bool is_saving = pal_state_system is SaveSystemState.SAVE;
+        bool is_full   = count == limit;
 
         FhSaveSet set = _sets[_sets_name_active];
 
         set.has_autosave  = has_autosave;
         set.count_saves   = count;
         set.count_ui_data = count;
-        set.is_full       = count == count_full;
+        set.is_full       = is_full;
 
-        if (is_saving && has_autosave) { set.count_ui_data--; _ui_data[0].valid = false;                            }
-        if (is_saving && !full)        { set.count_ui_data++; _ui_data[0]       = new() { slot = 0, valid = true }; }
+        /* [fkelava 03/11/26 14:43]
+         * The manager handles two edge cases to avoid spilling nonsense into the consuming UI.
+         *
+         * - The autosave is ignored for display purposes when saving.
+         * - When saving and the set isn't full, we insert a dummy for the 'New Save Data' button.
+         *
+         * UI data with slot 0 when saving must be interpreted as a placeholder for it.
+         */
+
+        if (is_saving && has_autosave) {
+            set.count_ui_data -= 1;
+            set.count_saves   -= 1;
+
+            _ui_data[0].valid = false;
+        }
+
+        if (is_saving && !is_full) {
+            set.count_ui_data += 1;
+
+            _ui_data[0] = new() {
+                slot  = 0,
+                valid = true
+            };
+        }
 
         _ui_data.Sort(_pal_sort_create_time);
     }
@@ -423,7 +446,7 @@ public sealed partial class FhSaves {
         _ = Directory.CreateDirectory(set_subdir_path);
 
         int count = 0;
-        for (int i = 0; i < MAX_SAVES_PER_SET; i++) {
+        for (int i = 0; i < SLOTS_PER_SET; i++) {
             if (File.Exists(pal_get_path_for_slot(i, set_name))) count++;
         }
 

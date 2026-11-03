@@ -244,8 +244,8 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         save_text = string.Format(
             save_text,
             set.has_autosave
-                ? set.count - 1
-                : set.count
+                ? set.count_saves - 1
+                : set.count_saves
         );
 
         Vector2 text_pos = new(1717f, 146f);
@@ -504,8 +504,8 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         save_text = string.Format(
             save_text,
             set.has_autosave
-                ? set.count - 1
-                : set.count
+                ? set.count_saves - 1
+                : set.count_saves
         );
 
         Vector2 save_count_size = FhApi.Gui.draw_text(

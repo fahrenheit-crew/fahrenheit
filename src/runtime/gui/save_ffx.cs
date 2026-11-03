@@ -218,7 +218,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
 
         UV bg_suv = bg_screen.as_uv();
 
-        if (mouse_hovered(bg_screen) && focus != UiFocus.ACTIVE_SET) {
+        if (!popup_shown && mouse_hovered(bg_screen) && focus != UiFocus.ACTIVE_SET) {
             FhApi.Audio.play_sound(SOUND_ID_ACTION, ACTION_VOLUME);
             focus = UiFocus.ACTIVE_SET;
         }
@@ -249,13 +249,13 @@ public sealed class FhSaveUiX : FhSaveUiBase {
                 draw,
                 cursor_target,
                 cursor_config with {
-                    overlap = false
+                    overlap = false,
                 }
             );
         }
 
         // Input handling
-        if (mouse_clicked(bg_screen)) {
+        if (!popup_shown && mouse_clicked(bg_screen)) {
             FhApi.Audio.play_sound(SOUND_ID_SET_CHANGE);
             change_mode(UiMode.SET_CHANGE);
         }
@@ -366,7 +366,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
         ImGuiIOPtr    io   = ImGui.GetIO();
 
-        if (mouse_hovered(button_scaled)) {
+        if (!popup_shown && mouse_hovered(button_scaled)) {
             if (focus != UiFocus.LIST || scrollable_sets.hovered != global_idx) {
                 FhApi.Audio.play_sound(SOUND_ID_ACTION, ACTION_VOLUME);
             }
@@ -450,7 +450,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
         }
 
         // Handle input
-        if (mouse_clicked(button_scaled)) {
+        if (!popup_shown && mouse_clicked(button_scaled)) {
             io.WantCaptureMouse = true;
             FhApi.Audio.play_sound(SOUND_ID_SET_CHANGE);
             change_set(set.name);
@@ -466,6 +466,8 @@ public sealed class FhSaveUiX : FhSaveUiBase {
             return;
         }
 
+        ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
+
         string message_key = save_mode switch {
             FhSaveSystemMode.ALBD => "popup.no_save_data",
             FhSaveSystemMode.LOAD => "popup.no_save_data.menu",
@@ -476,8 +478,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
 
         string message = localize(message_key);
 
-        ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
-
+        // Calculate window size from message size
         ImGui.PushFont(null, font_size);
         Vector2 text_size = ImGui.CalcTextSize(message);
         ImGui.PopFont();
@@ -490,6 +491,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
             size = Vector2.Zero,
         }.expand(window_size, Alignment2D.CENTER);
 
+        // Background
         uint gradient_tl = 0xFF9E4541;
         uint gradient_tr = 0xFF91264F;
         uint gradient_bl = 0xFF8F3950;
@@ -504,19 +506,23 @@ public sealed class FhSaveUiX : FhSaveUiBase {
             gradient_bl
         );
 
+        // Border
         NineSliceHelper screen_border_helper = NineSliceHelper.create(
             Vector2.One,
             window,
-            new Vector2(9f, 9f) * aspect_scale
+            new Vector2(4f, 4f) * aspect_scale
         );
 
         for (int slice_idx = 0; slice_idx < 9; slice_idx++) {
+            if (slice_idx == 4) continue;
+
             Vector2[] tex_uv    = _savefile_border_helper.get_uvs(slice_idx);
             Vector2[] screen_uv =    screen_border_helper.get_uvs(slice_idx);
 
             draw.AddImage(meswin, screen_uv[0], screen_uv[3], tex_uv[0], tex_uv[3]);
         }
 
+        // Text
         FhApi.Gui.draw_text(
             draw,
             window.center,
@@ -543,7 +549,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
         save_outer_bounds.pos.Y += (save_outer_bounds.size.Y + save_gap) * local_idx;
 
         // We set the hovered state early to potentially use it later.
-        if (mouse_hovered(save_outer_bounds.scale_to_aspect(aspect_helper))) {
+        if (!popup_shown && mouse_hovered(save_outer_bounds.scale_to_aspect(aspect_helper))) {
             if (focus != UiFocus.LIST || scrollable_saves.hovered != global_idx) {
                 FhApi.Audio.play_sound(SOUND_ID_ACTION, ACTION_VOLUME);
             }
@@ -563,10 +569,12 @@ public sealed class FhSaveUiX : FhSaveUiBase {
         NineSliceHelper screen_border_helper = NineSliceHelper.create(
             Vector2.One,
             save_outer_bounds.scale_to_aspect(aspect_helper),
-            new Vector2(9f, 9f) * aspect_scale
+            new Vector2(4f, 4f) * aspect_scale
         );
 
         for (int slice_idx = 0; slice_idx < 9; slice_idx++) {
+            if (slice_idx == 4) continue;
+
             Vector2[] tex_uv    = _savefile_border_helper.get_uvs(slice_idx);
             Vector2[] screen_uv =    screen_border_helper.get_uvs(slice_idx);
 
@@ -668,9 +676,9 @@ public sealed class FhSaveUiX : FhSaveUiBase {
         }
 
         // Handle input
-        if (mouse_clicked(save_outer_bounds.scale_to_aspect(aspect_helper))) {
+        if (!popup_shown && mouse_clicked(save_outer_bounds.scale_to_aspect(aspect_helper))) {
             FhApi.Audio.play_sound(SOUND_ID_ACTION, ACTION_VOLUME);
-            fade_out(() => FhApi.Saves.impl_execute(save.slot));
+            open_confirmation_popup(save.slot);
         }
     }
 
@@ -1186,6 +1194,170 @@ public sealed class FhSaveUiX : FhSaveUiBase {
             plus_tuv.p0,
             plus_tuv.p1
         );
+    }
+
+    protected override void ui_popup(UiPopupType popup) {
+        if (!_texture_meswin.try_use(out ImTextureRef meswin, out _)) {
+            return;
+        }
+
+        ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
+
+        string message    = get_popup_message(popup);
+        string choice_yes = FhApi.Localization.localize("Fahrenheit.yes");
+        string choice_no  = FhApi.Localization.localize("Fahrenheit.no");
+
+        bool is_confirmation = popup
+            is UiPopupType.CONFIRM_LOAD
+            or UiPopupType.CONFIRM_SAVE
+            or UiPopupType.CONFIRM_OVERWRITE;
+
+        // Calculate window size from message size
+        ImGui.PushFont(null, font_size);
+        Vector2 size_message    = ImGui.CalcTextSize(message);
+        Vector2 size_choice_yes = ImGui.CalcTextSize(choice_yes);
+        Vector2 size_choice_no  = ImGui.CalcTextSize(choice_no);
+        ImGui.PopFont();
+
+        Vector2 min_window_size = new Vector2(550f, 0f) * aspect_scale;
+
+        Vector2 text_margin = new Vector2(60f, 48f) * aspect_scale;
+        Vector2 window_size = Vector2.Max(text_margin * 2 + size_message, min_window_size);
+
+        if (is_confirmation) {
+            float min_choice_width = text_margin.X * 3 + size_choice_yes.X + size_choice_no.X;
+
+            window_size.X = float.Max(window_size.X, min_choice_width);
+            window_size.Y += text_margin.Y + float.Max(size_choice_yes.Y, size_choice_no.Y);
+        }
+
+        Rect window = new Rect {
+            pos  = FhApi.Gui.display_size / 2f,
+            size = Vector2.Zero,
+        }.expand(window_size, Alignment2D.CENTER);
+
+        // Background
+        uint gradient_tl = 0xFF9E4541;
+        uint gradient_tr = 0xFF91264F;
+        uint gradient_bl = 0xFF8F3950;
+        uint gradient_br = 0xFF822856;
+
+        draw.AddRectFilledMultiColor(
+            window.top_left,
+            window.bottom_right,
+            gradient_tl,
+            gradient_tr,
+            gradient_br,
+            gradient_bl
+        );
+
+        // Border
+        NineSliceHelper screen_border_helper = NineSliceHelper.create(
+            Vector2.One,
+            window,
+            new Vector2(4f, 4f) * aspect_scale
+        );
+
+        for (int slice_idx = 0; slice_idx < 9; slice_idx++) {
+            if (slice_idx == 4) continue;
+
+            Vector2[] tex_uv    = _savefile_border_helper.get_uvs(slice_idx);
+            Vector2[] screen_uv =    screen_border_helper.get_uvs(slice_idx);
+
+            draw.AddImage(meswin, screen_uv[0], screen_uv[3], tex_uv[0], tex_uv[3]);
+            draw.AddImage(meswin, screen_uv[0], screen_uv[3], tex_uv[0], tex_uv[3]);
+        }
+
+        // Text
+        if (!is_confirmation) {
+            FhApi.Gui.draw_text(
+                draw,
+                window.center,
+                message,
+                text_config with { align = Alignment2D.CENTER }
+            );
+
+            return;
+        }
+
+        float top_offset    = text_margin.Y + size_message.Y / 2f;
+        float bottom_offset = text_margin.Y + float.Max(size_choice_yes.Y, size_choice_no.Y) / 2f;
+
+        float yes_x = float.Max(window_size.X * 1f/4f, text_margin.X + size_choice_yes.X / 2f);
+        float no_x  = float.Min(window_size.X * 3f/4f, window_size.X - (text_margin.X + size_choice_no.X / 2f));
+
+        Vector2 pos_yes = window.bottom_left + new Vector2(yes_x, -bottom_offset);
+        Vector2 pos_no  = window.bottom_left + new Vector2(no_x,  -bottom_offset);
+
+        FhApi.Gui.draw_text(
+            draw,
+            window.top with { Y = window.top.Y + top_offset },
+            message,
+            text_config with { align = Alignment2D.CENTER }
+        );
+
+        FhApi.Gui.draw_text(
+            draw,
+            pos_yes,
+            choice_yes,
+            text_config with { align = Alignment2D.CENTER }
+        );
+
+        FhApi.Gui.draw_text(
+            draw,
+            pos_no,
+            choice_no,
+            text_config with { align = Alignment2D.CENTER }
+        );
+
+        Rect hitbox_yes = new() { pos = pos_yes };
+        Rect hitbox_no  = new() { pos = pos_no  };
+
+        hitbox_yes = hitbox_yes.expand(new(window.size.X / 4f, text_margin.Y), Alignment2D.CENTER);
+        hitbox_no  = hitbox_no .expand(new(window.size.X / 4f, text_margin.Y), Alignment2D.CENTER);
+
+        if (mouse_hovered(hitbox_yes)) {
+            popup_choice = UiPopupChoice.YES;
+        }
+
+        if (mouse_hovered(hitbox_no)) {
+            popup_choice = UiPopupChoice.NO;
+        }
+
+        Vector2 cursor_target = popup_choice switch {
+            UiPopupChoice.YES => pos_yes with { X = pos_yes.X - size_choice_yes.X / 2f },
+            UiPopupChoice.NO  => pos_yes with { X = pos_no.X  - size_choice_no.X  / 2f },
+
+            _ => throw new UnreachableException(),
+        };
+
+        FhApi.Gui.draw_x_cursor(
+            draw,
+            cursor_target,
+            cursor_config with {
+                overlap = false,
+            }
+        );
+
+        if (mouse_clicked(hitbox_yes)) {
+            FhApi.Audio.play_sound(SOUND_ID_ACTION, ACTION_VOLUME);
+
+            if (FhApi.Saves.ui_get_data(current_scrollable.hovered, out FhSaveUiData? data)) {
+                fade_out(() => FhApi.Saves.impl_execute(data.slot));
+            }
+            else {
+                popup_current = UiPopupType.NO_DATA;
+            }
+
+            return;
+        }
+
+        if (mouse_clicked(hitbox_no)) {
+            FhApi.Audio.play_sound(SOUND_ID_CANCEL);
+            popup_shown = false;
+
+            return;
+        }
     }
 
     protected override void ui_scrollbar() {

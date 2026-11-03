@@ -14,5 +14,13 @@
   "set_list.list_title": "Available Sets",
 
   "popup.no_save_data": "No saved data. Change set or return.",
-  "popup.no_save_data.menu": "No saved data. Change set or return to the main menu."
+  "popup.no_save_data.menu": "No saved data. Change set or return to the main menu.",
+
+  "popup.loading": "Loading... Do not quit the game.",
+  "popup.saving": "Saving... Do not quit the game.",
+  "popup.corrupt_data": "Data is corrupt.",
+  "popup.no_data": "Failed to find data. Try changing to this set again.",
+  "popup.confirm_load": "Load this file?",
+  "popup.confirm_save": "Save the game?",
+  "popup.confirm_overwrite": "Overwrite existing file?"
 }

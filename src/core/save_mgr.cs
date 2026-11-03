@@ -225,8 +225,9 @@ public sealed class FhSaveSet {
     public bool has_autosave { get; internal set; }
 
     /// <summary>
-    ///     How many saves, including the autosave, the set has.
+    ///     How many saves the set has.
     /// </summary>
+    /// <remarks>This excludes the autosave when saving.</remarks>
     public int count_saves   { get; internal set; }
 
     /// <summary>

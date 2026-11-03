@@ -338,7 +338,7 @@ public sealed partial class FhSaves {
                 case FhGameId.FFX:                     save_accessor.Read(0x40, out ui_data.data.x ); break;
                 case FhGameId.FFX2 or FhGameId.FFX2LM: save_accessor.Read(0x40, out ui_data.data.x2); break;
 
-                default: break;
+                default: throw new UnreachableException();
             }
         }
         catch { return; }
@@ -429,9 +429,9 @@ public sealed partial class FhSaves {
         if (is_saving && !is_full) {
             set.count_ui_data += 1;
 
-            _ui_data[0] = new() {
+            _ui_data[0] = new FhSaveUiData() {
                 slot  = 0,
-                valid = true
+                valid = true,
             };
         }
 
@@ -456,7 +456,7 @@ public sealed partial class FhSaves {
         _sets[set_name] = new FhSaveSet() {
             name         = set_name,
             has_autosave = File.Exists(pal_get_path_for_slot(0, set_name)),
-            count_saves  = count
+            count_saves  = count,
         };
     }
 

@@ -144,9 +144,7 @@ public abstract class FhSaveUiBase : FhSaveUi {
         FhSaveSet set = FhApi.Saves.sets_get_active();
 
         scrollable_sets .max = set_list.Count;
-        scrollable_saves.max = is_saving
-            ? set.count + 1 - (set.has_autosave ? 1 : 0) // Add one for New Save Data button
-            : set.count;
+        scrollable_saves.max = set.count_ui_data;
 
         fade.restart(COLOR_BLACK, COLOR_TRANS, fade_length);
     }
@@ -296,13 +294,8 @@ public abstract class FhSaveUiBase : FhSaveUi {
             if (mode == UiMode.SAVE_LIST) {
                 FhApi.Audio.play_sound(SOUND_ID_ACTION, ACTION_VOLUME);
 
-                if (is_saving && hovered == 0) {
-                    fade_out(() => FhApi.Saves.impl_execute(0));
-                }
-                else {
-                    if (FhApi.Saves.ui_get_data(hovered, out FhSaveUiData? data)) {
-                        fade_out(() => FhApi.Saves.impl_execute(data.slot));
-                    }
+                if (FhApi.Saves.ui_get_data(hovered, out FhSaveUiData? data)) {
+                    fade_out(() => FhApi.Saves.impl_execute(data.slot));
                 }
 
                 return true;
@@ -422,11 +415,9 @@ public abstract class FhSaveUiBase : FhSaveUi {
     protected virtual void ui_savelist() {
         FhSaveSet set = FhApi.Saves.sets_get_active();
 
-        scrollable_saves.max = is_saving
-            ? set.count + 1 - (set.has_autosave ? 1 : 0) // Add one for New Save Data button
-            : set.count;
+        scrollable_saves.max = set.count_ui_data;
 
-        if (!is_saving && set.count == 0) {
+        if (!is_saving && set.count_saves == 0) {
             ui_no_saves();
             return;
         }
@@ -434,20 +425,8 @@ public abstract class FhSaveUiBase : FhSaveUi {
         int start = scrollable_saves.get_clip_start();
         int end   = scrollable_saves.get_clip_end();
 
-        int ui_data_start = is_saving && set.has_autosave ? 1 : 0;
-
         for (int save_idx = start; save_idx < end; save_idx++) {
-            if (is_saving && save_idx == 0 && !set.is_full) {
-                // New Save Data
-                ui_save(new FhSaveUiData { slot = 0 }, 0, 0);
-                continue;
-            }
-
-            int ui_data_index = is_saving
-                ? ui_data_start + save_idx - 1
-                : ui_data_start + save_idx;
-
-            if (FhApi.Saves.ui_get_data(ui_data_index, out FhSaveUiData? save)) {
+            if (FhApi.Saves.ui_get_data(save_idx, out FhSaveUiData? save)) {
                 ui_save(save, save_idx, save_idx - start);
             }
         }

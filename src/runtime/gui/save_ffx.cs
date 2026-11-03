@@ -156,12 +156,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
             ? $"{localize("save_count.separator")}{localize("save_count.saves")}"
             : localize("save_count.saves");
 
-        save_text = string.Format(
-            save_text,
-            set.has_autosave
-                ? set.count - 1
-                : set.count
-        );
+        save_text = string.Format(save_text, set.count_saves);
 
         Vector2 text_pos = new(1722f, 144f);
 
@@ -420,12 +415,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
             ? $"{localize("save_count.separator")}{localize("save_count.saves")}"
             : localize("save_count.saves");
 
-        save_text = string.Format(
-            save_text,
-            set.has_autosave
-                ? set.count - 1
-                : set.count
-        );
+        save_text = string.Format(save_text, set.count_saves);
 
         Vector2 save_count_size = FhApi.Gui.draw_text(
             draw,
@@ -540,6 +530,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
             return;
         }
 
+        FhSaveSet     set  = FhApi.Saves.sets_get_active();
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
         Rect save_outer_bounds = new() {
@@ -656,7 +647,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
             },
         };
 
-        if (save.slot == 0 && is_saving)
+        if (save.slot == 0 && is_saving && !set.is_full)
             ui_newdata(info_bounds, map_bounds);
         else
             ui_save_details(save, save_bounds, header_bounds, info_bounds, map_bounds);

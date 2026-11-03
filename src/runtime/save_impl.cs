@@ -26,7 +26,7 @@ namespace Fahrenheit.Runtime;
 [FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
 public unsafe sealed class FhSaveSystemModule : FhModule, IFhSaveSystemImpl {
 
-    private int              _load_pending_slot;
+    private int              _load_pending_slot = -1;
     private FhSaveSystemMode _mode;
 
     public FhSaveSystemModule() { }
@@ -62,11 +62,11 @@ public unsafe sealed class FhSaveSystemModule : FhModule, IFhSaveSystemImpl {
     private void signal_enter_save() {
         FhApi.Input.lock_on();
 
-        FhApi.Saves.sets_query();
-        FhApi.Saves.sets_index();
-
         _mode = FhSaveSystemMode.SAVE;
         FhSaves.pal_state_system = SaveSystemState.SAVE;
+
+        FhApi.Saves.sets_query();
+        FhApi.Saves.sets_index();
 
         FhApi.Events.Common.GameLoop.PostOpenSaveMenu.invoke(EventArgs.Empty);
     }
@@ -78,11 +78,11 @@ public unsafe sealed class FhSaveSystemModule : FhModule, IFhSaveSystemImpl {
     private void signal_enter_load() {
         FhApi.Input.lock_on();
 
-        FhApi.Saves.sets_query();
-        FhApi.Saves.sets_index();
-
         _mode = FhSaveSystemMode.LOAD;
         FhSaves.pal_state_system = SaveSystemState.LOAD;
+
+        FhApi.Saves.sets_query();
+        FhApi.Saves.sets_index();
 
         FhApi.Events.Common.GameLoop.PostOpenSaveMenu.invoke(EventArgs.Empty);
     }
@@ -95,11 +95,11 @@ public unsafe sealed class FhSaveSystemModule : FhModule, IFhSaveSystemImpl {
     private void signal_enter_albd() {
         FhApi.Input.lock_on();
 
-        FhApi.Saves.sets_query();
-        FhApi.Saves.sets_index();
-
         _mode = FhSaveSystemMode.ALBD;
         FhSaves.pal_state_system = SaveSystemState.LOAD;
+
+        FhApi.Saves.sets_query();
+        FhApi.Saves.sets_index();
 
         FhApi.Events.Common.GameLoop.PostOpenSaveMenu.invoke(EventArgs.Empty);
     }
@@ -108,6 +108,8 @@ public unsafe sealed class FhSaveSystemModule : FhModule, IFhSaveSystemImpl {
     ///     Signals to the game that the pending save/load operation ended in failure.
     /// </summary>
     internal void signal_exit_abort() {
+        _mode = FhSaveSystemMode.NULL;
+
         FhSaves.pal_state_cancel = 1;
         FhSaves.pal_state_dialog = SaveDialogState.CLOSED;
 
@@ -123,6 +125,8 @@ public unsafe sealed class FhSaveSystemModule : FhModule, IFhSaveSystemImpl {
     ///     Signals to the game that the pending save/load operation ended in success.
     /// </summary>
     internal void signal_exit_success() {
+        _mode = FhSaveSystemMode.NULL;
+
         FhSaves.pal_state_cancel = 0;
         FhSaves.pal_state_dialog = SaveDialogState.CLOSED;
 

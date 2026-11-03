@@ -214,10 +214,31 @@ internal interface IFhSaveSystemImpl {
 ///     A named group of save files.
 /// </summary>
 public sealed class FhSaveSet {
-    public string name         { get; internal init; } = "";
-    public bool   has_autosave { get; internal set;  }
-    public int    count        { get; internal set;  }
-    public bool   is_full      { get; internal set;  }
+    /// <summary>
+    ///     The set's name. Equal to the folder on disk containing it.
+    /// </summary>
+    public string name       { get; internal init; } = "";
+
+    /// <summary>
+    ///     Whether the set has an autosave.
+    /// </summary>
+    public bool has_autosave { get; internal set; }
+
+    /// <summary>
+    ///     How many saves the set has, excluding the autosave.
+    /// </summary>
+    public int count_saves   { get; internal set; }
+
+    /// <summary>
+    ///     How many UI entries the set has.
+    /// </summary>
+    /// <remarks>This excludes the autosave when saving, and includes a 'new save data' entry when the set is not full.</remarks>
+    public int count_ui_data { get; internal set; }
+
+    /// <summary>
+    ///     Whether the set is full, and thus unable to accept a new save.
+    /// </summary>
+    public bool is_full      { get; internal set; }
 }
 
 /* [fkelava 07/11/25 15:01]
@@ -234,7 +255,7 @@ public sealed partial class FhSaves {
 
     internal readonly FhRuntimeHandle<IFhSaveSystemImpl> impl_handle = new();
 
-    private const int MAX_SAVES_PER_SET = 101;
+    private const int SLOTS_PER_SET = 101;
 
     private static readonly string _sets_path_base;
     private static readonly string _sets_path_default;
@@ -258,7 +279,7 @@ public sealed partial class FhSaves {
         _slots   = [];
         _sets    = [];
         _ui      = [];
-        _ui_data = new FhSaveUiData[MAX_SAVES_PER_SET];
+        _ui_data = new FhSaveUiData[SLOTS_PER_SET];
 
         /* [fkelava 19/01/26 18:13]
          * Indexing cannot be done here because game functions
@@ -266,6 +287,8 @@ public sealed partial class FhSaves {
          *
          * It is instead performed just in time when we switch to save/load mode.
          */
+
+        _sets_create_default();
     }
 
     /// <summary>
@@ -278,24 +301,36 @@ public sealed partial class FhSaves {
     /// <summary>
     ///     Reads a save file and prepares its display data.
     /// </summary>
-    private Task _sets_index_save(int index) {
-        string             save_file_path = pal_get_path_for_slot(index);
-        ReadOnlySpan<char> slot_str       = save_file_path[ ^3 .. ];
+    private void _sets_index_save(int slot) {
+        string save_file_path = pal_get_path_for_slot(slot);
 
         /* [fkelava 30/10/26 16:38]
          * UI data is sorted at end of indexing. Invalid UI data moves to the end,
          * i.e. the first `set.count` UI data are the ones for the valid saves.
          */
 
-        FhSaveUiData ui_data = _ui_data[index] ??= new();
+        FhSaveUiData ui_data = _ui_data[slot] ??= new();
         ui_data.valid = false;
 
-        if (!int.TryParse(slot_str, out int slot))
-            return Task.CompletedTask;
-
         try {
-            using MemoryMappedFile         save_file     = MemoryMappedFile.CreateFromFile(save_file_path);
-            using MemoryMappedViewAccessor save_accessor = save_file.CreateViewAccessor(0, pal_get_sz_save());
+            /* [fkelava 01/11/26 14:55]
+             * Memory-mapped files are opened R/W by default, and the memory view is flushed to disk when closing.
+             * The upshot is that the last write time will be changed even when opening it purely for reading
+             * unless we only pass R as the access flag.
+             */
+            using MemoryMappedFile save_file = MemoryMappedFile.CreateFromFile(
+                save_file_path,
+                FileMode.Open,
+                null,
+                0,
+                MemoryMappedFileAccess.Read
+            );
+
+            using MemoryMappedViewAccessor save_accessor = save_file.CreateViewAccessor(
+                0,
+                pal_get_sz_save(),
+                MemoryMappedFileAccess.Read
+            );
 
             save_accessor.Read(0, out ui_data.header);
 
@@ -303,10 +338,10 @@ public sealed partial class FhSaves {
                 case FhGameId.FFX:                     save_accessor.Read(0x40, out ui_data.data.x ); break;
                 case FhGameId.FFX2 or FhGameId.FFX2LM: save_accessor.Read(0x40, out ui_data.data.x2); break;
 
-                default: break;
+                default: throw new UnreachableException();
             }
         }
-        catch { return Task.CompletedTask; }
+        catch { return; }
 
         FhSaveUiData.IconChr icon_chr = ui_data.icon_chr;
         icon_chr[0] = _pal_get_icon_chr(ui_data.header, ui_data.data, 0);
@@ -327,8 +362,7 @@ public sealed partial class FhSaves {
         ui_data.icon_chr    = icon_chr;
         ui_data.valid       = true;
 
-        _slots.Add(slot);
-        return Task.CompletedTask;
+        _ = _slots.Add(slot);
     }
 
     /// <summary>
@@ -340,7 +374,8 @@ public sealed partial class FhSaves {
         string path_set_folder = Path.Join(
             _sets_path_base,
             _sets_name_active,
-            pal_get_save_subfolder());
+            pal_get_save_subfolder()
+        );
 
         /* [fkelava 08/02/26 15:00]
          * Save sets mirror the base game save directory's structure, i.e. the subfolders
@@ -352,16 +387,53 @@ public sealed partial class FhSaves {
          */
         _ = Directory.CreateDirectory(path_set_folder);
 
-        Task[] tasks = new Task[MAX_SAVES_PER_SET];
 
-        for (int i = 0; i < MAX_SAVES_PER_SET; i++) {
-            tasks[i] = _sets_index_save(i);
+        for (int slot = 0; slot < SLOTS_PER_SET; slot++) {
+            _sets_index_save(slot);
         }
 
-        Task.WaitAll(tasks);
+        bool has_autosave = _slots.Contains(0);
 
-        _sets[_sets_name_active].has_autosave = File.Exists(pal_get_path_for_slot(0));
-        _sets[_sets_name_active].count        = _slots.Count;
+        int count = _slots.Count;
+        int limit = SLOTS_PER_SET - (has_autosave ? 0 : 1);
+
+        bool is_saving = pal_state_system is SaveSystemState.SAVE;
+        bool is_full   = count == limit;
+
+        FhSaveSet set = _sets[_sets_name_active];
+
+        set.has_autosave  = has_autosave;
+        set.count_saves   = count;
+        set.count_ui_data = count;
+        set.is_full       = is_full;
+
+        /* [fkelava 03/11/26 14:43]
+         * The manager handles two edge cases to avoid spilling nonsense into the consuming UI.
+         *
+         * - The autosave is ignored for display count purposes, and not displayed when saving.
+         * - When saving and the set isn't full, we insert a dummy for the 'New Save Data' button.
+         *
+         * UI data with slot 0 when saving must be interpreted as a placeholder for it.
+         */
+
+        if (has_autosave) {
+            set.count_saves -= 1;
+
+            if (is_saving) {
+                set.count_ui_data -= 1;
+
+                _ui_data[0].valid = false;
+            }
+        }
+
+        if (is_saving && !is_full) {
+            set.count_ui_data += 1;
+
+            _ui_data[0] = new FhSaveUiData() {
+                slot  = 0,
+                valid = true,
+            };
+        }
 
         _ui_data.Sort(_pal_sort_create_time);
     }
@@ -370,21 +442,22 @@ public sealed partial class FhSaves {
     ///     Registers basic information about a given save set directory.
     /// </summary>
     /// <param name="set_dir_path">The absolute path to the save set directory.</param>
-    private Task _sets_query(string set_dir_path) {
+    private void _sets_query(string set_dir_path) {
         string set_name        = Path.GetFileName(set_dir_path);
         string set_subdir_path = Path.Join       (set_dir_path, pal_get_save_subfolder());
 
         _ = Directory.CreateDirectory(set_subdir_path);
 
-        ReadOnlySpan<string> files = [ .. Directory.EnumerateFiles(set_subdir_path, _pal_get_save_name_glob()) ];
+        int count = 0;
+        for (int i = 0; i < SLOTS_PER_SET; i++) {
+            if (File.Exists(pal_get_path_for_slot(i, set_name))) count++;
+        }
 
         _sets[set_name] = new FhSaveSet() {
             name         = set_name,
             has_autosave = File.Exists(pal_get_path_for_slot(0, set_name)),
-            count        = int.Min(MAX_SAVES_PER_SET, files.Length)
+            count_saves  = count,
         };
-
-        return Task.CompletedTask;
     }
 
     /// <summary>
@@ -393,14 +466,9 @@ public sealed partial class FhSaves {
     private void _sets_query_all() {
         _sets.Clear();
 
-        string[] sets  = [ .. Directory.EnumerateDirectories(_sets_path_base) ];
-        Task  [] tasks = new Task[sets.Length];
-
-        for (int i = 0; i < sets.Length; i++) {
-            tasks[i] = _sets_query(sets[i]);
+        foreach (string set in Directory.EnumerateDirectories(_sets_path_base)) {
+            _sets_query(set);
         }
-
-        Task.WaitAll(tasks);
 
         /* [fkelava 19/01/26 14:50]
          * The default set is forcibly regenerated if it does not exist,
@@ -493,7 +561,7 @@ public sealed partial class FhSaves {
     /// </summary>
     public bool ui_get_data(int index, [NotNullWhen(true)] out FhSaveUiData? data) {
         data = default;
-        if (index >= _sets[_sets_name_active].count)
+        if (index >= _sets[_sets_name_active].count_ui_data)
             return false;
 
         data = _ui_data[index];

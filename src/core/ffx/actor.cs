@@ -7,7 +7,7 @@ namespace Fahrenheit.FFX;
 
 [Flags]
 public enum ActorFlags : uint {
-    KEEP_FPS = 1 << 14,
+    KEEP_FPS = 1 << 20,
 }
 
 [InlineArray(26)]
@@ -15,11 +15,11 @@ public struct ChrPosVectors {
     private Vector4 _e0;
 }
 
-[StructLayout(LayoutKind.Explicit, CharSet = CharSet.Auto, Pack = 4, Size = 0x880)]
+[StructLayout(LayoutKind.Explicit, Pack = 4, Size = 0x880)]
 public unsafe struct Actor {
     [FieldOffset(0x0)]   public ushort     chr_id;
     [FieldOffset(0x2)]   public ushort     chr_enabled;
-    [FieldOffset(0x4)]   public char*      chr_name;
+    [FieldOffset(0x4)]   public byte*      chr_name;
     [FieldOffset(0xC)]   public Vector4    chr_pos_vec;
     [FieldOffset(0x1C)]  public Vector4    chr_pos_vec_bkup;
     [FieldOffset(0x5C)]  public Vector4    chr_scale_vec;
@@ -28,6 +28,9 @@ public unsafe struct Actor {
     [FieldOffset(0x158)] public float      chr_rotation_rad;
     [FieldOffset(0x168)] public float      chr_direction;
     [FieldOffset(0x170)] public float      chr_run_anim_spd_threshold;
+    [FieldOffset(0x182)] public byte       chr_grav_mode;
+    [FieldOffset(0x185)] public byte       chr_field_mode;
+    [FieldOffset(0x186)] public byte       chr_motion_type;
     [FieldOffset(0x194)] public ActorFlags chr_flags;
     [FieldOffset(0x330)] public LVec3f     chr_shade_r_vec;
     [FieldOffset(0x33C)] public LVec3f     chr_shade_g_vec;

@@ -132,13 +132,6 @@ public sealed partial class FhSaves {
         return $"{prefix}_{slot:D3}";
     }
 
-    /// <summary>
-    ///     Gets a glob string for save game names for the currently loaded game.
-    /// </summary>
-    private static string _pal_get_save_name_glob() {
-        return FhUtil.select("ffx_???", "ffx2_???", "ffx2_???");
-    }
-
     /* [fkelava 18/11/25 21:27]
      * Both Iggy and ImGui take null-terminated UTF-8 strings. Neither FhEncoding nor Encoding.UTF8
      * emit terminating null bytes, so we take care to do so manually in the PAL.
@@ -428,17 +421,12 @@ public sealed partial class FhSaves {
     ///     Returns the player character's name in the save with the given <paramref name="header"/>.
     /// </summary>
     private static unsafe string _pal_get_player_name(in SaveHeader header) {
-        string? str_loc;
-
         Span<byte> dest = stackalloc byte[0x10];
         dest.Clear();
 
         if (FhGlobal.game_id is FhGameId.FFX) {
-            if (_cache_player_name.TryGetValue(0, out str_loc))
-                return str_loc;
-
             _ = FhEncoding.decode(header.x.player_name, dest, header.x.lang_id, flags: FhEncodingFlags.IMPLICIT_END);
-            return (_cache_player_name[0] = Encoding.UTF8.GetString(dest));
+            return Encoding.UTF8.GetString(dest);
         }
 
         byte*              ptr_player_name_encoded = stackalloc byte[0x10];

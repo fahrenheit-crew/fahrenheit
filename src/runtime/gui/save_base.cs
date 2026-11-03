@@ -294,13 +294,8 @@ public abstract class FhSaveUiBase : FhSaveUi {
             if (mode == UiMode.SAVE_LIST) {
                 FhApi.Audio.play_sound(SOUND_ID_ACTION, ACTION_VOLUME);
 
-                if (is_saving && hovered == 0) {
-                    fade_out(() => FhApi.Saves.impl_execute(0));
-                }
-                else {
-                    if (FhApi.Saves.ui_get_data(hovered, out FhSaveUiData? data)) {
-                        fade_out(() => FhApi.Saves.impl_execute(data.slot));
-                    }
+                if (FhApi.Saves.ui_get_data(hovered, out FhSaveUiData? data)) {
+                    fade_out(() => FhApi.Saves.impl_execute(data.slot));
                 }
 
                 return true;

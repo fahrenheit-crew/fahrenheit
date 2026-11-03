@@ -908,9 +908,11 @@ public sealed class FhSaveUiX : FhSaveUiBase {
         for (byte i = 0; i < 3; i++) {
             byte id = save.data.x2.extend_party[i];
 
+            if (id == 0xFF) continue;
+
             FhTexture portrait = save.icon_chr[i];
 
-            if (id == 0xFF || !portrait.try_use(out ImTextureRef face, out FhTextureMetadata? face_meta)) continue;
+            if (!portrait.try_use(out ImTextureRef face, out FhTextureMetadata? face_meta)) continue;
 
             float y_size = save.data.x2.extend_party[i] <= 0x02 ? 239f : 256f;
 

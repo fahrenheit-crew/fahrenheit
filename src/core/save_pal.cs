@@ -850,7 +850,7 @@ public sealed partial class FhSaves {
             0x1147           => 189, // Elma
             0x1148           => 190, // Trema
             0x1149           => 191, // Shinra
-            _                => 0    // None
+            _                =>   0  // None
         };
     }
 }

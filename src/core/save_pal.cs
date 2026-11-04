@@ -367,11 +367,16 @@ public sealed partial class FhSaves {
                 0 => (_cache_icon_chr[(key_id, 0)] = new FhTexture($"{DIR_CHR_ICON_X}/face_ply.dds.phyre",   FhTextureType.GAME_PHYRE_2D)),
                 1 => (_cache_icon_chr[(key_id, 0)] = new FhTexture($"{DIR_CHR_ICON_X2}/mface_182.dds.phyre", FhTextureType.GAME_PHYRE_2D)),
                 2 => (_cache_icon_chr[(key_id, 0)] = new FhTexture($"{DIR_CHR_ICON_X}/face_smn.dds.phyre",   FhTextureType.GAME_PHYRE_2D)),
-                _ => throw new UnreachableException()
+                _ => throw new UnreachableException(),
             };
         }
 
-        byte chr = data.x2.extend_party[index];
+        byte slot = data.x2.party[index];
+        byte chr  = data.x2.extend_party[slot];
+
+        if (chr == 0xFF) {
+            return null;
+        }
 
         if (chr >= FFX2.Ids.PlySaveId.PC_CREATURE1 && chr <= FFX2.Ids.PlySaveId.PC_CREATURE8) {
             int  monster_id = data.x2.ply_saves[chr].creature_data.creature;
@@ -389,11 +394,11 @@ public sealed partial class FhSaves {
 
         byte ply_id = is_lm
             ? header.x2.lm_ply
-            : header.x2.ply[index];
+            : header.x2.ply[slot];
 
         byte job_id = is_lm
             ? header.x2.lm_job
-            : header.x2.ply_jobs[header.x2.ply[index]];
+            : header.x2.ply_jobs[header.x2.ply[slot]];
 
         (byte, byte) ply_key = (ply_id, job_id);
 

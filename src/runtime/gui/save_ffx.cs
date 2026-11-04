@@ -906,7 +906,8 @@ public sealed class FhSaveUiX : FhSaveUiBase {
         Vector2 face_screen_offset = new Vector2(face_size.X + face_gap, 0f) * aspect_scale;
 
         for (byte i = 0; i < 3; i++) {
-            byte id = save.data.x2.extend_party[i];
+            byte slot = save.data.x2.party[i];
+            byte id = save.data.x2.extend_party[slot];
 
             if (id == 0xFF) continue;
 

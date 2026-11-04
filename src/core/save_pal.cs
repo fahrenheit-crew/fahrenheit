@@ -389,11 +389,11 @@ public sealed partial class FhSaves {
 
         byte ply_id = is_lm
             ? header.x2.lm_ply
-            : data.x2.party[index];
+            : header.x2.ply[index];
 
         byte job_id = is_lm
             ? header.x2.lm_job
-            : header.x2.ply_jobs[data.x2.party[index]];
+            : header.x2.ply_jobs[header.x2.ply[index]];
 
         (byte, byte) ply_key = (ply_id, job_id);
 

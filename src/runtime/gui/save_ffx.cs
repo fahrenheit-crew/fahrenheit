@@ -907,7 +907,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
 
         for (byte i = 0; i < 3; i++) {
             byte slot = save.data.x2.party[i];
-            byte id = save.data.x2.extend_party[slot];
+            byte id   = save.data.x2.extend_party[slot];
 
             if (id == 0xFF) continue;
 

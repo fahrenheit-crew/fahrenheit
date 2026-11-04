@@ -1121,34 +1121,36 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
 
         byte job_id = header.lm_job;
 
+        if (job_id > 0x21) return;
+
         FhTexture portrait = save.icon_chr[0];
 
-        if (job_id <= 0x21 && portrait.try_use(out ImTextureRef face, out FhTextureMetadata? face_meta)) {
-            float y_size = job_id == 0x21 ? 256f : 239f;
+        if (!portrait.try_use(out ImTextureRef face, out FhTextureMetadata? face_meta)) return;
 
-            UV tuv = new Rect {
-                pos  = new(  0f,     0f),
-                size = new(256f, y_size),
-            }.as_uv(face_meta.size);
+        float y_size = job_id == 0x21 ? 256f : 239f;
 
-            for (int i = 3; i >= 0; i--) {
-                uint alpha = ImGui.GetColorU32(
-                    Vector4.One with {
-                        W = 1 - (i * 0.25f),
-                    }
-                );
+        UV tuv = new Rect {
+            pos  = new(  0f,     0f),
+            size = new(256f, y_size),
+        }.as_uv(face_meta.size);
 
-                draw.AddImage(
-                    face,
-                    suv.p0,
-                    suv.p1,
-                    tuv.p0,
-                    tuv.p1,
-                    alpha
-                );
+        for (int i = 3; i >= 0; i--) {
+            uint alpha = ImGui.GetColorU32(
+                Vector4.One with {
+                    W = 1 - (i * 0.25f),
+                }
+            );
 
-                suv = suv.move(face_screen_offset);
-            }
+            draw.AddImage(
+                face,
+                suv.p0,
+                suv.p1,
+                tuv.p0,
+                tuv.p1,
+                alpha
+            );
+
+            suv = suv.move(face_screen_offset);
         }
     }
 

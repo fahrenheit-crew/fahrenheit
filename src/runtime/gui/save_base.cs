@@ -100,6 +100,7 @@ public abstract class FhSaveUiBase : FhSaveUi {
     protected UiFocus focus;
 
     protected bool          popup_shown;
+    protected string        popup_message;
     protected UiPopupType   popup_current;
     protected UiPopupChoice popup_choice;
 
@@ -255,6 +256,7 @@ public abstract class FhSaveUiBase : FhSaveUi {
     /// <param name="popup">The type of the pop-up to open.</param>
     protected void open_popup(UiPopupType popup) {
         popup_shown   = true;
+        popup_message = get_popup_message(popup);
         popup_current = popup;
         popup_choice  = UiPopupChoice.NO;
     }
@@ -273,6 +275,16 @@ public abstract class FhSaveUiBase : FhSaveUi {
         }
 
         open_popup(confirmation_type);
+
+        if (!is_saving && FhApi.Saves.ui_get_data(slot, out FhSaveUiData? data)) {
+            FhLangId save_lang = FhGlobal.game_id == FhGameId.FFX
+                ? data.header.x .lang_id
+                : data.header.x2.lang_id;
+
+            if (FhGlobal.lang_id != save_lang) {
+                popup_message += $"\n{localize("popup.confirm_load.language_warning")}";
+            }
+        }
     }
 
 

@@ -19,8 +19,9 @@
   "popup.loading": "Loading... Do not quit the game.",
   "popup.saving": "Saving... Do not quit the game.",
   "popup.corrupt_data": "Data is corrupt.",
-  "popup.no_data": "Failed to find data. Try changing to this set again.",
+  "popup.no_data": "Failed to find data.\nTry changing to this set again.",
   "popup.confirm_load": "Load this file?",
+  "popup.confirm_load.language_warning": "The save's language does not match\ncurrent game language.\nCharacter names will be reset.",
   "popup.confirm_save": "Save the game?",
   "popup.confirm_overwrite": "Overwrite existing file?"
 }

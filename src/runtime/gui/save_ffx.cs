@@ -57,7 +57,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
             _tex_meswin_size,
             new(385f, 544f),
             new(450f, 609f),
-            new(  9f,   9f)
+            new(  4f,   4f)
         );
     }
 
@@ -1203,7 +1203,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
 
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
-        string message    = get_popup_message(popup);
+        string message    = popup_message;
         string choice_yes = FhApi.Localization.localize("Fahrenheit.yes");
         string choice_no  = FhApi.Localization.localize("Fahrenheit.no");
 
@@ -1280,7 +1280,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
             return;
         }
 
-        float top_offset    = text_margin.Y + size_message.Y / 2f;
+        float top_offset    = text_margin.Y;
         float bottom_offset = text_margin.Y + float.Max(size_choice_yes.Y, size_choice_no.Y) / 2f;
 
         float yes_x = float.Max(window_size.X * 1f/4f, text_margin.X + size_choice_yes.X / 2f);
@@ -1293,7 +1293,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
             draw,
             window.top with { Y = window.top.Y + top_offset },
             message,
-            text_config with { align = Alignment2D.CENTER }
+            text_config with { align = Alignment2D.TOP }
         );
 
         FhApi.Gui.draw_text(

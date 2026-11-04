@@ -449,7 +449,7 @@ public sealed partial class FhSaves {
         _ = Directory.CreateDirectory(set_subdir_path);
 
         int count = 0;
-        for (int i = 0; i < SLOTS_PER_SET; i++) {
+        for (int i = 1; i < SLOTS_PER_SET; i++) {
             if (File.Exists(pal_get_path_for_slot(i, set_name))) count++;
         }
 

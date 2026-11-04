@@ -1255,7 +1255,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
             0x80000000
         );
 
-        uint gradient_top = 0xA0873D4E;
+        uint gradient_top = 0xA0C77D8E;
         uint gradient_bot = 0xA0603440;
 
         draw.AddRectFilledMultiColor(
@@ -1316,11 +1316,17 @@ public sealed class FhSaveUiX : FhSaveUiBase {
         );
 
         for (int slice_idx = 0; slice_idx < 9; slice_idx++) {
-            Vector2[] tex_uv    = _popup_border_helper.get_uvs(slice_idx);
             Vector2[] screen_uv = screen_border_helper.get_uvs(slice_idx);
 
-            draw.AddImage(meswin, screen_uv[0], screen_uv[3], tex_uv[0], tex_uv[3]);
-            draw.AddImage(meswin, screen_uv[0], screen_uv[3], tex_uv[0], tex_uv[3]);
+            int       alt_idx    = 3 * (2 - slice_idx / 3) + (slice_idx % 3);
+            Vector2[] alt_tex_uv = _popup_border_helper.get_uvs(alt_idx);
+
+            Vector2 screen_p0 = screen_uv[0];
+            Vector2 screen_p1 = screen_uv[3];
+
+            (screen_p0.Y, screen_p1.Y) = (screen_p1.Y, screen_p0.Y);
+
+            draw.AddImage(meswin, screen_p0, screen_p1, alt_tex_uv[0], alt_tex_uv[3]);
         }
 
         // Text

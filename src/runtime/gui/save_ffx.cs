@@ -467,7 +467,9 @@ public sealed class FhSaveUiX : FhSaveUiBase {
     }
 
     protected override void ui_no_saves() {
-        if (!_texture_meswin.try_use(out ImTextureRef meswin, out _)) {
+        if (!_texture_stone.try_use(out ImTextureRef stone, out FhTextureMetadata? stone_meta)
+            || !_texture_meswin.try_use(out ImTextureRef meswin, out _)
+        ) {
             return;
         }
 
@@ -489,31 +491,78 @@ public sealed class FhSaveUiX : FhSaveUiBase {
 
         // Calculate window size from message size
         ImGui.PushFont(null, font_size);
-        Vector2 text_size = ImGui.CalcTextSize(message);
+        Vector2 size_message = ImGui.CalcTextSize(message);
         ImGui.PopFont();
 
-        Vector2 text_margin = new Vector2(36f, 48f) * aspect_scale;
-        Vector2 window_size = text_margin * 2 + text_size;
+        Vector2 text_margin = new Vector2(60f, 45f) * aspect_scale;
+        Vector2 window_size = text_margin * 2 + size_message;
 
         Rect window = new Rect {
             pos  = FhApi.Gui.display_size / 2f,
             size = Vector2.Zero,
         }.expand(window_size, Alignment2D.CENTER);
 
-        // Background
-        uint gradient_tl = 0xFF9E4541;
-        uint gradient_tr = 0xFF91264F;
-        uint gradient_bl = 0xFF8F3950;
-        uint gradient_br = 0xFF822856;
+        // Shadow behind popup
+        Vector2 shadow_offset = new(6f);
+
+        draw.AddRectFilled(
+            window.top_left + shadow_offset,
+            window.bottom_right + shadow_offset,
+            0x80000000
+        );
+
+        uint gradient_top = 0xA0C77D8E;
+        uint gradient_bot = 0xA0603440;
 
         draw.AddRectFilledMultiColor(
             window.top_left,
             window.bottom_right,
-            gradient_tl,
-            gradient_tr,
-            gradient_br,
-            gradient_bl
+            gradient_top,
+            gradient_top,
+            gradient_bot,
+            gradient_bot
         );
+
+        // Wrapping/Tiling stuff
+        float tex_width  = stone_meta.size.X * aspect_scale.X;
+        float tex_height = stone_meta.size.Y * aspect_scale.Y;
+
+        float x_offset = window.top_left.X - tex_width;
+        float y_offset = window.top_left.Y - tex_height;
+
+        for (float x = x_offset; x < window.bottom_right.X; x += tex_width) {
+            float min_x = float.Max(window.top_left.X, x);
+            float max_x = float.Min(window.bottom_right.X, x + tex_width);
+
+            if (max_x <= min_x) continue;
+
+            float uv_x1 = (min_x - x) / tex_width;
+            float uv_x2 = (max_x - x) / tex_width;
+
+            for (float y = y_offset; y < window.bottom_right.Y; y += tex_height) {
+                float min_y = float.Max(window.top_left.Y, y);
+                float max_y = float.Min(window.bottom_right.Y, y + tex_height);
+
+                if (max_y <= min_y) continue;
+
+                float uv_y1 = 1f - ((min_y - y) / tex_height);
+                float uv_y2 = 1f - ((max_y - y) / tex_height);
+
+                Vector2 suv_p0 = new Vector2(min_x, min_y);
+                Vector2 suv_p1 = new Vector2(max_x, max_y);
+                Vector2 tuv_p0 = new Vector2(uv_x1, uv_y1);
+                Vector2 tuv_p1 = new Vector2(uv_x2, uv_y2);
+
+                draw.AddImage(
+                    stone,
+                    suv_p0,
+                    suv_p1,
+                    tuv_p0,
+                    tuv_p1,
+                    0xA0844754
+                );
+            }
+        }
 
         // Border
         NineSliceHelper screen_border_helper = NineSliceHelper.create(
@@ -523,10 +572,17 @@ public sealed class FhSaveUiX : FhSaveUiBase {
         );
 
         for (int slice_idx = 0; slice_idx < 9; slice_idx++) {
-            Vector2[] tex_uv    = _popup_border_helper.get_uvs(slice_idx);
             Vector2[] screen_uv = screen_border_helper.get_uvs(slice_idx);
 
-            draw.AddImage(meswin, screen_uv[0], screen_uv[3], tex_uv[0], tex_uv[3]);
+            int       alt_idx    = 3 * (2 - slice_idx / 3) + (slice_idx % 3);
+            Vector2[] alt_tex_uv = _popup_border_helper.get_uvs(alt_idx);
+
+            Vector2 screen_p0 = screen_uv[0];
+            Vector2 screen_p1 = screen_uv[3];
+
+            (screen_p0.Y, screen_p1.Y) = (screen_p1.Y, screen_p0.Y);
+
+            draw.AddImage(meswin, screen_p0, screen_p1, alt_tex_uv[0], alt_tex_uv[3]);
         }
 
         // Text
@@ -1230,7 +1286,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
 
         Vector2 min_window_size = new Vector2(550f, 0f) * aspect_scale;
 
-        Vector2 text_margin = new Vector2(60f, 48f) * aspect_scale;
+        Vector2 text_margin = new Vector2(60f, 45f) * aspect_scale;
         Vector2 window_size = Vector2.Max(text_margin * 2 + size_message, min_window_size);
 
         if (is_confirmation) {

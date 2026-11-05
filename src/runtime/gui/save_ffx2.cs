@@ -552,67 +552,65 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
     }
 
     protected override void ui_no_saves() {
-        if (!_texture_x2_bg.try_use(out ImTextureRef x2_bg, out FhTextureMetadata? x2_bg_meta)) {
+        if (!_texture_window.try_use(out ImTextureRef message_window, out _)) {
             return;
         }
 
-        string message = localize("popup.no_save_data.menu");
+        if (!FhApi.Saves.impl_get_system_mode(out FhSaveSystemMode? save_mode)) {
+            return;
+        }
 
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
+        string message_key = save_mode switch {
+            FhSaveSystemMode.ALBD => "popup.no_save_data",
+            FhSaveSystemMode.LOAD => "popup.no_save_data.menu",
+
+            // When saving, we should always display "New Save Data" instead.
+            _ => throw new UnreachableException(),
+        };
+
+        string message = localize(message_key);
+
+        // Calculate window size from message size
         ImGui.PushFont(null, font_size);
-        Vector2 text_size = ImGui.CalcTextSize(message);
+        Vector2 size_message = ImGui.CalcTextSize(message);
         ImGui.PopFont();
 
-        Vector2 text_margin = new Vector2(60f, 40f) * aspect_scale;
-        Vector2 window_size = text_margin * 2 + text_size;
+        Vector2 text_margin = new Vector2(60f, 45f) * aspect_scale;
+        Vector2 window_size = text_margin * 2 + size_message;
 
         Rect window = new Rect {
             pos  = FhApi.Gui.display_size / 2f,
             size = Vector2.Zero,
         }.expand(window_size, Alignment2D.CENTER);
 
+        // Background
         draw.AddRectFilled(
             window.top_left,
             window.bottom_right,
-            0xA5000000
+            0xD0000000
         );
 
-        UV accent_tuv = new Rect {
-            pos  = new(1469f, 733f),
-            size = new( 286f, 287f),
-        }.as_uv(x2_bg_meta.size);
-
-        Vector2 accent_size = 125f * aspect_scale;
-
-        Rect accent_left = new() {
-            pos  = window.bottom_left + new Vector2(-4f, -121f) * aspect_scale,
-            size = accent_size,
-        };
-
-        Rect accent_right = new() {
-            pos  = window.top_right + new Vector2(3f, 121f) * aspect_scale,
-            size = -accent_size,
-        };
-
-        UV accentl_suv = accent_left .as_uv();
-        UV accentr_suv = accent_right.as_uv();
-
-        draw.AddImage(
-            x2_bg,
-            accentl_suv.p0,
-            accentl_suv.p1,
-            accent_tuv.p0,
-            accent_tuv.p1
+        NineSliceHelper window_suv = NineSliceHelper.create(
+            Vector2.One,
+            window,
+            new(3f)
         );
 
-        draw.AddImage(
-            x2_bg,
-            accentr_suv.p0,
-            accentr_suv.p1,
-            accent_tuv.p0,
-            accent_tuv.p1
-        );
+        for (int slice_idx = 0; slice_idx < 9; slice_idx++) {
+            Vector2[] screen_uv = window_suv.get_uvs(slice_idx);
+
+            int       alt_idx    = 3 * (2 - slice_idx / 3) + (slice_idx % 3);
+            Vector2[] alt_tex_uv = _popup_border_helper.get_uvs(alt_idx);
+
+            Vector2 screen_p0 = screen_uv[0];
+            Vector2 screen_p1 = screen_uv[3];
+
+            (screen_p0.Y, screen_p1.Y) = (screen_p1.Y, screen_p0.Y);
+
+            draw.AddImage(message_window, screen_p0, screen_p1, alt_tex_uv[0], alt_tex_uv[3], 0xFF808080);
+        }
 
         FhApi.Gui.draw_text(
             draw,
@@ -1389,7 +1387,7 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
 
         Vector2 min_window_size = new Vector2(550f, 0f) * aspect_scale;
 
-        Vector2 text_margin = new Vector2(60f, 40f) * aspect_scale;
+        Vector2 text_margin = new Vector2(60f, 45f) * aspect_scale;
         Vector2 window_size = Vector2.Max(text_margin * 2 + size_message, min_window_size);
 
         if (is_confirmation) {

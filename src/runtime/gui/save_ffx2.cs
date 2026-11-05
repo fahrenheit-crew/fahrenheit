@@ -546,7 +546,6 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         // Handle input
 
         if (!popup_shown && mouse_clicked(plate_bounds)) {
-            io.WantCaptureMouse = true;
             FhApi.Audio.play_sound(SOUND_ID_SET_CHANGE);
             change_set(set.name);
         }
@@ -1441,6 +1440,16 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
                 text_config with { align = Alignment2D.CENTER }
             );
 
+            Rect screen = new() {
+                pos  = Vector2.Zero,
+                size = ImGui.GetMainViewport().WorkSize,
+            };
+
+            if (mouse_clicked(screen) && !mouse_hovered(window)) {
+                FhApi.Audio.play_sound(SOUND_ID_CANCEL);
+                popup_shown = false;
+            }
+
             return;
         }
 
@@ -1511,10 +1520,10 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
             FhApi.Audio.play_sound(SOUND_ID_ACTION, ACTION_VOLUME);
 
             if (FhApi.Saves.ui_get_data(current_scrollable.hovered, out FhSaveUiData? data)) {
-                fade_out(() => FhApi.Saves.impl_execute(data.slot));
+                execute_slot(data.slot);
             }
             else {
-                popup_current = UiPopupType.NO_DATA;
+                open_popup(UiPopupType.NO_DATA);
             }
 
             return;

@@ -539,6 +539,12 @@ public abstract class FhSaveUiBase : FhSaveUi {
 
         handle_input();
 
+        if (!FhApi.Saves.impl_get_system_mode(out FhSaveSystemMode? save_mode)
+            || save_mode is FhSaveSystemMode.NULL
+        ) {
+            return;
+        }
+
         ui_background();
         ui_help();
 

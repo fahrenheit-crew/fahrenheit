@@ -19,12 +19,15 @@ namespace Fahrenheit.Runtime.Gui;
 [FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
 public sealed class FhSaveUiX2 : FhSaveUiBase {
     private readonly FhTexture _texture_menuback = new(Path.Join(DIR_X2_MENU,    "menuback.dds.phyre"),             FhTextureType.GAME_PHYRE_2D);
-    private readonly FhTexture _texture_black0   = new(Path.Join(DIR_X2_PLATE,   "black0.dds.phyre"),               FhTextureType.GAME_PHYRE_2D);
     private readonly FhTexture _texture_mahojin  = new(Path.Join(DIR_X2_MAHOJIN, "14336_19_0_0_512_512.dds.phyre"), FhTextureType.GAME_PHYRE_2D);
-    private readonly FhTexture _texture_plate    = new(Path.Join(DIR_X2_PLATE,   "12288_19_0_0_256_256.dds.phyre"), FhTextureType.GAME_PHYRE_2D);
+    private readonly FhTexture _texture_black0   = new(Path.Join(DIR_X2_PLATE,   "black0.dds.phyre"),               FhTextureType.GAME_PHYRE_2D);
     private readonly FhTexture _texture_freetex  = new(Path.Join(DIR_X2_MENU,    "freetex.dds.phyre"),              FhTextureType.GAME_PHYRE_2D);
     private readonly FhTexture _texture_x2_bg    = new(Path.Join(DIR_X2_MENU,    "x2_bg.dds.phyre"),                FhTextureType.GAME_PHYRE_2D);
+    private readonly FhTexture _texture_plate    = new(Path.Join(DIR_X2_PLATE,   "12288_19_0_0_256_256.dds.phyre"), FhTextureType.GAME_PHYRE_2D);
     private readonly FhTexture _texture_b_menu1  = new(Path.Join(DIR_X2_MENU,    "b_menu1.dds.phyre"),              FhTextureType.GAME_PHYRE_2D);
+    private readonly FhTexture _texture_window   = new(Path.Join(DIR_X2_MENU,    "window.dds.phyre"),               FhTextureType.GAME_PHYRE_2D);
+
+    private readonly Vector2 _tex_window_size = new(1024f,  256f);
 
     private readonly Vector2 _tex_face_size = new(256f, 256f);
 
@@ -33,12 +36,13 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
 
     protected override FhTexture[] textures => [
         _texture_menuback,
-        _texture_black0,
         _texture_mahojin,
-        _texture_plate,
+        _texture_black0,
         _texture_freetex,
         _texture_x2_bg,
+        _texture_plate,
         _texture_b_menu1,
+        _texture_window,
         _texture_ffx_faces_ply,
         _texture_ffx_faces_smn,
     ];
@@ -51,6 +55,17 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         cursor_size = new Vector2(92f, 55f) * aspect_scale,
         max_offset  = 18f * aspect_scale.X,
     };
+
+    private readonly NineSliceHelper _popup_border_helper;
+
+    public FhSaveUiX2() {
+        _popup_border_helper = NineSliceHelper.create(
+            _tex_window_size,
+            new(  -1f,  -1f),
+            new(1025f, 257f),
+            new(   3f,   3f)
+        );
+    }
 
     protected override void ui_background() {
         if (!_texture_menuback  .try_use(out ImTextureRef menuback, out FhTextureMetadata? menuback_meta)
@@ -367,9 +382,7 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
             FhApi.Gui.draw_x2_cursor(
                 draw,
                 cursor_target,
-                cursor_config with {
-                    overlap = false
-                }
+                cursor_config
             );
         }
 
@@ -1353,7 +1366,7 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
     }
 
     protected override void ui_popup(UiPopupType popup) {
-        if (!_texture_x2_bg.try_use(out ImTextureRef x2_bg, out FhTextureMetadata? x2_bg_meta)) {
+        if (!_texture_window.try_use(out ImTextureRef message_window, out _)) {
             return;
         }
 
@@ -1396,44 +1409,28 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         draw.AddRectFilled(
             window.top_left,
             window.bottom_right,
-            0xA5000000
+            0xD0000000
         );
 
-        UV accent_tuv = new Rect {
-            pos  = new(1469f, 733f),
-            size = new( 286f, 287f),
-        }.as_uv(x2_bg_meta.size);
-
-        Vector2 accent_size = 125f * aspect_scale;
-
-        Rect accent_left = new() {
-            pos  = window.bottom_left + new Vector2(-4f, -121f) * aspect_scale,
-            size = accent_size,
-        };
-
-        Rect accent_right = new() {
-            pos  = window.top_right + new Vector2(3f, 121f) * aspect_scale,
-            size = -accent_size,
-        };
-
-        UV accentl_suv = accent_left .as_uv();
-        UV accentr_suv = accent_right.as_uv();
-
-        draw.AddImage(
-            x2_bg,
-            accentl_suv.p0,
-            accentl_suv.p1,
-            accent_tuv.p0,
-            accent_tuv.p1
+        NineSliceHelper window_suv = NineSliceHelper.create(
+            Vector2.One,
+            window,
+            new(3f)
         );
 
-        draw.AddImage(
-            x2_bg,
-            accentr_suv.p0,
-            accentr_suv.p1,
-            accent_tuv.p0,
-            accent_tuv.p1
-        );
+        for (int slice_idx = 0; slice_idx < 9; slice_idx++) {
+            Vector2[] screen_uv = window_suv.get_uvs(slice_idx);
+
+            int       alt_idx    = 3 * (2 - slice_idx / 3) + (slice_idx % 3);
+            Vector2[] alt_tex_uv = _popup_border_helper.get_uvs(alt_idx);
+
+            Vector2 screen_p0 = screen_uv[0];
+            Vector2 screen_p1 = screen_uv[3];
+
+            (screen_p0.Y, screen_p1.Y) = (screen_p1.Y, screen_p0.Y);
+
+            draw.AddImage(message_window, screen_p0, screen_p1, alt_tex_uv[0], alt_tex_uv[3], 0xFF808080);
+        }
 
         // Text
         if (!is_confirmation) {
@@ -1492,8 +1489,8 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         }
 
         Vector2 cursor_target = popup_choice switch {
-            UiPopupChoice.YES => pos_yes with { X = pos_yes.X - size_choice_yes.X / 2f },
-            UiPopupChoice.NO  => pos_yes with { X = pos_no.X  - size_choice_no.X  / 2f },
+            UiPopupChoice.YES => pos_yes with { X = pos_yes.X - size_choice_yes.X / 2f - 8f * aspect_scale.X },
+            UiPopupChoice.NO  => pos_yes with { X = pos_no.X  - size_choice_no.X  / 2f - 8f * aspect_scale.X },
 
             _ => throw new UnreachableException(),
         };

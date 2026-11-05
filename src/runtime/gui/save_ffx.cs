@@ -503,7 +503,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
         }.expand(window_size, Alignment2D.CENTER);
 
         // Shadow behind popup
-        Vector2 shadow_offset = new(6f);
+        Vector2 shadow_offset = new Vector2(6f) * aspect_scale;
 
         draw.AddRectFilled(
             window.top_left + shadow_offset,
@@ -1302,7 +1302,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
         }.expand(window_size, Alignment2D.CENTER);
 
         // Shadow behind popup
-        Vector2 shadow_offset = new(6f);
+        Vector2 shadow_offset = new Vector2(6f) * aspect_scale;
 
         draw.AddRectFilled(
             window.top_left     + shadow_offset,

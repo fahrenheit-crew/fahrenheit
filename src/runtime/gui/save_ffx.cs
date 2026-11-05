@@ -1377,17 +1377,21 @@ public sealed class FhSaveUiX : FhSaveUiBase {
         hitbox_yes = hitbox_yes.expand(new(window.size.X / 4f, text_margin.Y), Alignment2D.CENTER);
         hitbox_no  = hitbox_no .expand(new(window.size.X / 4f, text_margin.Y), Alignment2D.CENTER);
 
-        if (mouse_hovered(hitbox_yes)) {
+        if (mouse_hovered(hitbox_yes) && popup_choice != UiPopupChoice.YES) {
+            FhApi.Audio.play_sound(SOUND_ID_ACTION);
             popup_choice = UiPopupChoice.YES;
         }
 
-        if (mouse_hovered(hitbox_no)) {
+        if (mouse_hovered(hitbox_no) && popup_choice != UiPopupChoice.NO) {
+            FhApi.Audio.play_sound(SOUND_ID_ACTION);
             popup_choice = UiPopupChoice.NO;
         }
 
+        float cursor_offset = 8f * aspect_scale.X;
+
         Vector2 cursor_target = popup_choice switch {
-            UiPopupChoice.YES => pos_yes with { X = pos_yes.X - size_choice_yes.X / 2f - 8f * aspect_scale.X },
-            UiPopupChoice.NO  => pos_yes with { X = pos_no.X  - size_choice_no.X  / 2f - 8f * aspect_scale.X },
+            UiPopupChoice.YES => pos_yes with { X = pos_yes.X - size_choice_yes.X / 2f - cursor_offset },
+            UiPopupChoice.NO  => pos_yes with { X = pos_no.X  - size_choice_no.X  / 2f - cursor_offset },
 
             _ => throw new UnreachableException(),
         };

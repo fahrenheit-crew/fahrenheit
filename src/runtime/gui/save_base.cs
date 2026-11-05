@@ -430,6 +430,7 @@ public abstract class FhSaveUiBase : FhSaveUi {
                 .. FhApi.Gui.keys_confirm,
                 .. FhApi.Gui.keys_cancel,
             ])) {
+                FhApi.Audio.play_sound(SOUND_ID_ACTION);
                 popup_shown = false;
                 return true;
             }
@@ -439,6 +440,8 @@ public abstract class FhSaveUiBase : FhSaveUi {
             .. FhApi.Gui.keys_left,
             .. FhApi.Gui.keys_right,
         ])) {
+            FhApi.Audio.play_sound(SOUND_ID_ACTION);
+
             // Toggle the selected option
             if (popup_choice == UiPopupChoice.YES)
                 popup_choice = UiPopupChoice.NO;

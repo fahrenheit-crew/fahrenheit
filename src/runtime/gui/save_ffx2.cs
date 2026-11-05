@@ -577,7 +577,7 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         Vector2 size_message = ImGui.CalcTextSize(message);
         ImGui.PopFont();
 
-        Vector2 text_margin = new Vector2(60f, 45f) * aspect_scale;
+        Vector2 text_margin = new Vector2(60f, 46f) * aspect_scale;
         Vector2 window_size = text_margin * 2 + size_message;
 
         Rect window = new Rect {
@@ -1387,7 +1387,7 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
 
         Vector2 min_window_size = new Vector2(550f, 0f) * aspect_scale;
 
-        Vector2 text_margin = new Vector2(60f, 45f) * aspect_scale;
+        Vector2 text_margin = new Vector2(60f, 46f) * aspect_scale;
         Vector2 window_size = Vector2.Max(text_margin * 2 + size_message, min_window_size);
 
         if (is_confirmation) {

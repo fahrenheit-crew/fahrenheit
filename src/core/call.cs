@@ -41,6 +41,33 @@ public static unsafe partial class FhCall {
      * circumvent it. We simply refuse to support any such scenario.
      */
 
+    // Opening seq.
+
+    [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
+    public delegate void d_FUN_002579d0_00677c0(byte* ptr_this);
+    public static FhCallHandle<d_FUN_002579d0_00677c0> PhyreScene_beginRenderOpeningScreen =>
+        new( new FhCallLocation(0x2579D0, 0x0677C0) );
+
+    [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
+    public delegate byte d_FUN_00260400_00709f0(byte* ptr_this);
+    public static FhCallHandle<d_FUN_00260400_00709f0> PhyreScene_isOpeningScreenPlaying =>
+        new( new FhCallLocation(0x260400, 0x0709F0) );
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate uint d_CreateIggyUi(byte* ptr_fname, float arg2, float arg3, float arg4, float arg5);
+    public static FhCallHandle<d_CreateIggyUi> CreateIggyUi =>
+        new( new FhCallLocation(0x2E93F0, 0x110050) );
+
+    [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
+    public delegate uint d_Phyre_PRendering_PRendererBase_setClearColor(byte* ptr_this, float arg2, float arg3, float arg4, float arg5);
+    public static FhCallHandle<d_Phyre_PRendering_PRendererBase_setClearColor> Phyre_PRendering_PRendererBase_setClearColor =>
+        new( new FhCallLocation(0x1BADA0, 0x486B90) );
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate PApplication* d_Phyre_PFramework_PApplication_GetApplication();
+    public static FhCallHandle<d_Phyre_PFramework_PApplication_GetApplication> Phyre_PFramework_PApplication_GetApplication =>
+        new( new FhCallLocation(0x223B90, 0x6B34F0) );
+
     // Seymour
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]

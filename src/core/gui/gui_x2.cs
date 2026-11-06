@@ -53,7 +53,7 @@ public partial class FhGui {
         public uint max_alpha = 0xA0;
 
         /// <inheritdoc cref="FhSaveUi.aspect_scale"/>
-        public float scale = 1.2f;
+        public float scale = 1.0f;
 
         /// <summary>The color of the water, in the format 0xAABBGGRR, i.e. RGBA8.</summary>
         public uint color = 0xFFFFFFFF;

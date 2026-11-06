@@ -163,6 +163,11 @@ public static partial class ObjectMotionId
     public const int sphere_a110_sphere_nage = 0x506e1000;
     public const int stairsride120_c_lift_move = 0x50781000;
     public const int empty_glass122_12_17_01_f122 = 0x507a1000;
+    public const int f123_idle4 = 0x507b1004;
+    public const int f123_idle3 = 0x507b1003;
+    public const int f123_idle0 = 0x507b1002;
+    public const int f123_idle2 = 0x507b1001;
+    public const int f123_idle1 = 0x507b1000;
     public const int gareki_a124_houraku = 0x507c1000;
     public const int gareki_b125_haide = 0x507d1000;
     public const int hover126_stop = 0x507e1000;

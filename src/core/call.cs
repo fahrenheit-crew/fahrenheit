@@ -41,6 +41,16 @@ public static unsafe partial class FhCall {
      * circumvent it. We simply refuse to support any such scenario.
      */
 
+    // Input lock
+
+    // Fused unannotated identical entry: unknown undefined FUN_0022a460()
+    // at (FFX.exe+22A460, FFX-2.exe+6B9D30)
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void d_FUN_0022A460_006B9D30(byte param_1);
+    public static FhCallHandle<d_FUN_0022A460_006B9D30> FUN_0022A460_006B9D30 =>
+        new( new FhCallLocation(0x22A460, 0x6B9D30) );
+
     // Seymour
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]

@@ -115,9 +115,9 @@ public unsafe sealed class FhImguiModule : FhModule, IFhPlatformUser {
          * See https://github.com/dotnet/runtime/discussions/102949#discussioncomment-9628356.
          */
 
-        string     path_ini        = Path.Join(FhEnvironment.Finder.State.FullName, "global", "imgui.ini");
+        string     path_ini        = Path.Join(FhEnvironment.Finder.State.FullName, "global", "imgui.ini\0");
         Span<byte> path_ini_u8     = Encoding.UTF8.GetBytes(path_ini);
-        byte*      ptr_path_ini_u8 = (byte*)NativeMemory.AllocZeroed((nuint)path_ini_u8.Length);
+        byte*      ptr_path_ini_u8 = (byte*) NativeMemory.AllocZeroed((nuint) path_ini_u8.Length);
 
         path_ini_u8.CopyTo(new(ptr_path_ini_u8, path_ini_u8.Length));
 

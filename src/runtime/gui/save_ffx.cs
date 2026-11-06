@@ -20,13 +20,13 @@ namespace Fahrenheit.Runtime.Gui;
 public sealed class FhSaveUiX : FhSaveUiBase {
     private readonly FhTexture _texture_bg           = new(Path.Join(DIR_X_MENU, "ffx_bg.dds.phyre"),        FhTextureType.GAME_PHYRE_2D);
     private readonly FhTexture _texture_help         = new(Path.Join(DIR_X_HIKU, "0_0_512_448_0.dds.phyre"), FhTextureType.GAME_PHYRE_2D);
+    private readonly FhTexture _texture_meswin       = new(Path.Join(DIR_X_MENU, "meswin.dds.phyre"),        FhTextureType.GAME_PHYRE_2D);
     private readonly FhTexture _texture_battle_kuang = new(Path.Join(DIR_X_MENU, "battle_kuang.dds.phyre"),  FhTextureType.GAME_PHYRE_2D);
+    private readonly FhTexture _texture_summonbg     = new(Path.Join(DIR_X_MENU, "summonbg.dds.phyre"),      FhTextureType.GAME_PHYRE_2D);
     private readonly FhTexture _texture_faces_ply    = new(Path.Join(DIR_X_MENU, "face_ply.dds.phyre"),      FhTextureType.GAME_PHYRE_2D);
     private readonly FhTexture _texture_faces_smn    = new(Path.Join(DIR_X_MENU, "face_smn.dds.phyre"),      FhTextureType.GAME_PHYRE_2D);
-    private readonly FhTexture _texture_meswin       = new(Path.Join(DIR_X_MENU, "meswin.dds.phyre"),        FhTextureType.GAME_PHYRE_2D);
-    private readonly FhTexture _texture_summonbg     = new(Path.Join(DIR_X_MENU, "summonbg.dds.phyre"),      FhTextureType.GAME_PHYRE_2D);
-    private readonly FhTexture _texture_battle       = new(Path.Join(DIR_X_MENU, "battle.dds.phyre"),        FhTextureType.GAME_PHYRE_2D);
     private readonly FhTexture _texture_stone        = new(Path.Join(DIR_X_MENU, "stonetexture.dds.phyre"),  FhTextureType.GAME_PHYRE_2D);
+    private readonly FhTexture _texture_battle       = new(Path.Join(DIR_X_MENU, "battle.dds.phyre"),        FhTextureType.GAME_PHYRE_2D);
 
     private readonly Vector2 _tex_meswin_size = new(1024f, 1024f);
 
@@ -37,13 +37,13 @@ public sealed class FhSaveUiX : FhSaveUiBase {
     protected override FhTexture[] textures => [
         _texture_bg,
         _texture_help,
+        _texture_meswin,
         _texture_battle_kuang,
+        _texture_summonbg,
         _texture_faces_ply,
         _texture_faces_smn,
-        _texture_meswin,
-        _texture_summonbg,
-        _texture_battle,
         _texture_stone,
+        _texture_battle,
         _texture_freetex,
     ];
 
@@ -168,17 +168,22 @@ public sealed class FhSaveUiX : FhSaveUiBase {
 
         save_text = string.Format(save_text, set.count_saves);
 
-        Vector2 text_pos = new(1722f, 144f);
+        Vector2 text_pos = new(1717f, 146f);
 
-        float line_height = FONT_SIZE_DEFAULT - 5f;
+        float line_height = FONT_SIZE_SMALL - 3f;
 
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
+
+        FhGui.DrawTextConfig config = text_config with {
+            align     = Alignment2D.RIGHT,
+            font_size = font_size_small,
+        };
 
         Vector2 saves_text_size = FhApi.Gui.draw_text(
             draw,
             text_pos * aspect_scale + aspect_helper.pos,
             save_text,
-            text_config with { align = Alignment2D.RIGHT }
+            config
         );
 
         if (set.has_autosave) {
@@ -191,10 +196,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
                 draw,
                 autosave_pos,
                 autosave_text,
-                text_config with {
-                    align = Alignment2D.RIGHT,
-                    color = COLOR_AUTOSAVE,
-                }
+                config with { color = COLOR_AUTOSAVE }
             );
         }
 
@@ -204,7 +206,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
             draw,
             second_line_pos * aspect_scale + aspect_helper.pos,
             set.name,
-            text_config with { align = Alignment2D.RIGHT }
+            config
         );
     }
 
@@ -258,9 +260,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
             FhApi.Gui.draw_x_cursor(
                 draw,
                 cursor_target,
-                cursor_config with {
-                    overlap = false,
-                }
+                cursor_config
             );
         }
 

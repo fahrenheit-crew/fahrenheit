@@ -192,12 +192,11 @@ public partial class FhGui {
 
         float cycle_length = 0.53f;
 
-        float spacing        = config.cursor_size.X * 0.1f;
-        float overlap_amount = config.overlap ? spacing : -spacing;
+        float overlap_amount = config.overlap ? config.cursor_size.X * 0.28f : 0f;
 
         Vector2 cursor_tip = new(
-            target_pos.X - config.cursor_size.X + overlap_amount,
-            target_pos.Y - config.cursor_size.Y / 2f + (0.04f * config.cursor_size.X) // Centers the cursor
+            target_pos.X + overlap_amount - config.max_offset,
+            target_pos.Y + (0.04f * config.cursor_size.X) // Centers the cursor
         );
 
         float loop_progress = (float)(ImGui.GetTime() % cycle_length) / cycle_length;
@@ -215,10 +214,9 @@ public partial class FhGui {
                 alpha  *= 1f - fade_time;
             }
 
-            UV ghost_suv = new Rect {
-                pos  = cursor_tip + new Vector2(offset, 0f),
-                size = config.cursor_size,
-            }.as_uv();
+            UV ghost_suv = new Rect { pos  = cursor_tip + new Vector2(offset, 0f) }
+                .expand(config.cursor_size, Alignment2D.RIGHT)
+                .as_uv();
 
             uint color = 0x00FFFFFF | ((uint)(alpha * 255) << 24);
 
@@ -249,10 +247,9 @@ public partial class FhGui {
                 alpha  *= 1f - fade_time;
             }
 
-            UV ghost_suv = new Rect {
-                pos  = cursor_tip + new Vector2(offset, 0f),
-                size = config.cursor_size,
-            }.as_uv();
+            UV ghost_suv = new Rect { pos  = cursor_tip + new Vector2(offset, 0f) }
+                .expand(config.cursor_size, Alignment2D.RIGHT)
+                .as_uv();
 
             uint color = 0x00FFFFFF | ((uint)(alpha * 255) << 24);
 
@@ -267,10 +264,9 @@ public partial class FhGui {
         }
 
         // Main Cursor
-        UV main_suv = new Rect {
-            pos  = cursor_tip + new Vector2(loop_progress * config.max_offset, 0f),
-            size = config.cursor_size,
-        }.as_uv();
+        UV main_suv = new Rect { pos  = cursor_tip + new Vector2(loop_progress * config.max_offset, 0f) }
+            .expand(config.cursor_size, Alignment2D.RIGHT)
+            .as_uv();
 
         draw.AddImage(
             freetex,

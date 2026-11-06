@@ -29,7 +29,7 @@ public partial class FhGui {
         float cycle_t = float.Sin((float)ImGui.GetTime() * float.Pi / cycle_length) / 2f + 0.5f;
         float offset  = config.max_offset * cycle_t;
 
-        float overlap_amount = config.overlap ? config.cursor_size.X * 0.1f : 0f;
+        float overlap_amount = config.overlap ? config.cursor_size.X * 0.28f : 0f;
 
         Vector2 cursor_tip = new(
             target_pos.X + overlap_amount - offset,

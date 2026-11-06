@@ -24,15 +24,12 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
     private readonly FhTexture _texture_freetex  = new(Path.Join(DIR_X2_MENU,    "freetex.dds.phyre"),              FhTextureType.GAME_PHYRE_2D);
     private readonly FhTexture _texture_x2_bg    = new(Path.Join(DIR_X2_MENU,    "x2_bg.dds.phyre"),                FhTextureType.GAME_PHYRE_2D);
     private readonly FhTexture _texture_plate    = new(Path.Join(DIR_X2_PLATE,   "12288_19_0_0_256_256.dds.phyre"), FhTextureType.GAME_PHYRE_2D);
-    private readonly FhTexture _texture_b_menu1  = new(Path.Join(DIR_X2_MENU,    "b_menu1.dds.phyre"),              FhTextureType.GAME_PHYRE_2D);
     private readonly FhTexture _texture_window   = new(Path.Join(DIR_X2_MENU,    "window.dds.phyre"),               FhTextureType.GAME_PHYRE_2D);
+    private readonly FhTexture _texture_b_menu1  = new(Path.Join(DIR_X2_MENU,    "b_menu1.dds.phyre"),              FhTextureType.GAME_PHYRE_2D);
 
     private readonly Vector2 _tex_window_size = new(1024f,  256f);
 
     private readonly Vector2 _tex_face_size = new(256f, 256f);
-
-    private readonly FhTexture _texture_ffx_faces_ply = new(Path.Join(DIR_X_MENU, "face_ply.dds.phyre"), FhTextureType.GAME_PHYRE_2D);
-    private readonly FhTexture _texture_ffx_faces_smn = new(Path.Join(DIR_X_MENU, "face_smn.dds.phyre"), FhTextureType.GAME_PHYRE_2D);
 
     protected override FhTexture[] textures => [
         _texture_menuback,
@@ -41,10 +38,8 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         _texture_freetex,
         _texture_x2_bg,
         _texture_plate,
-        _texture_b_menu1,
         _texture_window,
-        _texture_ffx_faces_ply,
-        _texture_ffx_faces_smn,
+        _texture_b_menu1,
     ];
 
     FhGui.DrawPlateConfig plate_config => new(_texture_plate) {
@@ -1497,11 +1492,9 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
             popup_choice = UiPopupChoice.NO;
         }
 
-        float cursor_offset = 8f * aspect_scale.X;
-
         Vector2 cursor_target = popup_choice switch {
-            UiPopupChoice.YES => pos_yes with { X = pos_yes.X - size_choice_yes.X / 2f - cursor_offset },
-            UiPopupChoice.NO  => pos_yes with { X = pos_no.X  - size_choice_no.X  / 2f - cursor_offset },
+            UiPopupChoice.YES => pos_yes with { X = pos_yes.X - size_choice_yes.X / 2f },
+            UiPopupChoice.NO  => pos_yes with { X = pos_no.X  - size_choice_no.X  / 2f },
 
             _ => throw new UnreachableException(),
         };

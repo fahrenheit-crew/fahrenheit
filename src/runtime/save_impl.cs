@@ -205,9 +205,9 @@ public unsafe sealed class FhSaveSystemModule : FhModule, IFhSaveSystemImpl {
         }
         catch { return false; }
 
-        FhInternal.State.state_save_slot(slot);
+        FhApi.Saves.sets_index();
 
-        signal_exit_success();
+        FhInternal.State.state_save_slot(slot);
         return true;
     }
 
@@ -226,7 +226,6 @@ public unsafe sealed class FhSaveSystemModule : FhModule, IFhSaveSystemImpl {
         if (FhCall.SaveDataCheckCrc.fnptr!() == 0) {
             save.Clear();
 
-            signal_exit_abort();
             return false;
         }
 

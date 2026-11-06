@@ -41,7 +41,7 @@ public partial class FhGui {
         public Vector2 move_offset = new(0f);
 
         /// <summary>The speed at which the texture moves.</summary>
-        public Vector2 move_speed = new Vector2(1f) * 100;
+        public Vector2 move_speed = new(1f);
 
         /// <summary>The amount of time, in seconds, in which the texture fades in and out.</summary>
         public float fade_cycle_length = 0.66f;
@@ -51,6 +51,9 @@ public partial class FhGui {
 
         /// <summary>The maximum alpha the texture can fade to.</summary>
         public uint max_alpha = 0xA0;
+
+        /// <inheritdoc cref="FhSaveUi.aspect_scale"/>
+        public float scale = 1.0f;
 
         /// <summary>The color of the water, in the format 0xAABBGGRR, i.e. RGBA8.</summary>
         public uint color = 0xFFFFFFFF;
@@ -187,15 +190,17 @@ public partial class FhGui {
             new(180f, 478f)
         ).map_to(freetex_meta.size);
 
-        float overlap_amount = config.overlap ? config.cursor_size.X * 0.1f : 0f;
+        float cycle_length = 0.53f;
 
-        Vector2 cursor_top_left = new(
+        float spacing        = config.cursor_size.X * 0.1f;
+        float overlap_amount = config.overlap ? spacing : -spacing;
+
+        Vector2 cursor_tip = new(
             target_pos.X - config.cursor_size.X + overlap_amount,
             target_pos.Y - config.cursor_size.Y / 2f + (0.04f * config.cursor_size.X) // Centers the cursor
         );
 
-        float loop_time     = (float)(ImGui.GetTime() % 0.53f);
-        float loop_progress = loop_time / 0.53f;
+        float loop_progress = (float)(ImGui.GetTime() % cycle_length) / cycle_length;
 
         // Draw trailing/fade out effect for cursor
         // Ghost Cursor 1
@@ -207,15 +212,15 @@ public partial class FhGui {
             if (loop_progress >= 0.48f) {
                 float fade_time = (loop_progress - 0.48f) / 0.52f;
                 offset += fade_time * (config.max_offset * 0.55f);
-                alpha *= 1f - fade_time;
+                alpha  *= 1f - fade_time;
             }
 
             UV ghost_suv = new Rect {
-                pos  = cursor_top_left + new Vector2(offset, 0f),
+                pos  = cursor_tip + new Vector2(offset, 0f),
                 size = config.cursor_size,
             }.as_uv();
 
-            uint color = ImGui.ColorConvertFloat4ToU32(new Vector4(1f, 1f, 1f, alpha));
+            uint color = 0x00FFFFFF | ((uint)(alpha * 255) << 24);
 
             draw.AddImage(
                 freetex,
@@ -241,15 +246,15 @@ public partial class FhGui {
             else if (loop_progress >= 0.48f) {
                 float fade_time = (loop_progress - 0.48f) / 0.52f;
                 offset += (config.max_offset * 0.20f) + (fade_time * (config.max_offset * 0.55f));
-                alpha *= 1f - fade_time;
+                alpha  *= 1f - fade_time;
             }
 
             UV ghost_suv = new Rect {
-                pos  = cursor_top_left + new Vector2(offset, 0f),
+                pos  = cursor_tip + new Vector2(offset, 0f),
                 size = config.cursor_size,
             }.as_uv();
 
-            uint color = ImGui.ColorConvertFloat4ToU32(new Vector4(1f, 1f, 1f, alpha));
+            uint color = 0x00FFFFFF | ((uint)(alpha * 255) << 24);
 
             draw.AddImage(
                 freetex,
@@ -263,7 +268,7 @@ public partial class FhGui {
 
         // Main Cursor
         UV main_suv = new Rect {
-            pos  = cursor_top_left + new Vector2(loop_progress * config.max_offset, 0f),
+            pos  = cursor_tip + new Vector2(loop_progress * config.max_offset, 0f),
             size = config.cursor_size,
         }.as_uv();
 
@@ -290,7 +295,7 @@ public partial class FhGui {
         // Fade the wave in and out
         float alpha;
         if (config.fade_cycle_length <= 0f) {
-            alpha = 1f;
+            alpha = 0x80;
         }
         else {
             float fade_progress = float.Sin((float)ImGui.GetTime() * float.Pi / config.fade_cycle_length) / 2f + 0.5f;
@@ -299,37 +304,39 @@ public partial class FhGui {
 
         config.color = ((uint)alpha << 24) | (config.color & 0x00FFFFFF);
 
-        float move_x = (float)ImGui.GetTime() * config.move_speed.X;
-        float move_y = (float)ImGui.GetTime() * config.move_speed.Y;
+        float move_x = (float)ImGui.GetTime() * (config.move_speed.X * 100f);
+        float move_y = (float)ImGui.GetTime() * (config.move_speed.Y * 100f);
+
+        Vector2 tex_size = water_meta.size * config.scale;
 
         // We use % and for loops to seamlessly loop the texture continually and simulate wrapping
         Vector2 wave_offset = new Vector2(
-            (config.move_offset.X + move_x) % water_meta.size.X,
-            (config.move_offset.Y + move_y) % water_meta.size.Y
+            (config.move_offset.X + move_x) % tex_size.X,
+            (config.move_offset.Y + move_y) % tex_size.Y
         );
 
-        float x_offset = bounds.pos.X + wave_offset.X - water_meta.size.X;
-        float y_offset = bounds.pos.Y + wave_offset.Y - water_meta.size.Y;
+        float x_offset = bounds.pos.X + wave_offset.X - tex_size.X;
+        float y_offset = bounds.pos.Y + wave_offset.Y - tex_size.Y;
 
         // TODO-C#15: Use labeled continues to reduce indendation by putting the for loops next to each other.
 
-        for (float x = x_offset; x < bounds.pos.X + bounds.size.X; x += water_meta.size.X) {
+        for (float x = x_offset; x < bounds.pos.X + bounds.size.X; x += tex_size.X) {
             float min_x = float.Max(bounds.pos.X, x);
-            float max_x = float.Min(bounds.pos.X + bounds.size.X, x + water_meta.size.X);
+            float max_x = float.Min(bounds.pos.X + bounds.size.X, x + tex_size.X);
 
             if (max_x <= min_x) continue;
 
-            float uv_x1 = (min_x - x) / water_meta.size.X;
-            float uv_x2 = (max_x - x) / water_meta.size.X;
+            float uv_x1 = (min_x - x) / tex_size.X;
+            float uv_x2 = (max_x - x) / tex_size.X;
 
-            for (float y = y_offset; y < bounds.pos.Y + bounds.size.Y; y += water_meta.size.Y) {
+            for (float y = y_offset; y < bounds.pos.Y + bounds.size.Y; y += tex_size.Y) {
                 float min_y = float.Max(bounds.pos.Y, y);
-                float max_y = float.Min(bounds.pos.Y + bounds.size.Y, y + water_meta.size.Y);
+                float max_y = float.Min(bounds.pos.Y + bounds.size.Y, y + tex_size.Y);
 
                 if (max_y <= min_y) continue;
 
-                float uv_y1 = (min_y - y) / water_meta.size.Y;
-                float uv_y2 = (max_y - y) / water_meta.size.Y;
+                float uv_y1 = (min_y - y) / tex_size.Y;
+                float uv_y2 = (max_y - y) / tex_size.Y;
 
                 Vector2 suv_p0 = new Vector2(min_x, min_y);
                 Vector2 suv_p1 = new Vector2(max_x, max_y);

@@ -27,6 +27,39 @@ public abstract class FhSaveUiBase : FhSaveUi {
         ACTIVE_SET = 1,
     }
 
+    /// <summary>Types of pop-ups the player may encounter.</summary>
+    protected enum UiPopupType {
+        /// <summary>"Loading... Do not quit the game."</summary>
+        LOADING = 0,
+
+        /// <summary>"Saving... Do not quit the game."</summary>
+        SAVING = 1,
+
+        /// <summary>"Data is corrupt."</summary>
+        CORRUPT_DATA = 2,
+
+        /// <summary>"Failed to find data. Try changing to this set again."</summary>
+        NO_DATA = 3,
+
+        /// <summary>"Load this file?"</summary>
+        CONFIRM_LOAD = 4,
+
+        /// <summary>"Save the game?"</summary>
+        CONFIRM_SAVE = 5,
+
+        /// <summary>"Overwrite existing file?"</summary>
+        CONFIRM_OVERWRITE = 6,
+    }
+
+    /// <summary>Choices available in popups requiring confirmation.</summary>
+    protected enum UiPopupChoice {
+        /// <summary>Cancels the chosen action.</summary>
+        NO  = 0,
+
+        /// <summary>Continues the chosen action.</summary>
+        YES = 1,
+    }
+
     protected const uint COLOR_WHITE    = 0xFFFFFFFF;
     protected const uint COLOR_BLACK    = 0xFF000000;
     protected const uint COLOR_TRANS    = 0x00000000;
@@ -36,11 +69,13 @@ public abstract class FhSaveUiBase : FhSaveUi {
     protected const float FONT_SIZE_SMALL   = 37f;
     protected const float FONT_SIZE_TINY    = 32f;
 
+    protected const uint SOUND_X_SAVE       = FFX.Ids.SoundId.UI_SAVE;
     protected const uint SOUND_X_MOVE       = FFX.Ids.SoundId.UI_ACTION;
     protected const uint SOUND_X_ACTION     = FFX.Ids.SoundId.UI_ACTION;
     protected const uint SOUND_X_CANCEL     = FFX.Ids.SoundId.UI_CANCEL;
     protected const uint SOUND_X_SET_CHANGE = FFX.Ids.SoundId.PAGE_TURN;
 
+    protected const uint SOUND_X2_SAVE       = FFX2.Ids.SoundId.UI_SAVE;
     protected const uint SOUND_X2_MOVE       = FFX2.Ids.SoundId.UI_ACTION;
     protected const uint SOUND_X2_ACTION     = FFX2.Ids.SoundId.UI_ACTION;
     protected const uint SOUND_X2_CANCEL     = FFX2.Ids.SoundId.UI_CANCEL;
@@ -56,6 +91,7 @@ public abstract class FhSaveUiBase : FhSaveUi {
     protected const string DIR_X2_MAHOJIN   = $"{DIR_X2_PS3}/menu/menu_mahojin/tex/D3D11/";
     protected const string DIR_X2_PLATE     = $"{DIR_X2_PS3}/menu/menu_plate/tex/D3D11/";
 
+    protected static readonly uint SOUND_ID_SAVE       = FhUtil.select(SOUND_X_SAVE,       SOUND_X2_SAVE,       SOUND_X2_SAVE);
     protected static readonly uint SOUND_ID_MOVE       = FhUtil.select(SOUND_X_MOVE,       SOUND_X2_MOVE,       SOUND_X2_MOVE);
     protected static readonly uint SOUND_ID_ACTION     = FhUtil.select(SOUND_X_ACTION,     SOUND_X2_ACTION,     SOUND_X2_ACTION);
     protected static readonly uint SOUND_ID_CANCEL     = FhUtil.select(SOUND_X_CANCEL,     SOUND_X2_CANCEL,     SOUND_X2_CANCEL);
@@ -65,6 +101,11 @@ public abstract class FhSaveUiBase : FhSaveUi {
 
     protected UiMode  mode;
     protected UiFocus focus;
+
+    protected bool          popup_shown;
+    protected string        popup_message;
+    protected UiPopupType   popup_current;
+    protected UiPopupChoice popup_choice;
 
     protected readonly float      fade_length = FhUtil.select(0.5f, 0.35f, 0.0f);
     protected readonly FadeHelper fade;
@@ -136,6 +177,8 @@ public abstract class FhSaveUiBase : FhSaveUi {
         mode  = UiMode .SAVE_LIST;
         focus = UiFocus.LIST;
 
+        popup_shown = false;
+
         try_load_textures();
 
         set_list.Clear();
@@ -205,6 +248,66 @@ public abstract class FhSaveUiBase : FhSaveUi {
         change_mode(UiMode.SAVE_LIST);
     }
 
+    /// <summary>Execute an action for a given slot based on the save system mode.</summary>
+    /// <param name="slot">The slot to execute the action for.</param>
+    protected void execute_slot(int slot) {
+        if (!FhApi.Saves.impl_execute(slot) && !is_saving) {
+            open_popup(UiPopupType.CORRUPT_DATA);
+        }
+        else {
+            popup_shown = false;
+
+            if (is_saving) {
+                FhApi.Audio.play_sound(SOUND_ID_SAVE);
+            }
+        }
+    }
+
+    /// <summary>Get the message for a given pop-up type.</summary>
+    /// <param name="popup">The type of pop-up to get the message for.</param>
+    /// <returns>The message for the pop-up.</returns>
+    protected string get_popup_message(UiPopupType popup) {
+        return localize($"popup.{popup.ToString().ToLower()}");
+    }
+
+    /// <summary>Open a new pop-up of the given type.</summary>
+    /// <param name="popup">The type of the pop-up to open.</param>
+    protected void open_popup(UiPopupType popup) {
+        if (popup_shown && popup_current == popup)
+            return;
+
+        popup_shown   = true;
+        popup_message = get_popup_message(popup);
+        popup_current = popup;
+        popup_choice  = UiPopupChoice.NO;
+    }
+
+    /// <summary>Open a new pop-up to confirm execution of a given slot.</summary>
+    /// <param name="slot">The slot to confirm execution of.</param>
+    protected void open_confirmation_popup(int slot) {
+        UiPopupType confirmation_type = UiPopupType.CONFIRM_LOAD;
+
+        if (is_saving) {
+            confirmation_type = UiPopupType.CONFIRM_SAVE;
+
+            if (slot != 0 || FhApi.Saves.sets_get_active().is_full) {
+                confirmation_type = UiPopupType.CONFIRM_OVERWRITE;
+            }
+        }
+
+        open_popup(confirmation_type);
+
+        if (!is_saving && FhApi.Saves.ui_get_data(slot, out FhSaveUiData? data)) {
+            FhLangId save_lang = FhGlobal.game_id == FhGameId.FFX
+                ? data.header.x .lang_id
+                : data.header.x2.lang_id;
+
+            if (FhGlobal.lang_id != save_lang) {
+                popup_message += $"\n{localize("popup.confirm_load.language_warning")}";
+            }
+        }
+    }
+
 
     /* ===== Textures ===== */
 
@@ -247,14 +350,21 @@ public abstract class FhSaveUiBase : FhSaveUi {
     /// <param name="bounds">The area to detect clicks in.</param>
     /// <param name="button">The mouse button to detect clicks from.</param>
     /// <param name="repeat">Whether the method should repeatedly return <c>true</c> for held inputs.</param>
+    /// <param name="auto_capture">Whether the WantCaptureMouse flag should automatically be set if <c>true</c>.</param>
     /// <returns>Whether the specified click was performed.</returns>
     protected bool mouse_clicked(
         Rect             bounds,
-        ImGuiMouseButton button = ImGuiMouseButton.Left,
-        bool             repeat = false
+        ImGuiMouseButton button       = ImGuiMouseButton.Left,
+        bool             repeat       = false,
+        bool             auto_capture = true
     ) {
-        return should_handle_input
+        bool result = should_handle_input
             && FhApi.Gui.mouse_clicked(bounds, button, repeat);
+
+        if (result && auto_capture)
+            ImGui.GetIO().WantCaptureMouse = true;
+
+        return result;
     }
 
     /// <summary>Handle input for the save and set lists.</summary>
@@ -293,10 +403,7 @@ public abstract class FhSaveUiBase : FhSaveUi {
 
             if (mode == UiMode.SAVE_LIST) {
                 FhApi.Audio.play_sound(SOUND_ID_ACTION, ACTION_VOLUME);
-
-                if (FhApi.Saves.ui_get_data(hovered, out FhSaveUiData? data)) {
-                    fade_out(() => FhApi.Saves.impl_execute(data.slot));
-                }
+                open_confirmation_popup(hovered);
 
                 return true;
             }
@@ -335,11 +442,74 @@ public abstract class FhSaveUiBase : FhSaveUi {
         return false;
     }
 
+    /// <summary>Handle input for pop-ups.</summary>
+    /// <returns>Whether input handling should be interrupted.</returns>
+    protected bool handle_input_popup() {
+        if (!popup_shown) return false;
+
+        // Pop-ups that can't be closed manually return automatically
+        if (popup_current is UiPopupType.LOADING or UiPopupType.SAVING)
+            return true;
+
+        // Corrupt data is the only pop-up that can be closed manually
+        // and doesn't require confirmation
+        if (popup_current is UiPopupType.CORRUPT_DATA or UiPopupType.NO_DATA) {
+            if (FhApi.Gui.is_any_pressed([
+                .. FhApi.Gui.keys_confirm,
+                .. FhApi.Gui.keys_cancel,
+            ])) {
+                FhApi.Audio.play_sound(SOUND_ID_ACTION);
+                popup_shown = false;
+                return true;
+            }
+        }
+
+        if (FhApi.Gui.is_any_pressed([
+            .. FhApi.Gui.keys_left,
+            .. FhApi.Gui.keys_right,
+        ])) {
+            FhApi.Audio.play_sound(SOUND_ID_ACTION);
+
+            // Toggle the selected option
+            if (popup_choice == UiPopupChoice.YES)
+                popup_choice = UiPopupChoice.NO;
+            else
+                popup_choice = UiPopupChoice.YES;
+
+            return true;
+        }
+
+        bool selected_option = FhApi.Gui.is_any_pressed(FhApi.Gui.keys_confirm);
+
+        if (FhApi.Gui.is_any_pressed(FhApi.Gui.keys_cancel)
+            || (selected_option && popup_choice == UiPopupChoice.NO)
+        ) {
+            FhApi.Audio.play_sound(SOUND_ID_CANCEL);
+            popup_shown = false;
+
+            return true;
+        }
+
+        if (selected_option && popup_choice == UiPopupChoice.YES) {
+            FhApi.Audio.play_sound(SOUND_ID_ACTION, ACTION_VOLUME);
+
+            if (FhApi.Saves.ui_get_data(current_scrollable.hovered, out FhSaveUiData? data)) {
+                execute_slot(data.slot);
+            }
+            else {
+                open_popup(UiPopupType.NO_DATA);
+            }
+        }
+
+        return true;
+    }
+
     /// <summary>Handle non-mouse input.</summary>
     /// <remarks>The scroll wheel is handled here as well.</remarks>
     protected void handle_input() {
         if (!should_handle_input) return;
 
+        if (popup_shown                 && handle_input_popup())      return;
         if (focus == UiFocus.LIST       && handle_input_list())       return;
         if (focus == UiFocus.ACTIVE_SET && handle_input_change_set()) return;
 
@@ -369,6 +539,12 @@ public abstract class FhSaveUiBase : FhSaveUi {
 
         handle_input();
 
+        if (!FhApi.Saves.impl_get_system_mode(out FhSaveSystemMode? save_mode)
+            || save_mode is FhSaveSystemMode.NULL
+        ) {
+            return;
+        }
+
         ui_background();
         ui_help();
 
@@ -382,6 +558,9 @@ public abstract class FhSaveUiBase : FhSaveUi {
         }
 
         ui_scrollbar();
+
+        if (popup_shown)
+            ui_popup();
 
         ui_fade();
 
@@ -510,6 +689,17 @@ public abstract class FhSaveUiBase : FhSaveUi {
     /// <param name="save_bounds">The bounds of the New Save Data button.</param>
     /// <param name="icon_bounds">The bounds of the map icon.</param>
     protected abstract void ui_newdata(Rect save_bounds, Rect icon_bounds);
+
+    /// <summary>Render the currently open pop-up, if any.</summary>
+    protected void ui_popup() {
+        if (!popup_shown) return;
+
+        ui_popup(popup_current);
+    }
+
+    /// <summary>Render the given pop-up, if any.</summary>
+    /// <param name="popup">The type of pop-up to render.</param>
+    protected abstract void ui_popup(UiPopupType popup);
 
     /// <summary>Render a full-screen fade as provided by <see cref="fade"/>.</summary>
     protected virtual void ui_fade() {

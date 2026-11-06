@@ -11,6 +11,8 @@ public class SoundId {
     public const uint UI_CANCEL   = 0x80000004;
     public const uint PAGE_TURN   = 0x80000030;
 
+    public const uint UI_SAVE = 0x8000006A;
+
     public const uint BTL_TURN_START = 0x80000002;
     public const uint BTL_SHATTER    = 0x80000031;
     public const uint BTL_FADE_IN    = 0x80000065;

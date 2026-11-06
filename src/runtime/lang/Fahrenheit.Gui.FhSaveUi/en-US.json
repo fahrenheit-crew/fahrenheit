@@ -3,7 +3,7 @@
   "help.save": "Select save area",
   "help.load": "Select save data",
 
-  "save_count.saves": "{0} saves",
+  "save_count.saves": "{0}/100 ",
   "save_count.separator": " + ",
   "save_count.autosave": "A",
 

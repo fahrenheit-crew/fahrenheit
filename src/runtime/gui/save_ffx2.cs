@@ -27,7 +27,7 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
     private readonly FhTexture _texture_window   = new(Path.Join(DIR_X2_MENU,    "window.dds.phyre"),               FhTextureType.GAME_PHYRE_2D);
     private readonly FhTexture _texture_b_menu1  = new(Path.Join(DIR_X2_MENU,    "b_menu1.dds.phyre"),              FhTextureType.GAME_PHYRE_2D);
 
-    private readonly Vector2 _tex_window_size = new(1024f,  256f);
+    private readonly Vector2 _tex_window_size = new(1024f, 256f);
 
     private readonly Vector2 _tex_face_size = new(256f, 256f);
 

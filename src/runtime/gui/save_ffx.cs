@@ -23,8 +23,6 @@ public sealed class FhSaveUiX : FhSaveUiBase {
     private readonly FhTexture _texture_meswin       = new(Path.Join(DIR_X_MENU, "meswin.dds.phyre"),        FhTextureType.GAME_PHYRE_2D);
     private readonly FhTexture _texture_battle_kuang = new(Path.Join(DIR_X_MENU, "battle_kuang.dds.phyre"),  FhTextureType.GAME_PHYRE_2D);
     private readonly FhTexture _texture_summonbg     = new(Path.Join(DIR_X_MENU, "summonbg.dds.phyre"),      FhTextureType.GAME_PHYRE_2D);
-    private readonly FhTexture _texture_faces_ply    = new(Path.Join(DIR_X_MENU, "face_ply.dds.phyre"),      FhTextureType.GAME_PHYRE_2D);
-    private readonly FhTexture _texture_faces_smn    = new(Path.Join(DIR_X_MENU, "face_smn.dds.phyre"),      FhTextureType.GAME_PHYRE_2D);
     private readonly FhTexture _texture_stone        = new(Path.Join(DIR_X_MENU, "stonetexture.dds.phyre"),  FhTextureType.GAME_PHYRE_2D);
     private readonly FhTexture _texture_battle       = new(Path.Join(DIR_X_MENU, "battle.dds.phyre"),        FhTextureType.GAME_PHYRE_2D);
 
@@ -40,8 +38,6 @@ public sealed class FhSaveUiX : FhSaveUiBase {
         _texture_meswin,
         _texture_battle_kuang,
         _texture_summonbg,
-        _texture_faces_ply,
-        _texture_faces_smn,
         _texture_stone,
         _texture_battle,
         _texture_freetex,

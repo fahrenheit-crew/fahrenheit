@@ -10922,11 +10922,6 @@ public static unsafe partial class FhCall {
     public static FhCallHandle<Fahrenheit.FhCall.d_UnknownFn> FUN_000677b0 => new( new FhCallLocation("FFX-2.exe", 0x677B0) );
 
     // Unannotated function:
-    // unknown undefined FUN_000677c0() at 000677c0
-
-    public static FhCallHandle<Fahrenheit.FhCall.d_UnknownFn> FUN_000677c0 => new( new FhCallLocation("FFX-2.exe", 0x677C0) );
-
-    // Unannotated function:
     // unknown undefined FUN_00067830() at 00067830
 
     public static FhCallHandle<Fahrenheit.FhCall.d_UnknownFn> FUN_00067830 => new( new FhCallLocation("FFX-2.exe", 0x67830) );
@@ -41889,7 +41884,7 @@ public static unsafe partial class FhCall {
     // Unannotated function:
     // unknown undefined FUN_0020c160() at 0020c160
 
-    public static FhCallHandle<Fahrenheit.FhCall.d_UnknownFn> FUN_0020c160 => new( new FhCallLocation("FFX-2.exe", 0x20C160) ); 
+    public static FhCallHandle<Fahrenheit.FhCall.d_UnknownFn> FUN_0020c160 => new( new FhCallLocation("FFX-2.exe", 0x20C160) );
 
     // Unannotated function:
     // unknown undefined FUN_0020c1f0() at 0020c1f0

@@ -200,7 +200,7 @@ public unsafe sealed class FhImguiModule : FhModule, IFhPlatformUser {
     /// <summary>
     ///     Intercepts attempts to resize the game window to allow ImGui to continue drawing.
     /// </summary>
-    [UnmanagedCallConv( CallConvs = [ typeof(CallConvStdcall) ] )]
+    [UnmanagedCallConv( CallConvs = [ typeof(CallConvMemberFunction) ] )]
     private nint h_resize_buffers(
         IDXGISwapChain* pSwapChain,
         uint            BufferCount,
@@ -221,9 +221,9 @@ public unsafe sealed class FhImguiModule : FhModule, IFhPlatformUser {
     }
 
     /// <summary>
-    ///     Overrides the game's <see cref="IDXGISwapChain.Present(uint, DXGI_PRESENT)"/> call to display mods' user interfaces.
+    ///     Overrides the game's <see cref="IDXGISwapChain.Present(uint, uint)"/> call to display mods' user interfaces.
     /// </summary>
-    [UnmanagedCallConv( CallConvs = [ typeof(CallConvStdcall) ] )]
+    [UnmanagedCallConv( CallConvs = [ typeof(CallConvMemberFunction) ] )]
     private nint h_present(
         IDXGISwapChain* pSwapChain,
         uint            SyncInterval,

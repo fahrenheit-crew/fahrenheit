@@ -482,20 +482,22 @@ static BOOL s0_dbg_w32_module_size(
 
 // Displays a debug string.
 static void s0_dbg_w32_debug_string(
-    HANDLE h_process,   // The handle of the process the debug string is coming from.
-    LPSTR  ptr_string,  // A pointer to the debug string in the process's address space.
-    WORD   len_string,  // The length of the string. Capped to 65536, though it can be longer.
-    WORD   is_unicode   // Nonzero if `ptr_image_name` is a wide string, otherwise zero.
+    HANDLE h_process,  // The handle of the process the debug string is coming from.
+    LPSTR  ptr_string, // A pointer to the debug string in the process's address space.
+    WORD   len_string, // The length of the string. Capped to 65536, though it can be longer.
+    WORD   is_unicode  // Nonzero if `ptr_string` is a wide string, otherwise zero.
 ) {
     if (ptr_string == nullptr) {
         fwprintf_s(stderr, L"[!] Debug string pointer was NULL.\n");
         return;
     }
 
-    BYTE   buffer[MAX_PATH * sizeof(wchar_t)] = { 0 };
+    if (len_string > 1024) len_string = 1024;
+
+    BYTE   buffer[1024] = { 0 };
     SIZE_T bytes_read;
 
-    if (!ReadProcessMemory(h_process, ptr_string, &buffer, sizeof(buffer), &bytes_read)) {
+    if (!ReadProcessMemory(h_process, ptr_string, &buffer, len_string, &bytes_read)) {
         fwprintf_s(stderr, L"[!] ReadProcessMemory() failed with code 0x%X.\n", GetLastError());
         return;
     }

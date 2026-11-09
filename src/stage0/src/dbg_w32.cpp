@@ -28,8 +28,8 @@ LPVOID                            g_addr_excep_fatal; // The originating address
 
 // Processes a stack frame, returning its type and preparing its symbol, if native.
 static S0_FRAME_DATA s0_dbg_w32_stack_frame(
-    HANDLE       h_process,  // A handle to the process the stack frame belongs to.
-    STACKFRAME64 stack_frame // The stack frame to symbolicate.
+    HANDLE        h_process,  // A handle to the process the stack frame belongs to.
+    STACKFRAME_EX stack_frame // The stack frame to symbolicate.
 ) {
     S0_FRAME_DATA frame      = { };
     DWORD64       frame_addr = stack_frame.AddrPC.Offset;
@@ -196,7 +196,7 @@ static void s0_dbg_w32_stack_walk(
     HANDLE   h_thread,   // A handle to the faulting thread.
     CONTEXT* ptr_context // A pointer to the faulting thread's context.
 ) {
-    STACKFRAME64 stack_frame = { 0 };
+    STACKFRAME_EX stack_frame = { 0 };
     stack_frame.AddrPC   .Offset = ptr_context->Eip;
     stack_frame.AddrPC   .Mode   = AddrModeFlat;
     stack_frame.AddrFrame.Offset = ptr_context->Ebp;
@@ -205,7 +205,7 @@ static void s0_dbg_w32_stack_walk(
     stack_frame.AddrStack.Mode   = AddrModeFlat;
 
     while (true) {
-        if (!StackWalk64(
+        if (!StackWalkEx(
             IMAGE_FILE_MACHINE_I386,
             h_process,
             h_thread,
@@ -214,7 +214,8 @@ static void s0_dbg_w32_stack_walk(
             NULL,
             SymFunctionTableAccess64,
             SymGetModuleBase64,
-            NULL
+            NULL,
+            0
         )) break;
 
         if (stack_frame.AddrPC.Offset == 0)

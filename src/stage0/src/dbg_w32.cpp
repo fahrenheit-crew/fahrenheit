@@ -150,9 +150,6 @@ static S0_FRAME_DATA s0_dbg_w32_stack_frame(
 static void s0_dbg_w32_print_context(
     CONTEXT* ptr_context // A pointer to the faulting thread's context.
 ) {
-    fwprintf_s(stdout, L"\n");
-    fwprintf_s(stdout, L"---- EXCEPTION CONTEXT ----\n");
-
     fwprintf_s(
         stdout,
         L"eax=%08X ebx=%08X ecx=%08X edx=%08X\n",
@@ -183,14 +180,10 @@ static void s0_dbg_w32_print_context(
         ptr_context->SegSs,
         ptr_context->EFlags
     );
-
-    fwprintf_s(stdout, L"\n");
 }
 
 // Prints the stack trace with any available data we have.
 static void s0_dbg_w32_print_stack_trace() {
-    fwprintf_s(stdout, L"---- STACK TRACE ----\n");
-
     for (const S0_FRAME_DATA& frame : g_frames) {
         fwprintf_s(stdout, L"%s", frame.frame_name);
     }
@@ -333,7 +326,6 @@ static void s0_dbg_w32_create_dump(
         fwprintf_s(stdout, L"Core dumped to %s.\n", crash_dump_path);
     }
 
-    fwprintf_s(stdout, L"\n");
     CloseHandle(dump_handle);
 }
 
@@ -414,7 +406,11 @@ static DWORD s0_dbg_w32_exception(
             return DBG_EXCEPTION_NOT_HANDLED;
         }
 
+        fwprintf_s(stdout, L"\n---- EXCEPTION CONTEXT ----\n");
+
         s0_dbg_w32_print_context(&faulting_thread_context);
+
+        fwprintf_s(stdout, L"\n---- CORE DUMP ----\n");
 
         /* [fkelava 13/09/26 13:49]
          * https://learn.microsoft.com/en-us/windows/win32/api/dbghelp/nf-dbghelp-stackwalk64
@@ -431,6 +427,8 @@ static DWORD s0_dbg_w32_exception(
         );
 
         g_frames.clear();
+
+        fwprintf_s(stdout, L"\n---- STACK TRACE ----\n");
 
         s0_dbg_w32_stack_walk(
             h_process,

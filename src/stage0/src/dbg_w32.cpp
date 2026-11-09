@@ -480,6 +480,31 @@ static BOOL s0_dbg_w32_module_size(
     return TRUE;
 }
 
+// Displays a debug string.
+static void s0_dbg_w32_debug_string(
+    HANDLE h_process,   // The handle of the process the debug string is coming from.
+    LPSTR  ptr_string,  // A pointer to the debug string in the process's address space.
+    WORD   len_string,  // The length of the string. Capped to 65536, though it can be longer.
+    WORD   is_unicode   // Nonzero if `ptr_image_name` is a wide string, otherwise zero.
+) {
+    if (ptr_string == nullptr) {
+        fwprintf_s(stderr, L"[!] Debug string pointer was NULL.\n");
+        return;
+    }
+
+    BYTE   buffer[MAX_PATH * sizeof(wchar_t)] = { 0 };
+    SIZE_T bytes_read;
+
+    if (!ReadProcessMemory(h_process, ptr_string, &buffer, sizeof(buffer), &bytes_read)) {
+        fwprintf_s(stderr, L"[!] ReadProcessMemory() failed with code 0x%X.\n", GetLastError());
+        return;
+    }
+
+    int _ = is_unicode
+        ? fwprintf_s(stdout, L"%s", (wchar_t*) buffer)
+        : fprintf_s (stdout,  "%s", (char*)    buffer);
+}
+
 // Obtains a module's path from its address space or from a handle to it.
 static BOOL s0_dbg_w32_module_name(
     HANDLE h_process,       // The handle of the process the module is being loaded into.
@@ -762,6 +787,15 @@ void s0_dbg_w32_main() {
         if (h_process == nullptr || h_process == INVALID_HANDLE_VALUE) {
             ContinueDebugEvent(id_process, id_thread, continue_state);
             continue;
+        }
+
+        if (event_code == OUTPUT_DEBUG_STRING_EVENT) {
+            s0_dbg_w32_debug_string(
+                h_process,
+                event.u.DebugString.lpDebugStringData,
+                event.u.DebugString.nDebugStringLength,
+                event.u.DebugString.fUnicode
+            );
         }
 
         /* [fkelava 13/09/26 16:18]

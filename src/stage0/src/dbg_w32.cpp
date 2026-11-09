@@ -310,7 +310,7 @@ static void s0_dbg_w32_create_dump(
     info_dump_exception.ExceptionPointers = &exception_pointers;
     info_dump_exception.ClientPointers    = FALSE;
 
-    fwprintf_s(stderr, L"Dumping process core. Please wait.\n");
+    fwprintf_s(stderr, L"Core dump in progress. Please wait.\n");
 
     if (!MiniDumpWriteDump(
         h_process,
@@ -321,10 +321,10 @@ static void s0_dbg_w32_create_dump(
         nullptr,
         nullptr
     )) {
-        fwprintf_s(stderr, L"Failed to dump core.\n");
+        fwprintf_s(stderr, L"Core dump failed.\n");
     }
     else {
-        fwprintf_s(stdout, L"Core dumped to %s.\n", crash_dump_path);
+        fwprintf_s(stdout, L"Core dump written to %s.\n", crash_dump_path);
     }
 
     CloseHandle(dump_handle);

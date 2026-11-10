@@ -6,9 +6,6 @@
 namespace Fahrenheit.Runtime.Gui;
 
 public partial class FhSettingsUiX {
-    public interface ICapturingRenderer {
-        public string get_input_help_text();
-    }
 
     private abstract class Renderer_Base<T> : FhSettingRenderer<T, FhSettingsUiX>
         where T : FhSetting {
@@ -25,7 +22,7 @@ public partial class FhSettingsUiX {
             [NotNullWhen(true)] out Rect? name_bounds,
             [NotNullWhen(true)] out Rect? value_bounds
         ) {
-            if (!ui._texture_battle_kuang.try_use(out ImTextureRef battle_kuang, out _)) {
+            if (!ui._texture_battle_kuang.try_use(out ImTextureRef battle_kuang, out FhTextureMetadata? battle_kuang_meta)) {
                 name_bounds  = null;
                 value_bounds = null;
                 return false;
@@ -81,7 +78,7 @@ public partial class FhSettingsUiX {
             UV separator_tuv = new Rect {
                 pos  = new(1515f, 797f),
                 size = new(88f, 57f),
-            }.as_uv(ui._tex_battle_kuang_size);
+            }.as_uv(battle_kuang_meta.size);
 
             Rect separator_start = new() {
                 pos  = new(
@@ -199,15 +196,11 @@ public partial class FhSettingsUiX {
         protected void render_name(FhSettingsUiX ui, Rect name_bounds, string name) {
             ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
-            float font_size = 36f * ui.font_scale;
-
             FhApi.Gui.draw_text(
                 draw,
                 name_bounds.right * ui.aspect_scale,
                 name,
-                font_size,
-                true,
-                new(Alignment.END, Alignment.CENTER)
+                ui.text_config with { align = Alignment2D.RIGHT }
             );
         }
     }
@@ -229,7 +222,7 @@ public partial class FhSettingsUiX {
         }
 
         internal protected override void render(FhSettingsUiX ui, FhSettingsCategory category, Rect max_bounds) {
-            if (!ui._texture_battle.try_use(out ImTextureRef battle, out _)) {
+            if (!ui._texture_battle.try_use(out ImTextureRef battle, out FhTextureMetadata? battle_meta)) {
                 return;
             }
 
@@ -288,7 +281,7 @@ public partial class FhSettingsUiX {
             Rect arrow_tuv = new Rect {
                 pos  = new(706f, 376f),
                 size = new(49f, 49f),
-            }.scale_raw(Vector2.One / ui._tex_battle_size);
+            }.scale_raw(Vector2.One / battle_meta.size);
 
             // We do some shenanigans for the various corner accessors
             // to work like we want them to
@@ -355,8 +348,6 @@ public partial class FhSettingsUiX {
             }
 
             // Name
-            float font_size = 36f * ui.font_scale;
-
             Vector2 name_pos = arrow_bounds.right;
             name_pos.X += 30f;
 
@@ -364,9 +355,7 @@ public partial class FhSettingsUiX {
                 draw,
                 name_pos * ui.aspect_scale,
                 category.name,
-                font_size,
-                true,
-                new(Alignment.BEGIN, Alignment.CENTER)
+                ui.text_config with { align = Alignment2D.LEFT }
             );
 
             // Input handling
@@ -383,11 +372,11 @@ public partial class FhSettingsUiX {
     }
 
     private class Renderer_Toggle : Renderer_Base<FhSettingToggle> {
-        private static string _text_on  => FhApi.Localization.localize($"{typeof(FhSettingsUiBase)}.input.on");
-        private static string _text_off => FhApi.Localization.localize($"{typeof(FhSettingsUiBase)}.input.off");
+        private static string _text_on  => FhApi.Localization.localize($"{typeof(FhSettingsUiSelector)}.input.on");
+        private static string _text_off => FhApi.Localization.localize($"{typeof(FhSettingsUiSelector)}.input.off");
 
         protected void render_options(FhSettingsUiX ui, FhSettingToggle toggle, Rect value_bounds) {
-            if (!ui._texture_meswin.try_use(out ImTextureRef meswin, out _)) {
+            if (!ui._texture_meswin.try_use(out ImTextureRef meswin, out FhTextureMetadata? meswin_meta)) {
                 return;
             }
 
@@ -404,18 +393,14 @@ public partial class FhSettingsUiX {
                 draw,
                 on_pos * ui.aspect_scale,
                 _text_on,
-                ui.font_size,
-                true,
-                new(Alignment.CENTER, Alignment.CENTER)
+                ui.text_config with { align = Alignment2D.CENTER }
             );
 
             FhApi.Gui.draw_text(
                 draw,
                 off_pos * ui.aspect_scale,
                 _text_off,
-                ui.font_size,
-                true,
-                new(Alignment.CENTER, Alignment.CENTER)
+                ui.text_config with { align = Alignment2D.CENTER }
             );
 
             // Underline
@@ -445,7 +430,7 @@ public partial class FhSettingsUiX {
             UV underline_tuv = new Rect {
                 pos  = new(0f, 582f),
                 size = new(300f, 9f),
-            }.as_uv(ui._tex_meswin_size);
+            }.as_uv(meswin_meta.size);
 
             UV underline_suv = underline_active.as_uv();
 
@@ -628,10 +613,11 @@ public partial class FhSettingsUiX {
                 draw,
                 pos * ui.aspect_scale,
                 name,
-                ui.font_size * scale,
-                true,
-                new(Alignment.CENTER, Alignment.CENTER),
-                color
+                ui.text_config with {
+                    align     = Alignment2D.CENTER,
+                    font_size = ui.text_config.font_size * scale,
+                    color     = color,
+                }
             );
         }
 
@@ -696,7 +682,7 @@ public partial class FhSettingsUiX {
         }
 
         protected void render_arrows(FhSettingsUiX ui, FhSettingChoice<T> choice, Rect value_bounds) {
-            if (!ui._texture_battle.try_use(out ImTextureRef battle, out _)) {
+            if (!ui._texture_battle.try_use(out ImTextureRef battle, out FhTextureMetadata? battle_meta)) {
                 return;
             }
 
@@ -707,7 +693,7 @@ public partial class FhSettingsUiX {
             UV arrow_tuv = new Rect {
                 pos  = new(724f, 680f),
                 size = new( 36f,  48f),
-            }.as_uv(ui._tex_battle_size);
+            }.as_uv(battle_meta.size);
 
             Vector2 arrow_size = new(36f, 48f);
 

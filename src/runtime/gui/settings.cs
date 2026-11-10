@@ -6,7 +6,7 @@
 namespace Fahrenheit.Runtime.Gui;
 
 [FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
-public class FhSettingsUiBase : FhModule {
+public class FhSettingsUiSelector : FhModule {
     private FhSettingsUiX?  _ui_x;
     private FhSettingsUiX2? _ui_x2;
 
@@ -14,7 +14,7 @@ public class FhSettingsUiBase : FhModule {
 
     public bool is_open { get; private set; }
 
-    private class FhSettingsUiSettings : FhSettingProvider<FhSettingsUiBase> {
+    private class FhSettingsUiSettings : FhSettingProvider<FhSettingsUiSelector> {
         //TODO: Change this to a Set-based dropdown once that's created.
         public readonly FhSettingText selected_ui = new("selected_ui", string.Empty);
 

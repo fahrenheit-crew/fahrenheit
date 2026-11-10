@@ -10,7 +10,7 @@ namespace Fahrenheit.Runtime.Gui;
 /// </summary>
 [FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
 public unsafe class FhModListDisplayModule : FhModule {
-    private FhSettingsUiBase? _settings_ui;
+    private FhSettingsUiSelector? _settings_ui;
 
     private class Settings : FhSettingProvider<FhModListDisplayModule> {
         public FhSettingToggle show_mod_count = new("mod_count", true);
@@ -27,7 +27,7 @@ public unsafe class FhModListDisplayModule : FhModule {
     private Settings _settings = new();
 
     public override bool init(FhModContext mod_context, FileStream global_state_file) {
-        return new FhModuleHandle<FhSettingsUiBase>(this).try_get_module(out _settings_ui);
+        return new FhModuleHandle<FhSettingsUiSelector>(this).try_get_module(out _settings_ui);
     }
 
     public override void render_imgui() {

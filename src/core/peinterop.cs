@@ -96,10 +96,10 @@ internal unsafe ref struct FhPDoubleListIterator<T>(PSimpleDoubleListElement<T>*
 [StructLayout(LayoutKind.Sequential, Size = 0x20, Pack = 4)]
 internal unsafe ref struct FhPFilteredInstanceList<T>(PInstanceList* ptr_instance_list) where T : unmanaged {
     public T*                object_base_ptr        = null;                                      // 0x00
-    public int               _0x04                  = 0;
+    public int               __0x04                 = 0;
     public int               object_size            = 0;                                         // 0x08
     public int               object_count           = 0;                                         // 0x0C
-    public int               _0x10                  = 0;                                         // an offset of some manner
+    public int               __0x10                 = 0;                                         // an offset of some manner
     public PInstanceList*    ptr_instance_list      = ptr_instance_list;                         // 0x14
     public PInstanceList*    ptr_instance_list_next = ptr_instance_list;                         // 0x18
     public PClassDescriptor* ptr_class_descriptor   = FhPhyreUtil.get_class_descriptor_for<T>(); // 0x1C

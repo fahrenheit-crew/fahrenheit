@@ -13,7 +13,7 @@ public struct AtelScriptHeader {
     public ushort ref_float_count;
     public ushort entry_point_count;
     public ushort jump_count;
-    public uint   _0x0C;
+    public uint   __0x0C;
     public uint   priv_data_len;
     public uint   offset_var_table;
     public uint   offset_int_table;

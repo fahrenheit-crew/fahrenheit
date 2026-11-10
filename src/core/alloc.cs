@@ -20,8 +20,8 @@ internal struct __ALLOC_STRUCT {
 [StructLayout(LayoutKind.Sequential)]
 internal struct __ALLOC_DATA {
     public uint size;
-    public uint _0x04;
-    public uint _0x08;
+    public uint __0x04;
+    public uint __0x08;
     public uint addr_primary_pool;
     public uint align;
     public uint addr_last_reserve;

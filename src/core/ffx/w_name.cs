@@ -20,5 +20,5 @@ public struct WeaponName {
     public  WeaponNameTextArray    names;
     public  WeaponNameTextArray    names_hira;
     public  WeaponNameModelIdArray model_ids;
-    private ushort                 _0x46;
+    private ushort                 __0x46;
 }

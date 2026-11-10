@@ -11,14 +11,14 @@ It is also the leading repository of knowledge about the games, underpinning oth
 This know-how is free for you to use, learn from, analyze, and improve.
 
 ## Here just to play?
-Grab the latest binaries from the [releases page](https://github.com/fahrenheit-crew/fahrenheit/releases), 
+Grab the latest binaries from the [releases page](https://github.com/fahrenheit-crew/fahrenheit/releases),
 then follow the [installation guide](https://github.com/fahrenheit-crew/fahrenheit/wiki/Installation-guide).
 
 ## For developers
-Read the [build, deployment and debugging guide](https://github.com/fahrenheit-crew/fahrenheit/wiki/Build-and-deployment-guide) (or `BUILD.md` locally) to get started.
+Follow the [build, deployment and debugging guide](https://github.com/fahrenheit-crew/fahrenheit/wiki/Build-and-deployment-guide) (or `BUILD.md` locally).
 
 ## For modders
-See the [template](https://github.com/fahrenheit-crew/fh-mods-template) and [TrueRNG mod](https://github.com/fahrenheit-crew/fh-mods-truerng) to get started.
+Follow the [modding quick-start guide](https://github.com/fahrenheit-crew/fahrenheit/wiki/Modding-quick-start-guide).
 
 ## Need help, or want to contribute?
 Feel free to join us in [Cid's Salvage Ship](https://discord.gg/AGx2grw9nD), a Discord server that supports Fahrenheit and related efforts.
@@ -36,3 +36,10 @@ Assets (the contents of the ``assets`` folder) may be used in forks of Fahrenhei
 
 For third-party code license notices, please see
 [THIRD-PARTY-NOTICES](https://github.com/fahrenheit-crew/fahrenheit/blob/main/THIRD-PARTY-NOTICES).
+
+## Disclaimers
+Fahrenheit does not accept contributions (issues or PRs) generated with or assisted by AI.
+We may decline such contributions at any time without further explanation.
+
+You are welcome to open issues and PRs without such assistance, regardless of your technical ability
+or ability to speak English. We are willing to assist you in reporting problems, creating feature requests, or making contributions.

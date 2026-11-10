@@ -41,7 +41,7 @@ public static partial class FhCall {
     public static FhCallHandle<d_JobSchedule_pppPart_clearFillBufferReques> JobSchedule_pppPart_clearFillBufferRequest
         => new( new FhCallLocation("FFX.exe", 0x31ECD0) );
 
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
     public unsafe delegate void d_ClassVFXRenderDataTable_Clear(ClassVFXRenderDataTable* ptr_this);
     public static FhCallHandle<d_ClassVFXRenderDataTable_Clear> ClassVFXRenderDataTable_Clear
         => new( new FhCallLocation("FFX.exe", 0x29F000) );
@@ -214,7 +214,7 @@ public static partial class FhCall {
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate byte d_TkMenuGetPlayerFromIndex2(int ply_idx);
     public static FhCallHandle<d_TkMenuGetPlayerFromIndex2> TkMenuGetPlayerFromIndex2
-        => new( new FhCallLocation("FFX.exe", 0x4A9AD0) );
+        => new( new FhCallLocation("FFX.exe", 0x4A9B00) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate float d_graphicUiRemapX2(float x);
@@ -535,7 +535,7 @@ public static partial class FhCall {
     public static FhCallHandle<d_MsLimitUp> MsLimitUp
         => new( new FhCallLocation("FFX.exe", 0x3B1590) );
 
-    [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate int d_MsCalcWeakLevel(int hp, int max_hp);
     public static FhCallHandle<d_MsCalcWeakLevel> MsCalcWeakLevel
         => new( new FhCallLocation("FFX.exe", 0x38BF00) );

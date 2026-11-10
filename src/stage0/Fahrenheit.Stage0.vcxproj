@@ -47,14 +47,14 @@
     It seems that 'msbuild -t:Publish' doesn't really deal with C++ projects well.
     It attempts to find and copy a standalone manifest file, ignoring the fact
     the MSVC linker will embed one into the S0 binary.
-    
+
     As we want the build process to be:
     > msbuild .\Fahrenheit.slnx
     > msbuild -t:Publish .\Fahrenheit.slnx
-    
+
     we simply set OutDir instead, and mark Stage0 unpublishable.
     Stage1 is already a C++ DLL and considered implicitly unpublishable.
-    
+
     See comment at L253 in Microsoft.Common.CurrentVersion.targets for the exact semantics.
     -->
     <PublishableProject>false</PublishableProject>
@@ -114,6 +114,10 @@
   <ItemGroup>
     <Content Include="$(WindowsSdkDir)\Debuggers\x86\dbghelp.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <!-- Required for WINE/Proton systems. -->
+    <Content Include="$(WindowsSdkDir)\Debuggers\x86\dbgcore.dll">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(WindowsSdkDir)\Debuggers\x86\symsrv.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

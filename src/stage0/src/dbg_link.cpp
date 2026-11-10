@@ -139,10 +139,8 @@ void s0_dbg_link_send(FH_DBG_MOD_LOAD data_load) {
 
     g_msgs.emplace(msg);
 
-    if (g_link_lock == nullptr || g_link_lock == INVALID_HANDLE_VALUE) {
-        fwprintf_s(stderr, L"[!] Debug link not yet ready. Deferring message.\n");
+    if (g_link_lock == nullptr || g_link_lock == INVALID_HANDLE_VALUE)
         return;
-    }
 
     if (!SetEvent(g_link_lock)) {
         fwprintf_s(stderr, L"[!] Failed to signal debug link thread with code 0x%X.\n", GetLastError());
@@ -158,10 +156,8 @@ void s0_dbg_link_send(FH_DBG_MOD_UNLOAD data_unload) {
 
     g_msgs.emplace(msg);
 
-    if (g_link_lock == nullptr || g_link_lock == INVALID_HANDLE_VALUE) {
-        fwprintf_s(stderr, L"[!] Debug link not yet ready. Deferring message.\n");
+    if (g_link_lock == nullptr || g_link_lock == INVALID_HANDLE_VALUE)
         return;
-    }
 
     if (!SetEvent(g_link_lock)) {
         fwprintf_s(stderr, L"[!] Failed to signal debug link thread with code 0x%X.\n", GetLastError());

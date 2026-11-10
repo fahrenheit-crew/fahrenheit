@@ -24,12 +24,12 @@ namespace Fahrenheit.Runtime;
 ///     Implements Fahrenheit's extended save system.
 /// </summary>
 [FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
-public unsafe sealed class FhSaveExtensionModule : FhModule, IFhSaveSystemImpl {
+public unsafe sealed class FhSaveSystemModule : FhModule, IFhSaveSystemImpl {
 
-    private int              _load_pending_slot;
+    private int              _load_pending_slot = -1;
     private FhSaveSystemMode _mode;
 
-    public FhSaveExtensionModule() { }
+    public FhSaveSystemModule() { }
 
     public override bool init(FhModContext mod_context, FileStream global_state_file) {
         FhApi.Saves.impl_handle.set(this);
@@ -61,10 +61,12 @@ public unsafe sealed class FhSaveExtensionModule : FhModule, IFhSaveSystemImpl {
     [UnmanagedCallConv(CallConvs = [ typeof(CallConvCdecl) ] )]
     private void signal_enter_save() {
         FhApi.Input.lock_on();
-        FhApi.Saves.index_active_set();
 
         _mode = FhSaveSystemMode.SAVE;
-        FhSavePal.pal_set_system_state(FhSaveSystemState.SAVE);
+        FhSaves.pal_state_system = SaveSystemState.SAVE;
+
+        FhApi.Saves.sets_query();
+        FhApi.Saves.sets_index();
 
         FhApi.Events.Common.GameLoop.PostOpenSaveMenu.invoke(EventArgs.Empty);
     }
@@ -75,10 +77,12 @@ public unsafe sealed class FhSaveExtensionModule : FhModule, IFhSaveSystemImpl {
     [UnmanagedCallConv(CallConvs = [ typeof(CallConvCdecl) ] )]
     private void signal_enter_load() {
         FhApi.Input.lock_on();
-        FhApi.Saves.index_active_set();
 
         _mode = FhSaveSystemMode.LOAD;
-        FhSavePal.pal_set_system_state(FhSaveSystemState.LOAD);
+        FhSaves.pal_state_system = SaveSystemState.LOAD;
+
+        FhApi.Saves.sets_query();
+        FhApi.Saves.sets_index();
 
         FhApi.Events.Common.GameLoop.PostOpenSaveMenu.invoke(EventArgs.Empty);
     }
@@ -90,10 +94,12 @@ public unsafe sealed class FhSaveExtensionModule : FhModule, IFhSaveSystemImpl {
     [UnmanagedCallConv(CallConvs = [ typeof(CallConvCdecl ) ] )]
     private void signal_enter_albd() {
         FhApi.Input.lock_on();
-        FhApi.Saves.index_active_set();
 
         _mode = FhSaveSystemMode.ALBD;
-        FhSavePal.pal_set_system_state(FhSaveSystemState.LOAD);
+        FhSaves.pal_state_system = SaveSystemState.LOAD;
+
+        FhApi.Saves.sets_query();
+        FhApi.Saves.sets_index();
 
         FhApi.Events.Common.GameLoop.PostOpenSaveMenu.invoke(EventArgs.Empty);
     }
@@ -102,11 +108,14 @@ public unsafe sealed class FhSaveExtensionModule : FhModule, IFhSaveSystemImpl {
     ///     Signals to the game that the pending save/load operation ended in failure.
     /// </summary>
     internal void signal_exit_abort() {
-        FhSavePal.pal_set_cancel_state(1);
+        _mode = FhSaveSystemMode.NULL;
+
+        FhSaves.pal_state_cancel = 1;
+        FhSaves.pal_state_dialog = SaveDialogState.CLOSED;
+
         FhCall.SaveDataSaveLoadSucceed.fnptr!(_mode is FhSaveSystemMode.SAVE
-            ? FhSaveSystemState.SAVE
-            : FhSaveSystemState.LOAD);
-        FhSavePal.pal_set_dialog_state(FhSaveDialogState.CLOSED);
+            ? SaveSystemState.SAVE
+            : SaveSystemState.LOAD);
 
         FhApi.Input.lock_off();
         FhApi.Events.Common.GameLoop.PostCloseSaveMenu.invoke(EventArgs.Empty);
@@ -116,11 +125,14 @@ public unsafe sealed class FhSaveExtensionModule : FhModule, IFhSaveSystemImpl {
     ///     Signals to the game that the pending save/load operation ended in success.
     /// </summary>
     internal void signal_exit_success() {
-        FhSavePal.pal_set_cancel_state(0);
+        _mode = FhSaveSystemMode.NULL;
+
+        FhSaves.pal_state_cancel = 0;
+        FhSaves.pal_state_dialog = SaveDialogState.CLOSED;
+
         FhCall.SaveDataSaveLoadSucceed.fnptr!(_mode is FhSaveSystemMode.SAVE
-            ? FhSaveSystemState.SAVE
-            : FhSaveSystemState.LOAD);
-        FhSavePal.pal_set_dialog_state(FhSaveDialogState.CLOSED);
+            ? SaveSystemState.SAVE
+            : SaveSystemState.LOAD);
 
         FhApi.Input.lock_off();
         FhApi.Events.Common.GameLoop.PostCloseSaveMenu.invoke(EventArgs.Empty);
@@ -129,23 +141,9 @@ public unsafe sealed class FhSaveExtensionModule : FhModule, IFhSaveSystemImpl {
     /* [fkelava 16/01/26 14:29]
      * https://github.com/fahrenheit-crew/fahrenheit/issues/70
      *
-     * Loading in the game is a multi-step process:
-     * 1) Data from the disk is loaded to `SaveDataManager::getRefBuffer`.
-     * 2) CRC checking and other validation is performed on the ref buffer.
-     * 3) If verification passed, the save data is later copied to `save_ram`.
-     * 4) Fahrenheit's SaveData accessors (and the rest of the game) only look at `save_ram`.
-     *
-     * with the following constraints:
-     * - Between 1) and 3) there is at least one main loop iteration of delay.
-     * - SaveData must be inspectable at `load_local_state` time.
-     * - SaveExtensionModule must load into the ref buffer for correctness, because
-     *   `SaveDataCheckCrc` et al. implicitly operate on the ref buffer.
-     * - Information about the slot being loaded is lost after 1).
-     *
-     * Thus we defer `load_local_state` to after 3), storing the pending load slot at 1).
-     *
-     * As the actual function performing the copy to `save_ram` is inlined on some platforms,
-     * we hook its parent function, TkMenuJumpToLoadedScene.
+     * Before being copied into global `save_ram`, save data is loaded into a temporary buffer
+     * where it's validated and CRC-checked. We want the save data to be inspectable at state
+     * load time, so we wait for that copy to occur before proceeding.
      */
 
     [UnmanagedCallConv(CallConvs = [ typeof(CallConvStdcall) ] )]
@@ -168,7 +166,7 @@ public unsafe sealed class FhSaveExtensionModule : FhModule, IFhSaveSystemImpl {
         FhCall.SaveDataWriteCrc       .fnptr!(ptr);
         FhCall._SetUpDefaultSaveFolder.fnptr!();
 
-        string             save_path = FhApi.Saves.get_save_path_for_slot(0);
+        string             save_path = FhApi.Saves.pal_get_path_for_slot(0);
         ReadOnlySpan<byte> save      = new(ptr, size);
 
         using (FileStream save_stream = File.OpenWrite(save_path)) {
@@ -191,73 +189,74 @@ public unsafe sealed class FhSaveExtensionModule : FhModule, IFhSaveSystemImpl {
     }
 
     /// <inheritdoc cref="IFhSaveSystemImpl.save"/>
-    void IFhSaveSystemImpl.save(int slot) {
-               slot      = FhApi.Saves.remap_slot(slot);
-        string save_path = FhApi.Saves.get_save_path_for_slot(slot);
-
-        ReadOnlySpan<byte> save = new(FhSavePal.pal_addr_buf_save(), FhSavePal.pal_sz_buf_save());
-        FhCall.SaveDataWriteCrc.fnptr!(FhSavePal.pal_addr_buf_save());
-
-        // TODO: add popups on success/failure
-
-        using (FileStream save_stream = File.OpenWrite(save_path)) {
-            save_stream.Write(save);
+    bool IFhSaveSystemImpl.save(int slot) {
+        if (slot == 0) { // This is a new save, not an overwrite.
+            slot = FhApi.Saves.pal_get_open_slot();
         }
 
+        string             save_path = FhApi.Saves.pal_get_path_for_slot(slot);
+        ReadOnlySpan<byte> save      = FhSaves.pal_get_buf_save();
+
+        try {
+            FhCall.SaveDataWriteCrc.fnptr!(FhSaves.pal_get_addr_save());
+
+            using FileStream save_stream = File.OpenWrite(save_path);
+            save_stream.Write(save);
+        }
+        catch { return false; }
+
         FhInternal.State.state_save_slot(slot);
+
         signal_exit_success();
+        return true;
     }
 
     /// <inheritdoc cref="IFhSaveSystemImpl.load"/>
-    void IFhSaveSystemImpl.load(int slot) {
-        string     save_name = FhApi.Saves.get_save_path_for_slot(slot);
-        Span<byte> save      = new(FhSavePal.pal_addr_buf_save(), FhSavePal.pal_sz_buf_save());
+    bool IFhSaveSystemImpl.load(int slot) {
+        string     save_path = FhApi.Saves.pal_get_path_for_slot(slot);
+        Span<byte> save      = FhSaves.pal_get_buf_save();
 
-        // TODO: add popups on success/failure
-        using (FileStream save_stream = File.OpenRead(save_name)) {
+        try {
+            using FileStream save_stream = File.OpenRead(save_path);
             save_stream.ReadExactly(save);
         }
+        catch { return false; }
 
         // From Iggy state handler 0xF
         if (FhCall.SaveDataCheckCrc.fnptr!() == 0) {
             save.Clear();
 
             signal_exit_abort();
-            return;
+            return false;
         }
 
+        // FFX.exe+2F022E, FFX-2.exe+11D0BE
         bool player_needs_rename = FhCall.isNeedRenamePlayer.fnptr!(
-            save[ FhSavePal.pal_header_offset_playerrename() ]);
+            save[ FhUtil.select(0x0C, 0x28, 0x28) ]
+        );
 
-        FhUtil.set_at(FhSavePal.pal_addr_force_player_rename(), player_needs_rename);
-
+        FhUtil.set_at(FhUtil.select(0xD33350, 0xA0FB70, 0xA0FB70), player_needs_rename);
         _load_pending_slot = slot;
-        signal_exit_success(); // TODO: popup if success
+
+        signal_exit_success();
+        return true;
     }
 
     /// <inheritdoc cref="IFhSaveSystemImpl.copy_albd"/>
-    void IFhSaveSystemImpl.copy_albd(int slot) {
-        string save_name = FhApi.Saves.get_save_path_for_slot(slot);
-
-        //Span<byte> save = new(
-        //    FhUtil.ptr_at<byte>(pal_addr_buf_save()),
-        //    pal_buf_save_size()
-        //    );
+    bool IFhSaveSystemImpl.copy_albd(int slot) {
+        string     save_name = FhApi.Saves.pal_get_path_for_slot(slot);
+        Span<byte> save      = FhSaves.pal_get_buf_save();
 
         //using (FileStream save_stream = File.OpenRead(save_name)) {
         //    save_stream.ReadExactly(save);
         //}
 
         signal_exit_success();
+        return true;
     }
 
-    /// <inheritdoc cref="IFhSaveSystemImpl.exit_cancel"/>
-    void IFhSaveSystemImpl.exit_cancel() {
+    /// <inheritdoc cref="IFhSaveSystemImpl.abort"/>
+    void IFhSaveSystemImpl.abort() {
         signal_exit_abort();
-    }
-
-    /// <inheritdoc cref="IFhSaveSystemImpl.exit_success"/>
-    void IFhSaveSystemImpl.exit_success() {
-        signal_exit_success();
     }
 }

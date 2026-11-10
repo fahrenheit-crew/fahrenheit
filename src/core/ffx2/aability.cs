@@ -8,7 +8,7 @@
 
 namespace Fahrenheit.FFX2;
 
-/// <remarks> 
+/// <remarks>
 ///     Describes any additional behaviors the auto-ability can possess.
 /// </remarks>
 [Flags]

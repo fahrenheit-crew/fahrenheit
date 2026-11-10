@@ -14,9 +14,17 @@
         <DebugType>portable</DebugType>
     </PropertyGroup>
 
+    <!-- PACKAGING CONFIGURATION -->
+    <PropertyGroup>
+        <IsPackable>true</IsPackable>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    </PropertyGroup>
+
     <!-- FAHRENHEIT PACKAGE IMPORT -->
     <ItemGroup>
-        <PackageReference Include="Fahrenheit" Version="1.0.0-alpha12" >
+        <PackageReference Include="Fahrenheit" Version="1.0.0-alpha13" >
             <Private>false</Private>
             <ExcludeAssets>runtime;native</ExcludeAssets>
         </PackageReference>

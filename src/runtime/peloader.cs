@@ -9,21 +9,19 @@ namespace Fahrenheit.Runtime;
  * The game utilizes the Phyre engine as a middleware for modern assets.
  * All are stored in pre-processed, platform-specific form.
  *
- * We would like to load them at runtime, that they need not be distributed
- * with mods. We have the game load them, since it can unwrap the Phyre containers.
+ * We would like to enable their use in mods and ImGui. We have the game load them,
+ * since it can unwrap the Phyre containers. This also removes the need to distribute
+ * copyrighted assets with mods, which is prohibited.
  *
- * Regardless of what derived asset type is at hand (a texture, shader, model...),
- * all are loaded the same way, in the same base form- a Phyre 'cluster',
- * containing 'instance lists' of specialized objects.
+ * All have the same base form- a Phyre 'cluster' containing 'instance lists'
+ * of specific objects (textures, shaders, models...)
  *
  * In Phyre, an asset/cluster can only be loaded once until released. The game
  * thus has a ref-counting system, the 'cluster manager'. This module interfaces with it.
  *
  * See:
  * - src/runtime/resload.cs
- * - src/core/petypes.cs
- * - src/core/petypes.g.cs
- * - src/core/peinterop.cs
+ * - src/core/{petypes|petypes.g|peinterop}.cs
  */
 
 /// <summary>

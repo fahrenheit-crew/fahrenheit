@@ -23,11 +23,6 @@
         <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
     </PropertyGroup>
 
-    <!-- SHARED FILE LINKS -->
-    <ItemGroup>
-        <None Include="$(SolutionDir).editorconfig" Link=".editorconfig" />
-    </ItemGroup>
-
     <!-- PROJECT REFERENCES -->
     <ItemGroup>
         <ProjectReference Include="..\core\Fahrenheit.csproj" />

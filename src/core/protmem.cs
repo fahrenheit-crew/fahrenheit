@@ -15,8 +15,8 @@ namespace Fahrenheit;
 /// </remarks>
 [SupportedOSPlatform("windows5.1.2600")]
 public unsafe readonly ref struct FhVirtualProtectScope<T> where T : unmanaged {
-    private readonly T*                    _address;
-    private readonly PAGE_PROTECTION_FLAGS _protection_flags_old;
+    private readonly T*   _address;
+    private readonly uint _protection_flags_old;
 
     /// <summary>
     ///     Changes the memory protection mode beginning at the given address.
@@ -27,9 +27,9 @@ public unsafe readonly ref struct FhVirtualProtectScope<T> where T : unmanaged {
     /// </remarks>
     /// <param name="address">The address to start changing the memory protection mode from.</param>
     /// <param name="protection_mode">The memory protection mode to set for the targeted memory region.</param>
-    public FhVirtualProtectScope(T* address, PAGE_PROTECTION_FLAGS protection_mode) {
-        PAGE_PROTECTION_FLAGS flOldProtect;
-        PInvoke.VirtualProtect(address, (nuint) sizeof(T), protection_mode, &flOldProtect);
+    public FhVirtualProtectScope(T* address, uint protection_mode) {
+        uint flOldProtect;
+        Windows.VirtualProtect(address, (nuint) sizeof(T), protection_mode, &flOldProtect);
 
         _address              = address;
         _protection_flags_old = flOldProtect;
@@ -39,8 +39,8 @@ public unsafe readonly ref struct FhVirtualProtectScope<T> where T : unmanaged {
     ///     Reverts the memory protection mode of the targeted region to its previous state.
     /// </summary>
     public void Dispose() {
-        PAGE_PROTECTION_FLAGS discard;
-        PInvoke.VirtualProtect(_address, (nuint) sizeof(T), _protection_flags_old, &discard);
+        uint discard;
+        Windows.VirtualProtect(_address, (nuint) sizeof(T), _protection_flags_old, &discard);
     }
 }
 

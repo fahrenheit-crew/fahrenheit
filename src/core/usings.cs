@@ -8,6 +8,7 @@ global using System.Diagnostics;               // [Conditional] et al.
 global using System.Diagnostics.CodeAnalysis;  // [NotNullWhen()] and other nullability static analysis attributes
 global using System.Globalization;             // CultureInfo.InvariantCulture et al.
 global using System.IO;                        // Path, File, and similar
+global using System.IO.MemoryMappedFiles;
 global using System.Numerics;                  // generic math - INumber<T>, IBinaryInteger<T>
 global using System.Reflection;                // Assembly
 global using System.Runtime.CompilerServices;  // [InlineArray]
@@ -27,15 +28,5 @@ global using Fahrenheit.Gui;
 global using Hexa.NET.ImGui;
 
 // Win32/D3D11 typedefs
-global using Windows.Win32;
-global using Windows.Win32.Foundation;
-global using Windows.Win32.Storage.FileSystem;
-global using Windows.Win32.Graphics.Direct3D11;
-global using Windows.Win32.Graphics.Direct3D;
-global using Windows.Win32.Graphics.Dxgi;
-global using Windows.Win32.Graphics.Dxgi.Common;
-global using Windows.Win32.Graphics.Gdi;
-global using Windows.Win32.UI.WindowsAndMessaging;
-global using Windows.Win32.System.Diagnostics.Debug;
-global using Windows.Win32.System.Memory;
-global using Windows.Win32.System.Threading;
+global using TerraFX.Interop.Windows;
+global using TerraFX.Interop.DirectX;

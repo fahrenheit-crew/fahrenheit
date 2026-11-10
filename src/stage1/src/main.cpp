@@ -11,11 +11,29 @@
  * For the HostFXR bits, see https://github.com/dotnet/samples/blob/main/core/hosting/src/NativeHost/nativehost.cpp.
  */
 
-#include "fhstage1.h"
+#define WIN32_LEAN_AND_MEAN // Exclude rarely-used stuff from Windows headers
 
-typedef void (CORECLR_DELEGATE_CALLTYPE* fh_init)(); // Function pointer to managed delegate with our own signature
+// Win32
+#include <windows.h>
+#include <strsafe.h>
+#include <PathCch.h>
 
-using main_fn = int(*)(void);
+// .NET hosting
+#include <nethost.h>
+#include <coreclr_delegates.h>
+#include <hostfxr.h>
+
+// IAT patching
+#include <detours/detours.h>
+
+// Hooking
+#include <MinHook.h>
+
+// Forward declarations
+BOOL s1_dbg_link_init(); // Debug bridge initializer.
+
+using init_fn = void(CORECLR_DELEGATE_CALLTYPE*)();
+using main_fn = int (                         *)();
 
 main_fn g_fnptr_main_original = nullptr; // A function pointer to the game's original entrypoint.
 main_fn g_fnptr_main_target   = nullptr; // A function pointer to our modified Stage 1 entrypoint.
@@ -29,8 +47,6 @@ hostfxr_close_fn                         g_fnptr_hostfxr_close;
 
 FILE* g_stdout;
 FILE* g_stderr;
-
-BOOL s1_eh_suppress(); // Forward declaration of EH suppressor function
 
 // Uses the `nethost` library to discover the location of the .NET hosting library,
 // `hostfxr`, and obtains the necessary function pointers from it.
@@ -81,11 +97,9 @@ static int s1_main(void) {
      * If that happens on your system, block here and attach with WinDbg.
      */
 
-    // If necessary, suppress the game's SEH filters, so Stage 0
-    // takes over exception handling and core dumping.
-    if (!s1_eh_suppress()) {
-        fwprintf_s(stderr, L"Failed to suppress SEH filter.\n");
-        return 1;
+    if (!s1_dbg_link_init()) {
+        fwprintf_s(stderr, L"Failed to initialize the Stage 1 debug bridge.\n");
+        return FALSE;
     }
 
     // Declare the name, type, and location of the bootstrap method to invoke.
@@ -166,7 +180,7 @@ static int s1_main(void) {
     get_function_pointer_fn fnptr_hostfxr_get_function_pointer = (get_function_pointer_fn)ptr_hostfxr_get_function_pointer;
 
     // Load managed assembly and get function pointer to bootstrap function.
-    fh_init fnptr_fh_init = nullptr;
+    init_fn fnptr_fh_init = nullptr;
 
     rc = fnptr_hostfxr_load_assembly(
         path_fh_dll,
@@ -238,20 +252,20 @@ static BOOL s1_init(
 
     // Override the program entrypoint. We need to run Fahrenheit initialization first.
     HMODULE h_target        = GetModuleHandleW(nullptr);
-    LPBYTE  ptr_target_base = reinterpret_cast<LPBYTE>(h_target);
+    LPBYTE  ptr_target_base = (LPBYTE) h_target;
 
-    PIMAGE_DOS_HEADER ptr_dos_headers = reinterpret_cast<PIMAGE_DOS_HEADER>(h_target);
+    PIMAGE_DOS_HEADER ptr_dos_headers = (PIMAGE_DOS_HEADER) h_target;
     if (ptr_dos_headers->e_magic != IMAGE_DOS_SIGNATURE)
         return FALSE;
 
-    PIMAGE_NT_HEADERS ptr_nt_headers  = reinterpret_cast<PIMAGE_NT_HEADERS>((ptr_target_base + ptr_dos_headers->e_lfanew));
+    PIMAGE_NT_HEADERS ptr_nt_headers  = (PIMAGE_NT_HEADERS) (ptr_target_base + ptr_dos_headers->e_lfanew);
     if (ptr_nt_headers->Signature != IMAGE_NT_SIGNATURE)
         return FALSE;
 
-    g_fnptr_main_target = reinterpret_cast<main_fn>(ptr_target_base + ptr_nt_headers->OptionalHeader.AddressOfEntryPoint);
+    g_fnptr_main_target = (main_fn) (ptr_target_base + ptr_nt_headers->OptionalHeader.AddressOfEntryPoint);
 
     if (MH_Initialize() != MH_OK
-    ||  MH_CreateHook(g_fnptr_main_target, &s1_main, reinterpret_cast<void**>(&g_fnptr_main_original)) != MH_OK
+    ||  MH_CreateHook(g_fnptr_main_target, &s1_main, (LPVOID*) &g_fnptr_main_original) != MH_OK
     ||  MH_EnableHook(g_fnptr_main_target) != MH_OK)
         return FALSE;
 

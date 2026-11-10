@@ -31,8 +31,8 @@ public struct ExcelSimplifiableTextOffset {
     ///     The offset to the simplified text.
     /// </summary>
     /// <remarks>
-    ///     In Japanese, this would have been hiragana; 
-    ///     in Western encodings, it has no effect. 
+    ///     In Japanese, this would have been hiragana;
+    ///     in Western encodings, it has no effect.
     ///     This is completely unused.
     /// </remarks>
     internal ExcelTextOffset simplified;

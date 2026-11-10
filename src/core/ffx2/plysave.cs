@@ -68,9 +68,9 @@ public struct PlySave {
     public uint enemies_defeated;
     public uint deaths;
     public uint status;
-    
+
     public AutoAbilityEffectsMap auto_ability_effects;
-    
+
     public T_X2JobId before_job; // Last equipped Dressphere?
 
     public PlySaveCreatureData creature_data;

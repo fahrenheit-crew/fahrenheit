@@ -263,7 +263,7 @@ internal sealed class FhGameSpecificGenerator(
                  // Unannotated function:
                  // {function.CallConv} {function.Signature} at {addr_label:x8}
 
-                 public static FhMethodHandle<Fahrenheit.FhCall.d_UnknownFn> {function.Name} => new( new FhMethodLocation("{module}", 0x{function.Location:X}) );
+                 public static FhCallHandle<Fahrenheit.FhCall.d_UnknownFn> {function.Name} => new( new FhCallLocation("{module}", 0x{function.Location:X}) );
 
              """);
             _line_count += 5;
@@ -276,7 +276,7 @@ internal sealed class FhGameSpecificGenerator(
 
              {emit_callconv_attr(function.CallConv)}
              public unsafe delegate {signature_data.ReturnType} d_{function.FuncName}{get_params_string(signature_data.Parameters)};
-             public static FhMethodHandle<d_{function.FuncName}> {function.Name} => new( new FhMethodLocation("{module}", 0x{function.Location:X}) );
+             public static FhCallHandle<d_{function.FuncName}> {function.Name} => new( new FhCallLocation("{module}", 0x{function.Location:X}) );
 
          """);
         _line_count += 7;
@@ -428,7 +428,7 @@ internal sealed class FhCommonGenerator(
                  // Fused unannotated identical entry: {function.CallConv} {function.Signature}
                  // at (FFX.exe+{addr_label_src:X}, FFX-2.exe+{addr_label_dst:X})
 
-                 public static FhMethodHandle<Fahrenheit.FhCall.d_UnknownFn> {fused_label} => new( new FhMethodLocation(0x{common_data.SourceAddress:X}, 0x{common_data.DestAddress:X}) );
+                 public static FhCallHandle<Fahrenheit.FhCall.d_UnknownFn> {fused_label} => new( new FhCallLocation(0x{common_data.SourceAddress:X}, 0x{common_data.DestAddress:X}) );
 
              """);
             _line_count += 5;
@@ -441,7 +441,7 @@ internal sealed class FhCommonGenerator(
 
              {emit_callconv_attr(function.CallConv)}
              public unsafe delegate {signature_data.ReturnType} d_{fused_label}{get_params_string(signature_data.Parameters)};
-             public static FhMethodHandle<d_{fused_label}> {fused_label} => new( new FhMethodLocation(0x{common_data.SourceAddress:X}, 0x{common_data.DestAddress:X}) );
+             public static FhCallHandle<d_{fused_label}> {fused_label} => new( new FhCallLocation(0x{common_data.SourceAddress:X}, 0x{common_data.DestAddress:X}) );
 
          """);
          _line_count += 7;

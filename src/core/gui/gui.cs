@@ -9,6 +9,39 @@ namespace Fahrenheit.Gui;
 ///     Fonts, style, and helper functions for user interfaces in Fahrenheit.
 /// </summary>
 public unsafe partial class FhGui {
+    public struct DrawTextConfig {
+        /// <summary>The size of the text.</summary>
+        public float font_size = 11f;
+
+        /// <summary>The color of the text, in the format 0xAABBGGRR, i.e. RGBA8.</summary>
+        public uint color = 0xFFFFFFFF;
+
+        /// <summary>Whether a shadow should be drawn under the text.</summary>
+        public bool draw_shadow = true;
+
+        /// <summary>The alignment of the text inside the available content region.</summary>
+        public Alignment2D align = Alignment2D.TOP_LEFT;
+
+        public DrawTextConfig() { }
+    }
+
+    public struct DrawCursorConfig {
+        /// <summary>The texture to draw.</summary>
+        public FhTexture texture;
+
+        /// <summary>The size of the cursor.</summary>
+        public Vector2 cursor_size = new Vector2(92f, 55f);
+
+        /// <summary>The maximum distance for the cursor to travel.</summary>
+        public float max_offset = 16f;
+
+        /// <summary>Whether the cursor slightly overlaps its target.</summary>
+        public bool overlap = true;
+
+        public DrawCursorConfig(FhTexture cursor_texture) {
+            texture = cursor_texture;
+        }
+    }
 
     // Fonts for standardized style across Fahrenheit
     public ImFontPtr FONT_DEFAULT;
@@ -165,42 +198,42 @@ public unsafe partial class FhGui {
     public Vector2 display_size => ImGui.GetMainViewport().WorkSize;
 
     //TODO: Change these keys arrays to private and add ReadOnlySpan accessors
-    public readonly ImGuiKey[] keys_up = [
+    public ImGuiKey[] keys_up => [
         ImGuiKey.W,
         ImGuiKey.UpArrow,
         ImGuiKey.GamepadDpadUp,
         ImGuiKey.GamepadLStickUp,
     ];
 
-    public readonly ImGuiKey[] keys_down = [
+    public ImGuiKey[] keys_down => [
         ImGuiKey.S,
         ImGuiKey.DownArrow,
         ImGuiKey.GamepadDpadDown,
         ImGuiKey.GamepadLStickDown,
     ];
 
-    public readonly ImGuiKey[] keys_left = [
+    public ImGuiKey[] keys_left => [
         ImGuiKey.A,
         ImGuiKey.LeftArrow,
         ImGuiKey.GamepadDpadLeft,
         ImGuiKey.GamepadLStickLeft,
     ];
 
-    public readonly ImGuiKey[] keys_right = [
+    public ImGuiKey[] keys_right => [
         ImGuiKey.D,
         ImGuiKey.RightArrow,
         ImGuiKey.GamepadDpadRight,
         ImGuiKey.GamepadLStickRight,
     ];
 
-    public readonly ImGuiKey[] keys_confirm = [
+    public ImGuiKey[] keys_confirm => [
         ImGuiKey.Enter,
         FhGlobal.lang_id == FhLangId.Japanese
             ? ImGuiKey.GamepadFaceRight
             : ImGuiKey.GamepadFaceDown,
     ];
 
-    public readonly ImGuiKey[] keys_cancel = [
+    public ImGuiKey[] keys_cancel => [
         ImGuiKey.Escape,
         ImGuiKey.Backspace,
         FhGlobal.lang_id == FhLangId.Japanese
@@ -267,11 +300,11 @@ public unsafe partial class FhGui {
     /// <returns>Whether the mouse cursor is hovering the specified rectangle.</returns>
     public bool mouse_hovering(
         Rect rect,
-        bool require_movement = false,
+        bool require_movement     = false,
         bool respect_want_capture = true
     ) {
         return (!respect_want_capture || !ImGui.GetIO().WantCaptureMouse)
-            && (!require_movement || ImGui.GetIO().MouseDelta.LengthSquared() > 0)
+            && (!require_movement     || ImGui.GetIO().MouseDelta.LengthSquared() > 0)
             && ImGui.IsMouseHoveringRect(rect.pos, rect.pos + rect.size, false);
     }
 
@@ -284,10 +317,10 @@ public unsafe partial class FhGui {
     /// </param>
     /// <returns>Whether the user clicked with the button on the specified rectangle.</returns>
     public bool mouse_clicked(
-        Rect rect,
-        ImGuiMouseButton button = ImGuiMouseButton.Left,
-        bool repeat = false,
-        bool respect_want_capture = true
+        Rect             rect,
+        ImGuiMouseButton button               = ImGuiMouseButton.Left,
+        bool             repeat               = false,
+        bool             respect_want_capture = true
     ) {
         return (!respect_want_capture || !ImGui.GetIO().WantCaptureMouse)
             && ImGui.IsMouseHoveringRect(rect.pos, rect.pos + rect.size, false)
@@ -302,20 +335,14 @@ public unsafe partial class FhGui {
     ///     The alignment will use the entire available content region to determine center and end positions.
     /// </remarks>
     /// <param name="text">The text to be drawn.</param>
-    /// <param name="font_size">The font size to draw the text at.</param>
-    /// <param name="draw_shadow">Whether a shadow should be drawn under the text.</param>
-    /// <param name="align">The alignment of the text inside the available content region.</param>
-    /// <param name="color">The color to draw the text using in the format 0xAABBGGRR, i.e. RGBA8.</param>
+    /// <param name="config">The configuration to draw the text with.</param>
     public void draw_text(
-        string      text,
-        float       font_size,
-        bool        draw_shadow = true,
-        Alignment2D align       = default,
-        uint        color       = 0xFFFFFFFF
+        string         text,
+        DrawTextConfig config
     ) {
         Vector2 position = ImGui.GetContentRegionAvail();
 
-        position.X = align.h switch {
+        position.X = config.align.h switch {
             Alignment.BEGIN  => 0f,
             Alignment.CENTER => position.X / 2f,
             Alignment.END    => position.X,
@@ -323,7 +350,7 @@ public unsafe partial class FhGui {
             _ => throw new NotImplementedException(),
         };
 
-        position.Y = align.v switch {
+        position.Y = config.align.v switch {
             Alignment.BEGIN  => 0f,
             Alignment.CENTER => position.Y / 2f,
             Alignment.END    => position.Y,
@@ -339,51 +366,7 @@ public unsafe partial class FhGui {
             ImGui.GetWindowDrawList(),
             position,
             text,
-            font_size,
-            draw_shadow,
-            align,
-            color
-        );
-    }
-
-    /// <inheritdoc cref="draw_text(string, float, bool, Alignment2D, uint)"/>
-    public void draw_text(
-        ReadOnlySpan<byte> text,
-        float              font_size,
-        bool               draw_shadow = true,
-        Alignment2D        align       = default,
-        uint               color       = 0xFFFFFFFF
-    ) {
-        Vector2 position = ImGui.GetContentRegionAvail();
-
-        position.X = align.h switch {
-            Alignment.BEGIN  => 0f,
-            Alignment.CENTER => position.X / 2f,
-            Alignment.END    => position.X,
-
-            _ => throw new NotImplementedException(),
-        };
-
-        position.Y = align.v switch {
-            Alignment.BEGIN  => 0f,
-            Alignment.CENTER => position.Y / 2f,
-            Alignment.END    => position.Y,
-
-            _ => throw new NotImplementedException(),
-        };
-
-        position += ImGui.GetCursorPos();
-
-        // Instead of repeating the text alignment logic here using ImGui.SetCursorPos,
-        // we call through to the draw list variant with the window's draw list.
-        draw_text(
-            ImGui.GetWindowDrawList(),
-            position,
-            text,
-            font_size,
-            draw_shadow,
-            align,
-            color
+            config
         );
     }
 
@@ -402,28 +385,22 @@ public unsafe partial class FhGui {
     /// <param name="draw_list">The draw list to add the text to.</param>
     /// <param name="position">The position to draw the text at.</param>
     /// <param name="text">The text to be drawn.</param>
-    /// <param name="font_size">The font size to draw the text at.</param>
-    /// <param name="draw_shadow">Whether a shadow should be drawn under the text.</param>
-    /// <param name="align">The alignment of the text relative to the position.</param>
-    /// <param name="color">The color to draw the text using in the format <c>0xAABBGGRR</c>, i.e. RGBA8.</param>
+    /// <param name="config">The configuration to draw the text with.</param>
     /// <returns>The size of the drawn text.</returns>
     /// <seealso cref="ImGui.GetWindowDrawList()"/>
     /// <seealso cref="ImGui.GetBackgroundDrawList()"/>
     /// <seealso cref="ImGui.GetForegroundDrawList()"/>
     public Vector2 draw_text(
-        ImDrawListPtr draw_list,
-        Vector2       position,
-        string        text,
-        float         font_size,
-        bool          draw_shadow = false,
-        Alignment2D   align       = default,
-        uint          color       = 0xFFFFFFFF
+        ImDrawListPtr  draw_list,
+        Vector2        position,
+        string         text,
+        DrawTextConfig config
     ) {
-        ImGui.PushFont(null, font_size);
+        ImGui.PushFont(null, config.font_size);
 
         Vector2 text_size = ImGui.CalcTextSize(text);
 
-        position.X -= align.h switch {
+        position.X -= config.align.h switch {
             Alignment.BEGIN  => 0f,
             Alignment.CENTER => text_size.X / 2f,
             Alignment.END    => text_size.X,
@@ -431,7 +408,7 @@ public unsafe partial class FhGui {
             _ => throw new NotImplementedException(),
         };
 
-        position.Y -= align.v switch {
+        position.Y -= config.align.v switch {
             Alignment.BEGIN  => 0f,
             Alignment.CENTER => text_size.Y / 2f,
             Alignment.END    => text_size.Y,
@@ -439,58 +416,14 @@ public unsafe partial class FhGui {
             _ => throw new NotImplementedException(),
         };
 
-        if (draw_shadow) {
+        if (config.draw_shadow) {
             // Use the alpha from the provided color
-            uint shadow_color = 0 | (color & 0xFF000000);
+            uint shadow_color = 0 | (config.color & 0xFF000000);
 
             draw_list.AddText(position + new Vector2(2f), shadow_color, text);
         }
 
-        draw_list.AddText(position, color, text);
-
-        ImGui.PopFont();
-
-        return text_size;
-    }
-
-    /// <inheritdoc cref="draw_text(ImDrawListPtr, Vector2, string, float, bool, Alignment2D, uint)"/>
-    public Vector2 draw_text(
-        ImDrawListPtr      draw_list,
-        Vector2            position,
-        ReadOnlySpan<byte> text,
-        float              font_size,
-        bool               draw_shadow = false,
-        Alignment2D        align       = default,
-        uint               color       = 0xFFFFFFFF
-    ) {
-        ImGui.PushFont(null, font_size);
-
-        Vector2 text_size = ImGui.CalcTextSize(text);
-
-        position.X -= align.h switch {
-            Alignment.BEGIN  => 0f,
-            Alignment.CENTER => text_size.X / 2f,
-            Alignment.END    => text_size.X,
-
-            _ => throw new NotImplementedException(),
-        };
-
-        position.Y -= align.v switch {
-            Alignment.BEGIN  => 0f,
-            Alignment.CENTER => text_size.Y / 2f,
-            Alignment.END    => text_size.Y,
-
-            _ => throw new NotImplementedException(),
-        };
-
-        if (draw_shadow) {
-            // Use the alpha from the provided color
-            uint shadow_color = 0 | (color & 0xFF000000);
-
-            draw_list.AddText(position + new Vector2(2f), shadow_color, text);
-        }
-
-        draw_list.AddText(position, color, text);
+        draw_list.AddText(position, config.color, text);
 
         ImGui.PopFont();
 
@@ -501,21 +434,21 @@ public unsafe partial class FhGui {
     /// <param name="draw_list">The draw list to draw the triangle to.</param>
     /// <param name="bounds">The bounding box of the desired triangle.</param>
     /// <param name="direction">The cardinal direction the triangle should point in.</param>
-    /// <param name="color_base1">The color of the left point of the base of the triangle.</param>
-    /// <param name="color_base2">The color of the right point of the base of the triangle.</param>
+    /// <param name="color_base_l">The color of the left point of the base of the triangle.</param>
+    /// <param name="color_base_r">The color of the right point of the base of the triangle.</param>
     /// <param name="color_peak">The color of the top point of the triangle.</param>
     /// <seealso cref="ImGui.GetWindowDrawList()"/>
     /// <seealso cref="ImGui.GetBackgroundDrawList()"/>
     /// <seealso cref="ImGui.GetForegroundDrawList()"/>
     public void draw_triangle_gradient(
-        ImDrawListPtr draw_list,
-        Rect          bounds,
-        GradientDirection     direction,
-        uint          color_base1,
-        uint          color_base2,
-        uint          color_peak
+        ImDrawListPtr     draw_list,
+        Rect              bounds,
+        GradientDirection direction,
+        uint              color_base_l,
+        uint              color_base_r,
+        uint              color_peak
     ) {
-        if (((color_base1 | color_base2 | color_peak) & 0xFF000000) == 0) {
+        if (((color_base_l | color_base_r | color_peak) & 0xFF000000) == 0) {
             return;
         }
 
@@ -523,7 +456,7 @@ public unsafe partial class FhGui {
 
         draw_list.PrimReserve(3, 3);
 
-        draw_list.PrimWriteIdx((ushort)draw_list.VtxCurrentIdx);
+        draw_list.PrimWriteIdx((ushort)(draw_list.VtxCurrentIdx + 0));
         draw_list.PrimWriteIdx((ushort)(draw_list.VtxCurrentIdx + 1));
         draw_list.PrimWriteIdx((ushort)(draw_list.VtxCurrentIdx + 2));
 
@@ -536,7 +469,7 @@ public unsafe partial class FhGui {
             _ => throw new UnreachableException(),
         };
 
-        Vector2 base1 = direction switch {
+        Vector2 base_l = direction switch {
             GradientDirection.UP    => bounds.bottom_left,
             GradientDirection.RIGHT => bounds.top_left,
             GradientDirection.DOWN  => bounds.top_right,
@@ -545,7 +478,7 @@ public unsafe partial class FhGui {
             _ => throw new UnreachableException(),
         };
 
-        Vector2 base2 = direction switch {
+        Vector2 base_r = direction switch {
             GradientDirection.UP    => bounds.bottom_right,
             GradientDirection.RIGHT => bounds.bottom_left,
             GradientDirection.DOWN  => bounds.top_left,
@@ -554,17 +487,17 @@ public unsafe partial class FhGui {
             _ => throw new UnreachableException(),
         };
 
-        draw_list.PrimWriteVtx(peak , uv, color_peak);
-        draw_list.PrimWriteVtx(base1, uv, color_base1);
-        draw_list.PrimWriteVtx(base2, uv, color_base2);
+        draw_list.PrimWriteVtx(peak  , uv, color_peak);
+        draw_list.PrimWriteVtx(base_l, uv, color_base_l);
+        draw_list.PrimWriteVtx(base_r, uv, color_base_r);
     }
 
     private void draw_rectangle_gradient_up(
-        ImDrawListPtr draw_list,
-        Rect bounds,
-        List<GradientStep> steps
+        ImDrawListPtr              draw_list,
+        Rect                       bounds,
+        ReadOnlySpan<GradientStep> steps
     ) {
-        for (int i = 1; i < steps.Count; i++)  {
+        for (int i = 1; i < steps.Length; i++)  {
             GradientStep step1 = steps[i - 1];
             GradientStep step2 = steps[i];
 
@@ -587,11 +520,11 @@ public unsafe partial class FhGui {
     }
 
     private void draw_rectangle_gradient_right(
-        ImDrawListPtr draw_list,
-        Rect bounds,
-        List<GradientStep> steps
+        ImDrawListPtr              draw_list,
+        Rect                       bounds,
+        ReadOnlySpan<GradientStep> steps
     ) {
-        for (int i = 1; i < steps.Count; i++)  {
+        for (int i = 1; i < steps.Length; i++)  {
             GradientStep step1 = steps[i - 1];
             GradientStep step2 = steps[i];
 
@@ -614,11 +547,11 @@ public unsafe partial class FhGui {
     }
 
     private void draw_rectangle_gradient_down(
-        ImDrawListPtr draw_list,
-        Rect bounds,
-        List<GradientStep> steps
+        ImDrawListPtr              draw_list,
+        Rect                       bounds,
+        ReadOnlySpan<GradientStep> steps
     ) {
-        for (int i = 1; i < steps.Count; i++)  {
+        for (int i = 1; i < steps.Length; i++)  {
             GradientStep step1 = steps[i - 1];
             GradientStep step2 = steps[i];
 
@@ -641,11 +574,11 @@ public unsafe partial class FhGui {
     }
 
     private void draw_rectangle_gradient_left(
-        ImDrawListPtr draw_list,
-        Rect bounds,
-        List<GradientStep> steps
+        ImDrawListPtr              draw_list,
+        Rect                       bounds,
+        ReadOnlySpan<GradientStep> steps
     ) {
-        for (int i = 1; i < steps.Count; i++)  {
+        for (int i = 1; i < steps.Length; i++)  {
             GradientStep step1 = steps[i - 1];
             GradientStep step2 = steps[i];
 
@@ -668,9 +601,9 @@ public unsafe partial class FhGui {
     }
 
     public void draw_rectangle_gradient(
-        ImDrawListPtr draw_list,
-        Rect bounds,
-        GradientDirection direction,
+        ImDrawListPtr              draw_list,
+        Rect                       bounds,
+        GradientDirection          direction,
         ReadOnlySpan<GradientStep> steps
     ) {
         ArgumentOutOfRangeException.ThrowIfLessThan(steps.Length, 1);
@@ -683,11 +616,13 @@ public unsafe partial class FhGui {
         if (steps[^1].progress != 1f)
             full_steps.Add(steps[^1] with { progress = 1f });
 
+        ReadOnlySpan<GradientStep> gradient_steps = CollectionsMarshal.AsSpan(full_steps);
+
         switch (direction) {
-            case GradientDirection.UP:    draw_rectangle_gradient_up   (draw_list, bounds, full_steps); break;
-            case GradientDirection.RIGHT: draw_rectangle_gradient_right(draw_list, bounds, full_steps); break;
-            case GradientDirection.DOWN:  draw_rectangle_gradient_down (draw_list, bounds, full_steps); break;
-            case GradientDirection.LEFT:  draw_rectangle_gradient_left (draw_list, bounds, full_steps); break;
+            case GradientDirection.UP:    draw_rectangle_gradient_up   (draw_list, bounds, gradient_steps); break;
+            case GradientDirection.RIGHT: draw_rectangle_gradient_right(draw_list, bounds, gradient_steps); break;
+            case GradientDirection.DOWN:  draw_rectangle_gradient_down (draw_list, bounds, gradient_steps); break;
+            case GradientDirection.LEFT:  draw_rectangle_gradient_left (draw_list, bounds, gradient_steps); break;
 
             default: throw new UnreachableException();
         }
@@ -695,8 +630,8 @@ public unsafe partial class FhGui {
 
     public void draw_quad_gradient(
         ImDrawListPtr draw_list,
-        Vector2[] points,
-        uint[] colors
+        Vector2[]     points,
+        uint[]        colors
     ) {
         ArgumentOutOfRangeException.ThrowIfNotEqual(points.Length, 4);
         ArgumentOutOfRangeException.ThrowIfNotEqual(colors.Length, 4);

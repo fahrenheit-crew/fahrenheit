@@ -30,12 +30,14 @@ internal sealed class FhState {
     ///     returns the path of the local state directory and creates it.
     /// </summary>
     private string _get_state_dir_path(FhModContext mod_context, FhModuleContext module_context, int slot) {
+        FhSaveSet set = FhApi.Saves.sets_get_active();
+
         string local_state_dir = Path.Join(
             FhEnvironment.Finder.State.FullName,
             FhInternal.Hasher.SaveSetHash,
-            FhApi.Saves.active_set,
-            FhSavePal.pal_get_save_subfolder(),
-            FhSavePal.pal_get_save_name_for_slot(slot),
+            set.name,
+            FhSaves.pal_get_save_subfolder(),
+            FhSaves.pal_get_save_name_for_slot(slot),
             mod_context.Manifest.Id,
             module_context.Module.ModuleType);
 
@@ -57,10 +59,9 @@ internal sealed class FhState {
 
                 if (!File.Exists(state_fn)) continue;
 
-                using FileStream state_meta_fs = File.Open(state_meta_fn, FileMode.Open,         FileAccess.Read, FileShare.None);
-                using FileStream state_fs      = File.Open(state_fn,      FileMode.OpenOrCreate, FileAccess.Read, FileShare.Read);
+                using FileStream state_meta_fs = File.Open(state_meta_fn, FileMode.Open, FileAccess.Read, FileShare.Read);
+                using FileStream state_fs      = File.Open(state_fn,      FileMode.Open, FileAccess.Read, FileShare.Read);
 
-                FhInternal.Log.Debug($"Reading metadata for module {module_type}.");
                 FhLocalStateInfo state_meta = JsonSerializer.Deserialize<FhLocalStateInfo>(state_meta_fs, FhUtil.InternalJsonOpts)
                     ?? throw new Exception("FH_E_LOCAL_STATE_META_BLOCK_NULL");
 
@@ -84,10 +85,9 @@ internal sealed class FhState {
 
                 FhLocalStateInfo state_meta = new(mod_context.Manifest.Version);
 
-                using FileStream state_meta_fs = File.Open(state_meta_fn, FileMode.Create,       FileAccess.Write, FileShare.None);
-                using FileStream state_fs      = File.Open(state_fn,      FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read);
+                using FileStream state_meta_fs = File.Open(state_meta_fn, FileMode.Create, FileAccess.Write, FileShare.None);
+                using FileStream state_fs      = File.Open(state_fn,      FileMode.Create, FileAccess.Write, FileShare.None);
 
-                FhInternal.Log.Debug($"Writing metadata for module {module_type}.");
                 state_meta_fs.Write(JsonSerializer.SerializeToUtf8Bytes(state_meta, FhUtil.InternalJsonOpts));
 
                 FhInternal.Log.Debug($"{module_type} -> {state_fn}.");

@@ -73,9 +73,9 @@ public class FadeHelper : Timer {
         int to_r = (int)((color_to >>  0) & 0xFF);
 
         int delta_a = to_a - from_a;
-        int delta_b = to_r - from_r;
+        int delta_b = to_b - from_b;
         int delta_g = to_g - from_g;
-        int delta_r = to_b - from_b;
+        int delta_r = to_r - from_r;
 
         int mixed_a = from_a + (int)float.Round(delta_a * progress);
         int mixed_b = from_b + (int)float.Round(delta_b * progress);

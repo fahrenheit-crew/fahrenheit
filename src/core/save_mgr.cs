@@ -5,8 +5,169 @@
 
 namespace Fahrenheit;
 
-using SaveCounts     = Dictionary<string, int>;
-using UserInterfaces = Dictionary<string, FhSaveUi>;
+/* [fkelava 30/10/26 13:13]
+ * Fahrenheit reimplements the base game's save/load system to allow for customizable user interfaces,
+ * save set capability, etc. It also fixes a number of bugs, such as invalid display of player
+ * names in other languages, inability to distinguish wetsuit Rikku from Seymour, and more.
+ *
+ * This file contains the save set and implementation controls. For the PAL, see `save_pal`.
+ */
+
+/// <summary>
+///     The possible states of the game's default save data manager.
+/// </summary>
+public enum SaveSystemState : int {
+    IDLE           = 0x00,
+    SAVE           = 0x01,
+    SAVE_SUCCEED   = 0x02,
+    LOAD           = 0x03,
+    LOAD_SUCCEED   = 0x04,
+    DELETE         = 0x05, // Effectively unused on PC
+    DELETE_SUCCEED = 0x06  // Effectively unused on PC
+}
+
+/// <summary>
+///     The possible states of the game's save/load screen dialog box.
+/// </summary>
+public enum SaveDialogState {
+    CLOSED = 0x00,
+    UNK5   = 0x05
+}
+
+/// <summary>
+///     The possible states of the game's save data screen.
+/// </summary>
+public enum SaveScreenState {
+    CLOSED  = 0x00,
+    OPENING = 0x01,
+    OPEN    = 0x02,
+    UNK3    = 0x03,
+    UNK4    = 0x04
+}
+
+/// <summary>
+///     Combines with save data to form a save file.
+/// </summary>
+/// <remarks>This is a union type. Only the active game's accessors are valid.</remarks>
+[StructLayout(LayoutKind.Explicit)]
+public struct SaveHeader {
+    [FieldOffset(0x0)] public FFX .SaveHeader x;
+    [FieldOffset(0x0)] public FFX2.SaveHeader x2;
+}
+
+/// <summary>
+///     Combines with a save header to form a save file.
+/// </summary>
+/// <remarks>This is a union type. Only the active game's accessors are valid.</remarks>
+[StructLayout(LayoutKind.Explicit)]
+public struct SaveData {
+    [FieldOffset(0x0)] public FFX .SaveData x;
+    [FieldOffset(0x0)] public FFX2.SaveData x2;
+}
+
+/// <summary>
+///     The core of the game's default save/load system.
+/// </summary>
+/// <remarks>This is a union type. Only the active game's accessors are valid.</remarks>
+[StructLayout(LayoutKind.Explicit)]
+internal struct SaveDataManager {
+    [FieldOffset(0x0)] public FFX .SaveDataManager x;
+    [FieldOffset(0x0)] public FFX2.SaveDataManager x2;
+}
+
+/// <summary>
+///     Contains per-save information for save/load UIs.
+/// </summary>
+/// <remarks>The properties are automatically localized to the active game language.</remarks>
+public class FhSaveUiData {
+    [InlineArray(3)]
+    public struct IconChr {
+        private FhTexture _e0;
+    }
+
+    internal FhSaveUiData() { }
+
+    /// <summary>
+    ///     Marks this UI data as temporarily invalidated.
+    /// </summary>
+    internal bool valid;
+
+    /// <summary>
+    ///     A copy of the save's header.
+    /// </summary>
+    /// <remarks>Do not modify its contents.</remarks>
+    public SaveHeader header;
+
+    /// <summary>
+    ///     A copy of the save's data.
+    /// </summary>
+    /// <remarks>Do not modify its contents.</remarks>
+    public SaveData data;
+
+    /// <summary>
+    ///     The slot that this save occupies.
+    /// </summary>
+    public int    slot         { get; internal set; } = 0xFFFF;
+
+    /// <summary>
+    ///     The slot that this save occupies, as a string.
+    /// </summary>
+    public string slot_str     { get; internal set; } = "";
+
+    /// <summary>
+    ///     The time spent in this save.
+    /// </summary>
+    public string play_time    { get; internal set; } = "";
+
+    /// <summary>
+    ///     The name of the primary player character in this save.
+    /// </summary>
+    public string player_name  { get; internal set; } = "";
+
+    /// <summary>
+    ///     The active story chapter in this save.
+    /// </summary>
+    /// <remarks>Only valid in FF X-2.</remarks>
+    public string chapter      { get; internal set; } = "";
+
+    /// <summary>
+    ///     The story completion, as a percentage, in this save.
+    /// </summary>
+    /// <remarks>Only valid in FF X-2.</remarks>
+    public string completion   { get; internal set; } = "";
+
+    /// <summary>
+    ///     The name of the current location in this save.
+    /// </summary>
+    public string location     { get; internal set; } = "";
+
+    /// <summary>
+    ///     The level of the player character in this save.
+    /// </summary>
+    /// <remarks>Only valid in FF X-2 LM.</remarks>
+    public string lm_level     { get; internal set; } = "";
+
+    /// <summary>
+    ///     The job of the player character in this save.
+    /// </summary>
+    /// <remarks>Only valid in FF X-2 LM.</remarks>
+    public string lm_job       { get; internal set; } = "";
+
+    /// <summary>
+    ///     A set of icons for the player party in this save.
+    /// </summary>
+    public IconChr icon_chr    { get; internal set; } = new();
+
+    /// <summary>
+    ///    The icon for the current location in this save.
+    /// </summary>
+    public FhTexture icon_map  { get; internal set; } = new("", FhTextureType.NULL);
+
+    /// <summary>
+    ///     The local time at which this save was last written to.
+    /// </summary>
+    public DateTimeOffset create_time { get; internal set; } = DateTimeOffset.MinValue;
+}
 
 /// <summary>Represents the current operating mode of the save system.</summary>
 public enum FhSaveSystemMode {
@@ -31,11 +192,11 @@ internal interface IFhSaveSystemImpl {
 
     /// <summary>Save to the specified slot.</summary>
     /// <param name="slot">The slot to save to. Set this to <c>0</c> if saving to a new slot.</param>
-    internal void save(int slot);
+    internal bool save(int slot);
 
     /// <summary>Load the save file in the specified slot.</summary>
     /// <param name="slot">The slot to load from.</param>
-    internal void load(int slot);
+    internal bool load(int slot);
 
     /// <summary>Compile Al Bhed primers from a specified slot.</summary>
     /// <remarks>
@@ -43,121 +204,178 @@ internal interface IFhSaveSystemImpl {
     ///     Al Bhed primers with ones from the chosen save file.
     /// </remarks>
     /// <param name="slot">The slot to compile primers from.</param>
-    internal void copy_albd(int slot);
+    internal bool copy_albd(int slot);
 
     /// <summary>Exit the save screen through cancellation or error.</summary>
-    internal void exit_cancel();
-
-    /// <summary>Exit the save screen through successfully loading, saving, or compiling a save.</summary>
-    internal void exit_success();
+    internal void abort();
 }
 
 /// <summary>
-///     Allows multiple sets of saves to exist.
+///     A named group of save files.
 /// </summary>
-public sealed class FhSaves {
+public sealed class FhSaveSet {
+    /// <summary>
+    ///     The set's name. Equal to the folder on disk containing it.
+    /// </summary>
+    public string name       { get; internal init; } = "";
+
+    /// <summary>
+    ///     Whether the set has an autosave.
+    /// </summary>
+    public bool has_autosave { get; internal set; }
+
+    /// <summary>
+    ///     How many saves the set has, excluding the autosave.
+    /// </summary>
+    public int count_saves   { get; internal set; }
+
+    /// <summary>
+    ///     How many UI entries the set has.
+    /// </summary>
+    /// <remarks>This excludes the autosave when saving, and includes a 'new save data' entry when the set is not full.</remarks>
+    public int count_ui_data { get; internal set; }
+
+    /// <summary>
+    ///     Whether the set is full, and thus unable to accept a new save.
+    /// </summary>
+    public bool is_full      { get; internal set; }
+}
+
+/* [fkelava 07/11/25 15:01]
+ * Fh computes a load-order sensitive hash over all mods that declare 'separate saves'.
+ * It creates a 'default' save set for that hash. The user may create other sets manually.
+ * At runtime, you may swap between all sets for the hash.
+ */
+
+/// <summary>
+///     The interface to the game's save system,
+///     and a manager that allows multiple sets of saves to exist.
+/// </summary>
+public sealed partial class FhSaves {
 
     internal readonly FhRuntimeHandle<IFhSaveSystemImpl> impl_handle = new();
 
-    /* [fkelava 07/11/25 15:01]
-     * Fh computes a load-order sensitive hash over all mods that declare 'separate saves'.
-     * It creates a 'default' save set for that hash. The user may create manual sets.
-     * At runtime, you may swap between all sets for the hash.
-     */
+    private const int SLOTS_PER_SET = 101;
 
-    private          int                     _sm_lock;
-    private readonly HashSet<string>         _sm_sets;
-    private readonly HashSet<string>         _sm_sets_with_autosaves;
-    private readonly SaveCounts              _sm_set_save_counts;
-    private readonly HashSet<int>            _sm_occupied_slots;
-    private          string                  _sm_active_set;
-    private readonly string                  _sm_path_base;
-    private readonly string                  _sm_path_default_set;
-    private readonly List<FhSaveDisplayData> _sm_display_data;
-    private readonly UserInterfaces          _sm_uis;
+    private static readonly string _sets_path_base;
+    private static readonly string _sets_path_default;
+    private static readonly string _sets_name_default = "default";
+    private static          string _sets_name_active; // The active set's name.
 
-    /// <summary>The name of the active set.</summary>
-    public string active_set => _sm_active_set;
+    private readonly Dictionary<string, FhSaveSet> _sets; // The available save sets.
+    private readonly Dictionary<string, FhSaveUi>  _ui;   // The available save user interfaces.
+    private readonly FhSaveUiData[]                _ui_data;
 
-    /// <summary>The list of display data of saves in the active set.</summary>
-    public List<FhSaveDisplayData> display_data => _sm_display_data;
+    private          int          _lock;
+    private readonly HashSet<int> _slots; // The slots occupied in the active set.
 
-    public FhSaves() {
-        _sm_path_base           = Path.Join(FhEnvironment.Finder.Saves.FullName, FhInternal.Hasher.SaveSetHash);
-        _sm_path_default_set    = Path.Join(_sm_path_base, FhSavePal.DEFAULT_SET_NAME, FhSavePal.pal_get_save_subfolder());
-        _sm_occupied_slots      = [];
-        _sm_sets                = [];
-        _sm_sets_with_autosaves = [];
-        _sm_active_set          = FhSavePal.DEFAULT_SET_NAME;
-        _sm_display_data        = [];
-        _sm_uis                 = [];
-        _sm_set_save_counts     = [];
-
-        /* [fkelava 19/01/26 18:13]
-         * Save PAL is not ready to perform indexing operations at 'init' time because
-         * AtelGetSaveDicName & co. are not usable before game initialization has run.
-         *
-         * Set indexing is performed just in time when SEM transitions to save/load mode.
-         */
-
-        _sm_create_default_set();
-        _sm_query_sets();
+    static FhSaves() {
+        _sets_path_base    = Path.Join(FhEnvironment.Finder.Saves.FullName, FhInternal.Hasher.SaveSetHash);
+        _sets_path_default = Path.Join(_sets_path_base, _sets_name_default, pal_get_save_subfolder());
+        _sets_name_active  = _sets_name_default;
     }
 
-    /* [fkelava 19/01/26 12:03]
-     * The save manager is considered essential, as is any part of the runtime. We throw
-     * if we cannot do basic file I/O; there is no point trying to handle it gracefully.
-     */
+    public FhSaves() {
+        _slots   = [];
+        _sets    = [];
+        _ui      = [];
+        _ui_data = new FhSaveUiData[SLOTS_PER_SET];
+
+        /* [fkelava 19/01/26 18:13]
+         * Indexing cannot be done here because game functions
+         * are not callable before module initialization has run.
+         *
+         * It is instead performed just in time when we switch to save/load mode.
+         */
+
+        _sets_create_default();
+    }
 
     /// <summary>
-    ///     Ensures the default set exists. A default set must exist for every state hash.
+    ///     Ensures the default save set exists.
     /// </summary>
-    private void _sm_create_default_set() {
-        _ = Directory.CreateDirectory(_sm_path_default_set);
+    private void _sets_create_default() {
+        _ = Directory.CreateDirectory(_sets_path_default);
     }
 
     /// <summary>
     ///     Reads a save file and prepares its display data.
     /// </summary>
-    private async Task _sm_index_save_file(string save_file_path) {
-        FhSaveDisplayData  display_data = new();
-        ReadOnlySpan<char> slot_str     = save_file_path[ (save_file_path.LastIndexOf('_') + 1) .. ];
+    private void _sets_index_save(int slot) {
+        string save_file_path = pal_get_path_for_slot(slot);
 
-        if (!int.TryParse(slot_str, out int slot))
-            return;
+        /* [fkelava 30/10/26 16:38]
+         * UI data is sorted at end of indexing. Invalid UI data moves to the end,
+         * i.e. the first `set.count` UI data are the ones for the valid saves.
+         */
 
-        using (FileStream save_file_stream = File.OpenRead(save_file_path)) {
-            save_file_stream.ReadExactly(display_data.header);
+        FhSaveUiData ui_data = _ui_data[slot] ??= new();
+        ui_data.valid = false;
+
+        try {
+            /* [fkelava 01/11/26 14:55]
+             * Memory-mapped files are opened R/W by default, and the memory view is flushed to disk when closing.
+             * The upshot is that the last write time will be changed even when opening it purely for reading
+             * unless we only pass R as the access flag.
+             */
+            using MemoryMappedFile save_file = MemoryMappedFile.CreateFromFile(
+                save_file_path,
+                FileMode.Open,
+                null,
+                0,
+                MemoryMappedFileAccess.Read
+            );
+
+            using MemoryMappedViewAccessor save_accessor = save_file.CreateViewAccessor(
+                0,
+                pal_get_sz_save(),
+                MemoryMappedFileAccess.Read
+            );
+
+            save_accessor.Read(0, out ui_data.header);
+
+            switch (FhGlobal.game_id) {
+                case FhGameId.FFX:                     save_accessor.Read(0x40, out ui_data.data.x ); break;
+                case FhGameId.FFX2 or FhGameId.FFX2LM: save_accessor.Read(0x40, out ui_data.data.x2); break;
+
+                default: throw new UnreachableException();
+            }
         }
+        catch { return; }
 
-        FhSavePal.pal_get_location   (display_data.header, display_data.location);
-        FhSavePal.pal_get_icon_map   (display_data.header, display_data.icon_map);
-        FhSavePal.pal_get_player_name(display_data.header, display_data.player_name);
-        FhSavePal.pal_get_playtime   (display_data.header, display_data.play_time);
-        FhSavePal.pal_get_chapter    (display_data.header, display_data.chapter);
-        FhSavePal.pal_get_completion (display_data.header, display_data.completion);
-        FhSavePal.pal_get_lm_job     (display_data.header, display_data.lm_job);
-        FhSavePal.pal_get_lm_level   (display_data.header, display_data.lm_level);
+        FhSaveUiData.IconChr icon_chr = ui_data.icon_chr;
+        icon_chr[0] = _pal_get_icon_chr(ui_data.header, ui_data.data, 0);
+        icon_chr[1] = _pal_get_icon_chr(ui_data.header, ui_data.data, 1);
+        icon_chr[2] = _pal_get_icon_chr(ui_data.header, ui_data.data, 2);
 
-        display_data.slot        = slot;
-        display_data.slot_str    = slot.ToString();
-        display_data.create_time = File.GetLastWriteTime(save_file_path);
+        ui_data.slot        = slot;
+        ui_data.slot_str    = slot.ToString();
+        ui_data.create_time = File.GetLastWriteTime(save_file_path);
+        ui_data.play_time   = _pal_get_play_time  (ui_data.header);
+        ui_data.player_name = _pal_get_player_name(ui_data.header);
+        ui_data.chapter     = _pal_get_chapter    (ui_data.header);
+        ui_data.completion  = _pal_get_completion (ui_data.header);
+        ui_data.location    = _pal_get_location   (ui_data.header);
+        ui_data.lm_level    = _pal_get_lm_level   (ui_data.header);
+        ui_data.lm_job      = _pal_get_lm_job     (ui_data.header);
+        ui_data.icon_map    = _pal_get_icon_map   (ui_data.header);
+        ui_data.icon_chr    = icon_chr;
+        ui_data.valid       = true;
 
-        _sm_occupied_slots.Add(slot);
-        _sm_display_data  .Add(display_data);
+        _ = _slots.Add(slot);
     }
 
     /// <summary>
     ///     Indexes the active save set. This function must be called under lock.
     /// </summary>
-    private void _sm_index_active_set() {
-        _sm_display_data  .Clear();
-        _sm_occupied_slots.Clear();
+    private void _sets_index() {
+        _slots.Clear();
 
         string path_set_folder = Path.Join(
-            _sm_path_base,
-            _sm_active_set,
-            FhSavePal.pal_get_save_subfolder());
+            _sets_path_base,
+            _sets_name_active,
+            pal_get_save_subfolder()
+        );
 
         /* [fkelava 08/02/26 15:00]
          * Save sets mirror the base game save directory's structure, i.e. the subfolders
@@ -169,139 +387,145 @@ public sealed class FhSaves {
          */
         _ = Directory.CreateDirectory(path_set_folder);
 
-        string[] files = [ .. Directory.EnumerateFiles(path_set_folder, FhSavePal.pal_get_save_name_glob()) ];
-        Task  [] tasks = new Task[files.Length];
 
-        for (int i = 0; i < files.Length; i++) {
-            tasks[i] = _sm_index_save_file(files[i]);
+        for (int slot = 0; slot < SLOTS_PER_SET; slot++) {
+            _sets_index_save(slot);
         }
 
-        Task.WaitAll(tasks);
+        bool has_autosave = _slots.Contains(0);
 
-        _sm_display_data.Sort(FhSaveTimeComparer.Instance);
+        int count = _slots.Count;
+        int limit = SLOTS_PER_SET - (has_autosave ? 0 : 1);
+
+        bool is_saving = pal_state_system is SaveSystemState.SAVE;
+        bool is_full   = count == limit;
+
+        FhSaveSet set = _sets[_sets_name_active];
+
+        set.has_autosave  = has_autosave;
+        set.count_saves   = count;
+        set.count_ui_data = count;
+        set.is_full       = is_full;
+
+        /* [fkelava 03/11/26 14:43]
+         * The manager handles two edge cases to avoid spilling nonsense into the consuming UI.
+         *
+         * - The autosave is ignored for display count purposes, and not displayed when saving.
+         * - When saving and the set isn't full, we insert a dummy for the 'New Save Data' button.
+         *
+         * UI data with slot 0 when saving must be interpreted as a placeholder for it.
+         */
+
+        if (has_autosave) {
+            set.count_saves -= 1;
+
+            if (is_saving) {
+                set.count_ui_data -= 1;
+
+                _ui_data[0].valid = false;
+            }
+        }
+
+        if (is_saving && !is_full) {
+            set.count_ui_data += 1;
+
+            _ui_data[0] = new FhSaveUiData() {
+                slot  = 0,
+                valid = true,
+            };
+        }
+
+        _ui_data.Sort(_pal_sort_create_time);
+    }
+
+    /// <summary>
+    ///     Registers basic information about a given save set directory.
+    /// </summary>
+    /// <param name="set_dir_path">The absolute path to the save set directory.</param>
+    private void _sets_query(string set_dir_path) {
+        string set_name        = Path.GetFileName(set_dir_path);
+        string set_subdir_path = Path.Join       (set_dir_path, pal_get_save_subfolder());
+
+        _ = Directory.CreateDirectory(set_subdir_path);
+
+        int count = 0;
+        for (int i = 0; i < SLOTS_PER_SET; i++) {
+            if (File.Exists(pal_get_path_for_slot(i, set_name))) count++;
+        }
+
+        _sets[set_name] = new FhSaveSet() {
+            name         = set_name,
+            has_autosave = File.Exists(pal_get_path_for_slot(0, set_name)),
+            count_saves  = count,
+        };
     }
 
     /// <summary>
     ///     Queries the disk for available save sets.
     /// </summary>
-    private void _sm_query_sets() {
-        _sm_sets               .Clear();
-        _sm_sets_with_autosaves.Clear();
-        _sm_set_save_counts    .Clear();
+    private void _sets_query_all() {
+        _sets.Clear();
 
-        foreach (string set_dir in Directory.EnumerateDirectories(_sm_path_base)) {
-            string set_name   = Path.GetFileName(set_dir);
-            string set_subdir = Path.Join       (set_dir, FhSavePal.pal_get_save_subfolder());
-
-            _sm_sets.Add(set_name);
-
-            if (File.Exists(get_save_path_for_slot(0, set_name))) {
-                _sm_sets_with_autosaves.Add(set_name);
-            }
-
-            _ = Directory.CreateDirectory(set_subdir);
-
-            ReadOnlySpan<string> saves = [ .. Directory.EnumerateFiles(set_subdir, FhSavePal.pal_get_save_name_glob()) ];
-
-            _sm_set_save_counts[set_name] = saves.Length;
+        foreach (string set in Directory.EnumerateDirectories(_sets_path_base)) {
+            _sets_query(set);
         }
 
         /* [fkelava 19/01/26 14:50]
-         * Sets can be modified on the disk under us. The user can create a new one, delete the
-         * active one, or even delete the _default_ set, which is meant to be a system invariant.
-         *
-         * We can't stop that, but we can disregard their nonsense. The default set is forcibly
-         * regenerated if it does not exist, and we fall back to it if the active set was torched.
+         * The default set is forcibly regenerated if it does not exist,
+         * and we fall back to it if the active set was torched.
          */
 
-        if (!_sm_sets.Contains(_sm_active_set)) {
-            FhInternal.Log.Warning($"Active set {_sm_active_set} was deleted; falling back to default.");
+        if (!_sets.TryGetValue(_sets_name_active, out _)) {
+            FhInternal.Log.Warning($"Active set {_sets_name_active} was deleted; falling back to default.");
 
-            if (!_sm_sets.Contains(FhSavePal.DEFAULT_SET_NAME)) {
+            if (!_sets.TryGetValue(_sets_name_default, out _)) {
                 FhInternal.Log.Error("Default set was deleted; forcibly re-generating.");
 
-                _sm_create_default_set();
-                _sm_query_sets();
+                _sets_create_default();
+                _sets_query_all();
             }
 
-            _sm_active_set = FhSavePal.DEFAULT_SET_NAME;
+            _sets_name_active = _sets_name_default;
         }
     }
 
     /// <summary>
     ///     Reindexes the active save set.
     /// </summary>
-    internal void index_active_set() {
-        if (Interlocked.CompareExchange(ref _sm_lock, 1, 0) != 0)
+    internal void sets_index() {
+        if (Interlocked.CompareExchange(ref _lock, 1, 0) != 0)
             return;
 
-        _sm_index_active_set();
+        _pal_cache_init();
+        _pal_cache_tex_unload();
 
-        Interlocked.Decrement(ref _sm_lock);
+        _sets_index();
+
+        _pal_cache_tex_load();
+
+        Interlocked.Decrement(ref _lock);
     }
 
     /// <summary>
-    ///     For a given <paramref name="slot"/> in the given <paramref name="set"/>,
-    ///     gets the full path of the corresponding save file.
+    ///     Regenerates the available save sets.
     /// </summary>
-    internal string get_save_path_for_slot(int slot, string? set = null) {
-        return Path.Join(
-            _sm_path_base,
-            set ?? _sm_active_set,
-            FhSavePal.pal_get_save_subfolder(),
-            FhSavePal.pal_get_save_name_for_slot(slot));
-    }
-
-    /// <summary>
-    ///     For a given <paramref name="slot"/>, returns the slot number being saved to.
-    /// </summary>
-    internal int remap_slot(int slot) {
-        // This method is not re-entrant.
-        if (slot != 0) return slot;
-
-        int target_slot = 1;
-        while (_sm_occupied_slots.Contains(target_slot)) { target_slot++; }
-
-        _sm_occupied_slots.Add(target_slot);
-        return target_slot;
-    }
-
-    /// <summary>Get the save UI associated with the given ID.</summary>
-    /// <param name="id">The ID of the desired UI.</param>
-    /// <param name="ui">The UI with the given ID.</param>
-    /// <returns>Whether the operation succeeded.</returns>
-    internal bool get_ui(string id, [NotNullWhen(true)] out FhSaveUi? ui) {
-        return _sm_uis.TryGetValue(id, out ui);
-    }
-
-    /// <summary>Register a new save UI for selection by the user.</summary>
-    /// <param name="ui">The new UI to register.</param>
-    public void register_ui(FhSaveUi ui) {
-        _sm_uis[ui.ModuleType] = ui;
-    }
-
-    /// <summary>Regenerate and retrieve the loadable sets.</summary>
     /// <remarks>
     ///     Regenerating sets involves expensive file operations,
     ///     so only do this when you have to.
     /// </remarks>
+    internal void sets_query() {
+        if (Interlocked.CompareExchange(ref _lock, 1, 0) != 0)
+            return;
+
+        _sets_query_all();
+
+        Interlocked.Decrement(ref _lock);
+    }
+
+    /// <summary>Retrieve the loadable sets.</summary>
     /// <returns>A set of the available set names.</returns>
-    public IReadOnlySet<string> get_sets() {
-        _sm_query_sets();
-        return _sm_sets;
-    }
-
-    /// <summary>Retrieve the save counts for each set for the current game.</summary>
-    /// <returns>A dictionary of save counts keyed by set names.</returns>
-    public IReadOnlyDictionary<string, int> get_save_counts() {
-        return _sm_set_save_counts;
-    }
-
-    /// <summary>Determine whether a set contains an autosave.</summary>
-    /// <param name="set_name">The name of the set to check for an autosave.</param>
-    /// <returns>Whether the specified set contains an autosave.</returns>
-    public bool set_has_autosave(string set_name) {
-        return _sm_sets_with_autosaves.Contains(set_name);
+    public IEnumerable<string> sets_enumerate() {
+        return _sets.Keys;
     }
 
     /// <summary>Switch to the specified save set, and index it.</summary>
@@ -310,28 +534,58 @@ public sealed class FhSaves {
     ///     so only do this when you have to.
     /// </remarks>
     /// <param name="set_name">The name of the set to switch to.</param>
-    public void switch_active_set(string set_name) {
-        if (Interlocked.CompareExchange(ref _sm_lock, 1, 0) != 0)
+    public void sets_change(string set_name) {
+        if (Interlocked.CompareExchange(ref _lock, 1, 0) != 0)
             return;
 
-        _sm_active_set = set_name;
-        _sm_index_active_set();
+        _pal_cache_tex_unload();
 
-        Interlocked.Decrement(ref _sm_lock);
+        _sets_name_active = set_name;
+        _sets_index();
+
+        _pal_cache_tex_load();
+
+        Interlocked.Decrement(ref _lock);
     }
 
-    /// <summary>Get the number of slots used in the current set, not including the autosave.</summary>
-    /// <returns>The number of slots used.</returns>
-    public int get_slots_used() {
-        return _sm_occupied_slots.Contains(0)
-            ? _sm_display_data.Count - 1
-            : _sm_display_data.Count;
+    /// <summaryRetrieve the active set.</summary>
+    public FhSaveSet sets_get_active() => _sets[_sets_name_active];
+
+    /// <summaryRetrieve a specific set.</summary>
+    public bool sets_get(string set_name, [NotNullWhen(true)] out FhSaveSet? set) {
+        return _sets.TryGetValue(set_name, out set);
+    }
+
+    /// <summary>
+    ///     Retrieves the UI data at a specific index in the active set.
+    /// </summary>
+    public bool ui_get_data(int index, [NotNullWhen(true)] out FhSaveUiData? data) {
+        data = default;
+        if (index >= _sets[_sets_name_active].count_ui_data)
+            return false;
+
+        data = _ui_data[index];
+        return true;
+    }
+
+    /// <summary>Get the save UI associated with the given ID.</summary>
+    /// <param name="id">The ID of the desired UI.</param>
+    /// <param name="ui">The UI with the given ID.</param>
+    /// <returns>Whether the operation succeeded.</returns>
+    internal bool ui_get(string id, [NotNullWhen(true)] out FhSaveUi? ui) {
+        return _ui.TryGetValue(id, out ui);
+    }
+
+    /// <summary>Register a new save UI for selection by the user.</summary>
+    /// <param name="ui">The new UI to register.</param>
+    internal void ui_register(FhSaveUi ui) {
+        _ui[ui.ModuleType] = ui;
     }
 
     /// <summary>Retrieve the current save system mode.</summary>
     /// <param name="mode">The current mode of the system.</param>
     /// <returns>Whether the operation succeeded.</returns>
-    public bool get_system_mode([NotNullWhen(true)] out FhSaveSystemMode? mode) {
+    public bool impl_get_system_mode([NotNullWhen(true)] out FhSaveSystemMode? mode) {
         mode = null;
         if (!impl_handle.get(out IFhSaveSystemImpl? impl))
             return false;
@@ -340,53 +594,28 @@ public sealed class FhSaves {
         return true;
     }
 
-    /// <inheritdoc cref="IFhSaveSystemImpl.save"/>
-    /// <returns>Whether the operation succeeded.</returns>
-    public bool save(int slot) {
+    /// <summary>Executes the action for a given slot based on the save system mode.</summary>
+    /// <param name="slot">The slot to perform the action for.</param>
+    /// <returns>Whether the action succeeded.</returns>
+    public bool impl_execute(int slot) {
         if (!impl_handle.get(out IFhSaveSystemImpl? impl))
             return false;
 
-        impl.save(slot);
-        return true;
+        return impl.get_system_mode() switch {
+            FhSaveSystemMode.LOAD => impl.load     (slot),
+            FhSaveSystemMode.SAVE => impl.save     (slot),
+            FhSaveSystemMode.ALBD => impl.copy_albd(slot),
+            _                     => false,
+        };
     }
 
-    /// <inheritdoc cref="IFhSaveSystemImpl.load"/>
+    /// <inheritdoc cref="IFhSaveSystemImpl.abort"/>
     /// <returns>Whether the operation succeeded.</returns>
-    public bool load(int slot) {
+    public bool impl_abort() {
         if (!impl_handle.get(out IFhSaveSystemImpl? impl))
             return false;
 
-        impl.load(slot);
-        return true;
-    }
-
-    /// <inheritdoc cref="IFhSaveSystemImpl.copy_albd"/>
-    /// <returns>Whether the operation succeeded.</returns>
-    public bool copy_albd(int slot) {
-        if (!impl_handle.get(out IFhSaveSystemImpl? impl))
-            return false;
-
-        impl.copy_albd(slot);
-        return true;
-    }
-
-    /// <inheritdoc cref="IFhSaveSystemImpl.exit_cancel"/>
-    /// <returns>Whether the operation succeeded.</returns>
-    public bool exit_cancel() {
-        if (!impl_handle.get(out IFhSaveSystemImpl? impl))
-            return false;
-
-        impl.exit_cancel();
-        return true;
-    }
-
-    /// <inheritdoc cref="IFhSaveSystemImpl.exit_success"/>
-    /// <returns>Whether the operation succeeded.</returns>
-    public bool exit_success() {
-        if (!impl_handle.get(out IFhSaveSystemImpl? impl))
-            return false;
-
-        impl.exit_success();
+        impl.abort();
         return true;
     }
 }

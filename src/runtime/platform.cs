@@ -10,12 +10,6 @@ namespace Fahrenheit.Runtime;
  * platform-specific objects or runtime constants. In the case of FF X/X-2 HD on Steam, the 'platform' is Win32+D3D11.
  */
 
-/* [fkelava 20/01/26 00:24]
- * This interface is internal and thus meant to be implemented explicitly, not implicitly.
- * https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/interfaces#working-with-internal-interfaces
- * > You must use explicit interface implementation to implement interface members that aren't meant to be public.
- */
-
 /// <summary>
 ///     Implemented by modules that require raw handles to native windowing/graphics APIs.
 /// </summary>
@@ -28,7 +22,8 @@ internal unsafe interface IFhPlatformUser {
         ID3D11Device*        ptr_device,         // https://learn.microsoft.com/en-us/windows/win32/api/d3d11/nn-d3d11-id3d11device
         ID3D11DeviceContext* ptr_device_context, // https://learn.microsoft.com/en-us/windows/win32/api/d3d11/nn-d3d11-id3d11devicecontext
         IDXGISwapChain*      ptr_swapchain,      // https://learn.microsoft.com/en-us/windows/win32/api/dxgi/nn-dxgi-idxgiswapchain
-        HWND                 hWnd);
+        HWND                 hWnd
+    );
 }
 
 /// <summary>
@@ -116,7 +111,7 @@ public unsafe sealed class FhPlatformBindingModule : FhModule {
          * See https://github.com/SpecialKO/SpecialK/blob/main/src/render/d3d11/d3d11.cpp#L8183.
          */
 
-        if (hr != HRESULT.S_OK || ppSwapChain == null || ppDevice == null || ppImmediateContext == null)
+        if (hr != S.S_OK || ppSwapChain == null || ppDevice == null || ppImmediateContext == null)
             return hr;
 
         /* [fkelava 13/02/26 17:46]

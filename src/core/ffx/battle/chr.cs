@@ -129,14 +129,11 @@ public unsafe struct Chr {
     [FieldOffset(0x2D)]  public bool      stat_bodyhit_flag;
     [FieldOffset(0x3B)]  public bool      eternal_autolife;
     [FieldOffset(0x48)]  public nint      ptr_mon_wep_bin;
-    [FieldOffset(0x182)] public byte      grav_mode;
-    [FieldOffset(0x185)] public byte      field_mode;
-    [FieldOffset(0x186)] public byte      motion_type;
     [FieldOffset(0x3F4)] public byte      death_level;
     [FieldOffset(0x3F5)] public byte      death_pattern;
     [FieldOffset(0x3F8)] public bool      stat_center_chr_flag;
     [FieldOffset(0x3F9)] public byte      stat_death_return;
-    [FieldOffset(0x400)] public byte      motion_speed_normal;
+    [FieldOffset(0x400)] public ushort    motion_speed_normal;
     [FieldOffset(0x402)] public ushort    motion_speed_effect;
     [FieldOffset(0x404)] public byte      motion_speed_effect_nonzero;
     [FieldOffset(0x405)] public byte      motion_speed_normal_init;
@@ -180,7 +177,7 @@ public unsafe struct Chr {
     [FieldOffset(0x4B9)] public byte      stat_attack_inc_speed;
     [FieldOffset(0x4BA)] public byte      stat_attack_dec_speed;
     [FieldOffset(0x4BB)] public byte      stat_motion_num;
-    [FieldOffset(0x4FC)] public ushort    area;
+    [FieldOffset(0x4FC)] public sbyte     area;
     [FieldOffset(0x4FE)] public byte      pos;
     [FieldOffset(0x4FF)] public byte      stat_far;
     [FieldOffset(0x504)] public byte      stat_group;

@@ -378,7 +378,7 @@ public static unsafe partial class FhCall {
     internal delegate nint d_DXGI_IDXGISwapChain_Present(
         IDXGISwapChain* pSwapChain,
         uint            SyncInterval,
-        DXGI_PRESENT    Flags);
+        uint            Flags);
     internal static FhCallHandle<d_DXGI_IDXGISwapChain_Present> DXGI_IDXGISwapChain_Present
         (IDXGISwapChain* ptr_swapchain)
         => new( new FhCallLocation(ptr_swapchain->lpVtbl[8]) );
@@ -546,7 +546,7 @@ public static unsafe partial class FhCall {
         => new( new FhCallLocation(0x387370, 0x20F4B0) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    internal delegate void d_SaveDataSaveLoadSucceed(FhSaveSystemState arg1);
+    internal delegate void d_SaveDataSaveLoadSucceed(SaveSystemState arg1);
     internal static FhCallHandle<d_SaveDataSaveLoadSucceed> SaveDataSaveLoadSucceed
         => new( new FhCallLocation(0x248540, 0x88300) );
 
@@ -596,7 +596,7 @@ public static unsafe partial class FhCall {
      */
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate void d__Printf(string fmt,
+    public delegate void d__Printf(byte* fmt,
         nint va0,  nint va1,  nint va2,  nint va3,
         nint va4,  nint va5,  nint va6,  nint va7,
         nint va8,  nint va9,  nint va10, nint va11,
@@ -614,7 +614,7 @@ public static unsafe partial class FhCall {
         new( new FhCallLocation(0x527550, 0x3D9610) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate void d_Phyre_PhyrePrintf(int rc, string fmt,
+    public delegate void d_Phyre_PhyrePrintf(int sev, byte* fmt,
         nint va0,  nint va1,  nint va2,  nint va3,
         nint va4,  nint va5,  nint va6,  nint va7,
         nint va8,  nint va9,  nint va10, nint va11,
@@ -622,6 +622,11 @@ public static unsafe partial class FhCall {
 
     public static FhCallHandle<d_Phyre_PhyrePrintf> Phyre_PhyrePrintf =>
         new ( new FhCallLocation(0x352F0, 0x48CB70) );
+
+    [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+    public delegate void d_FUN_000354f0_0048cd70(int sev, byte* buf);
+    public static FhCallHandle<d_FUN_000354f0_0048cd70> FUN_000354f0_0048cd70 =>
+        new( new FhCallLocation(0x354F0, 0x48CD70) );
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void d_FUN_0046a130_00324820();

@@ -40,4 +40,22 @@ public abstract class FhSettingsUi : FhFullscreenUi {
             }
         }
     }
+
+    protected bool try_get_setting_parent(
+        FhSetting setting,
+        [NotNullWhen(true)] out FhSettingsCategory? parent,
+        [NotNullWhen(true)] out int?                index_in_parent
+    ) {
+        if (setting.parent != null) {
+            parent          = setting.parent;
+            index_in_parent = setting.index_in_parent;
+
+            return true;
+        }
+
+        parent          = null;
+        index_in_parent = null;
+
+        return false;
+    }
 }

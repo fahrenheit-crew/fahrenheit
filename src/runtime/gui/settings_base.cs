@@ -62,7 +62,7 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
     protected List<FhModuleContext> selected_modules => settings_map.GetAt(selected_mod_idx).Value;
     protected FhModuleContext       selected_module  => settings_map.GetAt(selected_mod_idx).Value[selected_module_idx];
 
-    protected FhSetting? hovered_setting;
+    protected FhSetting hovered_setting;
 
     protected int   indent_level;
     protected float setting_y;
@@ -174,6 +174,76 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
         scrollable_modules.hovered = module_idx;
 
         FhInternal.Settings.try_get_settings(selected_module.Module, out displayed_settings);
+
+        hovered_setting = displayed_settings!.settings[0];
+    }
+
+    protected void hover_setting_up() {
+        // Settings follow the structure:
+        // - main_category  (parent=null)
+        //   - setting_A      (parent=main, index=0)
+        //   - setting_B      (parent=main, index=1)
+        //   - sub_category_A (parent=main, index=2)
+        //     - setting_C      (parent=subA, index=0)
+        //     - setting_D      (parent=subA, index=1)
+        //   - sub_category_B (parent=main, index=3)
+        //     - setting_E      (parent=subB, index=0)
+        //     - setting_F      (parent=subB, index=1)
+        //   - setting_G      (parent=main, index=4)
+        //   - setting_H      (parent=main, index=5)
+
+        if (!try_get_setting_parent(hovered_setting, out FhSettingsCategory? parent, out int? index)) {
+            throw new UnreachableException("The main category, which is not displayed, is hovered.");
+        }
+
+        // If we have a parent and the index is zero, the parent category is guaranteed to be directly above us!
+        if (index == 0) {
+            // The displayed_settings category is never actually displayed, only its settings
+            if (parent != displayed_settings)
+                hovered_setting = parent;
+            return;
+        }
+
+        FhSetting setting_one_up = parent.settings[(int)index - 1];
+
+        // We have to dive into the previous setting in the parent if it's a category
+        while (setting_one_up is FhSettingsCategory category && !category.collapsed) {
+            setting_one_up = category.settings[^1];
+        }
+    }
+
+    protected void hover_setting_down() {
+        // For example of the settings structure, see the first comment in hover_setting_up()
+
+        // If we are hovering over an expanded category, we go into it.
+        if (hovered_setting is FhSettingsCategory category && !category.collapsed) {
+            hovered_setting = category.settings[0];
+            return;
+        }
+
+        if (!try_get_setting_parent(hovered_setting, out FhSettingsCategory? parent, out int? index)) {
+            throw new UnreachableException("The main category, which is not displayed, is hovered.");
+        }
+
+        // While we are hovering the last setting in the category,
+        // try hovering one down from the parent.
+        while (index == parent.settings.Length - 1) {
+            // We arrived at the main category, and we are still last.
+            // There is no setting after us, so just return.
+            if (parent == displayed_settings) {
+                return;
+            }
+
+            if (!try_get_setting_parent(parent, out FhSettingsCategory? next_parent, out int? next_index)) {
+                throw new UnreachableException("Non-main settings category with null parent.");
+            }
+
+            parent = next_parent;
+            index  = next_index;
+        }
+
+        // We now we're not last in the parent, so it is safe to go down.
+        hovered_setting = parent.settings[(int)index + 1];
     }
 
 
@@ -252,7 +322,24 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
     }
 
     private void handle_input_settings() {
+        if (captured_setting != null) {
+            //TODO: Pass input handling to captured setting
+            return;
+        }
 
+        if (FhApi.Gui.is_any_pressed(FhApi.Gui.keys_up)) {
+            hover_setting_up();
+            //TODO: Ensure scrollable_settings is scrolled to make new hovered setting visible.
+
+            return;
+        }
+
+        if (FhApi.Gui.is_any_pressed(FhApi.Gui.keys_down)) {
+            hover_setting_down();
+            //TODO: Ensure scrollable_settings is scrolled to make new hovered setting visible.
+
+            return;
+        }
     }
 
     private void handle_input() {

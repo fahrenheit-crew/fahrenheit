@@ -269,6 +269,9 @@ public abstract class FhSetting(string id) {
     /// <remarks>This must be provided in localization data with ID <c>{setting_id}.desc</c>.</remarks>
     public string desc => FhApi.Localization.localize($"{id}.desc");
 
+    internal FhSettingsCategory? parent;
+    internal int                 index_in_parent;
+
     internal virtual void init() { }
 
     /// <summary>
@@ -306,6 +309,8 @@ public abstract class FhSetting<T>(string id, T defval) : FhSetting(id) {
 
     protected readonly T default_ = defval;
     protected          T value    = defval;
+
+    internal T dirty_value = defval;
 
     public virtual T get() => value;
 
@@ -350,6 +355,7 @@ public sealed class FhSettingsCategory : FhSetting {
     public FhSettingsCategory(string id, FhSetting[] settings) : base(id) {
         this.settings = settings;
         update_ids(id);
+        update_parents();
     }
 
     /// <summary>Prepends the category's ID to all subordinate settings.</summary>
@@ -359,6 +365,13 @@ public sealed class FhSettingsCategory : FhSetting {
 
             if (setting is FhSettingsCategory category)
                 category.update_ids(new_prefix);
+        }
+    }
+
+    private void update_parents() {
+        for (int i = 0; i < settings.Length; i++) {
+            settings[i].parent = this;
+            settings[i].index_in_parent = i;
         }
     }
 

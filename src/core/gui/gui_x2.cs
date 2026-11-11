@@ -229,7 +229,7 @@ public partial class FhGui {
 
         // Ghost Cursor 2
         if (loop_progress >= 0.25f) {
-            float offset = -0.04f * config.cursor_size.X;
+            float offset = -0.03f * config.cursor_size.X;
             float alpha  = 0.85f;
 
             // Start moving

@@ -5,70 +5,143 @@
 
 namespace Fahrenheit.Runtime.Gui;
 
-using SettingRenderer = FhSettingRenderer<FhSetting, FhSettingsUiX2>;
-
 public partial class FhSettingsUiX2 {
-    public interface ICapturingRenderer {
-        public string get_input_help_text();
+
+    private abstract class Renderer_Base<T> : FhSettingRenderer<T, FhSettingsUiX2>
+        where T : FhSetting {
+
+        internal protected override Vector2 get_size(FhSettingsUiX2 ui) {
+            return new Vector2(0f, 65f);
+        }
+
+        protected bool render_background(
+            FhSettingsUiX2 ui,
+
+            Rect max_bounds,
+
+            [NotNullWhen(true)] out Rect? name_bounds,
+            [NotNullWhen(true)] out Rect? value_bounds
+        ) {
+            if (!ui._texture_plate    .try_use(out ImTextureRef plate,  out FhTextureMetadata? plate_meta)
+                || !ui._texture_window.try_use(out ImTextureRef window, out FhTextureMetadata? window_meta)
+            ) {
+                name_bounds = null;
+                value_bounds = null;
+                return false;
+            }
+
+            ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
+
+            // Background
+            // Divide the bounds width into plate, gap, and window
+            float plate_width = max_bounds.size.X / 2.5f;
+
+            float gap = plate_width / 8.8f;
+
+            float window_width = float.Max(0f, max_bounds.size.X - plate_width - gap);
+
+            Rect plate_bounds = new() {
+                pos = max_bounds.pos,
+                size = max_bounds.size with {
+                    X = plate_width
+                }
+            };
+
+            Rect window_bounds = new() {
+                pos = max_bounds.pos with {
+                    X = plate_bounds.right.X + gap
+                },
+                size = max_bounds.size with {
+                    X = window_width
+                }
+            };
+
+            FhApi.Gui.draw_x2_plate(
+                draw,
+                plate_bounds.scale_to_aspect(ui.aspect_helper),
+                ui.setting_idx,
+                ui.plate_config
+            );
+
+            NineSliceHelper window_suv = NineSliceHelper.create(
+                Vector2.One,
+                window_bounds.scale_to_aspect(ui.aspect_helper),
+                new(3f)
+            );
+
+            for (int slice_idx = 0; slice_idx < 9; slice_idx++) {
+                Vector2[] screen_uv = window_suv.get_uvs(slice_idx);
+
+                int       alt_idx    = 3 * (2 - slice_idx / 3) + (slice_idx % 3);
+                Vector2[] alt_tex_uv = ui.window_helper.get_uvs(alt_idx);
+
+                Vector2 screen_p0 = screen_uv[0];
+                Vector2 screen_p1 = screen_uv[3];
+
+                (screen_p0.Y, screen_p1.Y) = (screen_p1.Y, screen_p0.Y);
+
+                draw.AddImage(window, screen_p0, screen_p1, alt_tex_uv[0], alt_tex_uv[3], 0xFF808080);
+            }
+
+            name_bounds  = plate_bounds .scale_to_aspect(ui.aspect_helper);
+            value_bounds = window_bounds.scale_to_aspect(ui.aspect_helper);
+
+            return true;
+        }
+
+        protected void render_name(FhSettingsUiX2 ui, Rect name_bounds, string name) {
+            ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
+
+            FhApi.Gui.draw_text(
+                draw,
+                name_bounds.right * ui.aspect_scale + ui.aspect_helper.pos,
+                name,
+                ui.text_config with { align = Alignment2D.RIGHT }
+            );
+        }
     }
 
     private class Renderer_Category
         : FhSettingRenderer<FhSettingsCategory, FhSettingsUiX2> {
 
         internal protected override Vector2 get_size(FhSettingsUiX2 ui) {
-            return new Vector2(0f, 38f);
+            return new Vector2(0f, 45f);
         }
 
         internal protected override void render(FhSettingsUiX2 ui, FhSettingsCategory category, Rect max_bounds) {
-            if (
-                !ui._texture_plate  .try_use(out ImTextureRef plate,   out _)
-             || !ui._texture_b_menu1.try_use(out ImTextureRef b_menu1, out _)
-            ) {
+            if (!ui._texture_b_menu1.try_use(out ImTextureRef b_menu1, out FhTextureMetadata? b_menu1_meta)) {
                 return;
             }
 
             ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
-            UV plate_tuv = new Rect {
-                pos  = new(  0f, 252f),
-                size = new(512f,  38f),
-            }.as_uv(ui._tex_plate_size);
-
-            uint color = 0xFFFFFFFF;
-
-            float top_width    = 5f * ui.aspect_scale.Y;
-            float left_width   = 6f * ui.aspect_scale.Y;
-            float bottom_width = 4f * ui.aspect_scale.Y;
-            float right_width  = 6f * ui.aspect_scale.Y;
-
-            FhApi.Gui.X2.draw_plate(
+            // Background
+            FhApi.Gui.draw_x2_plate(
                 draw,
                 max_bounds.scale_to_aspect(ui.aspect_helper),
-                plate,
-                plate_tuv,
-                color,
-                top_width,
-                left_width,
-                bottom_width,
-                right_width,
-                ui._shadow_pos
+                2,
+                ui.plate_config with {
+                    color = 0xFFAEBEC3,
+                    draw_header = true,
+                }
             );
 
             // Arrow
             Rect arrow_tuv = new Rect {
                 pos  = new(965f, 913f),
-                size = new( 53f,  30f),
-            }.scale_raw(Vector2.One / ui._tex_b_menu1_size);
+                size = new( 54f,  30f),
+            }.scale_raw(Vector2.One / b_menu1_meta.size);
+
             // We do some shenanigans for the various corner accessors
             // to work like we want them to
-            arrow_tuv.pos.Y += arrow_tuv.size.Y;
+            arrow_tuv.pos.Y  += arrow_tuv.size.Y;
             arrow_tuv.size.Y *= -1f;
 
             Rect arrow_bounds = new() {
                 pos = max_bounds.left with {
                     X = max_bounds.left.X + 35f,
                 },
-                size = new(32f, 22f),
+                size = new(29f, 25f),
             };
 
             arrow_bounds.pos.Y -= arrow_bounds.size.Y / 2f;
@@ -84,7 +157,8 @@ public partial class FhSettingsUiX2 {
             ).scale_to_aspect(ui.aspect_helper);
 
             bool hovering_arrow = ui.mouse_hovered(arrow_hitbox, false);
-            uint arrow_color = hovering_arrow ? 0xFFE0F0FF : 0xFFFFFFFF; // TODO: Find a better hovered color
+
+            uint arrow_color = hovering_arrow ? 0xFFA0F0FF : 0xFFFFFFFF;
 
             if (category.collapsed) {
                 // Upside-right
@@ -124,19 +198,14 @@ public partial class FhSettingsUiX2 {
             }
 
             // Name
-            float font_size = 30f * ui.font_scale;
-
             Vector2 name_pos = arrow_bounds.right;
-            name_pos.X += 30f;
-            name_pos.Y -=  1f;
+            name_pos.X      += 30f;
 
             FhApi.Gui.draw_text(
                 draw,
                 name_pos * ui.aspect_scale + ui.aspect_helper.pos,
                 category.name,
-                font_size,
-                true,
-                new(Alignment.BEGIN, Alignment.CENTER)
+                ui.text_config with { align = Alignment2D.LEFT }
             );
 
             // Input handling
@@ -152,132 +221,121 @@ public partial class FhSettingsUiX2 {
         }
     }
 
-    private class Renderer_Toggle
-        : FhSettingRenderer<FhSettingToggle, FhSettingsUiX2> {
+    private class Renderer_Toggle : Renderer_Base<FhSettingToggle> {
+        private static string _text_on => FhApi.Localization.localize($"{typeof(FhSettingsUiSelector)}.input.on");
+        private static string _text_off => FhApi.Localization.localize($"{typeof(FhSettingsUiSelector)}.input.off");
 
-        internal protected override Vector2 get_size(FhSettingsUiX2 ui) {
-            return new Vector2(0f, 60f);
-        }
-
-        internal protected override void render(FhSettingsUiX2 ui, FhSettingToggle toggle, Rect max_bounds) {
-            if (
-                !ui._texture_plate .try_use(out ImTextureRef plate,  out _)
-             || !ui._texture_window.try_use(out ImTextureRef window, out _)
-             || !ui._texture_wave  .try_use(out ImTextureRef wave,   out _)
-            ) {
+        protected void render_options(FhSettingsUiX2 ui, FhSettingToggle toggle, Rect value_bounds) {
+            if (!ui._texture_meswin.try_use(out ImTextureRef meswin, out FhTextureMetadata? meswin_meta)) {
                 return;
             }
 
             ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
-            Rect plate_bounds = new Rect {
-                pos  = max_bounds.pos,
-                size = new Vector2(440f, max_bounds.size.Y),
-            };
+            // Options
+            Vector2 on_pos  = value_bounds.left;
+            Vector2 off_pos = value_bounds.left;
 
-            Rect window_bounds = new Rect {
-                pos  = max_bounds.pos + new Vector2(500f, 0f),
-                size = new Vector2(600f, max_bounds.size.Y),
-            };
-
-            float slice_size  = 64f;
-            float plate_max_y = 512f - ((ui._setting_idx % 8) * slice_size);
-
-            UV plate_tuv = new Rect {
-                pos  = new(  0f, plate_max_y - slice_size),
-                size = new(512f,               slice_size),
-            }.as_uv(ui._tex_plate_size);
-
-            uint color = 0xFFFFFFFF;
-
-            float border_width = 5f * ui.aspect_scale.Y;
-
-            FhApi.Gui.X2.draw_plate(
-                draw,
-                plate_bounds.scale_to_aspect(ui.aspect_helper),
-                plate,
-                plate_tuv,
-                color,
-                border_width,
-                ui._shadow_pos
-            );
-
-            FhApi.Gui.X2.draw_message_window(
-                draw,
-                window_bounds.scale_to_aspect(ui.aspect_helper),
-                window,
-                ui._message_window,
-                new Vector2(4f, 4f) * ui.aspect_scale,
-                0xFF808080,
-                wave,
-                1f,
-                0x80A1C6C6
-            );
-
-            float font_size = 36f * ui.font_scale;
-
-            // Name
-            Vector2 name_pos = plate_bounds.center;
-            name_pos.Y -= 1f;
+            on_pos.X  += value_bounds.size.X * 3f / 12f;
+            off_pos.X += value_bounds.size.X * 8f / 12f;
 
             FhApi.Gui.draw_text(
                 draw,
-                name_pos * ui.aspect_scale + ui.aspect_helper.pos,
-                toggle.name,
-                font_size,
-                true,
-                new(Alignment.CENTER, Alignment.CENTER)
-            );
-
-            // Options
-            // TODO: If option is selected/active, draw with color 0xFF19D8FF
-            Vector2 on_pos  = window_bounds.left  + new Vector2(175f, -1f);
-            Vector2 off_pos = window_bounds.right - new Vector2(175f,  1f);
-
-            Vector2 on_size = FhApi.Gui.draw_text(
-                draw,
                 on_pos * ui.aspect_scale + ui.aspect_helper.pos,
-                FhApi.Localization.localize($"{typeof(FhSettingsUiBase)}.input.on"),
-                font_size,
-                true,
-                new(Alignment.CENTER, Alignment.CENTER)
+                _text_on,
+                ui.text_config with { align = Alignment2D.CENTER }
             );
 
-            Vector2 off_size = FhApi.Gui.draw_text(
+            FhApi.Gui.draw_text(
                 draw,
                 off_pos * ui.aspect_scale + ui.aspect_helper.pos,
-                FhApi.Localization.localize($"{typeof(FhSettingsUiBase)}.input.off"),
-                font_size,
-                true,
-                new(Alignment.CENTER, Alignment.CENTER)
+                _text_off,
+                ui.text_config with { align = Alignment2D.CENTER }
             );
 
-            // Highlight
-            Vector2 highlight_pos = toggle.get() ? on_pos : off_pos;
+            // Underline
+            Vector2 underline_size = new(220f, 9f);
 
-            Vector2 highlight_size = new(135f, 38f);
-
-            highlight_pos.X -= highlight_size.X / 2f;
-            highlight_pos.Y -= 18f;
-
-            GradientStep[] steps = [
-                new(0.0f, 0x000E91A9),
-                new(0.2f, 0x400E91A9),
-                new(0.8f, 0x400E91A9),
-                new(1.0f, 0x000E91A9),
-            ];
-
-            Rect enabled_highlight = new Rect {
-                pos  = highlight_pos,
-                size = highlight_size,
+            Rect underline_on = new Rect {
+                pos = new() {
+                    X = on_pos.X - underline_size.X / 2f,
+                    Y = on_pos.Y + 15f,
+                },
+                size = underline_size,
             }.scale_to_aspect(ui.aspect_helper);
 
-            FhApi.Gui.draw_rectangle_gradient(
-                draw,
-                enabled_highlight,
-                GradientDirection.RIGHT,
-                steps
+            Rect underline_off = new Rect {
+                pos = new() {
+                    X = off_pos.X - underline_size.X / 2f,
+                    Y = off_pos.Y + 15f,
+                },
+                size = underline_size,
+            }.scale_to_aspect(ui.aspect_helper);
+
+            (Rect underline_active, Rect underline_inactive) =
+                toggle.get()
+                    ? (underline_on, underline_off)
+                    : (underline_off, underline_on);
+
+            UV underline_tuv = new Rect {
+                pos  = new(  0f, 582f),
+                size = new(300f,   9f),
+            }.as_uv(meswin_meta.size);
+
+            UV underline_suv = underline_active.as_uv();
+
+            draw.AddImage(
+                meswin,
+                underline_suv.p0,
+                underline_suv.p1,
+                underline_tuv.p0,
+                underline_tuv.p1
             );
+
+            Rect hitbox_inactive = new Rect {
+                pos  = (toggle.get() ? off_pos : on_pos) with {
+                    Y = value_bounds.top.Y,
+                },
+                size = new() {
+                    Y = value_bounds.size.Y,
+                },
+            }.expand(
+                new(off_pos.X - on_pos.X, 0f),
+                new(Alignment.CENTER, Alignment.BEGIN)
+            ).scale_to_aspect(ui.aspect_helper);
+
+            // Extra underline on hover
+            if (ui.mouse_hovered(hitbox_inactive, false)) {
+                underline_suv = underline_inactive.as_uv();
+
+                draw.AddImage(
+                    meswin,
+                    underline_suv.p0,
+                    underline_suv.p1,
+                    underline_tuv.p0,
+                    underline_tuv.p1,
+                    0x80FFFFFF
+                );
+            }
+
+            if (ui.mouse_clicked(hitbox_inactive)) {
+                toggle.set(!toggle.get());
+            }
+        }
+
+        internal protected override void render(FhSettingsUiX2 ui, FhSettingToggle toggle, Rect max_bounds) {
+            if (!render_background(
+                ui,
+                max_bounds,
+                out Rect? name_bounds,
+                out Rect? value_bounds
+            )) {
+                return;
+            }
+
+            render_name(ui, (Rect) name_bounds, toggle.name);
+
+            render_options(ui, toggle, (Rect) value_bounds);
         }
 
         internal protected override void handle_input(FhSettingsUiX2 ui, FhSettingToggle toggle) {
@@ -290,73 +348,6 @@ public partial class FhSettingsUiX2 {
             if (FhApi.Gui.is_any_pressed(toggle_keys)) {
                 toggle.set(!toggle.get());
             }
-        }
-    }
-
-    private class Renderer_Text
-        : FhSettingRenderer<FhSettingText, FhSettingsUiX2>,
-          ICapturingRenderer {
-
-        private FhSettingText? focused_setting;
-        private string?        buffer;
-
-        internal protected override Vector2 get_size(FhSettingsUiX2 ui) {
-            //TODO: Implement size calculation
-            return new Vector2(0f, 0f);
-        }
-
-        internal protected override void render(FhSettingsUiX2 ui, FhSettingText text, Rect max_bounds) {
-            //TODO: Implement rendering
-        }
-
-        internal protected override void handle_input(FhSettingsUiX2 ui, FhSettingText text) {
-            ImGuiIOPtr io = ImGui.GetIO();
-
-            if (focused_setting == null) {
-                if (FhApi.Gui.is_any_pressed(FhApi.Gui.keys_confirm)) {
-                    io.WantCaptureKeyboard = true;
-
-                    ui.try_capture_setting(this, text);
-
-                    focused_setting = text;
-                    buffer = text.get();
-                }
-
-                return;
-            }
-
-            if (focused_setting != text) return;
-
-            if (FhApi.Gui.is_any_pressed(FhApi.Gui.keys_confirm)) {
-                io.WantCaptureKeyboard = true;
-
-                text.set(buffer!);
-
-                ui.try_release_setting(this);
-
-                focused_setting = null;
-                buffer = null;
-                return;
-            }
-
-            if (FhApi.Gui.is_any_pressed(FhApi.Gui.keys_cancel)) {
-                io.WantCaptureKeyboard = true;
-
-                ui.try_release_setting(this);
-
-                focused_setting = null;
-                buffer = null;
-                return;
-            }
-
-            //TODO: Implement input handling
-
-            // Yes, we're making a single-line text editor here.
-            // This should probably be a helper on the `FhSettingText` class once it's done.
-        }
-
-        public string get_input_help_text() {
-            return FhApi.Localization.localize($"{typeof(FhSettingsUiBase).FullName}.help.input.text");
         }
     }
 
@@ -375,6 +366,276 @@ public partial class FhSettingsUiX2 {
 
         internal protected override void handle_input(FhSettingsUiX2 ui, FhSettingNumber<T> number) {
             //TODO: Implement input handling
+        }
+    }
+
+    private class Renderer_Choice<T>
+        : Renderer_Base<FhSettingChoice<T>>
+        where T : struct, Enum {
+
+        protected const float SPIN_SPEED = 2f; // in progress per second
+        protected const float OPTION_SPIN_DIFF = 1f/3f;
+
+        // Between -1 and 1. 0 when no spin is happening
+        // Technically between -OPTION_SPIN_DIFF and OPTION_SPIN_DIFF
+        // Equal to the spin progress of the current value
+        protected Dictionary<FhSettingChoice<T>, float> spin_progress = [];
+
+        protected int get_prev_index(ReadOnlySpan<T> choices, T choice) {
+            int index = choices.IndexOf(choice);
+            if (index == 0) return choices.Length - 1;
+            return index - 1;
+        }
+
+        protected int get_next_index(ReadOnlySpan<T> choices, T choice) {
+            int index = choices.IndexOf(choice);
+            if (index == choices.Length - 1) return 0;
+            return index + 1;
+        }
+
+        protected int get_prev_prev_index(ReadOnlySpan<T> choices, T choice) {
+            int index = choices.IndexOf(choice);
+
+            if (index == 0)
+                index = choices.Length - 1;
+            else
+                index -= 1;
+
+            if (index == 0)
+                return choices.Length - 1;
+
+            return index - 1;
+        }
+
+        protected int get_next_next_index(ReadOnlySpan<T> choices, T choice) {
+            int index = choices.IndexOf(choice);
+
+            if (index == choices.Length - 1)
+                index = 0;
+            else
+                index += 1;
+
+            if (index == choices.Length - 1)
+                return 0;
+
+            return index + 1;
+        }
+
+        protected float map_spin_progress(float progress) {
+            // We remap progress to give us a nice arc
+            return (float) (
+                0.7372493987604 * float.Pow(progress, 4)
+                + 0.2627506012396 * float.Pow(progress, 2)
+            );
+        }
+
+        protected uint get_alpha_for_spin(float progress) {
+            return (uint) (((byte) (progress * 0xFF) << 24) | 0xFFFFFF);
+        }
+
+        protected Vector2 get_offset_for_spin(Vector2 center, Vector2 side, float progress) {
+            Vector2 max_offset = side - center;
+
+            bool other_way = progress < 0f;
+
+            progress = map_spin_progress(progress);
+
+            Vector2 offset = Vector2.Lerp(center, side, progress);
+
+            if (other_way) offset.X *= 1f;
+
+            return offset;
+        }
+
+        protected void render_option(FhSettingsUiX2 ui, FhSettingChoice<T> choice, int index, float progress, Rect value_bounds) {
+            Vector2 center = value_bounds.center;
+            Vector2 right  = value_bounds.right;
+            right.X       -= value_bounds.size.X / 6f;
+
+            Vector2 pos   = center + get_offset_for_spin(center, right, progress);
+            uint    color = get_alpha_for_spin(progress);
+            float   scale = 1f - map_spin_progress(progress) / 3f;
+            string  name  = FhApi.Localization.localize(choice.choice_names[index]);
+
+            ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
+
+            FhApi.Gui.draw_text(
+                draw,
+                pos * ui.aspect_scale + ui.aspect_helper.pos,
+                name,
+                ui.text_config with {
+                    align = Alignment2D.CENTER,
+                    font_size = ui.text_config.font_size * scale,
+                    color = color,
+                }
+            );
+        }
+
+        protected void render_options(FhSettingsUiX2 ui, FhSettingChoice<T> choice, Rect value_bounds) {
+            T curr_choice = choice.get();
+
+            int curr_index = choice.choices.IndexOf(curr_choice);
+            int prev_index = get_prev_index(choice.choices, curr_choice);
+            int next_index = get_next_index(choice.choices, curr_choice);
+
+            int[] choice_indices = spin_progress[choice] switch {
+                0f => [
+                    prev_index,
+                    curr_index,
+                    next_index,
+                ],
+
+                > 0f => [
+                    prev_index,
+                    curr_index,
+                    next_index,
+                    get_next_index(choice.choices, choice.choices[next_index]),
+                ],
+
+                < 0f => [
+                    get_prev_index(choice.choices, choice.choices[prev_index]),
+                    prev_index,
+                    curr_index,
+                    next_index,
+                ],
+
+                _ => throw new UnreachableException(),
+            };
+
+            int main_index = spin_progress[choice] switch {
+                  0f => 1,
+                > 0f => 1,
+                < 0f => 2,
+
+                _ => throw new UnreachableException(),
+            };
+
+            for (int i = 0; i < main_index; i++) {
+                float spin = spin_progress[choice] - OPTION_SPIN_DIFF * (main_index - i);
+
+                // This shouldn't be necessary but let's do it anyway
+                spin = float.Clamp(spin, -1f, 1f);
+
+                render_option(ui, choice, i, spin, value_bounds);
+            }
+
+            render_option(ui, choice, main_index, spin_progress[choice], value_bounds);
+
+            for (int i = main_index + 1; i < choice_indices.Length; i++) {
+                float spin = spin_progress[choice] + OPTION_SPIN_DIFF * (i - main_index);
+
+                // This shouldn't be necessary but let's do it anyway
+                spin = float.Clamp(spin, -1f, 1f);
+
+                render_option(ui, choice, i, spin, value_bounds);
+            }
+        }
+
+        protected void render_arrows(FhSettingsUiX2 ui, FhSettingChoice<T> choice, Rect value_bounds) {
+            if (!ui._texture_b_menu1.try_use(out ImTextureRef b_menu1, out FhTextureMetadata? b_menu1_meta)) {
+                return;
+            }
+
+            float arrow_progress = float.Clamp(spin_progress[choice] * 5f, 0f, 1f);
+
+            Vector2 max_offset = new(10f, 0f);
+
+            UV arrow_tuv = new Rect {
+                pos  = new(965f, 913f),
+                size = new( 54f,  30f),
+            }.as_uv(b_menu1_meta.size);
+
+            Vector2 arrow_size = new(30f, 42f);
+
+            Rect arrow_left  = new() { pos = value_bounds.left  + max_offset };
+            Rect arrow_right = new() { pos = value_bounds.right - max_offset };
+
+            arrow_left .expand(arrow_size, new(Alignment.BEGIN, Alignment.CENTER));
+            arrow_right.expand(arrow_size, new(Alignment.END, Alignment.CENTER));
+
+            if (arrow_progress < 0f)
+                arrow_left.pos += Vector2.Lerp(Vector2.Zero, max_offset, arrow_progress);
+            else if (arrow_progress > 0f)
+                arrow_right.pos += Vector2.Lerp(Vector2.Zero, max_offset, arrow_progress);
+
+            UV arrow_left_suv  = arrow_left .scale_to_aspect(ui.aspect_helper).as_uv();
+            UV arrow_right_suv = arrow_right.scale_to_aspect(ui.aspect_helper).as_uv();
+
+            ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
+
+            draw.AddImage(
+                b_menu1,
+                arrow_left_suv.p0,
+                arrow_left_suv.p1,
+                arrow_tuv.p1,
+                arrow_tuv.p0
+            );
+
+            draw.AddImage(
+                b_menu1,
+                arrow_right_suv.p0,
+                arrow_right_suv.p1,
+                arrow_tuv.p0,
+                arrow_tuv.p1
+            );
+        }
+
+        internal protected override void render(FhSettingsUiX2 ui, FhSettingChoice<T> choice, Rect max_bounds) {
+            if (!render_background(
+                ui,
+                max_bounds,
+                out Rect? name_bounds,
+                out Rect? value_bounds
+            )) {
+                return;
+            }
+
+            render_name(ui, (Rect) name_bounds, choice.name);
+
+            if (spin_progress[choice] != 0f) {
+                float spin_delta = SPIN_SPEED * ImGui.GetIO().DeltaTime;
+                spin_delta = float.Min(spin_delta, spin_progress[choice]);
+
+                spin_progress[choice] -= spin_delta * float.Sign(spin_progress[choice]);
+                spin_progress[choice] = float.Clamp(spin_progress[choice], 0f, 1f);
+            }
+
+            render_options(ui, choice, (Rect) value_bounds);
+            render_arrows(ui, choice, (Rect) value_bounds);
+        }
+
+        protected void spin_left(FhSettingChoice<T> choice) {
+            T   curr_choice = choice.get();
+            int prev_index  = get_prev_index(choice.choices, curr_choice);
+            T   prev_choice = choice.choices[prev_index];
+
+            choice.set(prev_choice);
+
+            spin_progress[choice] = OPTION_SPIN_DIFF;
+        }
+
+        protected void spin_right(FhSettingChoice<T> choice) {
+            T   curr_choice = choice.get();
+            int next_index  = get_next_index(choice.choices, curr_choice);
+            T   next_choice = choice.choices[next_index];
+
+            choice.set(next_choice);
+
+            spin_progress[choice] = -OPTION_SPIN_DIFF;
+        }
+
+        internal protected override void handle_input(FhSettingsUiX2 ui, FhSettingChoice<T> choice) {
+            if (spin_progress[choice] != 0f) return;
+
+            if (FhApi.Gui.is_any_down(FhApi.Gui.keys_left)) {
+                spin_right(choice);
+                return;
+            }
+
+            if (FhApi.Gui.is_any_down(FhApi.Gui.keys_right)) {
+                spin_left(choice);
+                return;
+            }
         }
     }
 }

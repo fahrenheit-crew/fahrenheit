@@ -83,8 +83,8 @@ public partial class FhSettingsUiX2 {
                 draw.AddImage(window, screen_p0, screen_p1, alt_tex_uv[0], alt_tex_uv[3], 0xFF808080);
             }
 
-            name_bounds  = plate_bounds .scale_to_aspect(ui.aspect_helper);
-            value_bounds = window_bounds.scale_to_aspect(ui.aspect_helper);
+            name_bounds  = plate_bounds;
+            value_bounds = window_bounds;
 
             return true;
         }

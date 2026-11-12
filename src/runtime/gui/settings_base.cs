@@ -10,6 +10,12 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
         public string get_input_help_text();
     }
 
+    protected abstract class SettingRenderer {
+        public abstract Vector2 get_size(FhSettingsUiX ui);
+        public abstract void handle_input(FhSettingsUiX ui, FhSetting setting);
+        public abstract void render(FhSettingsUiX ui, FhSetting setting, Rect max_bounds);
+    }
+
     /// <summary>Possible elements for the UI to focus on.</summary>
     protected enum UiFocus {
         /// <summary>The scrollable list of mods with settings.</summary>
@@ -253,13 +259,6 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
 
     private void handle_input() {
         if (captured_setting != null) {
-            if (!captured_setting.get_renderer<FhSettingsUiX>(out FhSettingRenderer? renderer)) {
-                capturing_renderer = null;
-                captured_setting   = null;
-                return;
-            }
-
-            renderer.handle_input(this, captured_setting);
             return;
         }
 
@@ -299,6 +298,8 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
 
         // ui_fade();
     }
+
+    protected abstract bool get_setting_renderer(FhSetting setting, [NotNullWhen(true)] out SettingRenderer? renderer);
 
     protected abstract void ui_background();
     protected abstract void ui_help();

@@ -4,6 +4,9 @@
 // It is licensed to you under the GNU Lesser General Public License, version 3.0 or later. See COPYING, COPYING.LESSER.
 
 /* [fkelava 12/11/26 14:39]
+ * This is the generic tool program stub. Do not edit this unless you encounter a bug.
+ * To edit the tool's UI, please open `ui.cpp`.
+ *
  * Mostly a verbatim copy of the SDL3/OGL3 example. Unlike the C# equivalent, here
  * we have the option of following the example more closely.
  */
@@ -13,6 +16,9 @@
 #pragma comment(lib, "version")  // Required for SDL3 static linking.
 #pragma comment(lib, "opengl32") // Required for OGL3 linking.
 
+#include <fhsetup.h>
+
+// Win32
 #include <windows.h>
 
 // ImGui
@@ -145,7 +151,7 @@ int WINAPI WinMain(
         ImGui::NewFrame();
 
         // Draw the actual setup UI
-        ImGui::ShowDemoWindow();
+        setup_ui();
 
         // Rendering
         ImGui::Render();

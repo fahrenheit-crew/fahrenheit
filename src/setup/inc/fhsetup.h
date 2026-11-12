@@ -5,3 +5,5 @@
 
 #pragma once
 
+// Forward declaration of UI function.
+void setup_ui();

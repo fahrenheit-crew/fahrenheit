@@ -31,14 +31,6 @@ public partial class FhSettingsUiX : FhSettingsUiBase {
         _texture_battle_kuang,
     ];
 
-    public FhSettingsUiX() {
-        FhInternal.Settings.register_setting_renderer<FhSettingsUiX>(typeof(FhSettingsCategory), typeof(Renderer_Category));
-        FhInternal.Settings.register_setting_renderer<FhSettingsUiX>(typeof(FhSettingToggle),    typeof(Renderer_Toggle));
-        FhInternal.Settings.register_setting_renderer<FhSettingsUiX>(typeof(FhSettingChoice<>),  typeof(Renderer_Choice<>));
-    }
-
-
-
     // Rendering
 
     /// <summary>Render the background.</summary>
@@ -320,8 +312,21 @@ public partial class FhSettingsUiX : FhSettingsUiBase {
         }
     }
 
+    protected override bool get_setting_renderer(FhSetting setting, [NotNullWhen(true)] out SettingRenderer? renderer) {
+        renderer = 0 switch {
+            _ when setting is FhSettingsCategory     => Renderer_Category     .instance,
+            _ when setting is FhSettingToggle        => Renderer_Toggle       .instance,
+            _ when setting is FhSettingNumber        => Renderer_Number       .instance,
+            _ when setting is FhSettingChoice        => Renderer_Choice       .instance,
+            _ when setting is FhSettingDynamicChoice => Renderer_DynamicChoice.instance,
+            _ => null,
+        };
+
+        return renderer != null;
+    }
+
     private void ui_setting(FhSetting setting, Rect outer_bounds) {
-        if (!setting.get_renderer<FhSettingsUiX>(out FhSettingRenderer? renderer)) {
+        if (!get_setting_renderer(setting, out SettingRenderer? renderer)) {
             Rect debug_bounds = new() {
                 pos  = new(610f, 202f + setting_y),
                 size = new(outer_bounds.size.X, 40f),
@@ -331,7 +336,7 @@ public partial class FhSettingsUiX : FhSettingsUiBase {
                 ImGui.GetBackgroundDrawList(),
                 debug_bounds.scale_to_aspect(aspect_helper).center,
                 $"Renderer not found for {setting.GetType()}.",
-                text_config with { align = Alignment2D.LEFT }
+                text_config with { align = Alignment2D.CENTER }
             );
 
             setting_y += 40f;

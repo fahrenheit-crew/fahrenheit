@@ -6,7 +6,7 @@
 namespace Fahrenheit.Runtime.Gui;
 
 [FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
-public class FhSettingsUiSelector : FhModule {
+public sealed class FhSettingsUiSelector : FhModule {
     private FhSettingsUiX?  _ui_x;
     private FhSettingsUiX2? _ui_x2;
 
@@ -14,50 +14,56 @@ public class FhSettingsUiSelector : FhModule {
 
     public bool is_open { get; private set; }
 
-    private class FhSettingsUiSettings : FhSettingProvider<FhSettingsUiSelector> {
-        //TODO: Change this to a Set-based dropdown once that's created.
-        public readonly FhSettingText selected_ui = new("selected_ui", string.Empty);
+    internal sealed class UiSelectionSetting(string id, string def_value) : FhSettingDynamicChoice<string>(id, def_value) {
+        protected override IReadOnlyList<object> init_choices() {
+            //TODO: Unhardcode this once we can safely retrieve all registered UIs (post module ctor, pre module init)
+            List<string> ui_types = [
+                typeof(FhSettingsUiX) .FullName!,
+                typeof(FhSettingsUiX2).FullName!,
+            ];
+
+            return ui_types;
+        }
+
+        internal override void init() {
+            base.init();
+
+            set(get_default_ui_id());
+        }
+    }
+
+    internal class Settings : FhSettingProvider<FhSettingsUiSelector> {
+        public readonly UiSelectionSetting selected_ui = new("selected_ui", string.Empty);
 
         internal protected override IEnumerable<FhSetting> get() {
             return [ selected_ui ];
         }
     }
 
-    private readonly FhSettingsUiSettings _settings = new();
+    internal readonly Settings settings = new();
 
-    private string get_default_ui_id() {
-        return FhGlobal.game_id switch {
-            FhGameId.FFX    => _ui_x! .ModuleType,
-            FhGameId.FFX2   or
-            FhGameId.FFX2LM => _ui_x2!.ModuleType,
-
-            _ => throw new NotImplementedException(),
-        };
+    private static string get_default_ui_id() {
+        return FhUtil.select(
+            typeof(FhSettingsUiX) .FullName!,
+            typeof(FhSettingsUiX2).FullName!,
+            typeof(FhSettingsUiX2).FullName!
+        );
     }
 
     public override bool init(FhModContext mod_context, FileStream global_state_file) {
-        bool got_modules =
-               new FhModuleHandle<FhSettingsUiX> (this).try_get_module(out _ui_x)
-            && new FhModuleHandle<FhSettingsUiX2>(this).try_get_module(out _ui_x2);
-
-        if (!got_modules) return false;
-
-        if (_settings.selected_ui.get() == string.Empty) {
-            _settings.selected_ui.set(get_default_ui_id());
-        }
-
-        return true;
+        return new FhModuleHandle<FhSettingsUiX> (this).try_get_module(out _ui_x)
+            && new FhModuleHandle<FhSettingsUiX2>(this).try_get_module(out _ui_x2);;
     }
 
     private void open() {
-        _selected_ui = _settings.selected_ui.get();
+        _selected_ui = settings.selected_ui.get();
         if (FhInternal.Settings.get_ui(_selected_ui, out _)) return;
 
-        _logger.Warning($"Failed to find desired settings UI \"{_settings.selected_ui.get()}\", falling back to default.");
+        _logger.Warning($"Failed to find desired settings UI \"{settings.selected_ui.get()}\", falling back to default.");
 
-        _settings.selected_ui.set(get_default_ui_id());
-        _selected_ui = _settings.selected_ui.get();
-        if (FhInternal.Settings.get_ui(_settings.selected_ui.get(), out _)) return;
+        settings.selected_ui.set(get_default_ui_id());
+        _selected_ui = settings.selected_ui.get();
+        if (FhInternal.Settings.get_ui(settings.selected_ui.get(), out _)) return;
 
         // Something has gone disastrously wrong – we're missing our default UI!
         _logger.Error("Failed to find default settings UI.");

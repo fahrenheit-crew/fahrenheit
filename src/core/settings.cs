@@ -350,7 +350,7 @@ public sealed class FhSettingsCategory : FhSetting {
 
 /// <summary>A text input setting, with flags.</summary>
 /// <remarks>Callbacks are not currently supported.</remarks>
-public sealed class FhSettingText(
+internal sealed class FhSettingText(
     string              id,
     string              def_value,
     ImGuiInputTextFlags flags = ImGuiInputTextFlags.None
@@ -457,7 +457,12 @@ public sealed class FhSettingChoice<T> : FhSettingChoice
 
         // This will be unnecessary once we can constrain T to be 'closed'
         if (!Enum.IsDefined(typeof(T), new_value)) {
-            FhInternal.Log.Error($"Value '{new_value}' rejected as invalid for setting '{id}'.");
+            FhInternal.Log.Error($"Value '{new_value}' rejected as invalid for setting '{id}'. Valid values:");
+
+            foreach (T valid_value in Enum.GetValues<T>()) {
+                FhInternal.Log.Error($"  {valid_value}");
+            }
+
             return;
         }
 
@@ -468,7 +473,7 @@ public sealed class FhSettingChoice<T> : FhSettingChoice
 }
 
 public abstract class FhSettingDynamicChoice(string id, object def_value) : FhSettingCarousel<object>(id, def_value) {
-    internal List<object> choices;
+    internal List<object> choices = [];
 
     public sealed override ReadOnlySpan<object> get_choice_values() => CollectionsMarshal.AsSpan(choices);
     public sealed override string get_choice_name(object choice) => $"{id}.{choice}.name";
@@ -478,7 +483,12 @@ public abstract class FhSettingDynamicChoice(string id, object def_value) : FhSe
         SetEventArgs args = new(value);
 
         if (!choices.Contains(new_value)) {
-            FhInternal.Log.Error($"Value '{new_value}' rejected as invalid for setting '{id}'.");
+            FhInternal.Log.Error($"Value '{new_value}' rejected as invalid for setting '{id}'. Valid values:");
+
+            foreach (object valid_value in choices) {
+                FhInternal.Log.Error($"  {valid_value}");
+            }
+
             return;
         }
 
@@ -487,9 +497,15 @@ public abstract class FhSettingDynamicChoice(string id, object def_value) : FhSe
         PostSet.invoke(args);
     }
 
-    internal sealed override void init() {
+    internal override void init() {
         choices = [ ..init_choices() ];
     }
 
     protected abstract IReadOnlyList<object> init_choices();
+}
+
+public abstract class FhSettingDynamicChoice<T>(string id, T def_value) : FhSettingDynamicChoice(id, def_value!) {
+    internal new T get() {
+        return (T)base.get();
+    }
 }

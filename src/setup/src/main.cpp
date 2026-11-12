@@ -8,13 +8,10 @@
  * we have the option of following the example more closely.
  */
 
-/* [fkelava 12/11/2026 15:44]
- * These are required for SDL3 static linking to succeed.
- */
-
-#pragma comment(lib, "winmm")
-#pragma comment(lib, "setupapi")
-#pragma comment(lib, "version")
+#pragma comment(lib, "winmm")    // Required for SDL3 static linking.
+#pragma comment(lib, "setupapi") // Required for SDL3 static linking.
+#pragma comment(lib, "version")  // Required for SDL3 static linking.
+#pragma comment(lib, "opengl32") // Required for OGL3 linking.
 
 #include <windows.h>
 
@@ -26,8 +23,6 @@
 // SDL3
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_opengl.h>
-
-SDL_Window* g_window;
 
 int WINAPI WinMain(
     _In_     HINSTANCE hInstance,
@@ -101,14 +96,108 @@ int WINAPI WinMain(
         return 1;
     }
 
+    IMGUI_CHECKVERSION();
+
     ImGuiContext* ctx   = ImGui::CreateContext();
     ImGuiIO&      io    = ImGui::GetIO(); (void)io;
     ImGuiStyle    style = ImGui::GetStyle();
 
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
-    IMGUI_CHECKVERSION();
+    io.IniFilename = nullptr; // Do not save any settings.
+
+    ImGui::StyleColorsDark();
+
+    if (!ImGui_ImplSDL3_InitForOpenGL(sdl_window, sdl_context)) {
+        fwprintf_s(stdout, L"Fault in ImGui_ImplSDL3_InitForOpenGL().\n");
+        return 1;
+    }
+
+    if (!ImGui_ImplOpenGL3_Init()) {
+        fwprintf_s(stdout, L"Fault in ImGui_ImplOpenGL3_Init().\n");
+        return 1;
+    }
+
+    bool      quit = false;
+    SDL_Event event;
+
+    while (!quit) {
+        // Poll and handle events (inputs, window resize, etc.)
+        while (SDL_PollEvent(&event)) {
+            ImGui_ImplSDL3_ProcessEvent(&event);
+
+            quit = event.type == SDL_EVENT_QUIT ||
+                   event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED && event.window.windowID == sdl_window_id;
+        }
+
+        if (SDL_GetWindowFlags(sdl_window) & SDL_WINDOW_MINIMIZED) {
+            SDL_Delay(10);
+            continue;
+        }
+
+        // Start the Dear ImGui frame
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplSDL3_NewFrame();
+
+        ImGui::NewFrame();
+
+        // Draw the actual setup UI
+        ImGui::ShowDemoWindow();
+
+        // Rendering
+        ImGui::Render();
+
+        glViewport(
+            0,
+            0,
+            (int) io.DisplaySize.x,
+            (int) io.DisplaySize.y
+        );
+
+        glClearColor(
+            0.45F,
+            0.55F,
+            0.60F,
+            1.00F
+        );
+
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+        // Update and Render additional Platform Windows
+        // (Platform functions may change the current OpenGL context, so we save/restore it to make it easier to paste this code elsewhere.)
+        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+        {
+            SDL_Window*   current_window  = SDL_GL_GetCurrentWindow();
+            SDL_GLContext current_context = SDL_GL_GetCurrentContext();
+
+            ImGui::UpdatePlatformWindows();
+            ImGui::RenderPlatformWindowsDefault();
+
+            if (!SDL_GL_MakeCurrent(current_window, current_context)) {
+                fwprintf_s(stdout, L"Fault in SDL_GL_MakeCurrent() - %hs\n", SDL_GetError());
+                return 1;
+            }
+        }
+
+        if (!SDL_GL_SwapWindow(sdl_window)) {
+            fwprintf_s(stdout, L"Fault in SDL_GL_SwapWindow() - %hs\n", SDL_GetError());
+            return 1;
+        }
+    }
+
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplSDL3_Shutdown();
+
+    ImGui::DestroyContext();
+
+    SDL_GL_DestroyContext(sdl_context);
+    SDL_DestroyWindow    (sdl_window);
+    SDL_Quit();
 
     return 0;
 }

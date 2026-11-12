@@ -1,0 +1,13 @@
+{
+    "settings.name": "Settings Menu",
+    "settings.desc": "Configure the settings menu",
+
+    "settings.selected_ui.name": "UI",
+    "settings.selected_UI.desc": "Select which UI to use for the settings menu",
+
+    "settings.selected_ui.Fahrenheit.Runtime.Gui.FhSettingsUiX.name": "FFX",
+    "settings.selected_ui.Fahrenheit.Runtime.Gui.FhSettingsUiX.desc": "The default UI for FFX",
+
+    "settings.selected_ui.Fahrenheit.Runtime.Gui.FhSettingsUiX2.name": "FFX-2",
+    "settings.selected_ui.Fahrenheit.Runtime.Gui.FhSettingsUiX2.desc": "The default UI for FFX-2"
+}

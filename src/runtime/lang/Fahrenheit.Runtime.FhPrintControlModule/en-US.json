@@ -1,0 +1,7 @@
+{
+    "settings.name": "Debug Prints",
+    "settings.desc": "Configure logging of the game's debug prints",
+
+    "settings.enable.name": "Enable",
+    "settings.enable.desc": "Whether Fahrenheit should log the game's debug prints"
+}

@@ -7,7 +7,6 @@ namespace Fahrenheit;
 
 using UserInterfaces   = Dictionary<string, FhSettingsUi>;
 using ModuleSettings   = ConcurrentDictionary<Type, FhSettingData>;
-using SettingRenderers = ConcurrentDictionary<(Type, Type), Type>;
 
 /// <summary>
 ///     Pairs a setting category with data
@@ -40,33 +39,6 @@ public abstract class FhSettingProvider<T> where T : FhModule {
     ///     the mod settings UI, in display order.
     /// </summary>
     internal protected abstract IEnumerable<FhSetting> get();
-}
-
-public abstract class FhSettingRenderer {
-    internal protected abstract Vector2 get_size(FhSettingsUi ui);
-    internal protected abstract void render(FhSettingsUi ui, FhSetting setting, Rect max_bounds);
-    internal protected abstract void handle_input(FhSettingsUi ui, FhSetting setting);
-}
-
-public abstract class FhSettingRenderer<TSetting, TUi> : FhSettingRenderer
-    where TSetting : FhSetting
-    where TUi      : FhSettingsUi {
-
-    internal protected sealed override Vector2 get_size(FhSettingsUi ui) {
-        return get_size((TUi)ui);
-    }
-
-    internal protected sealed override void render(FhSettingsUi ui, FhSetting setting, Rect max_bounds) {
-        render((TUi)ui, (TSetting)setting, max_bounds);
-    }
-
-    internal protected sealed override void handle_input(FhSettingsUi ui, FhSetting setting) {
-        handle_input((TUi)ui, (TSetting)setting);
-    }
-
-    internal protected abstract Vector2 get_size(TUi ui);
-    internal protected abstract void render(TUi ui, TSetting setting, Rect max_bounds);
-    internal protected abstract void handle_input(TUi ui, TSetting setting);
 }
 
 // /// <summary>
@@ -108,7 +80,6 @@ public abstract class FhSettingRenderer<TSetting, TUi> : FhSettingRenderer
 internal sealed class FhSettings {
     private readonly UserInterfaces   _uis       = [];
     private readonly ModuleSettings   _settings  = [];
-    private readonly SettingRenderers _renderers = [];
 
     /// <summary>Get the settings UI associated with the given ID.</summary>
     /// <param name="id">The ID of the desired UI.</param>
@@ -124,25 +95,6 @@ internal sealed class FhSettings {
         _uis[ui.ModuleType] = ui;
     }
 
-    public bool get_setting_renderer<TUi>(
-        FhSetting setting,
-        [NotNullWhen(true)] out Type? renderer_type
-    )
-        where TUi      : FhSettingsUi {
-
-        return _renderers.TryGetValue((setting.GetType(), typeof(TUi)), out renderer_type);
-    }
-
-    /// <summary>Registers the given renderer type.</summary>
-    /// <typeparam name="TSetting">The type of the setting the renderer is for.</typeparam>
-    /// <typeparam name="TUi">The type of the UI the renderer is for.</typeparam>
-    /// <typeparam name="TRenderer">The type of the renderer for the setting.</typeparam>
-    public void register_setting_renderer<TUi>(Type setting_type, Type renderer_type) where TUi : FhSettingsUi {
-        FhInternal.Log.Info($"Registering renderer for {setting_type} in {typeof(TUi)}");
-
-        _renderers[(setting_type, typeof(TUi))] = renderer_type;
-    }
-
     /// <summary>
     ///     Registers a given module's settings for display.
     /// </summary>
@@ -155,7 +107,7 @@ internal sealed class FhSettings {
         Type          module_type     = typeof(T);
         FhSettingData module_settings = new(
             settings_path: "", // We'll fill in the path in initialize(), when all module constructors have finished running.
-            settings:      new FhSettingsCategory(module_type.FullName!, [ .. provider.get() ])
+            settings:      new FhSettingsCategory($"{module_type.FullName!}.settings", [ .. provider.get() ])
         );
 
         if (!_settings.TryAdd(module_type, module_settings)) {
@@ -283,8 +235,6 @@ public abstract class FhSetting(string id) {
     ///     Reads the setting's value from disk through the provided <paramref name="reader"/>.
     /// </summary>
     internal abstract void load(Utf8JsonReader reader);
-
-    public abstract bool get_renderer<TUi>([NotNullWhen(true)] out FhSettingRenderer? renderer) where TUi : FhSettingsUi;
 }
 
 /// <summary>
@@ -347,8 +297,6 @@ public abstract class FhSetting<T>(string id, T defval) : FhSetting(id) {
 
 /// <summary>An indented group of settings.</summary>
 public sealed class FhSettingsCategory : FhSetting {
-    private static readonly Dictionary<Type, FhSettingRenderer> _renderers = [];
-
     internal readonly FhSetting[] settings;
     internal          bool        collapsed;
 
@@ -398,23 +346,6 @@ public sealed class FhSettingsCategory : FhSetting {
             setting.load(reader);
         }
     }
-
-    public override bool get_renderer<TUi>([NotNullWhen(true)] out FhSettingRenderer? renderer) {
-        Type ui_type = typeof(TUi);
-        if (_renderers.TryGetValue(ui_type, out renderer))
-            return true;
-
-        if (!FhInternal.Settings.get_setting_renderer<TUi>(this, out Type? renderer_type)) {
-            return false;
-        }
-
-        _renderers[ui_type] = (FhSettingRenderer)renderer_type
-            .GetConstructor([])!
-            .Invoke(null);
-
-        renderer = _renderers[ui_type];
-        return true;
-    }
 }
 
 /// <summary>A text input setting, with flags.</summary>
@@ -426,25 +357,6 @@ public sealed class FhSettingText(
 ) : FhSetting<string>(id, def_value) {
 
     public const int MAX_LENGTH = 1024;
-
-    private static Dictionary<Type, FhSettingRenderer> _renderers = [];
-
-    public override bool get_renderer<TUi>([NotNullWhen(true)] out FhSettingRenderer? renderer) {
-        Type ui_type = typeof(TUi);
-        if (_renderers.TryGetValue(ui_type, out renderer))
-            return true;
-
-        if (!FhInternal.Settings.get_setting_renderer<TUi>(this, out Type? renderer_type)) {
-            return false;
-        }
-
-        _renderers[ui_type] = (FhSettingRenderer)renderer_type
-            .GetConstructor([])!
-            .Invoke(null);
-
-        renderer = _renderers[ui_type];
-        return true;
-    }
 }
 
 /// <summary>A numeric/spinbox input.</summary>
@@ -454,103 +366,84 @@ public sealed class FhSettingText(
 /// <param name="max">The biggest accepted number. Defaults to 1.</param>
 /// <param name="step">The amount the arrows increase/decrease the value. Defaults to 1. Set to 0 to disable the arrows.</param>
 /// <typeparam name="T">The underlying numeric type for the value.</typeparam>
-public class FhSettingNumber<T>(
-    string id,
-    T      def_value,
-    T?     min,
-    T?     max,
-    T?     step
-) : FhSetting<T>(id, def_value) where T : unmanaged, INumber<T> {
+public class FhSettingNumber : FhSetting<double> {
+    public readonly double min;
+    public readonly double max;
+    public readonly double step;
 
-    private static Dictionary<Type, FhSettingRenderer> _renderers = [];
+    public readonly bool integers_only;
 
-    public readonly ImGuiDataType type = get_data_type(def_value);
+    public FhSettingNumber(
+        string id,
+        double def_value,
+        double min           = 0.0,
+        double max           = 1.0,
+        double step          = 1.0,
+        bool   integers_only = false
+    ) : base(id, def_value) {
+        ArgumentOutOfRangeException.ThrowIfLessThan   (def_value, min);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(def_value, max);
 
-    public readonly T step = step ?? T.One;
-    public readonly T min  = min  ?? T.Zero;
-    public readonly T max  = max  ?? T.One;
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(step, max - min);
 
-    private static ImGuiDataType get_data_type(T value) {
-        return value switch {
-            byte   => ImGuiDataType.U8,
-            ushort => ImGuiDataType.U16,
-            uint   => ImGuiDataType.U32,
-            ulong  => ImGuiDataType.U64,
-            sbyte  => ImGuiDataType.S8,
-            short  => ImGuiDataType.S16,
-            int    => ImGuiDataType.S32,
-            long   => ImGuiDataType.S64,
-            float  => ImGuiDataType.Float,
-            double => ImGuiDataType.Double,
-            _      => throw new NotImplementedException($"{nameof(FhSettingNumber<T>)} expected a built-in number type, not {typeof(T).Name}"),
-        };
+        if (integers_only) {
+            ArgumentOutOfRangeException.ThrowIfEqual(double.IsInteger(min),  false);
+            ArgumentOutOfRangeException.ThrowIfEqual(double.IsInteger(max),  false);
+            ArgumentOutOfRangeException.ThrowIfEqual(double.IsInteger(step), false);
+        }
+
+        this.min  = min;
+        this.max  = max;
+        this.step = step;
+
+        this.integers_only = integers_only;
     }
 
-    internal override void set(T new_value) {
+    internal override void set(double new_value) {
         SetEventArgs args = new(value);
 
-        value = T.Clamp(new_value, min, max);
+        value = double.Clamp(new_value, min, max);
+
+        if (integers_only) {
+            value = double.Round(value);
+        }
 
         PostSet.invoke(args);
     }
-
-    public override bool get_renderer<TUi>([NotNullWhen(true)] out FhSettingRenderer? renderer) {
-        Type ui_type = typeof(TUi);
-        if (_renderers.TryGetValue(ui_type, out renderer))
-            return true;
-
-        if (!FhInternal.Settings.get_setting_renderer<TUi>(this, out Type? renderer_type)) {
-            return false;
-        }
-
-        _renderers[ui_type] = (FhSettingRenderer)renderer_type
-            .MakeGenericType(typeof(T))
-            .GetConstructor([])!
-            .Invoke(null);
-
-        renderer = _renderers[ui_type];
-        return true;
-    }
 }
 
-public class FhSettingToggle(string id, bool def_value) : FhSetting<bool>(id, def_value) {
-    private static Dictionary<Type, FhSettingRenderer> _renderers = [];
+public class FhSettingToggle(string id, bool def_value) : FhSetting<bool>(id, def_value);
 
-    public override bool get_renderer<TUi>([NotNullWhen(true)] out FhSettingRenderer? renderer) {
-        Type ui_type = typeof(TUi);
-        if (_renderers.TryGetValue(ui_type, out renderer))
-            return true;
+public abstract class FhSettingCarousel<T> : FhSetting<T> {
+    protected FhSettingCarousel(string id, T def_value) : base(id, def_value) { }
 
-        if (!FhInternal.Settings.get_setting_renderer<TUi>(this, out Type? renderer_type)) {
-            return false;
-        }
-
-        _renderers[ui_type] = (FhSettingRenderer)renderer_type
-            .GetConstructor([])!
-            .Invoke(null);
-
-        renderer = _renderers[ui_type];
-        return true;
-    }
+    public abstract ReadOnlySpan<T> get_choice_values();
+    public abstract string get_choice_name(T choice);
+    public abstract string get_choice_desc(T choice);
 }
 
-public class FhSettingChoice<T> : FhSetting<T> where T : struct, Enum {
-    private static Dictionary<Type, FhSettingRenderer> _renderers = [];
+public abstract class FhSettingChoice(string id, long def_value) : FhSettingCarousel<long>(id, def_value) {
+    public override string get_choice_name(long choice) => $"{id}.{choice}.name";
+    public override string get_choice_desc(long choice) => $"{id}.{choice}.desc";
+}
 
-    private static readonly string[] _names;
-    private static readonly T[]      _vals;
-    private static readonly string[] _keys_name;
-    private static readonly string[] _keys_desc;
+public sealed class FhSettingChoice<T> : FhSettingChoice
+    where T : struct, Enum {
 
-    public ReadOnlySpan<T> choices => _vals;
+    private static long[] _vals;
+    public override ReadOnlySpan<long> get_choice_values() => _vals;
 
-    public ReadOnlySpan<string> choice_names => _keys_name;
-    public ReadOnlySpan<string> choice_descs => _keys_desc;
+    static FhSettingChoice() {
+        T[] values = Enum.GetValues<T>();
 
-    public string choice_name(T choice) => _keys_name[_vals.IndexOf(choice)];
-    public string choice_desc(T choice) => _keys_desc[_vals.IndexOf(choice)];
+        _vals = new long[values.Length];
 
-    public FhSettingChoice(string id, T def_value) : base(id, def_value) {
+        for (int i = 0; i < values.Length; i++) {
+            _vals[i] = Convert.ToInt64(values[i]);
+        }
+    }
+
+    public FhSettingChoice(string id, T def_value) : base(id, Convert.ToInt64(def_value)) {
         // This will be unnecessary once we can constrain T to be 'closed'
         ArgumentOutOfRangeException.ThrowIfEqual(
             Enum.IsDefined(def_value),
@@ -559,11 +452,11 @@ public class FhSettingChoice<T> : FhSetting<T> where T : struct, Enum {
         );
     }
 
-    internal override void set(T new_value) {
+    internal override void set(long new_value) {
         SetEventArgs args = new(value);
 
         // This will be unnecessary once we can constrain T to be 'closed'
-        if (!Enum.IsDefined(new_value)) {
+        if (!Enum.IsDefined(typeof(T), new_value)) {
             FhInternal.Log.Error($"Value '{new_value}' rejected as invalid for setting '{id}'.");
             return;
         }
@@ -572,32 +465,16 @@ public class FhSettingChoice<T> : FhSetting<T> where T : struct, Enum {
 
         PostSet.invoke(args);
     }
-
-    public override bool get_renderer<TUi>([NotNullWhen(true)] out FhSettingRenderer? renderer) {
-        Type ui_type = typeof(TUi);
-        if (_renderers.TryGetValue(ui_type, out renderer))
-            return true;
-
-        if (!FhInternal.Settings.get_setting_renderer<TUi>(this, out Type? renderer_type)) {
-            return false;
-        }
-
-        _renderers[ui_type] = (FhSettingRenderer)renderer_type
-            .MakeGenericType(typeof(T))
-            .GetConstructor([])!
-            .Invoke(null);
-
-        renderer = _renderers[ui_type];
-        return true;
-    }
 }
 
-public abstract class FhSettingDynamicChoice<T> (string id, T def_value) : FhSetting<T>(id, def_value) {
-    private static Dictionary<Type, FhSettingRenderer> _renderers = [];
+public abstract class FhSettingDynamicChoice(string id, object def_value) : FhSettingCarousel<object>(id, def_value) {
+    internal List<object> choices;
 
-    internal List<T> choices;
+    public sealed override ReadOnlySpan<object> get_choice_values() => CollectionsMarshal.AsSpan(choices);
+    public sealed override string get_choice_name(object choice) => $"{id}.{choice}.name";
+    public sealed override string get_choice_desc(object choice) => $"{id}.{choice}.desc";
 
-    internal override void set(T new_value) {
+    internal sealed override void set(object new_value) {
         SetEventArgs args = new(value);
 
         if (!choices.Contains(new_value)) {
@@ -610,29 +487,9 @@ public abstract class FhSettingDynamicChoice<T> (string id, T def_value) : FhSet
         PostSet.invoke(args);
     }
 
-    internal override void init() {
+    internal sealed override void init() {
         choices = [ ..init_choices() ];
     }
 
-    protected abstract IReadOnlyList<T> init_choices();
-
-    public IList<T> get_choices() => [ .. choices ];
-
-    public override bool get_renderer<TUi>([NotNullWhen(true)] out FhSettingRenderer? renderer) {
-        Type ui_type = typeof(TUi);
-        if (_renderers.TryGetValue(ui_type, out renderer))
-            return true;
-
-        if (!FhInternal.Settings.get_setting_renderer<TUi>(this, out Type? renderer_type)) {
-            return false;
-        }
-
-        _renderers[ui_type] = (FhSettingRenderer)renderer_type
-            .MakeGenericType(typeof(T))
-            .GetConstructor([])!
-            .Invoke(null);
-
-        renderer = _renderers[ui_type];
-        return true;
-    }
+    protected abstract IReadOnlyList<object> init_choices();
 }

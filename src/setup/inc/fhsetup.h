@@ -5,5 +5,9 @@
 
 #pragma once
 
-// Forward declaration of UI function.
-void setup_ui();
+void bridge_ui(); // Displays the Bridge user interface.
+
+bool bridge_check_vcredist_x86(); // Determines whether the x86 VC Redistributable is installed on this system.
+bool bridge_check_vcredist_x64(); // Determines whether the x64 VC Redistributable is installed on this system.
+bool bridge_check_nethost_x86();  // Determines whether the x86 .NET Runtime is installed on this system.
+bool bridge_check_nethost_x64();  // Determines whether the x64 .NET Runtime is installed on this system.

@@ -11,4 +11,10 @@ public partial class GameLoopEvents {
 
     /// <summary>Raised after the save/load menu is closed.</summary>
     public FhEvent<EventArgs> PostCloseSaveMenu = new();
+
+    /// <summary>Raised after the Fahrenheit settings menu is opened.</summary>
+    public FhEvent<EventArgs> PostOpenSettingsMenu = new();
+
+    /// <summary>Raised after the Fahrenheit settings menu is closed.</summary>
+    public FhEvent<EventArgs> PostCloseSettingsMenu = new();
 }

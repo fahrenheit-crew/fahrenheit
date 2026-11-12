@@ -22,39 +22,67 @@ public sealed class FhSaveUiSelector : FhModule {
     private FhSaveUiX?  _ui_x;
     private FhSaveUiX2? _ui_x2;
 
-    private class FhSaveUiSettings : FhSettingProvider<FhSaveUiSelector> {
-        //TODO: Change this to a Set-based dropdown once that's created.
-        public readonly FhSettingText selected_ui = new("selected_ui", "");
+    internal sealed class UiSelectionSetting(string id, string def_value) : FhSettingDynamicChoice<string>(id, def_value) {
+        protected override IReadOnlyList<object> init_choices() {
+            //TODO: Unhardcode this once we can safely retrieve all registered UIs (post module ctor, pre module init)
+            List<string> ui_types = [
+                typeof(FhSaveUiX) .FullName!,
+                typeof(FhSaveUiX2).FullName!,
+            ];
+
+            return ui_types;
+        }
+
+        internal override void init() {
+            base.init();
+
+            set(get_default_ui_id());
+        }
+    }
+
+    internal sealed class Settings : FhSettingProvider<FhSaveUiSelector> {
+        public readonly UiSelectionSetting selected_ui = new("selected_ui", string.Empty);
 
         internal protected override IEnumerable<FhSetting> get() {
             return [ selected_ui ];
         }
     }
 
-    private readonly FhSaveUiSettings _settings = new();
+    internal readonly Settings settings = new();
 
-    private string get_default_ui_id() {
-        return FhGlobal.game_id switch {
-            FhGameId.FFX    => _ui_x! .ModuleType,
-            FhGameId.FFX2   or
-            FhGameId.FFX2LM => _ui_x2!.ModuleType,
-
-            _ => throw new NotImplementedException(),
-        };
+    private static string get_default_ui_id() {
+        return FhUtil.select(
+            typeof(FhSaveUiX) .FullName!,
+            typeof(FhSaveUiX2).FullName!,
+            typeof(FhSaveUiX2).FullName!
+        );
     }
 
     public override bool init(FhModContext mod_context, FileStream global_state_file) {
-        bool got_modules = FhGlobal.game_id switch {
-            FhGameId.FFX    => new FhModuleHandle<FhSaveUiX> (this).try_get_module(out _ui_x),
-            FhGameId.FFX2   or
-            FhGameId.FFX2LM => new FhModuleHandle<FhSaveUiX2>(this).try_get_module(out _ui_x2),
+        return new FhModuleHandle<FhSaveUiX> (this).try_get_module(out _ui_x)
+            && new FhModuleHandle<FhSaveUiX2>(this).try_get_module(out _ui_x2);
+    }
 
-            _ => throw new NotImplementedException(),
-        };
+    private FhSaveUi get_ui() {
+        FhSaveUi? ui;
 
-        _settings.selected_ui.set(get_default_ui_id());
+        if (FhApi.Saves.ui_get(settings.selected_ui.get(), out ui)) {
+            return ui;
+        }
 
-        return got_modules;
+        // Previous UI is missing (provider mod updated and broke API?)
+        // So we try to fall back to default
+        _logger.Warning($"Failed to find desired save/load UI \"{settings.selected_ui.get()}\", falling back to default.");
+
+        settings.selected_ui.set(get_default_ui_id());
+
+        if (FhApi.Saves.ui_get(settings.selected_ui.get(), out ui)) {
+            return ui;
+        }
+
+        // Something has gone disastrously wrong – we're missing our default UI!
+        _logger.Error("Failed to find default save/load UI.");
+        throw new NotImplementedException("Failed to find default save/load UI.");
     }
 
     public override void render_imgui() {
@@ -64,19 +92,7 @@ public sealed class FhSaveUiSelector : FhModule {
             return;
         }
 
-        if (!FhApi.Saves.ui_get(_settings.selected_ui.get(), out FhSaveUi? ui)) {
-            // Previous UI is missing (provider mod updated and broke API?)
-            // So we try to fall back to default
-            _logger.Warning($"Failed to find desired save/load UI \"{_settings.selected_ui.get()}\", falling back to default.");
-
-            _settings.selected_ui.set(get_default_ui_id());
-
-            if (!FhApi.Saves.ui_get(_settings.selected_ui.get(), out ui)) {
-                // Something has gone disastrously wrong – we're missing our default UI!
-                _logger.Error("Failed to find default save/load UI.");
-                throw new NotImplementedException("Failed to find default save/load UI.");
-            }
-        }
+        FhSaveUi ui = get_ui();
 
         if (FhSaves.pal_state_screen is SaveScreenState.OPEN) {
             ui.render_ui();

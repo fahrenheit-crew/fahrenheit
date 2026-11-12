@@ -1,0 +1,13 @@
+{
+  "selected_ui.name": "Selected UI",
+  "selected_ui.desc": "The fully qualified module type name of the settings UI to use",
+
+  "help.mod_list": "Select mod to configure",
+  "help.module_list": "Select module to configure",
+
+  "help.input.text": "Input desired text",
+  "help.input.number": "Input desired number",
+
+  "input.on": "ON",
+  "input.off": "OFF"
+}

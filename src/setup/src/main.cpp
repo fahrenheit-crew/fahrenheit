@@ -151,7 +151,7 @@ int WINAPI WinMain(
         ImGui::NewFrame();
 
         // Draw the actual setup UI
-        setup_ui();
+        bridge_ui();
 
         // Rendering
         ImGui::Render();

@@ -12,6 +12,11 @@
 // ImGui
 #include <imgui.h>
 
-void setup_ui() {
+bool vc_x86  = bridge_check_vcredist_x86();
+bool vc_x64  = bridge_check_vcredist_x64();
+bool net_x86 = bridge_check_nethost_x86();
+bool net_x64 = bridge_check_nethost_x64();
+
+void bridge_ui() {
     ImGui::ShowDemoWindow();
 }

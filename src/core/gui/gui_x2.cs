@@ -214,7 +214,7 @@ public partial class FhGui {
                 alpha  *= 1f - fade_time;
             }
 
-            UV ghost_suv = new Rect { pos  = cursor_tip + new Vector2(offset, 0f) }
+            UV ghost_suv = new Rect { pos = cursor_tip + new Vector2(offset, 0f) }
                 .expand(config.cursor_size, Alignment2D.RIGHT)
                 .as_uv();
 
@@ -247,7 +247,7 @@ public partial class FhGui {
                 alpha  *= 1f - fade_time;
             }
 
-            UV ghost_suv = new Rect { pos  = cursor_tip + new Vector2(offset, 0f) }
+            UV ghost_suv = new Rect { pos = cursor_tip + new Vector2(offset, 0f) }
                 .expand(config.cursor_size, Alignment2D.RIGHT)
                 .as_uv();
 
@@ -264,7 +264,7 @@ public partial class FhGui {
         }
 
         // Main Cursor
-        UV main_suv = new Rect { pos  = cursor_tip + new Vector2(loop_progress * config.max_offset, 0f) }
+        UV main_suv = new Rect { pos = cursor_tip + new Vector2(loop_progress * config.max_offset, 0f) }
             .expand(config.cursor_size, Alignment2D.RIGHT)
             .as_uv();
 

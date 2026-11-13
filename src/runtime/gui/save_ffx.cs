@@ -463,7 +463,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
     }
 
     protected override void ui_no_saves() {
-        if (!_texture_stone.try_use(out ImTextureRef stone, out FhTextureMetadata? stone_meta)
+        if (!_texture_stone    .try_use(out ImTextureRef stone,  out FhTextureMetadata? stone_meta)
             || !_texture_meswin.try_use(out ImTextureRef meswin, out _)
         ) {
             return;

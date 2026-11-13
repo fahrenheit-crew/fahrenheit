@@ -12,11 +12,38 @@
 // ImGui
 #include <imgui.h>
 
-bool vc_x86  = bridge_check_vcredist_x86();
-bool vc_x64  = bridge_check_vcredist_x64();
-bool net_x86 = bridge_check_nethost_x86();
-bool net_x64 = bridge_check_nethost_x64();
+bool vc_x86;
+bool vc_x64;
+bool net_x86;
+bool net_x64;
+
+void bridge_ui_rescan() {
+    vc_x86  = bridge_check_vcredist(X86);
+    vc_x64  = bridge_check_vcredist(X64);
+    net_x86 = bridge_check_nethost (X86);
+    net_x64 = bridge_check_nethost (X64);
+}
 
 void bridge_ui() {
     ImGui::ShowDemoWindow();
+
+    if (!ImGui::Begin("WOW")) {
+        ImGui::End();
+        return;
+    }
+
+    ImGui::BeginDisabled();
+
+    ImGui::Checkbox("VC++ x86", &vc_x86);
+    ImGui::Checkbox("VC++ x64", &vc_x64);
+    ImGui::Checkbox(".NET x86", &net_x86);
+    ImGui::Checkbox(".NET x64", &net_x64);
+
+    ImGui::EndDisabled();
+
+    if (ImGui::Button("Rescan", { 100, 100 } )) {
+        bridge_ui_rescan();
+    }
+
+    ImGui::End();
 }

@@ -148,7 +148,7 @@ bool bridge_check_nethost(BRIDGE_REDIST_TYPE type) {
         FAILED(StringCchCatW(path_runtimeconfig, MAX_PATH, rtcfg_name))
     ) {
         fwprintf_s(stderr, L"[!] StringCchCatW() failed.\n");
-        return 1;
+        return false;
     }
 
     hostfxr_handle cxt = nullptr;
@@ -161,13 +161,12 @@ bool bridge_check_nethost(BRIDGE_REDIST_TYPE type) {
 
     if (rc != 0 || cxt == nullptr) {
         fwprintf_s(stderr, L"hostfxr: initialize_for_runtime_config() failed\n");
-        fwprintf_s(stderr, L"This is an uncommon error. Please contact the Fahrenheit developers at https://github.com/fahrenheit-crew/fahrenheit.\n");
 
         if (g_fnptr_hostfxr_close(cxt) != 0) {
             fwprintf_s(stderr, L"hostfxr: failed to close.\n");
         }
 
-        return rc;
+        return false;
     }
 
     if (g_fnptr_hostfxr_close(cxt) != 0) {

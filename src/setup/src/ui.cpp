@@ -17,14 +17,14 @@ bool vc_x64;
 bool net_x86;
 bool net_x64;
 
-void bridge_ui_rescan() {
-    vc_x86  = bridge_check_vcredist(X86);
-    vc_x64  = bridge_check_vcredist(X64);
-    net_x86 = bridge_check_nethost (X86);
-    net_x64 = bridge_check_nethost (X64);
+void setup_ui_rescan() {
+    vc_x86  = setup_check_vcredist(X86);
+    vc_x64  = setup_check_vcredist(X64);
+    net_x86 = setup_check_nethost (X86);
+    net_x64 = setup_check_nethost (X64);
 }
 
-void bridge_ui() {
+void setup_ui_main() {
     ImGui::ShowDemoWindow();
 
     if (!ImGui::Begin("WOW")) {
@@ -42,7 +42,7 @@ void bridge_ui() {
     ImGui::EndDisabled();
 
     if (ImGui::Button("Rescan", { 100, 100 } )) {
-        bridge_ui_rescan();
+        setup_ui_rescan();
     }
 
     ImGui::End();

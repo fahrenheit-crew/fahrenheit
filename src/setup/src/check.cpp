@@ -36,7 +36,7 @@ hostfxr_close_fn                         g_fnptr_hostfxr_close;
  * We use KEY_WOW64_32KEY to automatically redirect us to Wow6432Node as necessary.
  */
 
-bool bridge_check_vcredist(BRIDGE_REDIST_TYPE type) {
+bool setup_check_vcredist(FH_SETUP_REDIST_TYPE type) {
     LPCWSTR key_name;
     if      (type == X86) key_name = L"SOFTWARE\\Microsoft\\VisualStudio\\14.0\\VC\\Runtimes\\X86";
     else if (type == X64) key_name = L"SOFTWARE\\Microsoft\\VisualStudio\\14.0\\VC\\Runtimes\\X64";
@@ -104,7 +104,7 @@ bool bridge_check_vcredist(BRIDGE_REDIST_TYPE type) {
 
 // Uses the `nethost` library to discover the location of the .NET hosting library,
 // `hostfxr`, and obtains the necessary function pointers from it.
-static bool bridge_check_hostfxr() {
+static bool setup_check_hostfxr() {
     if (g_fnptr_hostfxr_init && g_fnptr_hostfxr_close)
         return true;
 
@@ -135,8 +135,8 @@ static bool bridge_check_hostfxr() {
     return g_fnptr_hostfxr_init && g_fnptr_hostfxr_close;
 }
 
-bool bridge_check_nethost(BRIDGE_REDIST_TYPE type) {
-    if (!bridge_check_hostfxr())
+bool setup_check_nethost(FH_SETUP_REDIST_TYPE type) {
+    if (!setup_check_hostfxr())
         return false;
 
     LPCWSTR rtcfg_name;

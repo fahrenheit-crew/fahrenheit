@@ -92,7 +92,10 @@ bool bridge_check_vcredist(BRIDGE_REDIST_TYPE type) {
      * > The MSVC build tools that ship with Visual Studio 2026 and later start at version 14.50, and _MSC_VER starts at 1950.
      */
 
-    return val_installed == 1 && val_major >= (MSC_MAJOR - 5) && val_minor >= MSC_MINOR && val_bld >= MSC_BUILD;
+    return val_installed == 1
+        && val_major     >= (MSC_MAJOR - 5)
+        && val_minor     >=  MSC_MINOR
+        && val_bld       >=  MSC_BUILD;
 }
 
 /* [fkelava 13/11/26 13:40]

@@ -42,12 +42,16 @@ bool bridge_check_vcredist(BRIDGE_REDIST_TYPE type) {
     else if (type == X64) key_name = L"SOFTWARE\\Microsoft\\VisualStudio\\14.0\\VC\\Runtimes\\X64";
     else return false;
 
+    REGSAM sam = KEY_READ;
+    if      (type == X86) sam |= KEY_WOW64_32KEY;
+    else if (type == X64) sam |= KEY_WOW64_64KEY;
+
     HKEY    key;
     LSTATUS ret = RegOpenKeyExW(
         HKEY_LOCAL_MACHINE,
         key_name,
         0,
-        KEY_READ | KEY_WOW64_32KEY,
+        sam,
         &key
     );
 

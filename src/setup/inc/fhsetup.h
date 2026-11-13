@@ -7,7 +7,11 @@
 
 void bridge_ui(); // Displays the Bridge user interface.
 
-bool bridge_check_vcredist_x86(); // Determines whether the x86 VC Redistributable is installed on this system.
-bool bridge_check_vcredist_x64(); // Determines whether the x64 VC Redistributable is installed on this system.
-bool bridge_check_nethost_x86();  // Determines whether the x86 .NET Runtime is installed on this system.
-bool bridge_check_nethost_x64();  // Determines whether the x64 .NET Runtime is installed on this system.
+enum BRIDGE_REDIST_TYPE {
+    X86   = 1,
+    X64   = 2,
+    ARM64 = 3
+};
+
+bool bridge_check_vcredist(BRIDGE_REDIST_TYPE type); // Determines whether the specified VC Redistributable is installed on this system.
+bool bridge_check_nethost (BRIDGE_REDIST_TYPE type); // Determines whether the specified .NET Runtime is installed on this system.

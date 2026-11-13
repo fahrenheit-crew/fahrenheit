@@ -60,26 +60,41 @@ bool bridge_check_vcredist(BRIDGE_REDIST_TYPE type) {
         return false;
     }
 
-    DWORD reg_type;
-    DWORD reg_value     = 0;
-    DWORD reg_type_size = sizeof(reg_value);
+    DWORD val_installed = 0;
+    DWORD val_major     = 0;
+    DWORD val_minor     = 0;
+    DWORD val_bld       = 0;
+    DWORD val_rbld      = 0;
 
-    ret = RegGetValueW(
-        key,
-        nullptr,
-        L"Installed",
-        RRF_RT_REG_DWORD,
-        &reg_type,
-        &reg_value,
-        &reg_type_size
-    );
+    DWORD reg_type_sz = sizeof(DWORD);
+    DWORD reg_flags   = RRF_RT_REG_DWORD;
 
-    if (ret != ERROR_SUCCESS) {
+    if (RegGetValueW(key, nullptr, L"Installed", reg_flags, nullptr, &val_installed, &reg_type_sz) != ERROR_SUCCESS ||
+        RegGetValueW(key, nullptr, L"Major",     reg_flags, nullptr, &val_major,     &reg_type_sz) != ERROR_SUCCESS ||
+        RegGetValueW(key, nullptr, L"Minor",     reg_flags, nullptr, &val_minor,     &reg_type_sz) != ERROR_SUCCESS ||
+        RegGetValueW(key, nullptr, L"Bld",       reg_flags, nullptr, &val_bld,       &reg_type_sz) != ERROR_SUCCESS ||
+        RegGetValueW(key, nullptr, L"Rbld",      reg_flags, nullptr, &val_rbld,      &reg_type_sz) != ERROR_SUCCESS
+    ) {
         fwprintf_s(stderr, L"[!] RegGetValueW() failed with code 0x%X.\n", ret);
         return false;
     }
 
-    return reg_value == 1;
+    /* [fkelava 13/11/26 15:35]
+     * https://devblogs.microsoft.com/oldnewthing/20221219-00/?p=107601/
+     * > If the compiler’s self-reported version is `aa.bb.ccccc.dd`, then _MSC_VER is `aabb` and _MSC_FULL_VER is `aabbccccc`.
+     * > In other words, `_MSC_VER = aa * 100 + bb` and `_MSC_FULL_VER = aa * 10000000 + bb * 100000 + cc`.
+     */
+
+    const auto MSC_MAJOR = _MSC_FULL_VER / 10000000;
+    const auto MSC_MINOR = _MSC_VER - MSC_MAJOR * 100;
+    const auto MSC_BUILD = _MSC_FULL_VER % 100000;
+
+    /* [fkelava 13/11/26 15:35]
+     * https://learn.microsoft.com/en-us/cpp/overview/compiler-versions?view=msvc-170#visual-studio-2026-and-later
+     * > The MSVC build tools that ship with Visual Studio 2026 and later start at version 14.50, and _MSC_VER starts at 1950.
+     */
+
+    return val_installed == 1 && val_major >= (MSC_MAJOR - 5) && val_minor >= MSC_MINOR && val_bld >= MSC_BUILD;
 }
 
 /* [fkelava 13/11/26 13:40]

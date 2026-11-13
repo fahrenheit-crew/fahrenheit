@@ -5,13 +5,13 @@
 
 #pragma once
 
-void bridge_ui(); // Displays the Bridge user interface.
+void setup_ui_main(); // Displays the setup user interface.
 
-enum BRIDGE_REDIST_TYPE {
+enum FH_SETUP_REDIST_TYPE {
     X86   = 1,
     X64   = 2,
     ARM64 = 3
 };
 
-bool bridge_check_vcredist(BRIDGE_REDIST_TYPE type); // Determines whether the specified VC Redistributable is installed on this system.
-bool bridge_check_nethost (BRIDGE_REDIST_TYPE type); // Determines whether the specified .NET Runtime is installed on this system.
+bool setup_check_vcredist(FH_SETUP_REDIST_TYPE type); // Determines whether the specified VC Redistributable is installed on this system.
+bool setup_check_nethost (FH_SETUP_REDIST_TYPE type); // Determines whether the specified .NET Runtime is installed on this system.

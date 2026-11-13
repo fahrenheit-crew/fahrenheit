@@ -83,9 +83,9 @@ bool bridge_check_vcredist(BRIDGE_REDIST_TYPE type) {
      * > In other words, `_MSC_VER = aa * 100 + bb` and `_MSC_FULL_VER = aa * 10000000 + bb * 100000 + cc`.
      */
 
-    const auto MSC_MAJOR = _MSC_FULL_VER / 10000000;
-    const auto MSC_MINOR = _MSC_VER - MSC_MAJOR * 100;
-    const auto MSC_BUILD = _MSC_FULL_VER % 100000;
+    const int MSC_MAJOR = _MSC_FULL_VER / 10000000;
+    const int MSC_MINOR = _MSC_VER - MSC_MAJOR * 100;
+    const int MSC_BUILD = _MSC_FULL_VER % 100000;
 
     /* [fkelava 13/11/26 15:35]
      * https://learn.microsoft.com/en-us/cpp/overview/compiler-versions?view=msvc-170#visual-studio-2026-and-later

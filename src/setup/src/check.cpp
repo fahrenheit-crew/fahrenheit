@@ -64,7 +64,6 @@ bool bridge_check_vcredist(BRIDGE_REDIST_TYPE type) {
     DWORD val_major     = 0;
     DWORD val_minor     = 0;
     DWORD val_bld       = 0;
-    DWORD val_rbld      = 0;
 
     DWORD reg_type_sz = sizeof(DWORD);
     DWORD reg_flags   = RRF_RT_REG_DWORD;
@@ -72,8 +71,7 @@ bool bridge_check_vcredist(BRIDGE_REDIST_TYPE type) {
     if (RegGetValueW(key, nullptr, L"Installed", reg_flags, nullptr, &val_installed, &reg_type_sz) != ERROR_SUCCESS ||
         RegGetValueW(key, nullptr, L"Major",     reg_flags, nullptr, &val_major,     &reg_type_sz) != ERROR_SUCCESS ||
         RegGetValueW(key, nullptr, L"Minor",     reg_flags, nullptr, &val_minor,     &reg_type_sz) != ERROR_SUCCESS ||
-        RegGetValueW(key, nullptr, L"Bld",       reg_flags, nullptr, &val_bld,       &reg_type_sz) != ERROR_SUCCESS ||
-        RegGetValueW(key, nullptr, L"Rbld",      reg_flags, nullptr, &val_rbld,      &reg_type_sz) != ERROR_SUCCESS
+        RegGetValueW(key, nullptr, L"Bld",       reg_flags, nullptr, &val_bld,       &reg_type_sz) != ERROR_SUCCESS
     ) {
         fwprintf_s(stderr, L"[!] RegGetValueW() failed with code 0x%X.\n", ret);
         return false;

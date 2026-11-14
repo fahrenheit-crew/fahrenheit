@@ -1469,7 +1469,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
                 execute_slot(data.slot);
             }
             else {
-                open_popup(UiPopupType.NO_DATA);
+                open_popup(UiPopupType.DATA_MISSING);
             }
 
             return;

@@ -29,26 +29,20 @@ public abstract class FhSaveUiBase : FhSaveUi {
 
     /// <summary>Types of pop-ups the player may encounter.</summary>
     protected enum UiPopupType {
-        /// <summary>"Loading... Do not quit the game."</summary>
-        LOADING = 0,
+        /// <summary>Pop-up shown if the player tries to load corrupt data.</summary>
+        DATA_CORRUPT = 0,
 
-        /// <summary>"Saving... Do not quit the game."</summary>
-        SAVING = 1,
+        /// <summary>Pop-up shown if the save manager is missing the save UI data for a slot.</summary>
+        DATA_MISSING = 1,
 
-        /// <summary>"Data is corrupt."</summary>
-        CORRUPT_DATA = 2,
+        /// <summary>Confirmation pop-up when loading data.</summary>
+        CONFIRM_LOAD = 2,
 
-        /// <summary>"Failed to find data. Try changing to this set again."</summary>
-        NO_DATA = 3,
+        /// <summary>Confirmation pop-up when saving new data.</summary>
+        CONFIRM_SAVE = 3,
 
-        /// <summary>"Load this file?"</summary>
-        CONFIRM_LOAD = 4,
-
-        /// <summary>"Save the game?"</summary>
-        CONFIRM_SAVE = 5,
-
-        /// <summary>"Overwrite existing file?"</summary>
-        CONFIRM_OVERWRITE = 6,
+        /// <summary>Confirmation pop-up when overwriting existing data.</summary>
+        CONFIRM_OVERWRITE = 4,
     }
 
     /// <summary>Choices available in popups requiring confirmation.</summary>
@@ -103,9 +97,9 @@ public abstract class FhSaveUiBase : FhSaveUi {
     protected UiFocus focus;
 
     protected bool          popup_shown;
-    protected string        popup_message;
     protected UiPopupType   popup_current;
     protected UiPopupChoice popup_choice;
+    protected string        popup_message = string.Empty;
 
     protected readonly float      fade_length = FhUtil.select(0.5f, 0.35f, 0.0f);
     protected readonly FadeHelper fade;
@@ -252,14 +246,14 @@ public abstract class FhSaveUiBase : FhSaveUi {
     /// <param name="slot">The slot to execute the action for.</param>
     protected void execute_slot(int slot) {
         if (!FhApi.Saves.impl_execute(slot) && !is_saving) {
-            open_popup(UiPopupType.CORRUPT_DATA);
+            open_popup(UiPopupType.DATA_CORRUPT);
+            return;
         }
-        else {
-            popup_shown = false;
 
-            if (is_saving) {
-                FhApi.Audio.play_sound(SOUND_ID_SAVE);
-            }
+        popup_shown = false;
+
+        if (is_saving) {
+            FhApi.Audio.play_sound(SOUND_ID_SAVE);
         }
     }
 
@@ -285,15 +279,13 @@ public abstract class FhSaveUiBase : FhSaveUi {
     /// <summary>Open a new pop-up to confirm execution of a given slot.</summary>
     /// <param name="slot">The slot to confirm execution of.</param>
     protected void open_confirmation_popup(int slot) {
-        UiPopupType confirmation_type = UiPopupType.CONFIRM_LOAD;
+        bool is_overwrite = slot != 0 || FhApi.Saves.sets_get_active().is_full;
 
-        if (is_saving) {
-            confirmation_type = UiPopupType.CONFIRM_SAVE;
-
-            if (slot != 0 || FhApi.Saves.sets_get_active().is_full) {
-                confirmation_type = UiPopupType.CONFIRM_OVERWRITE;
-            }
-        }
+        UiPopupType confirmation_type = is_saving switch {
+            true when is_overwrite => UiPopupType.CONFIRM_OVERWRITE,
+            true                   => UiPopupType.CONFIRM_SAVE,
+            false                  => UiPopupType.CONFIRM_LOAD,
+        };
 
         open_popup(confirmation_type);
 
@@ -303,7 +295,7 @@ public abstract class FhSaveUiBase : FhSaveUi {
                 : data.header.x2.lang_id;
 
             if (FhGlobal.lang_id != save_lang) {
-                popup_message += $"\n{localize("popup.confirm_load.language_warning")}";
+                popup_message = $"{popup_message}\n{localize("popup.confirm_load.language_warning")}";
             }
         }
     }
@@ -445,15 +437,12 @@ public abstract class FhSaveUiBase : FhSaveUi {
     /// <summary>Handle input for pop-ups.</summary>
     /// <returns>Whether input handling should be interrupted.</returns>
     protected bool handle_input_popup() {
-        if (!popup_shown) return false;
-
-        // Pop-ups that can't be closed manually return automatically
-        if (popup_current is UiPopupType.LOADING or UiPopupType.SAVING)
-            return true;
+        if (!popup_shown)
+            return false;
 
         // Corrupt data is the only pop-up that can be closed manually
         // and doesn't require confirmation
-        if (popup_current is UiPopupType.CORRUPT_DATA or UiPopupType.NO_DATA) {
+        if (popup_current is UiPopupType.DATA_CORRUPT or UiPopupType.DATA_MISSING) {
             if (FhApi.Gui.is_any_pressed([
                 .. FhApi.Gui.keys_confirm,
                 .. FhApi.Gui.keys_cancel,
@@ -497,7 +486,7 @@ public abstract class FhSaveUiBase : FhSaveUi {
                 execute_slot(data.slot);
             }
             else {
-                open_popup(UiPopupType.NO_DATA);
+                open_popup(UiPopupType.DATA_MISSING);
             }
         }
 

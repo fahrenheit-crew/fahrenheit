@@ -342,7 +342,7 @@ public abstract class FhSaveUiBase : FhSaveUi {
     /// <param name="bounds">The area to detect clicks in.</param>
     /// <param name="button">The mouse button to detect clicks from.</param>
     /// <param name="repeat">Whether the method should repeatedly return <c>true</c> for held inputs.</param>
-    /// <param name="auto_capture">Whether the WantCaptureMouse flag should automatically be set if <c>true</c>.</param>
+    /// <param name="auto_capture">Whether the WantCaptureMouse flag should be set if this method returns <c>true</c>.</param>
     /// <returns>Whether the specified click was performed.</returns>
     protected bool mouse_clicked(
         Rect             bounds,

@@ -409,7 +409,7 @@ public unsafe partial class FhGui {
         ReadOnlySpan<char> text_span = text;
                 Span<byte> text_u8   = stackalloc byte[1024];
 
-        float line_y      = text_bounds.top_left.Y + ImGui.GetStyle().ItemSpacing.Y / 2f;
+        float line_y      = text_bounds.top_left.Y;
         float line_height = ImGui.GetTextLineHeightWithSpacing();
 
         foreach (ReadOnlySpan<char> text_segment in text_span.EnumerateLines()) {
@@ -427,9 +427,8 @@ public unsafe partial class FhGui {
                 _ => throw new NotImplementedException(),
             };
 
-            line_y += line_height;
-
             Vector2 line_pos = new(line_x, line_y);
+            line_y += line_height;
 
             if (config.draw_shadow) {
                 // Use the alpha from the provided color

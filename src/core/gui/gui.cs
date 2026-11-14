@@ -403,15 +403,21 @@ public unsafe partial class FhGui {
 
         Vector2 text_size = ImGui.CalcTextSize(text);
 
-        string[] text_lines = text.Split('\n');
-
         Rect text_bounds = new() { pos = position };
         text_bounds = text_bounds.expand(text_size, config.align);
 
-        for (int i = 0; i < text_lines.Length; i++) {
-            string line = text_lines[i];
+        ReadOnlySpan<char> text_span = text;
+                Span<byte> text_u8   = stackalloc byte[1024];
 
-            Vector2 line_size = ImGui.CalcTextSize(line);
+        float line_y      = text_bounds.top_left.Y + ImGui.GetStyle().ItemSpacing.Y / 2f;
+        float line_height = ImGui.GetTextLineHeightWithSpacing();
+
+        foreach (ReadOnlySpan<char> text_segment in text_span.EnumerateLines()) {
+            text_u8.Clear();
+
+            Encoding.UTF8.GetBytes(text_segment, text_u8);
+
+            Vector2 line_size = ImGui.CalcTextSize(text_u8);
 
             float line_x = position.X - config.align.h switch {
                 Alignment.BEGIN  => 0f,
@@ -421,7 +427,7 @@ public unsafe partial class FhGui {
                 _ => throw new NotImplementedException(),
             };
 
-            float line_y = text_bounds.top_left.Y + text_bounds.size.Y * i / text_lines.Length;
+            line_y += line_height;
 
             Vector2 line_pos = new(line_x, line_y);
 
@@ -429,10 +435,10 @@ public unsafe partial class FhGui {
                 // Use the alpha from the provided color
                 uint shadow_color = 0 | (config.color & 0xFF000000);
 
-                draw_list.AddText(line_pos + new Vector2(2f), shadow_color, line);
+                draw_list.AddText(line_pos + new Vector2(2f), shadow_color, text_u8);
             }
 
-            draw_list.AddText(line_pos, config.color, line);
+            draw_list.AddText(line_pos, config.color, text_u8);
 
             if (config.draw_debug_helpers) {
                 draw_list.AddCircle(line_pos, 3f, 0xFF00FFFF, 4);

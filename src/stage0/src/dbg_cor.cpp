@@ -319,8 +319,7 @@ HRESULT s0_dbg_cor_stack_walk(
         return hr;
     }
 
-    ULONG32 nb_managed_fns   = 0;
-    ULONG32 nb_managed_fns_2 = 0;
+    ULONG32 nb_managed_fns = 0;
 
     hr = ptr_ICorDebugThread2->GetActiveFunctions(0, &nb_managed_fns, nullptr);
     if (hr != S_OK) {
@@ -335,7 +334,7 @@ HRESULT s0_dbg_cor_stack_walk(
         return hr;
     }
 
-    hr = ptr_ICorDebugThread2->GetActiveFunctions(nb_managed_fns, &nb_managed_fns_2, managed_fns);
+    hr = ptr_ICorDebugThread2->GetActiveFunctions(nb_managed_fns, &nb_managed_fns, managed_fns);
     if (hr != S_OK) {
         fwprintf_s(stderr, L"[!] ICorDebugThread2::GetActiveFunctions failed with code 0x%X.\n", hr);
         return hr;

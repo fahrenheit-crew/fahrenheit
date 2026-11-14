@@ -360,37 +360,55 @@ public sealed partial class FhSaves {
                 0 => (_cache_icon_chr[(key_id, 0)] = new FhTexture($"{DIR_CHR_ICON_X}/face_ply.dds.phyre",   FhTextureType.GAME_PHYRE_2D)),
                 1 => (_cache_icon_chr[(key_id, 0)] = new FhTexture($"{DIR_CHR_ICON_X2}/mface_182.dds.phyre", FhTextureType.GAME_PHYRE_2D)),
                 2 => (_cache_icon_chr[(key_id, 0)] = new FhTexture($"{DIR_CHR_ICON_X}/face_smn.dds.phyre",   FhTextureType.GAME_PHYRE_2D)),
-                _ => throw new UnreachableException()
+                _ => throw new UnreachableException(),
             };
+        }
+
+        byte slot = data.x2.party[index];
+        byte chr  = data.x2.extend_party[slot];
+
+        if (chr == 0xFF) {
+            return null;
+        }
+
+        if (chr >= FFX2.Ids.PlySaveId.PC_CREATURE1 && chr <= FFX2.Ids.PlySaveId.PC_CREATURE8) {
+            int  monster_id = data.x2.ply_saves[chr].creature_data.creature;
+            byte icon_id    = pal_remap_creature_icon(monster_id);
+
+            (byte, byte) chr_key = (FFX2.Ids.PlySaveId.PC_CREATURE1, icon_id);
+
+            if (_cache_icon_chr.TryGetValue(chr_key, out FhTexture? tex_mon))
+                return tex_mon;
+
+            return (_cache_icon_chr[chr_key] = new FhTexture($"{DIR_CHR_ICON_X2}/mface_{icon_id:D3}.dds.phyre", FhTextureType.GAME_PHYRE_2D));
         }
 
         bool is_lm = FhGlobal.game_id is FhGameId.FFX2LM;
 
-        byte job_id = is_lm
-            ? header.x2.lm_job
-            : header.x2.ply_jobs[index];
-
         byte ply_id = is_lm
             ? header.x2.lm_ply
-            : header.x2.ply[index];
+            : header.x2.ply[slot];
 
-        (byte, byte) key = (ply_id, job_id);
+        byte job_id = is_lm
+            ? header.x2.lm_job
+            : header.x2.ply_jobs[header.x2.ply[slot]];
 
-        if (_cache_icon_chr.TryGetValue(key, out FhTexture? tex))
+        (byte, byte) ply_key = (ply_id, job_id);
+
+        if (_cache_icon_chr.TryGetValue(ply_key, out FhTexture? tex))
             return tex;
 
         if (job_id == 0x21) {
-            return (_cache_icon_chr[key] = new FhTexture($"{DIR_CHR_ICON_X2}/mface_147.dds.phyre", FhTextureType.GAME_PHYRE_2D)); // She-Goon
+            return (_cache_icon_chr[ply_key] = new FhTexture($"{DIR_CHR_ICON_X2}/mface_147.dds.phyre", FhTextureType.GAME_PHYRE_2D)); // She-Goon
         }
 
-        string ply = ply_id switch {
-            0 => "yuna",
+        string ply_name = ply_id switch {
             1 => "rikku",
             2 => "paine",
-            _ => "m",
+            _ => "yuna",
         };
 
-        // Rewires Rikku's and Paine's job IDs to match original filenames
+        // Remaps Rikku and Paine's job IDs to correctly match the icon's filenames
         byte job = job_id switch {
             24 or 25       => 12, // Trainer
             26 or 27       => 14, // Mascot
@@ -401,7 +419,14 @@ public sealed partial class FhSaves {
             _  => job_id,
         };
 
-        return (_cache_icon_chr[key] = new FhTexture($"{DIR_CHR_ICON_X2}/{ply}face_{job:D3}.dds.phyre", FhTextureType.GAME_PHYRE_2D));
+        /* We have to remap Paine's "default" icon to her "Warrior" icon
+         * because her default icon is 128x128, not 256x256.
+         */
+        if (ply_id == FFX2.Ids.PlySaveId.PC_PAINE && job_id == 0x0) {
+            job = 0x4;
+        }
+
+        return (_cache_icon_chr[ply_key] = new FhTexture($"{DIR_CHR_ICON_X2}/{ply_name}face_{job:D3}.dds.phyre", FhTextureType.GAME_PHYRE_2D));
     }
 
     /// <summary>
@@ -623,4 +648,206 @@ public sealed partial class FhSaves {
         return target_slot;
     }
 
+    /// <summary>
+    ///     Returns the icon ID for a given FF X-2 creature's monster ID.
+    /// </summary>
+    private static byte pal_remap_creature_icon(int monster_id) {
+        return monster_id switch {
+            FFX2.Ids.MonsterId.MON_SALLET           =>   1,
+            FFX2.Ids.MonsterId.MON_BICOCETTE        =>   2,
+            FFX2.Ids.MonsterId.MON_BARBUTA_1        =>   3,
+            FFX2.Ids.MonsterId.MON_ARMET            =>   4,
+            FFX2.Ids.MonsterId.MON_BASCINET         =>   5,
+            FFX2.Ids.MonsterId.MON_HEAVY_SALLET     =>   6,
+            FFX2.Ids.MonsterId.MON_ZURVAN           =>   7,
+            FFX2.Ids.MonsterId.MON_VARAN            =>   8,
+            FFX2.Ids.MonsterId.MON_ARAST            =>   9,
+            FFX2.Ids.MonsterId.MON_ELDER_ZURVAN     =>  10,
+            FFX2.Ids.MonsterId.MON_COYOTE           =>  11,
+            FFX2.Ids.MonsterId.MON_WILD_WOLF        =>  12,
+            FFX2.Ids.MonsterId.MON_KILLER_HOUND     =>  13,
+            FFX2.Ids.MonsterId.MON_WHITE_FANG_1     =>  14,
+            FFX2.Ids.MonsterId.MON_CANIS_MAJOR      =>  15,
+            FFX2.Ids.MonsterId.MON_LUPUS            =>  16,
+            FFX2.Ids.MonsterId.MON_TINDALOS         =>  17,
+            FFX2.Ids.MonsterId.MON_FLAN_AZUL        =>  18,
+            FFX2.Ids.MonsterId.MON_FLAN_AMARILLO    =>  19,
+            FFX2.Ids.MonsterId.MON_FLAN_PALIDO      =>  20,
+            FFX2.Ids.MonsterId.MON_FLAN_BLANCO      =>  21,
+            FFX2.Ids.MonsterId.MON_FLAN_ROJO        =>  22,
+            FFX2.Ids.MonsterId.MON_FLAN_AZABACHE    =>  23,
+            FFX2.Ids.MonsterId.MON_GECKO            =>  24,
+            FFX2.Ids.MonsterId.MON_AGAMA            =>  25,
+            FFX2.Ids.MonsterId.MON_SKINK            =>  26,
+            FFX2.Ids.MonsterId.MON_ANOLE            =>  27,
+            FFX2.Ids.MonsterId.MON_ARCHAEOTHYRIS    =>  28,
+            FFX2.Ids.MonsterId.MON_LACERTA          =>  29,
+            FFX2.Ids.MonsterId.MON_DIVEBEAK         =>  30,
+            FFX2.Ids.MonsterId.MON_PEREGRINE        =>  31,
+            FFX2.Ids.MonsterId.MON_AQUILA           =>  32,
+            FFX2.Ids.MonsterId.MON_DEATH_DAUBER     =>  33,
+            FFX2.Ids.MonsterId.MON_ASSASSIN_BEE     =>  34,
+            FFX2.Ids.MonsterId.MON_ACULEATE         =>  35,
+            FFX2.Ids.MonsterId.MON_VESPA            =>  36,
+            FFX2.Ids.MonsterId.MON_WASP_QUEEN       =>  37,
+            FFX2.Ids.MonsterId.MON_AHRIMAN          =>  38,
+            FFX2.Ids.MonsterId.MON_FLY_EYE          =>  39,
+            FFX2.Ids.MonsterId.MON_VERTIGO_1        =>  40,
+            FFX2.Ids.MonsterId.MON_GRIM_GAZE        =>  41,
+            FFX2.Ids.MonsterId.MON_PURPUREA         =>  42,
+            FFX2.Ids.MonsterId.MON_LEUCOPHYLLA      =>  43,
+            FFX2.Ids.MonsterId.MON_CEPHALOTUS       =>  44,
+            FFX2.Ids.MonsterId.MON_SHANTAK          =>  45,
+            FFX2.Ids.MonsterId.MON_ZU               =>  46,
+            FFX2.Ids.MonsterId.MON_RUKH             =>  47,
+            FFX2.Ids.MonsterId.MON_YSLS_99_1        =>  48,
+            FFX2.Ids.MonsterId.MON_YSLS_ZERO        =>  49,
+            FFX2.Ids.MonsterId.MON_HAUNT            =>  50,
+            FFX2.Ids.MonsterId.MON_WIGHT            =>  51,
+            FFX2.Ids.MonsterId.MON_PHANTOM          =>  52,
+            FFX2.Ids.MonsterId.MON_LICH             =>  53,
+            FFX2.Ids.MonsterId.MON_GREAT_HAUNT      =>  54,
+            FFX2.Ids.MonsterId.MON_NASHORN          =>  55,
+            FFX2.Ids.MonsterId.MON_QUADRICORN       =>  56,
+            FFX2.Ids.MonsterId.MON_BALIVARHA_1      =>  57,
+            FFX2.Ids.MonsterId.MON_LESSER_DRAKE     =>  58,
+            FFX2.Ids.MonsterId.MON_SPINE_DRAKE_1    =>  59,
+            FFX2.Ids.MonsterId.MON_BOLT_DRAKE       =>  60,
+            FFX2.Ids.MonsterId.MON_GREATER_DRAKE    =>  61,
+            FFX2.Ids.MonsterId.MON_ELDER_DRAKE      =>  62,
+            FFX2.Ids.MonsterId.MON_MALBORO          =>  63,
+            FFX2.Ids.MonsterId.MON_GREAT_MALBORO    =>  64,
+            FFX2.Ids.MonsterId.MON_GIGAS            =>  65,
+            FFX2.Ids.MonsterId.MON_GUG              =>  66,
+            FFX2.Ids.MonsterId.MON_HRIMTHURS_1      =>  67,
+            FFX2.Ids.MonsterId.MON_YELLOW_ELEMENTAL =>  68,
+            FFX2.Ids.MonsterId.MON_WHITE_ELEMENTAL  =>  69,
+            FFX2.Ids.MonsterId.MON_RED_ELEMENTAL    =>  70,
+            FFX2.Ids.MonsterId.MON_GOLD_ELEMENTAL   =>  71,
+            FFX2.Ids.MonsterId.MON_BLUE_ELEMENTAL   =>  72,
+            FFX2.Ids.MonsterId.MON_DARK_ELEMENTAL   =>  73,
+            FFX2.Ids.MonsterId.MON_BLACK_ELEMENTAL  =>  74,
+            FFX2.Ids.MonsterId.MON_TAKOUBA          =>  75,
+            FFX2.Ids.MonsterId.MON_BARONG_1         =>  76,
+            FFX2.Ids.MonsterId.MON_KING_TAKOUBA     =>  77,
+            FFX2.Ids.MonsterId.MON_BEHEMOTH         =>  78,
+            FFX2.Ids.MonsterId.MON_HUMBABA          =>  79,
+            FFX2.Ids.MonsterId.MON_PROTOCHIMERA_1   =>  80,
+            FFX2.Ids.MonsterId.MON_RHYOS            =>  81,
+            FFX2.Ids.MonsterId.MON_COEURL           =>  82,
+            FFX2.Ids.MonsterId.MON_QUEEN_COEURL     =>  83,
+            FFX2.Ids.MonsterId.MON_MACHINA_RANGER   =>  84,
+            FFX2.Ids.MonsterId.MON_MACHINA_HUNTER   =>  85,
+            FFX2.Ids.MonsterId.MON_MACHINA_SOLDIER  =>  86,
+            FFX2.Ids.MonsterId.MON_MACHINA_LEADER   =>  87,
+            FFX2.Ids.MonsterId.MON_TOMB             =>  88,
+            FFX2.Ids.MonsterId.MON_MONOLITH         =>  89,
+            FFX2.Ids.MonsterId.MON_DOLMEN           =>  90,
+            FFX2.Ids.MonsterId.MON_EPITAPH          =>  91,
+            FFX2.Ids.MonsterId.MON_SCOUT_MACHINA    =>  92,
+            FFX2.Ids.MonsterId.MON_GUARD_MACHINA    =>  93,
+            FFX2.Ids.MonsterId.MON_ASSAULT_MACHINA  =>  94,
+            FFX2.Ids.MonsterId.MON_KILLER_MACHINA   =>  95,
+            FFX2.Ids.MonsterId.MON_IRON_GIANT_1     =>  96,
+            FFX2.Ids.MonsterId.MON_GEMINI_1 or
+            FFX2.Ids.MonsterId.MON_GEMINI_2         =>  97,
+            FFX2.Ids.MonsterId.MON_KUKULCAN         =>  98,
+            FFX2.Ids.MonsterId.MON_GUCUMATZ         =>  99,
+            FFX2.Ids.MonsterId.MON_CHAC             => 100,
+            FFX2.Ids.MonsterId.MON_ADAMANTOISE_1    => 101,
+            FFX2.Ids.MonsterId.MON_ADAMANTORTOISE   => 102,
+            FFX2.Ids.MonsterId.MON_DAEVA            => 103,
+            FFX2.Ids.MonsterId.MON_AESHMA           => 104,
+            FFX2.Ids.MonsterId.MON_AKA_MANAH        => 105,
+            FFX2.Ids.MonsterId.MON_OCHU             => 106,
+            FFX2.Ids.MonsterId.MON_FLAILING_OCHU    => 107,
+            FFX2.Ids.MonsterId.MON_DROWSY_OCHU      => 108,
+            FFX2.Ids.MonsterId.MON_YAC_13           => 109,
+            FFX2.Ids.MonsterId.MON_YAC_62           => 110,
+            FFX2.Ids.MonsterId.MON_BOMB             => 111,
+            FFX2.Ids.MonsterId.MON_DETONATOR        => 112,
+            FFX2.Ids.MonsterId.MON_VOLCANO          => 113,
+            FFX2.Ids.MonsterId.MON_YAU_28           => 114,
+            FFX2.Ids.MonsterId.MON_YAU_71           => 115,
+            FFX2.Ids.MonsterId.MON_CACTUAR_1 or
+            FFX2.Ids.MonsterId.MON_CACTUAR_2        => 116,
+            FFX2.Ids.MonsterId.MON_JUMBO_CACTUAR    => 117,
+            FFX2.Ids.MonsterId.MON_STALWART_1       => 118,
+            FFX2.Ids.MonsterId.MON_IRONSIDE         => 119,
+            FFX2.Ids.MonsterId.MON_BULLY_CAP        => 120,
+            FFX2.Ids.MonsterId.MON_MYCOTOXIN        => 121,
+            FFX2.Ids.MonsterId.MON_MUSHROOM_CLOUD   => 122,
+            FFX2.Ids.MonsterId.MON_BIG_BULLY_CAP    => 123,
+            FFX2.Ids.MonsterId.MON_PAIRIKA          => 124,
+            FFX2.Ids.MonsterId.MON_JAHI             => 125,
+            FFX2.Ids.MonsterId.MON_TAROMAITI        => 126,
+            FFX2.Ids.MonsterId.MON_TONBERRY         => 127,
+            FFX2.Ids.MonsterId.MON_MEGA_TONBERRY    => 128,
+            FFX2.Ids.MonsterId.MON_CLARET_DRAGON    => 129,
+            FFX2.Ids.MonsterId.MON_ZALAMANDER       => 130,
+            FFX2.Ids.MonsterId.MON_FLAME_DRAGON     => 131,
+            FFX2.Ids.MonsterId.MON_RECOIL           => 132,
+            FFX2.Ids.MonsterId.MON_FLAK_PYTHON      => 133,
+            FFX2.Ids.MonsterId.MON_VIPER_SNIPER     => 134,
+            FFX2.Ids.MonsterId.MON_BATTLESNAKE_1    => 135,
+            FFX2.Ids.MonsterId.MON_CREEPER          => 136,
+            FFX2.Ids.MonsterId.MON_HUG_BUG          => 137,
+            FFX2.Ids.MonsterId.MON_HEXAPOD          => 138,
+            FFX2.Ids.MonsterId.MON_KING_VERMIN      => 139,
+            FFX2.Ids.MonsterId.MON_INSECT_MATRIARCH => 140,
+            FFX2.Ids.MonsterId.MON_CRITICAL_BUG     => 141,
+            FFX2.Ids.MonsterId.MON_BORIS            => 142,
+            FFX2.Ids.MonsterId.MON_ARANEA           => 143,
+            FFX2.Ids.MonsterId.MON_GOON             => 144,
+            FFX2.Ids.MonsterId.MON_MR_GOON          => 145,
+            FFX2.Ids.MonsterId.MON_DR_GOON          => 146,
+            FFX2.Ids.MonsterId.MON_SHE_GOON         => 147,
+            FFX2.Ids.MonsterId.MON_MS_GOON          => 148,
+            FFX2.Ids.MonsterId.MON_FEM_GOON         => 149,
+            FFX2.Ids.MonsterId.MON_SAHAGIN_3        => 150,
+            FFX2.Ids.MonsterId.MON_SAHAGIN_PRINCE   => 151,
+            FFX2.Ids.MonsterId.MON_SAHAGIN_CHIEF    => 152,
+            FFX2.Ids.MonsterId.MON_HAIZHE_1         => 153,
+            FFX2.Ids.MonsterId.MON_DEEP_HAIZHE_1    => 154,
+            FFX2.Ids.MonsterId.MON_XIPHACTINUS      => 155,
+            FFX2.Ids.MonsterId.MON_DINICTUS         => 156,
+            FFX2.Ids.MonsterId.MON_TENTACLES_1      => 157,
+            FFX2.Ids.MonsterId.MON_ULTIMA_WEAPON    => 158,
+            FFX2.Ids.MonsterId.MON_OMEGA_WEAPON     => 159,
+            FFX2.Ids.MonsterId.MON_PARAGON          => 160,
+            FFX2.Ids.MonsterId.MON_CHOCOBO_EATER_1  => 161,
+            FFX2.Ids.MonsterId.MON_ANYTHING_EATER   => 162,
+            FFX2.Ids.MonsterId.MON_SHELL_SHOCKER_1  => 163,
+            FFX2.Ids.MonsterId.MON_CONCHEROR        => 164,
+            FFX2.Ids.MonsterId.MON_POP_FRY          => 165,
+            FFX2.Ids.MonsterId.MON_MACHINA_STRIKER  => 166,
+            FFX2.Ids.MonsterId.MON_AMORPHOUS_GEL    => 167,
+            FFX2.Ids.MonsterId.MON_PROTEAN_GEL      => 168,
+            FFX2.Ids.MonsterId.MON_MACHINA_PANZER   => 169,
+            FFX2.Ids.MonsterId.MON_GUARDIAN_BEAST_1 => 170,
+            FFX2.Ids.MonsterId.MON_AZI_DAHAKA       => 171,
+            FFX2.Ids.MonsterId.MON_CHOCOBO_1 or
+            FFX2.Ids.MonsterId.MON_CHOCOBO_3        => 172,
+            FFX2.Ids.MonsterId.MON_ORMI_1           => 173,
+            FFX2.Ids.MonsterId.MON_LOGOS_1          => 174,
+            FFX2.Ids.MonsterId.MON_LEBLANC_1        => 175,
+            FFX2.Ids.MonsterId.MON_BROTHER          => 176,
+            FFX2.Ids.MonsterId.MON_BUDDY            => 177,
+            FFX2.Ids.MonsterId.MON_AURON            => 178,
+            FFX2.Ids.MonsterId.MON_KIMAHRI          => 179,
+            FFX2.Ids.MonsterId.MON_LULU             => 180,
+            FFX2.Ids.MonsterId.MON_TIDUS            => 181,
+            FFX2.Ids.MonsterId.MON_SEYMOUR          => 182,
+            FFX2.Ids.MonsterId.MON_BARALAI_2        => 183,
+            FFX2.Ids.MonsterId.MON_NOOJ             => 184,
+            FFX2.Ids.MonsterId.MON_GIPPAL           => 185,
+            FFX2.Ids.MonsterId.MON_GARIK_RONSO_2    => 186,
+            FFX2.Ids.MonsterId.MON_YAIBAL_2         => 187,
+            FFX2.Ids.MonsterId.MON_LUCIL_2          => 188,
+            FFX2.Ids.MonsterId.MON_ELMA_3           => 189,
+            FFX2.Ids.MonsterId.MON_TREMA_2          => 190,
+            FFX2.Ids.MonsterId.MON_ALMIGHTY_SHINRA  => 191,
+            _                                       =>   0
+        };
+    }
 }

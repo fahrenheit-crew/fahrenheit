@@ -29,8 +29,6 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
 
     private readonly Vector2 _tex_window_size = new(1024f, 256f);
 
-    private readonly Vector2 _tex_face_size = new(256f, 256f);
-
     protected override FhTexture[] textures => [
         _texture_menuback,
         _texture_mahojin,
@@ -1056,48 +1054,43 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
     ) {
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
-        UV face_tuv = new Rect {
-            pos  = new(  0f,   0f),
-            size = new(256f, 239f),
-        }.as_uv(_tex_face_size);
-
-        Rect face = new() {
+        Rect face_bounds = new() {
             pos = bounds.bottom_left with {
                 Y = bounds.bottom_left.Y - face_size.Y,
             },
             size = face_size,
         };
 
-        UV face_suv = face.scale_to_aspect(aspect_helper).as_uv();
+        UV suv = face_bounds.scale_to_aspect(aspect_helper).as_uv();
 
         Vector2 face_screen_offset = new Vector2(face_size.X + face_gap, 0f) * aspect_scale;
 
-        FFX2.SaveHeader header = save.header.x2;
-
         for (byte i = 0; i < 3; i++) {
-            byte job_id = header.ply_jobs[i];
+            byte slot = save.data.x2.party[i];
+            byte id   = save.data.x2.extend_party[slot];
 
-            if (job_id > 0x21) {
-                face_suv = face_suv.move(face_screen_offset);
-                continue;
-            }
+            if (id == 0xFF) continue;
 
             FhTexture portrait = save.icon_chr[i];
 
-            uint alpha = job_id == 0x0 ? 0xA0C0C0C0 : 0xFFFFFFFF;
+            if (!portrait.try_use(out ImTextureRef face, out FhTextureMetadata? face_meta)) continue;
 
-            if (portrait.try_use(out ImTextureRef faces, out _)) {
-                draw.AddImage(
-                    faces,
-                    face_suv.p0,
-                    face_suv.p1,
-                    face_tuv.p0,
-                    face_tuv.p1,
-                    alpha
-                );
-            }
+            float y_size = save.data.x2.extend_party[i] <= 0x02 ? 239f : 256f;
 
-            face_suv = face_suv.move(face_screen_offset);
+            UV tuv = new Rect {
+                pos  = new(  0f,     0f),
+                size = new(256f, y_size),
+            }.as_uv(face_meta.size);
+
+            draw.AddImage(
+                face,
+                suv.p0,
+                suv.p1,
+                tuv.p0,
+                tuv.p1
+            );
+
+            suv = suv.move(face_screen_offset);
         }
     }
 
@@ -1109,12 +1102,7 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
     ) {
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
-        UV face_tuv = new Rect {
-            pos  = new(  0f,   0f),
-            size = new(256f, 239f),
-        }.as_uv(_tex_face_size);
-
-        Rect face = new() {
+        Rect face_bounds = new() {
             pos = bounds.bottom_left with {
                 X = bounds.bottom_left.X + (3 * face_gap),
                 Y = bounds.bottom_left.Y - face_size.Y,
@@ -1122,32 +1110,44 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
             size = face_size,
         };
 
-        UV face_suv = face.scale_to_aspect(aspect_helper).as_uv();
+        UV suv = face_bounds.scale_to_aspect(aspect_helper).as_uv();
 
         Vector2 face_screen_offset = new Vector2(-face_gap, 0f) * aspect_scale;
 
         FFX2.SaveHeader header = save.header.x2;
 
         byte job_id = header.lm_job;
-        if (job_id <= 0x21 && save.icon_chr[0].try_use(out ImTextureRef faces, out _)) {
-            for (int i = 3; i >= 0; i--) {
-                uint alpha = ImGui.GetColorU32(
-                    Vector4.One with {
-                        W = 1 - (i * 0.25f),
-                    }
-                );
 
-                draw.AddImage(
-                    faces,
-                    face_suv.p0,
-                    face_suv.p1,
-                    face_tuv.p0,
-                    face_tuv.p1,
-                    alpha
-                );
+        if (job_id > 0x21) return;
 
-                face_suv = face_suv.move(face_screen_offset);
-            }
+        FhTexture portrait = save.icon_chr[0];
+
+        if (!portrait.try_use(out ImTextureRef face, out FhTextureMetadata? face_meta)) return;
+
+        float y_size = job_id == 0x21 ? 256f : 239f;
+
+        UV tuv = new Rect {
+            pos  = new(  0f,     0f),
+            size = new(256f, y_size),
+        }.as_uv(face_meta.size);
+
+        for (int i = 3; i >= 0; i--) {
+            uint alpha = ImGui.GetColorU32(
+                Vector4.One with {
+                    W = 1 - (i * 0.25f),
+                }
+            );
+
+            draw.AddImage(
+                face,
+                suv.p0,
+                suv.p1,
+                tuv.p0,
+                tuv.p1,
+                alpha
+            );
+
+            suv = suv.move(face_screen_offset);
         }
     }
 

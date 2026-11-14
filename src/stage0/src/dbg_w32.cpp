@@ -28,8 +28,8 @@ LPVOID                            g_addr_excep_fatal; // The originating address
 
 // Processes a stack frame, returning its type and preparing its symbol, if native.
 static S0_FRAME_DATA s0_dbg_w32_stack_frame(
-    HANDLE       h_process,  // A handle to the process the stack frame belongs to.
-    STACKFRAME64 stack_frame // The stack frame to symbolicate.
+    HANDLE        h_process,  // A handle to the process the stack frame belongs to.
+    STACKFRAME_EX stack_frame // The stack frame to symbolicate.
 ) {
     S0_FRAME_DATA frame      = { };
     DWORD64       frame_addr = stack_frame.AddrPC.Offset;
@@ -108,6 +108,8 @@ static S0_FRAME_DATA s0_dbg_w32_stack_frame(
         }
     }
 
+    bool module_has_name = lstrlenW(module.ModuleName) != 0;
+
     /* [fkelava 16/09/26 18:57]
      * This struct is not documented anywhere.
      * It is a SYMBOL_INFOW whose symbol name buffer is of size MAX_SYM_NAME, for ease of use.
@@ -131,10 +133,14 @@ static S0_FRAME_DATA s0_dbg_w32_stack_frame(
             return frame;
         }
 
-        swprintf_s(frame.frame_name, MAX_SYM_NAME, L"%s+0x%llX\n", module.ModuleName, frame_addr - module.BaseOfImage);
+        int _ = module_has_name
+            ? swprintf_s(frame.frame_name, MAX_SYM_NAME, L"%s+0x%llX\n",     module.ModuleName,  frame_addr - module.BaseOfImage)
+            : swprintf_s(frame.frame_name, MAX_SYM_NAME, L"0x%llX+0x%llX\n", module.BaseOfImage, frame_addr - module.BaseOfImage);
     }
     else {
-        swprintf_s(frame.frame_name, MAX_SYM_NAME, L"%s!%s+0x%llX\n", module.ModuleName, sym.si.Name, sym_displacement);
+        int _ = module_has_name
+            ? swprintf_s(frame.frame_name, MAX_SYM_NAME, L"%s!%s+0x%llX\n",  module.ModuleName, sym.si.Name, sym_displacement)
+            : swprintf_s(frame.frame_name, MAX_SYM_NAME, L"0x%llX+0x%llX\n", module.BaseOfImage, frame_addr - module.BaseOfImage);
     }
 
     return frame;
@@ -144,9 +150,6 @@ static S0_FRAME_DATA s0_dbg_w32_stack_frame(
 static void s0_dbg_w32_print_context(
     CONTEXT* ptr_context // A pointer to the faulting thread's context.
 ) {
-    fwprintf_s(stdout, L"\n");
-    fwprintf_s(stdout, L"---- EXCEPTION CONTEXT ----\n");
-
     fwprintf_s(
         stdout,
         L"eax=%08X ebx=%08X ecx=%08X edx=%08X\n",
@@ -177,14 +180,10 @@ static void s0_dbg_w32_print_context(
         ptr_context->SegSs,
         ptr_context->EFlags
     );
-
-    fwprintf_s(stdout, L"\n");
 }
 
 // Prints the stack trace with any available data we have.
 static void s0_dbg_w32_print_stack_trace() {
-    fwprintf_s(stdout, L"---- STACK TRACE ----\n");
-
     for (const S0_FRAME_DATA& frame : g_frames) {
         fwprintf_s(stdout, L"%s", frame.frame_name);
     }
@@ -197,7 +196,7 @@ static void s0_dbg_w32_stack_walk(
     HANDLE   h_thread,   // A handle to the faulting thread.
     CONTEXT* ptr_context // A pointer to the faulting thread's context.
 ) {
-    STACKFRAME64 stack_frame = { 0 };
+    STACKFRAME_EX stack_frame = { 0 };
     stack_frame.AddrPC   .Offset = ptr_context->Eip;
     stack_frame.AddrPC   .Mode   = AddrModeFlat;
     stack_frame.AddrFrame.Offset = ptr_context->Ebp;
@@ -206,7 +205,7 @@ static void s0_dbg_w32_stack_walk(
     stack_frame.AddrStack.Mode   = AddrModeFlat;
 
     while (true) {
-        if (!StackWalk64(
+        if (!StackWalkEx(
             IMAGE_FILE_MACHINE_I386,
             h_process,
             h_thread,
@@ -215,7 +214,8 @@ static void s0_dbg_w32_stack_walk(
             NULL,
             SymFunctionTableAccess64,
             SymGetModuleBase64,
-            NULL
+            NULL,
+            0
         )) break;
 
         if (stack_frame.AddrPC.Offset == 0)
@@ -310,7 +310,7 @@ static void s0_dbg_w32_create_dump(
     info_dump_exception.ExceptionPointers = &exception_pointers;
     info_dump_exception.ClientPointers    = FALSE;
 
-    fwprintf_s(stderr, L"Dumping process core. Please wait.\n");
+    fwprintf_s(stderr, L"Core dump in progress. Please wait.\n");
 
     if (!MiniDumpWriteDump(
         h_process,
@@ -321,13 +321,12 @@ static void s0_dbg_w32_create_dump(
         nullptr,
         nullptr
     )) {
-        fwprintf_s(stderr, L"Failed to dump core.\n");
+        fwprintf_s(stderr, L"Core dump failed.\n");
     }
     else {
-        fwprintf_s(stdout, L"Core dumped to %s.\n", crash_dump_path);
+        fwprintf_s(stdout, L"Core dump written to %s.\n", crash_dump_path);
     }
 
-    fwprintf_s(stdout, L"\n");
     CloseHandle(dump_handle);
 }
 
@@ -408,7 +407,11 @@ static DWORD s0_dbg_w32_exception(
             return DBG_EXCEPTION_NOT_HANDLED;
         }
 
+        fwprintf_s(stdout, L"\n---- EXCEPTION CONTEXT ----\n");
+
         s0_dbg_w32_print_context(&faulting_thread_context);
+
+        fwprintf_s(stdout, L"\n---- CORE DUMP ----\n");
 
         /* [fkelava 13/09/26 13:49]
          * https://learn.microsoft.com/en-us/windows/win32/api/dbghelp/nf-dbghelp-stackwalk64
@@ -425,6 +428,8 @@ static DWORD s0_dbg_w32_exception(
         );
 
         g_frames.clear();
+
+        fwprintf_s(stdout, L"\n---- STACK TRACE ----\n");
 
         s0_dbg_w32_stack_walk(
             h_process,
@@ -475,41 +480,133 @@ static BOOL s0_dbg_w32_module_size(
     return TRUE;
 }
 
+// Displays a debug string.
+static void s0_dbg_w32_debug_string(
+    HANDLE h_process,  // The handle of the process the debug string is coming from.
+    LPSTR  ptr_string, // A pointer to the debug string in the process's address space.
+    WORD   len_string, // The length of the string. Capped to 65536, though it can be longer.
+    WORD   is_unicode  // Nonzero if `ptr_string` is a wide string, otherwise zero.
+) {
+    if (ptr_string == nullptr) {
+        fwprintf_s(stderr, L"[!] Debug string pointer was NULL.\n");
+        return;
+    }
+
+    if (len_string > 1024) len_string = 1024;
+
+    BYTE   buffer[1024] = { 0 };
+    SIZE_T bytes_read;
+
+    if (!ReadProcessMemory(h_process, ptr_string, &buffer, len_string, &bytes_read)) {
+        fwprintf_s(stderr, L"[!] ReadProcessMemory() failed with code 0x%X.\n", GetLastError());
+        return;
+    }
+
+    int _ = is_unicode
+        ? fwprintf_s(stdout, L"%s", (wchar_t*) buffer)
+        : fprintf_s (stdout,  "%s", (char*)    buffer);
+}
+
+// Obtains a module's path from its address space or from a handle to it.
+static BOOL s0_dbg_w32_module_name(
+    HANDLE h_process,       // The handle of the process the module is being loaded into.
+    HANDLE h_module_file,   // The handle to the file of the module being loaded.
+    LPVOID ptr_image_name,  // A pointer to the module's name in its own address space.
+    LPWSTR ptr_module_name, // A pointer to a buffer containing the module's name.
+    WORD   is_unicode       // Nonzero if `ptr_image_name` is a wide string, otherwise zero.
+) {
+    if (h_module_file != nullptr && h_module_file != INVALID_HANDLE_VALUE) {
+        /* [fkelava 13/09/26 16:33]
+         * `drmingw` has a fallback path in case this API doesn't work,
+         * such as people running on RAM disks. We do not support this for our own sanity.
+         *
+         * See generally https://learn.microsoft.com/en-us/windows/win32/memory/obtaining-a-file-name-from-a-file-handle,
+         * https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-getfinalpathnamebyhandlew#remarks.
+         */
+        DWORD sz_module_path = GetFinalPathNameByHandleW(
+            h_module_file,
+            ptr_module_name,
+            MAX_PATH,
+            FILE_NAME_OPENED
+        );
+
+        if (sz_module_path == 0) {
+            fwprintf_s(stderr, L"[!] GetFinalPathNameByHandleW() failed with code 0x%X.\n", GetLastError());
+            return FALSE;
+        }
+
+        if (sz_module_path > MAX_PATH) {
+            fwprintf_s(stderr, L"[!] GetFinalPathNameByHandleW() - path length exceeded MAX_PATH.\n");
+            return FALSE;
+        }
+
+        return TRUE;
+    }
+
+    if (ptr_image_name == nullptr) {
+        fwprintf_s(stderr, L"[!] Both `lpImageName` and `hFile` were invalid.\n");
+        return FALSE;
+    }
+
+    BYTE   buffer[MAX_PATH * sizeof(wchar_t)] = { 0 };
+    SIZE_T bytes_read;
+
+    /* [fkelava 08/11/26 16:44]
+     * https://learn.microsoft.com/en-us/windows/win32/api/minwinbase/ns-minwinbase-load_dll_debug_info
+     * > This member may be NULL, or it may contain the address of a string pointer in the address space
+     * > of the process being debugged. That address may, in turn, either be NULL or point to the actual filename.
+     */
+    LPVOID ptr_actual = nullptr;
+
+    if (!ReadProcessMemory(h_process, ptr_image_name, &ptr_actual, sizeof(ptr_actual), &bytes_read)) {
+        fwprintf_s(stderr, L"[!] ReadProcessMemory() failed with code 0x%X.\n", GetLastError());
+        return FALSE;
+    }
+
+    if (ptr_actual == nullptr) {
+        fwprintf_s(stderr, L"[!] *lpImageName was NULL.\n");
+        return FALSE;
+    }
+
+    if (!ReadProcessMemory(h_process, ptr_actual, &buffer, sizeof(buffer), &bytes_read)) {
+        fwprintf_s(stderr, L"[!] ReadProcessMemory() failed with code 0x%X.\n", GetLastError());
+        return FALSE;
+    }
+
+    if (is_unicode) {
+        HRESULT hr = StringCchCopyW(ptr_module_name, MAX_PATH, (wchar_t*) buffer);
+
+        if (SUCCEEDED(hr))
+            return TRUE;
+
+        fwprintf_s(stderr, L"[!] StringCchCopyW failed with code 0x%X.\n", hr);
+        return FALSE;
+    }
+
+    /* [fkelava 08/11/26 16:44]
+     * `fUnicode` is almost always true on modern systems. This edge case is therefore poorly tested.
+     * We assume that `lpImageName` is null-terminated, because we have no length information about that string _anyway_.
+     */
+
+    if (MultiByteToWideChar(CP_ACP, 0, (char*) buffer, -1, ptr_module_name, MAX_PATH) != 0)
+        return TRUE;
+
+    fwprintf_s(stderr, L"[!] MultiByteToWideChar failed with code 0x%X.\n", GetLastError());
+    return FALSE;
+}
+
 // Loads a module's symbols.
 static BOOL s0_dbg_w32_module_load(
-    HANDLE h_process,      // The handle of the process the module is being loaded into.
-    HANDLE h_module_file,  // The handle to the file of the module being loaded.
-    LPVOID ptr_module_base // A pointer to the base address of the module itself.
+    HANDLE h_process,       // The handle of the process the module is being loaded into.
+    HANDLE h_module_file,   // The handle to the file of the module being loaded.
+    LPVOID ptr_module_base, // A pointer to the base address of the module itself.
+    LPVOID ptr_image_name,  // A pointer to the module's name in its own address space.
+    WORD   is_unicode       // Nonzero if `ptr_image_name` points to a wide string, otherwise zero.
 ) {
-    if (h_module_file == nullptr || h_module_file == INVALID_HANDLE_VALUE) {
-        fwprintf_s(stderr, L"[!] LOAD_DLL_DEBUG_EVENT: Invalid DLL handle.\n");
-        return FALSE;
-    }
-
-    /* [fkelava 13/09/26 16:33]
-     * `drmingw` has a fallback path in case this API doesn't work,
-     * such as people running on RAM disks. We do not support this for our own sanity.
-     *
-     * See generally https://learn.microsoft.com/en-us/windows/win32/memory/obtaining-a-file-name-from-a-file-handle,
-     * https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-getfinalpathnamebyhandlew#remarks.
-     */
     wchar_t module_path[MAX_PATH] = { 0 };
 
-    DWORD sz_module_path = GetFinalPathNameByHandleW(
-        h_module_file,
-        module_path,
-        sizeof(module_path) / sizeof(wchar_t),
-        FILE_NAME_OPENED
-    );
-
-    if (sz_module_path == 0) {
-        fwprintf_s(stderr, L"[!] GetFinalPathNameByHandleW() failed with code 0x%X.\n", GetLastError());
-        return FALSE;
-    }
-
-    if (sz_module_path > MAX_PATH) {
-        fwprintf_s(stderr, L"[!] GetFinalPathNameByHandleW() - path length exceeded MAX_PATH.\n");
-        return FALSE;
+    if (!s0_dbg_w32_module_name(h_process, h_module_file, ptr_image_name, module_path, is_unicode)) {
+        fwprintf_s(stderr, L"[!] LOAD_DLL_DEBUG_EVENT: DLL at 0x%p will have no name/symbols.\n", ptr_module_base);
     }
 
     /* [fkelava 19/09/26 02:26]
@@ -571,15 +668,15 @@ static BOOL s0_dbg_w32_module_load(
         module_path
     );
 
-    g_modules        [ptr_module_base] = load_data;
-    g_checked_symbols[ptr_module_base] = false;
-
-    s0_dbg_link_send(load_data);
-
     if (hr != S_OK) {
         fwprintf_s(stderr, L"[!] StringCchCopyW() failed with code 0x%X.\n", hr);
         return FALSE;
     }
+
+    g_modules        [ptr_module_base] = load_data;
+    g_checked_symbols[ptr_module_base] = false;
+
+    s0_dbg_link_send(load_data);
 
 #if _DEBUG
     fwprintf_s(stdout, L"Module loaded: %s\n", module_path);
@@ -637,7 +734,10 @@ void s0_dbg_w32_main() {
         DEBUG_EVENT event;
         DWORD       continue_state = DBG_EXCEPTION_NOT_HANDLED;
 
-        WaitForDebugEventEx(&event, INFINITE);
+        if (!WaitForDebugEventEx(&event, INFINITE)) {
+            fwprintf_s(stderr, L"[!] WaitForDebugEventEx() failed with code 0x%X.\n", GetLastError());
+            return;
+        }
 
         DWORD event_code = event.dwDebugEventCode;
         DWORD id_thread  = event.dwThreadId;
@@ -668,7 +768,9 @@ void s0_dbg_w32_main() {
             if (!s0_dbg_w32_module_load(
                 h_process,
                 event.u.CreateProcessInfo.hFile,
-                event.u.CreateProcessInfo.lpBaseOfImage
+                event.u.CreateProcessInfo.lpBaseOfImage,
+                event.u.CreateProcessInfo.lpImageName,
+                event.u.CreateProcessInfo.fUnicode
             )) {
                 TerminateProcess(h_process, GetLastError());
                 return;
@@ -689,6 +791,15 @@ void s0_dbg_w32_main() {
             continue;
         }
 
+        if (event_code == OUTPUT_DEBUG_STRING_EVENT) {
+            s0_dbg_w32_debug_string(
+                h_process,
+                event.u.DebugString.lpDebugStringData,
+                event.u.DebugString.nDebugStringLength,
+                event.u.DebugString.fUnicode
+            );
+        }
+
         /* [fkelava 13/09/26 16:18]
          * To say that there is a dearth of documentation about how to properly
          * handle LOAD_DLL_DEBUG_EVENT would be an understatement. The call that a debugger
@@ -698,7 +809,13 @@ void s0_dbg_w32_main() {
          * The relevant parts are simplified slightly from https://github.com/jrfonseca/drmingw.
          */
         if (event_code == LOAD_DLL_DEBUG_EVENT) {
-            if (!s0_dbg_w32_module_load(h_process, event.u.LoadDll.hFile, event.u.LoadDll.lpBaseOfDll)) {
+            if (!s0_dbg_w32_module_load(
+                h_process,
+                event.u.LoadDll.hFile,
+                event.u.LoadDll.lpBaseOfDll,
+                event.u.LoadDll.lpImageName,
+                event.u.LoadDll.fUnicode
+            )) {
                 TerminateProcess(h_process, GetLastError());
                 return;
             }
@@ -729,6 +846,9 @@ void s0_dbg_w32_main() {
             continue_state = s0_dbg_w32_exception(h_process, id_process, id_thread, &event.u.Exception);
         }
 
-        ContinueDebugEvent(id_process, id_thread, continue_state);
+        if (!ContinueDebugEvent(id_process, id_thread, continue_state)) {
+            fwprintf_s(stderr, L"[!] ContinueDebugEvent() failed with code 0x%X.\n", GetLastError());
+            return;
+        }
     }
 }

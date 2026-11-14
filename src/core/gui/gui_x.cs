@@ -27,17 +27,17 @@ public partial class FhGui {
 
         // Multiply by pi so cycle_length can be expressed in seconds.
         float cycle_t = float.Sin((float)ImGui.GetTime() * float.Pi / cycle_length) / 2f + 0.5f;
-        float offset  = -(config.max_offset * cycle_t);
+        float offset  = config.max_offset * cycle_t;
 
-        float overlap_amount = config.overlap ? config.cursor_size.X * 0.1f : 0f;
+        float overlap_amount = config.overlap ? config.cursor_size.X * 0.28f : 0f;
 
-        Vector2 cursor_center = new(
-            target_pos.X - config.cursor_size.X / 2f + overlap_amount - offset,
+        Vector2 cursor_tip = new(
+            target_pos.X + overlap_amount - offset,
             target_pos.Y
         );
 
-        UV cursor_suv = new Rect { pos = cursor_center }
-            .expand(config.cursor_size, Alignment2D.CENTER)
+        UV cursor_suv = new Rect { pos = cursor_tip }
+            .expand(config.cursor_size, Alignment2D.RIGHT)
             .as_uv();
 
         draw.AddImage(

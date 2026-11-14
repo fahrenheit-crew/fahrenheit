@@ -449,7 +449,7 @@ public sealed partial class FhSaves {
         _ = Directory.CreateDirectory(set_subdir_path);
 
         int count = 0;
-        for (int i = 0; i < SLOTS_PER_SET; i++) {
+        for (int i = 1; i < SLOTS_PER_SET; i++) {
             if (File.Exists(pal_get_path_for_slot(i, set_name))) count++;
         }
 
@@ -548,10 +548,10 @@ public sealed partial class FhSaves {
         Interlocked.Decrement(ref _lock);
     }
 
-    /// <summaryRetrieve the active set.</summary>
+    /// <summary>Retrieve the active set.</summary>
     public FhSaveSet sets_get_active() => _sets[_sets_name_active];
 
-    /// <summaryRetrieve a specific set.</summary>
+    /// <summary>Retrieve a specific set.</summary>
     public bool sets_get(string set_name, [NotNullWhen(true)] out FhSaveSet? set) {
         return _sets.TryGetValue(set_name, out set);
     }

@@ -20,11 +20,10 @@ namespace Fahrenheit.Runtime.Gui;
 public sealed class FhSaveUiX : FhSaveUiBase {
     private readonly FhTexture _texture_bg           = new(Path.Join(DIR_X_MENU, "ffx_bg.dds.phyre"),        FhTextureType.GAME_PHYRE_2D);
     private readonly FhTexture _texture_help         = new(Path.Join(DIR_X_HIKU, "0_0_512_448_0.dds.phyre"), FhTextureType.GAME_PHYRE_2D);
-    private readonly FhTexture _texture_battle_kuang = new(Path.Join(DIR_X_MENU, "battle_kuang.dds.phyre"),  FhTextureType.GAME_PHYRE_2D);
-    private readonly FhTexture _texture_faces_ply    = new(Path.Join(DIR_X_MENU, "face_ply.dds.phyre"),      FhTextureType.GAME_PHYRE_2D);
-    private readonly FhTexture _texture_faces_smn    = new(Path.Join(DIR_X_MENU, "face_smn.dds.phyre"),      FhTextureType.GAME_PHYRE_2D);
     private readonly FhTexture _texture_meswin       = new(Path.Join(DIR_X_MENU, "meswin.dds.phyre"),        FhTextureType.GAME_PHYRE_2D);
+    private readonly FhTexture _texture_battle_kuang = new(Path.Join(DIR_X_MENU, "battle_kuang.dds.phyre"),  FhTextureType.GAME_PHYRE_2D);
     private readonly FhTexture _texture_summonbg     = new(Path.Join(DIR_X_MENU, "summonbg.dds.phyre"),      FhTextureType.GAME_PHYRE_2D);
+    private readonly FhTexture _texture_stone        = new(Path.Join(DIR_X_MENU, "stonetexture.dds.phyre"),  FhTextureType.GAME_PHYRE_2D);
     private readonly FhTexture _texture_battle       = new(Path.Join(DIR_X_MENU, "battle.dds.phyre"),        FhTextureType.GAME_PHYRE_2D);
 
     private readonly Vector2 _tex_meswin_size = new(1024f, 1024f);
@@ -34,11 +33,10 @@ public sealed class FhSaveUiX : FhSaveUiBase {
     protected override FhTexture[] textures => [
         _texture_bg,
         _texture_help,
-        _texture_battle_kuang,
-        _texture_faces_ply,
-        _texture_faces_smn,
         _texture_meswin,
+        _texture_battle_kuang,
         _texture_summonbg,
+        _texture_stone,
         _texture_battle,
         _texture_freetex,
     ];
@@ -49,9 +47,17 @@ public sealed class FhSaveUiX : FhSaveUiBase {
     };
 
     private readonly NineSliceHelper  _savefile_border_helper;
+    private readonly NineSliceHelper  _popup_border_helper;
 
     public FhSaveUiX() {
         _savefile_border_helper = NineSliceHelper.create(
+            _tex_meswin_size,
+            new(385f, 544f),
+            new(450f, 609f),
+            new(  4f,   4f)
+        );
+
+        _popup_border_helper = NineSliceHelper.create(
             _tex_meswin_size,
             new(385f, 544f),
             new(450f, 609f),
@@ -156,17 +162,22 @@ public sealed class FhSaveUiX : FhSaveUiBase {
 
         save_text = string.Format(save_text, set.count_saves);
 
-        Vector2 text_pos = new(1722f, 144f);
+        Vector2 text_pos = new(1717f, 146f);
 
-        float line_height = FONT_SIZE_DEFAULT - 5f;
+        float line_height = FONT_SIZE_SMALL - 3f;
 
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
+
+        FhGui.DrawTextConfig config = text_config with {
+            align     = Alignment2D.RIGHT,
+            font_size = font_size_small,
+        };
 
         Vector2 saves_text_size = FhApi.Gui.draw_text(
             draw,
             text_pos * aspect_scale + aspect_helper.pos,
             save_text,
-            text_config with { align = Alignment2D.RIGHT }
+            config
         );
 
         if (set.has_autosave) {
@@ -179,10 +190,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
                 draw,
                 autosave_pos,
                 autosave_text,
-                text_config with {
-                    align = Alignment2D.RIGHT,
-                    color = COLOR_AUTOSAVE,
-                }
+                config with { color = COLOR_AUTOSAVE }
             );
         }
 
@@ -192,7 +200,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
             draw,
             second_line_pos * aspect_scale + aspect_helper.pos,
             set.name,
-            text_config with { align = Alignment2D.RIGHT }
+            config
         );
     }
 
@@ -216,7 +224,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
 
         UV bg_suv = bg_screen.as_uv();
 
-        if (mouse_hovered(bg_screen) && focus != UiFocus.ACTIVE_SET) {
+        if (!popup_shown && mouse_hovered(bg_screen) && focus != UiFocus.ACTIVE_SET) {
             FhApi.Audio.play_sound(SOUND_ID_ACTION, ACTION_VOLUME);
             focus = UiFocus.ACTIVE_SET;
         }
@@ -246,14 +254,12 @@ public sealed class FhSaveUiX : FhSaveUiBase {
             FhApi.Gui.draw_x_cursor(
                 draw,
                 cursor_target,
-                cursor_config with {
-                    overlap = false
-                }
+                cursor_config
             );
         }
 
         // Input handling
-        if (mouse_clicked(bg_screen)) {
+        if (!popup_shown && mouse_clicked(bg_screen)) {
             FhApi.Audio.play_sound(SOUND_ID_SET_CHANGE);
             change_mode(UiMode.SET_CHANGE);
         }
@@ -364,7 +370,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
         ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
         ImGuiIOPtr    io   = ImGui.GetIO();
 
-        if (mouse_hovered(button_scaled)) {
+        if (!popup_shown && mouse_hovered(button_scaled)) {
             if (focus != UiFocus.LIST || scrollable_sets.hovered != global_idx) {
                 FhApi.Audio.play_sound(SOUND_ID_ACTION, ACTION_VOLUME);
             }
@@ -448,21 +454,24 @@ public sealed class FhSaveUiX : FhSaveUiBase {
         }
 
         // Handle input
-        if (mouse_clicked(button_scaled)) {
-            io.WantCaptureMouse = true;
+        if (!popup_shown && mouse_clicked(button_scaled)) {
             FhApi.Audio.play_sound(SOUND_ID_SET_CHANGE);
             change_set(set.name);
         }
     }
 
     protected override void ui_no_saves() {
-        if (!_texture_meswin.try_use(out ImTextureRef meswin, out _)) {
+        if (!_texture_stone    .try_use(out ImTextureRef stone,  out FhTextureMetadata? stone_meta)
+            || !_texture_meswin.try_use(out ImTextureRef meswin, out _)
+        ) {
             return;
         }
 
         if (!FhApi.Saves.impl_get_system_mode(out FhSaveSystemMode? save_mode)) {
             return;
         }
+
+        ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
         string message_key = save_mode switch {
             FhSaveSystemMode.ALBD => "popup.no_save_data",
@@ -474,47 +483,103 @@ public sealed class FhSaveUiX : FhSaveUiBase {
 
         string message = localize(message_key);
 
-        ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
-
+        // Calculate window size from message size
         ImGui.PushFont(null, font_size);
-        Vector2 text_size = ImGui.CalcTextSize(message);
+        Vector2 size_message = ImGui.CalcTextSize(message);
         ImGui.PopFont();
 
-        Vector2 text_margin = new Vector2(36f, 48f) * aspect_scale;
-        Vector2 window_size = text_margin * 2 + text_size;
+        Vector2 text_margin = new Vector2(60f, 46f) * aspect_scale;
+        Vector2 window_size = text_margin * 2 + size_message;
 
         Rect window = new Rect {
             pos  = FhApi.Gui.display_size / 2f,
             size = Vector2.Zero,
         }.expand(window_size, Alignment2D.CENTER);
 
-        uint gradient_tl = 0xFF9E4541;
-        uint gradient_tr = 0xFF91264F;
-        uint gradient_bl = 0xFF8F3950;
-        uint gradient_br = 0xFF822856;
+        // Shadow behind popup
+        Vector2 shadow_offset = new Vector2(6f) * aspect_scale;
+
+        draw.AddRectFilled(
+            window.top_left + shadow_offset,
+            window.bottom_right + shadow_offset,
+            0x80000000
+        );
+
+        uint gradient_top = 0xA0C77D8E;
+        uint gradient_bot = 0xA0603440;
 
         draw.AddRectFilledMultiColor(
             window.top_left,
             window.bottom_right,
-            gradient_tl,
-            gradient_tr,
-            gradient_br,
-            gradient_bl
+            gradient_top,
+            gradient_top,
+            gradient_bot,
+            gradient_bot
         );
 
+        // Wrapping/Tiling stuff
+        float tex_width  = stone_meta.size.X * aspect_scale.X;
+        float tex_height = stone_meta.size.Y * aspect_scale.Y;
+
+        float x_offset = window.top_left.X - tex_width;
+        float y_offset = window.top_left.Y - tex_height;
+
+        for (float x = x_offset; x < window.bottom_right.X; x += tex_width) {
+            float min_x = float.Max(window.top_left.X, x);
+            float max_x = float.Min(window.bottom_right.X, x + tex_width);
+
+            if (max_x <= min_x) continue;
+
+            float uv_x1 = (min_x - x) / tex_width;
+            float uv_x2 = (max_x - x) / tex_width;
+
+            for (float y = y_offset; y < window.bottom_right.Y; y += tex_height) {
+                float min_y = float.Max(window.top_left.Y, y);
+                float max_y = float.Min(window.bottom_right.Y, y + tex_height);
+
+                if (max_y <= min_y) continue;
+
+                float uv_y1 = 1f - ((min_y - y) / tex_height);
+                float uv_y2 = 1f - ((max_y - y) / tex_height);
+
+                Vector2 suv_p0 = new Vector2(min_x, min_y);
+                Vector2 suv_p1 = new Vector2(max_x, max_y);
+                Vector2 tuv_p0 = new Vector2(uv_x1, uv_y1);
+                Vector2 tuv_p1 = new Vector2(uv_x2, uv_y2);
+
+                draw.AddImage(
+                    stone,
+                    suv_p0,
+                    suv_p1,
+                    tuv_p0,
+                    tuv_p1,
+                    0xA0844754
+                );
+            }
+        }
+
+        // Border
         NineSliceHelper screen_border_helper = NineSliceHelper.create(
             Vector2.One,
             window,
-            new Vector2(9f, 9f) * aspect_scale
+            new Vector2(8f, 8f) * aspect_scale
         );
 
         for (int slice_idx = 0; slice_idx < 9; slice_idx++) {
-            Vector2[] tex_uv    = _savefile_border_helper.get_uvs(slice_idx);
-            Vector2[] screen_uv =    screen_border_helper.get_uvs(slice_idx);
+            Vector2[] screen_uv = screen_border_helper.get_uvs(slice_idx);
 
-            draw.AddImage(meswin, screen_uv[0], screen_uv[3], tex_uv[0], tex_uv[3]);
+            int       alt_idx    = 3 * (2 - slice_idx / 3) + (slice_idx % 3);
+            Vector2[] alt_tex_uv = _popup_border_helper.get_uvs(alt_idx);
+
+            Vector2 screen_p0 = screen_uv[0];
+            Vector2 screen_p1 = screen_uv[3];
+
+            (screen_p0.Y, screen_p1.Y) = (screen_p1.Y, screen_p0.Y);
+
+            draw.AddImage(meswin, screen_p0, screen_p1, alt_tex_uv[0], alt_tex_uv[3]);
         }
 
+        // Text
         FhApi.Gui.draw_text(
             draw,
             window.center,
@@ -541,7 +606,7 @@ public sealed class FhSaveUiX : FhSaveUiBase {
         save_outer_bounds.pos.Y += (save_outer_bounds.size.Y + save_gap) * local_idx;
 
         // We set the hovered state early to potentially use it later.
-        if (mouse_hovered(save_outer_bounds.scale_to_aspect(aspect_helper))) {
+        if (!popup_shown && mouse_hovered(save_outer_bounds.scale_to_aspect(aspect_helper))) {
             if (focus != UiFocus.LIST || scrollable_saves.hovered != global_idx) {
                 FhApi.Audio.play_sound(SOUND_ID_ACTION, ACTION_VOLUME);
             }
@@ -561,10 +626,12 @@ public sealed class FhSaveUiX : FhSaveUiBase {
         NineSliceHelper screen_border_helper = NineSliceHelper.create(
             Vector2.One,
             save_outer_bounds.scale_to_aspect(aspect_helper),
-            new Vector2(9f, 9f) * aspect_scale
+            new Vector2(4f, 4f) * aspect_scale
         );
 
         for (int slice_idx = 0; slice_idx < 9; slice_idx++) {
+            if (slice_idx == 4) continue;
+
             Vector2[] tex_uv    = _savefile_border_helper.get_uvs(slice_idx);
             Vector2[] screen_uv =    screen_border_helper.get_uvs(slice_idx);
 
@@ -666,9 +733,9 @@ public sealed class FhSaveUiX : FhSaveUiBase {
         }
 
         // Handle input
-        if (mouse_clicked(save_outer_bounds.scale_to_aspect(aspect_helper))) {
+        if (!popup_shown && mouse_clicked(save_outer_bounds.scale_to_aspect(aspect_helper))) {
             FhApi.Audio.play_sound(SOUND_ID_ACTION, ACTION_VOLUME);
-            fade_out(() => FhApi.Saves.impl_execute(save.slot));
+            open_confirmation_popup(save.slot);
         }
     }
 
@@ -1183,6 +1250,237 @@ public sealed class FhSaveUiX : FhSaveUiBase {
             plus_tuv.p0,
             plus_tuv.p1
         );
+    }
+
+    protected override void ui_popup(UiPopupType popup) {
+        if (!_texture_stone    .try_use(out ImTextureRef stone,  out FhTextureMetadata? stone_meta)
+            || !_texture_meswin.try_use(out ImTextureRef meswin, out _)
+        ) {
+            return;
+        }
+
+        ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
+
+        string message    = popup_message;
+        string choice_yes = FhApi.Localization.localize("Fahrenheit.yes");
+        string choice_no  = FhApi.Localization.localize("Fahrenheit.no");
+
+        bool is_confirmation = popup
+            is UiPopupType.CONFIRM_LOAD
+            or UiPopupType.CONFIRM_SAVE
+            or UiPopupType.CONFIRM_OVERWRITE;
+
+        // Calculate window size from message size
+        ImGui.PushFont(null, font_size);
+        Vector2 size_message    = ImGui.CalcTextSize(message);
+        Vector2 size_choice_yes = ImGui.CalcTextSize(choice_yes);
+        Vector2 size_choice_no  = ImGui.CalcTextSize(choice_no);
+        ImGui.PopFont();
+
+        Vector2 min_window_size = new Vector2(550f, 0f) * aspect_scale;
+
+        Vector2 text_margin = new Vector2(60f, 46f) * aspect_scale;
+        Vector2 window_size = Vector2.Max(text_margin * 2 + size_message, min_window_size);
+
+        if (is_confirmation) {
+            float min_choice_width = text_margin.X * 3 + size_choice_yes.X + size_choice_no.X;
+
+            window_size.X = float.Max(window_size.X, min_choice_width);
+            window_size.Y += text_margin.Y + float.Max(size_choice_yes.Y, size_choice_no.Y);
+        }
+
+        Rect window = new Rect {
+            pos  = FhApi.Gui.display_size / 2f,
+            size = Vector2.Zero,
+        }.expand(window_size, Alignment2D.CENTER);
+
+        // Shadow behind popup
+        Vector2 shadow_offset = new Vector2(6f) * aspect_scale;
+
+        draw.AddRectFilled(
+            window.top_left     + shadow_offset,
+            window.bottom_right + shadow_offset,
+            0x80000000
+        );
+
+        uint gradient_top = 0xA0C77D8E;
+        uint gradient_bot = 0xA0603440;
+
+        draw.AddRectFilledMultiColor(
+            window.top_left,
+            window.bottom_right,
+            gradient_top,
+            gradient_top,
+            gradient_bot,
+            gradient_bot
+        );
+
+        // Wrapping/Tiling stuff
+        float tex_width  = stone_meta.size.X * aspect_scale.X;
+        float tex_height = stone_meta.size.Y * aspect_scale.Y;
+
+        float x_offset = window.top_left.X - tex_width;
+        float y_offset = window.top_left.Y - tex_height;
+
+        for (float x = x_offset; x < window.bottom_right.X; x += tex_width) {
+            float min_x = float.Max(window.top_left.X, x);
+            float max_x = float.Min(window.bottom_right.X, x + tex_width);
+
+            if (max_x <= min_x) continue;
+
+            float uv_x1 = (min_x - x) / tex_width;
+            float uv_x2 = (max_x - x) / tex_width;
+
+            for (float y = y_offset; y < window.bottom_right.Y; y += tex_height) {
+                float min_y = float.Max(window.top_left.Y, y);
+                float max_y = float.Min(window.bottom_right.Y, y + tex_height);
+
+                if (max_y <= min_y) continue;
+
+                float uv_y1 = 1f - ((min_y - y) / tex_height);
+                float uv_y2 = 1f - ((max_y - y) / tex_height);
+
+                Vector2 suv_p0 = new Vector2(min_x, min_y);
+                Vector2 suv_p1 = new Vector2(max_x, max_y);
+                Vector2 tuv_p0 = new Vector2(uv_x1, uv_y1);
+                Vector2 tuv_p1 = new Vector2(uv_x2, uv_y2);
+
+                draw.AddImage(
+                    stone,
+                    suv_p0,
+                    suv_p1,
+                    tuv_p0,
+                    tuv_p1,
+                    0xA0844754
+                );
+            }
+        }
+
+        // Border
+        NineSliceHelper screen_border_helper = NineSliceHelper.create(
+            Vector2.One,
+            window,
+            new Vector2(8f, 8f) * aspect_scale
+        );
+
+        for (int slice_idx = 0; slice_idx < 9; slice_idx++) {
+            Vector2[] screen_uv = screen_border_helper.get_uvs(slice_idx);
+
+            int       alt_idx    = 3 * (2 - slice_idx / 3) + (slice_idx % 3);
+            Vector2[] alt_tex_uv = _popup_border_helper.get_uvs(alt_idx);
+
+            Vector2 screen_p0 = screen_uv[0];
+            Vector2 screen_p1 = screen_uv[3];
+
+            (screen_p0.Y, screen_p1.Y) = (screen_p1.Y, screen_p0.Y);
+
+            draw.AddImage(meswin, screen_p0, screen_p1, alt_tex_uv[0], alt_tex_uv[3]);
+        }
+
+        // Text
+        if (!is_confirmation) {
+            FhApi.Gui.draw_text(
+                draw,
+                window.center,
+                message,
+                text_config with { align = Alignment2D.CENTER }
+            );
+
+            Rect screen = new() {
+                pos  = Vector2.Zero,
+                size = ImGui.GetMainViewport().WorkSize,
+            };
+
+            if (mouse_clicked(screen) && !mouse_hovered(window)) {
+                FhApi.Audio.play_sound(SOUND_ID_CANCEL);
+                popup_shown = false;
+            }
+
+            return;
+        }
+
+        float top_offset    = text_margin.Y;
+        float bottom_offset = text_margin.Y + float.Max(size_choice_yes.Y, size_choice_no.Y) / 2f;
+
+        float yes_x = float.Max(window_size.X * 1f/4f, text_margin.X + size_choice_yes.X / 2f);
+        float no_x  = float.Min(window_size.X * 3f/4f, window_size.X - (text_margin.X + size_choice_no.X / 2f));
+
+        Vector2 pos_yes = window.bottom_left + new Vector2(yes_x, -bottom_offset);
+        Vector2 pos_no  = window.bottom_left + new Vector2(no_x,  -bottom_offset);
+
+        FhApi.Gui.draw_text(
+            draw,
+            window.top with { Y = window.top.Y + top_offset },
+            message,
+            text_config with { align = Alignment2D.TOP }
+        );
+
+        FhApi.Gui.draw_text(
+            draw,
+            pos_yes,
+            choice_yes,
+            text_config with { align = Alignment2D.CENTER }
+        );
+
+        FhApi.Gui.draw_text(
+            draw,
+            pos_no,
+            choice_no,
+            text_config with { align = Alignment2D.CENTER }
+        );
+
+        Rect hitbox_yes = new() { pos = pos_yes };
+        Rect hitbox_no  = new() { pos = pos_no  };
+
+        hitbox_yes = hitbox_yes.expand(new Vector2(window.size.X / 4f, text_margin.Y), Alignment2D.CENTER);
+        hitbox_no  = hitbox_no .expand(new Vector2(window.size.X / 4f, text_margin.Y), Alignment2D.CENTER);
+
+        if (mouse_hovered(hitbox_yes) && popup_choice != UiPopupChoice.YES) {
+            FhApi.Audio.play_sound(SOUND_ID_ACTION);
+            popup_choice = UiPopupChoice.YES;
+        }
+
+        if (mouse_hovered(hitbox_no) && popup_choice != UiPopupChoice.NO) {
+            FhApi.Audio.play_sound(SOUND_ID_ACTION);
+            popup_choice = UiPopupChoice.NO;
+        }
+
+        float cursor_offset = 8f * aspect_scale.X;
+
+        Vector2 cursor_target = popup_choice switch {
+            UiPopupChoice.YES => pos_yes with { X = pos_yes.X - size_choice_yes.X / 2f - cursor_offset },
+            UiPopupChoice.NO  => pos_yes with { X = pos_no.X  - size_choice_no.X  / 2f - cursor_offset },
+
+            _ => throw new UnreachableException(),
+        };
+
+        FhApi.Gui.draw_x_cursor(
+            draw,
+            cursor_target,
+            cursor_config with {
+                overlap = false,
+            }
+        );
+
+        if (mouse_clicked(hitbox_yes)) {
+            FhApi.Audio.play_sound(SOUND_ID_ACTION, ACTION_VOLUME);
+
+            if (FhApi.Saves.ui_get_data(current_scrollable.hovered, out FhSaveUiData? data)) {
+                execute_slot(data.slot);
+            }
+            else {
+                open_popup(UiPopupType.DATA_MISSING);
+            }
+
+            return;
+        }
+
+        if (mouse_clicked(hitbox_no)) {
+            FhApi.Audio.play_sound(SOUND_ID_CANCEL);
+            popup_shown = false;
+
+            return;
+        }
     }
 
     protected override void ui_scrollbar() {

@@ -10,4 +10,6 @@ public class SoundId {
     public const uint UI_DISABLED = 0x80000003;
     public const uint UI_CANCEL   = 0x80000004;
     public const uint PAGE_TURN   = 0x80000030;
+
+    public const uint UI_SAVE = 0x8000006A;
 }

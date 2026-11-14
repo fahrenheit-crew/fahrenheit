@@ -22,6 +22,9 @@ public unsafe partial class FhGui {
         /// <summary>The alignment of the text inside the available content region.</summary>
         public Alignment2D align = Alignment2D.TOP_LEFT;
 
+        /// <summary>Whether text position debugging helpers should be drawn.</summary>
+        public bool draw_debug_helpers = false;
+
         public DrawTextConfig() { }
     }
 
@@ -400,32 +403,54 @@ public unsafe partial class FhGui {
 
         Vector2 text_size = ImGui.CalcTextSize(text);
 
-        position.X -= config.align.h switch {
-            Alignment.BEGIN  => 0f,
-            Alignment.CENTER => text_size.X / 2f,
-            Alignment.END    => text_size.X,
+        Rect text_bounds = new() { pos = position };
+        text_bounds = text_bounds.expand(text_size, config.align);
 
-            _ => throw new NotImplementedException(),
-        };
+        ReadOnlySpan<char> text_span = text;
+                Span<byte> text_u8   = stackalloc byte[1024];
 
-        position.Y -= config.align.v switch {
-            Alignment.BEGIN  => 0f,
-            Alignment.CENTER => text_size.Y / 2f,
-            Alignment.END    => text_size.Y,
+        float line_y      = text_bounds.top_left.Y + ImGui.GetStyle().ItemSpacing.Y / 2f;
+        float line_height = ImGui.GetTextLineHeightWithSpacing();
 
-            _ => throw new NotImplementedException(),
-        };
+        foreach (ReadOnlySpan<char> text_segment in text_span.EnumerateLines()) {
+            text_u8.Clear();
 
-        if (config.draw_shadow) {
-            // Use the alpha from the provided color
-            uint shadow_color = 0 | (config.color & 0xFF000000);
+            Encoding.UTF8.GetBytes(text_segment, text_u8);
 
-            draw_list.AddText(position + new Vector2(2f), shadow_color, text);
+            Vector2 line_size = ImGui.CalcTextSize(text_u8);
+
+            float line_x = position.X - config.align.h switch {
+                Alignment.BEGIN  => 0f,
+                Alignment.CENTER => line_size.X / 2f,
+                Alignment.END    => line_size.X,
+
+                _ => throw new NotImplementedException(),
+            };
+
+            line_y += line_height;
+
+            Vector2 line_pos = new(line_x, line_y);
+
+            if (config.draw_shadow) {
+                // Use the alpha from the provided color
+                uint shadow_color = 0 | (config.color & 0xFF000000);
+
+                draw_list.AddText(line_pos + new Vector2(2f), shadow_color, text_u8);
+            }
+
+            draw_list.AddText(line_pos, config.color, text_u8);
+
+            if (config.draw_debug_helpers) {
+                draw_list.AddCircle(line_pos, 3f, 0xFF00FFFF, 4);
+            }
         }
 
-        draw_list.AddText(position, config.color, text);
-
         ImGui.PopFont();
+
+        if (config.draw_debug_helpers) {
+            draw_list.AddRect(text_bounds.top_left, text_bounds.bottom_right, 0xFFFFFF00, 0f, 1f);
+            draw_list.AddCircle(position, 3f, 0xFF0000FF, 4);
+        }
 
         return text_size;
     }

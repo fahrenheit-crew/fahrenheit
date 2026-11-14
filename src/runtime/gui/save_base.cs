@@ -600,6 +600,7 @@ public abstract class FhSaveUiBase : FhSaveUi {
         }
     }
 
+    //TODO: Fold this into a pop-up
     /// <summary>Render the message displayed when no saves exist in the active set.</summary>
     protected abstract void ui_no_saves();
 

@@ -1479,8 +1479,8 @@ public sealed class FhSaveUiX2 : FhSaveUiBase {
         Rect hitbox_yes = new() { pos = pos_yes };
         Rect hitbox_no  = new() { pos = pos_no  };
 
-        hitbox_yes = hitbox_yes.expand(new(window.size.X / 4f, text_margin.Y), Alignment2D.CENTER);
-        hitbox_no  = hitbox_no .expand(new(window.size.X / 4f, text_margin.Y), Alignment2D.CENTER);
+        hitbox_yes = hitbox_yes.expand(new Vector2(window.size.X / 4f, text_margin.Y), Alignment2D.CENTER);
+        hitbox_no  = hitbox_no .expand(new Vector2(window.size.X / 4f, text_margin.Y), Alignment2D.CENTER);
 
         if (mouse_hovered(hitbox_yes) && popup_choice != UiPopupChoice.YES) {
             FhApi.Audio.play_sound(SOUND_ID_ACTION);

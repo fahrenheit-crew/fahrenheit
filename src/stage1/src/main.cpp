@@ -50,9 +50,7 @@ FILE* g_stderr;
 
 // Uses the `nethost` library to discover the location of the .NET hosting library,
 // `hostfxr`, and obtains the necessary function pointers from it.
-static BOOL s1_load_hostfxr(
-    DWORD& error_code // [out] The error code, if the method returns FALSE.
-) {
+static bool s1_load_hostfxr() {
     wchar_t path_hostfxr_buf[MAX_PATH];
     size_t  path_hostfxr_size = sizeof(path_hostfxr_buf) / sizeof(wchar_t);
 
@@ -63,19 +61,15 @@ static BOOL s1_load_hostfxr(
     );
 
     if (rc != 0) {
-        fwprintf_s(stderr, L"[!] get_hostfxr_path() failed.\n");
-        error_code = rc;
-
-        return FALSE;
+        fwprintf_s(stderr, L"[!] get_hostfxr_path() failed with code 0x%X.\n", rc);
+        return false;
     }
 
     HMODULE lib_hostfxr = LoadLibraryW(path_hostfxr_buf);
 
     if (lib_hostfxr == nullptr) {
-        fwprintf_s(stderr, L"[!] LoadLibraryW() failed.\n");
-        error_code = GetLastError();
-
-        return FALSE;
+        fwprintf_s(stderr, L"[!] LoadLibraryW() failed with code 0x%X.\n", GetLastError());
+        return false;
     }
 
     g_fnptr_hostfxr_init                 = (hostfxr_initialize_for_runtime_config_fn)GetProcAddress(lib_hostfxr, "hostfxr_initialize_for_runtime_config");
@@ -119,10 +113,9 @@ static int s1_main(void) {
     const wchar_t* fh_init_method = L"boot";
 
     // Load HostFxr. This library will locate the .NET runtime for us.
-    DWORD load_hostfxr_rc = 0;
-    if (!s1_load_hostfxr(load_hostfxr_rc)) {
+    if (!s1_load_hostfxr()) {
         fwprintf_s(stderr, L"Fahrenheit failed to load the .NET Runtime. Ensure it is installed as per the setup guide.\n");
-        return load_hostfxr_rc;
+        return 1;
     }
 
     // Initialize and start the .NET runtime.
@@ -130,12 +123,20 @@ static int s1_main(void) {
     void*          ptr_hostfxr_get_function_pointer = nullptr;
     hostfxr_handle cxt                              = nullptr;
 
-    int rc = g_fnptr_hostfxr_init(path_fh_runtimeconfig, nullptr, &cxt);
+    int rc = g_fnptr_hostfxr_init(
+        path_fh_runtimeconfig,
+        nullptr,
+        &cxt
+    );
+
     if (rc != 0 || cxt == nullptr) {
         fwprintf_s(stderr, L"hostfxr: initialize_for_runtime_config() failed\n");
         fwprintf_s(stderr, L"This is an uncommon error. Please contact the Fahrenheit developers at https://github.com/fahrenheit-crew/fahrenheit.\n");
 
-        g_fnptr_hostfxr_close(cxt);
+        if (g_fnptr_hostfxr_close(cxt) != 0) {
+            fwprintf_s(stderr, L"hostfxr: failed to close.\n");
+        }
+
         return rc;
     }
 
@@ -143,7 +144,8 @@ static int s1_main(void) {
     rc = g_fnptr_hostfxr_set_runtime_property(
         cxt,
         L"APP_CONTEXT_BASE_DIRECTORY",
-        g_path_fh_dir);
+        g_path_fh_dir
+    );
 
     if (rc != 0) {
         fwprintf_s(stderr, L"hostfxr: failed to set APP_CONTEXT_BASE_DIRECTORY\n");
@@ -155,7 +157,8 @@ static int s1_main(void) {
     rc = g_fnptr_hostfxr_get_delegate(
         cxt,
         hdt_load_assembly,
-        &ptr_hostfxr_load_assembly);
+        &ptr_hostfxr_load_assembly
+    );
 
     if (rc != 0 || ptr_hostfxr_load_assembly == nullptr) {
         fwprintf_s(stderr, L"hostfxr: failed to obtain fnptr (hdt_load_assembly)\n");
@@ -166,7 +169,8 @@ static int s1_main(void) {
     rc = g_fnptr_hostfxr_get_delegate(
         cxt,
         hdt_get_function_pointer,
-        &ptr_hostfxr_get_function_pointer);
+        &ptr_hostfxr_get_function_pointer
+    );
 
     if (rc != 0 || ptr_hostfxr_get_function_pointer == nullptr) {
         fwprintf_s(stderr, L"hostfxr: failed to obtain fnptr (hdt_get_function_pointer)\n");
@@ -174,10 +178,14 @@ static int s1_main(void) {
         return rc;
     }
 
-    g_fnptr_hostfxr_close(cxt);
+    rc = g_fnptr_hostfxr_close(cxt);
 
-    load_assembly_fn        fnptr_hostfxr_load_assembly        = (load_assembly_fn)       ptr_hostfxr_load_assembly;
-    get_function_pointer_fn fnptr_hostfxr_get_function_pointer = (get_function_pointer_fn)ptr_hostfxr_get_function_pointer;
+    if (rc != 0) {
+        fwprintf_s(stderr, L"hostfxr: failed to close.\n");
+    }
+
+    load_assembly_fn        fnptr_hostfxr_load_assembly        = (load_assembly_fn)        ptr_hostfxr_load_assembly;
+    get_function_pointer_fn fnptr_hostfxr_get_function_pointer = (get_function_pointer_fn) ptr_hostfxr_get_function_pointer;
 
     // Load managed assembly and get function pointer to bootstrap function.
     init_fn fnptr_fh_init = nullptr;
@@ -185,7 +193,8 @@ static int s1_main(void) {
     rc = fnptr_hostfxr_load_assembly(
         path_fh_dll,
         nullptr,
-        nullptr);
+        nullptr
+    );
 
     if (rc != 0) {
         fwprintf_s(stderr, L"hostfxr: load_assembly() failed\n");
@@ -199,7 +208,8 @@ static int s1_main(void) {
         UNMANAGEDCALLERSONLY_METHOD,
         nullptr,
         nullptr,
-        (void**)&fnptr_fh_init);
+        (void**) &fnptr_fh_init
+    );
 
     if (rc != 0 || fnptr_fh_init == nullptr) {
         fwprintf_s(stderr, L"hostfxr: get_function_pointer() failed\n");
@@ -240,7 +250,7 @@ static BOOL s1_init(
     );
 
     if (path_fh_dir_size == 0) {
-        fwprintf_s(stderr, L"[!] GetModuleFileNameW() failed.\n");
+        fwprintf_s(stderr, L"[!] GetModuleFileNameW() failed with code 0x%X.\n", GetLastError());
         return FALSE;
     }
 

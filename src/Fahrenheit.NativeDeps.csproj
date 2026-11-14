@@ -36,13 +36,14 @@ Do not modify or unload it. See `src/stage0/inc/dbgshim/README.md`, `src/stage1/
             <NetHostLib>$(NetHostDir)/nethost.lib</NetHostLib>
             <NetHostDll>$(NetHostDir)/nethost.dll</NetHostDll>
 
-            <DestDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', 'stage1', 'inc', 'nethost'))</DestDir>
+            <DestDirStage1>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', 'stage1', 'inc', 'nethost'))</DestDirStage1>
+            <DestDirSetup>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', 'setup', 'inc', 'nethost'))</DestDirSetup>
         </PropertyGroup>
 
         <MakeDir Directories="$(DestDir)" />
 
-        <Copy SourceFiles="$(NetHostInc)" DestinationFolder="$(DestDir)" />
-        <Copy SourceFiles="$(NetHostLib)" DestinationFolder="$(DestDir)" />
+        <Copy SourceFiles="$(NetHostInc);$(NetHostLib)" DestinationFolder="$(DestDirStage1)" />
+        <Copy SourceFiles="$(NetHostInc);$(NetHostLib)" DestinationFolder="$(DestDirSetup)" />
         <Copy SourceFiles="$(NetHostDll)" DestinationFolder="$(_FhOutDirBin)" />
     </Target>
 </Project>

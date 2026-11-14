@@ -178,8 +178,7 @@ int WINAPI WinMain(
 
         // Update and Render additional Platform Windows
         // (Platform functions may change the current OpenGL context, so we save/restore it to make it easier to paste this code elsewhere.)
-        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-        {
+        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
             SDL_Window*   current_window  = SDL_GL_GetCurrentWindow();
             SDL_GLContext current_context = SDL_GL_GetCurrentContext();
 

@@ -3,17 +3,12 @@
 // This file is part of Fahrenheit, © 2023-2026 The Fahrenheit contributors.
 // It is licensed to you under the GNU Lesser General Public License, version 3.0 or later. See COPYING, COPYING.LESSER.
 
-#pragma comment(lib, "pathcch")
-#pragma comment(lib, "nethost")
-
 #include <fhsetup.h>
 
-#define WIN32_LEAN_AND_MEAN // Exclude rarely-used stuff from Windows headers
-
 // Win32
-#include <windows.h>
 #include <strsafe.h>
 #include <pathcch.h>
+#include <msi.h>
 
 // (U)CRT
 #include <stdio.h>
@@ -26,17 +21,17 @@
 hostfxr_initialize_for_runtime_config_fn g_fnptr_hostfxr_init;
 hostfxr_close_fn                         g_fnptr_hostfxr_close;
 
-/* [fkelava 12/11/26 17:43]
- * There are many ways of checking for VC++ presence, but we use the only semi-official one. Per MSDN:
- *
- * https://learn.microsoft.com/en-us/cpp/windows/redistributing-visual-cpp-files?view=msvc-170#install-the-redistributable-packages
- * > The current {...} version {...} stored in HKLM\SOFTWARE\Wow6432Node\Microsoft\VisualStudio\14.0\VC\Runtimes\{x86|x64|arm64}.
- * > (You need to check {...} Wow6432Node {...} only {...} to view the version of the x86 package on an x64 platform.)
- *
- * We use KEY_WOW64_32KEY to automatically redirect us to Wow6432Node as necessary.
- */
-
 bool setup_check_vcredist(FH_SETUP_REDIST_TYPE type) {
+    /* [fkelava 12/11/26 17:43]
+     * There are many ways of checking for VC++ presence, but we use the only semi-official one. Per MSDN:
+     *
+     * https://learn.microsoft.com/en-us/cpp/windows/redistributing-visual-cpp-files?view=msvc-170#install-the-redistributable-packages
+     * > The current {...} version {...} stored in HKLM\SOFTWARE\Wow6432Node\Microsoft\VisualStudio\14.0\VC\Runtimes\{x86|x64|arm64}.
+     * > (You need to check {...} Wow6432Node {...} only {...} to view the version of the x86 package on an x64 platform.)
+     *
+     * We use KEY_WOW64_32KEY to automatically redirect us to Wow6432Node as necessary.
+     */
+
     LPCWSTR key_name;
     if      (type == X86) key_name = L"SOFTWARE\\Microsoft\\VisualStudio\\14.0\\VC\\Runtimes\\X86";
     else if (type == X64) key_name = L"SOFTWARE\\Microsoft\\VisualStudio\\14.0\\VC\\Runtimes\\X64";
@@ -191,6 +186,92 @@ bool setup_check_nethost(FH_SETUP_REDIST_TYPE type) {
 
     if (g_fnptr_hostfxr_close(cxt) != 0) {
         fwprintf_s(stderr, L"hostfxr: failed to close.\n");
+    }
+
+    return true;
+}
+
+bool setup_check_gamedir(
+    const char* ptr_path_game_dir // [in] A user-supplied directory to check.
+) {
+    char path_ffx [MAX_PATH] = { 0 };
+    char path_ffx2[MAX_PATH] = { 0 };
+    char path_vbf [MAX_PATH] = { 0 };
+    char path_vbf2[MAX_PATH] = { 0 };
+
+    if (FAILED(StringCchCatA(path_ffx,  MAX_PATH, ptr_path_game_dir      )) ||
+        FAILED(StringCchCatA(path_ffx2, MAX_PATH, ptr_path_game_dir      )) ||
+        FAILED(StringCchCatA(path_vbf,  MAX_PATH, ptr_path_game_dir      )) ||
+        FAILED(StringCchCatA(path_vbf2, MAX_PATH, ptr_path_game_dir      )) ||
+        FAILED(StringCchCatA(path_ffx,  MAX_PATH, "\\FFX.exe"            )) ||
+        FAILED(StringCchCatA(path_ffx2, MAX_PATH, "\\FFX-2.exe"          )) ||
+        FAILED(StringCchCatA(path_vbf,  MAX_PATH, "\\data\\FFX_Data.vbf" )) ||
+        FAILED(StringCchCatA(path_vbf2, MAX_PATH, "\\data\\FFX2_Data.vbf"))
+    ) {
+        fwprintf_s(stderr, L"[!] Failed to prepare target names.\n");
+        return false;
+    }
+
+    DWORD attr_ffx  = GetFileAttributesA(path_ffx );
+    DWORD attr_ffx2 = GetFileAttributesA(path_ffx2);
+    DWORD attr_vbf  = GetFileAttributesA(path_vbf );
+    DWORD attr_vbf2 = GetFileAttributesA(path_vbf2);
+
+    if ((attr_ffx  == INVALID_FILE_ATTRIBUTES || attr_ffx  & FILE_ATTRIBUTE_DIRECTORY) ||
+        (attr_ffx2 == INVALID_FILE_ATTRIBUTES || attr_ffx2 & FILE_ATTRIBUTE_DIRECTORY)
+    ) {
+        // MISSING_BIN
+        return true;
+    }
+
+    if ((attr_vbf  == INVALID_FILE_ATTRIBUTES || attr_vbf  & FILE_ATTRIBUTE_DIRECTORY) ||
+        (attr_vbf2 == INVALID_FILE_ATTRIBUTES || attr_vbf2 & FILE_ATTRIBUTE_DIRECTORY)
+    ) {
+        // MISSING_VBF
+        return true;
+    }
+
+    MSIFILEHASHINFO hash_info = { };
+    hash_info.dwFileHashInfoSize = sizeof(MSIFILEHASHINFO);
+
+    UINT hash_rc = MsiGetFileHashA(
+        path_ffx,
+        0,
+        &hash_info
+    );
+
+    if (hash_rc != ERROR_SUCCESS) {
+        fwprintf_s(stderr, L"[!] MsiGetFileHashW(FFX.exe) failed with code 0x%X.\n", hash_rc);
+        return false;
+    }
+
+    if (hash_info.dwData[0] != 0x67239580 ||
+        hash_info.dwData[1] != 0xA48DCCE2 ||
+        hash_info.dwData[2] != 0xD9DFAFCB ||
+        hash_info.dwData[3] != 0xB2ED8427
+    ) {
+        // INVALID_BIN
+        return false;
+    }
+
+    hash_rc = MsiGetFileHashA(
+        path_ffx2,
+        0,
+        &hash_info
+    );
+
+    if (hash_rc != ERROR_SUCCESS) {
+        fwprintf_s(stderr, L"[!] MsiGetFileHashW(FFX-2.exe) failed with code 0x%X.\n", hash_rc);
+        return false;
+    }
+
+    if (hash_info.dwData[0] != 0xF2059BB3 ||
+        hash_info.dwData[1] != 0xC780DCA9 ||
+        hash_info.dwData[2] != 0x49F12153 ||
+        hash_info.dwData[3] != 0xFB9E85E1
+    ) {
+        // INVALID_BIN
+        return false;
     }
 
     return true;

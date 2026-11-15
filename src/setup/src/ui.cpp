@@ -12,13 +12,10 @@
 // ImGui
 #include <imgui.h>
 
-const char* g_selected_dir; // The directory the user provides as the game directory.
-
 bool g_have_vc_x86;  // Whether a valid x86 VC++ Redistributable was detected on the last scan.
 bool g_have_vc_x64;  // Whether a valid x86 VC++ Redistributable was detected on the last scan.
 bool g_have_net_x86; // Whether a valid x86 .NET Runtime was detected on the last scan.
 bool g_have_net_x64; // Whether a valid x64 .NET Runtime was detected on the last scan.
-
 
 // The folder select dialog callback.
 static void SDLCALL setup_ui_dialog_cb(
@@ -27,7 +24,7 @@ static void SDLCALL setup_ui_dialog_cb(
     int                filter    // [in] Index of the selected filter. In our case, zero, because we use none.
 ) {
     if (filelist == nullptr) {
-        fwprintf_s(stdout, L"Fault in dialog callback - %hs\n", SDL_GetError());
+        fwprintf_s(stderr, L"Fault in dialog callback - %hs\n", SDL_GetError());
         return;
     }
 
@@ -36,7 +33,17 @@ static void SDLCALL setup_ui_dialog_cb(
         return;
     }
 
-    g_selected_dir = *filelist;
+    wchar_t path[MAX_PATH] = { 0 };
+
+    if (MultiByteToWideChar(CP_UTF8, 0, *filelist, -1, path, MAX_PATH) == 0) {
+        fwprintf_s(stderr, L"MultiByteToWideChar() failed with code 0x%X.\n", GetLastError());
+        return;
+    }
+
+    FH_SETUP_ERROR error;
+    if (!setup_check_gamedir(path, error)) {
+        // Show error as you please
+    }
 }
 
 void setup_ui_rescan() {

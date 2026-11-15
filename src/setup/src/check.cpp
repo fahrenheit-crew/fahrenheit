@@ -135,59 +135,57 @@ static bool setup_create_links(
     const wchar_t* name_link_ffx2   = L"\\Final Fantasy X-2 (Fahrenheit).lnk";
     const wchar_t* name_link_ffx2lm = L"\\Final Fantasy X-2 LM (Fahrenheit).lnk";
 
-    wchar_t path_fhstage0   [MAX_PATH] = { 0 }; // The absolute path to `fhstage0.exe`.
-    wchar_t path_workdir    [MAX_PATH] = { 0 }; // The absolute path of the game's working directory.
-    wchar_t path_linkdir    [MAX_PATH] = { 0 }; // The absolute path of the directory the shortcuts shall be placed in.
     wchar_t path_link_ffx   [MAX_PATH] = { 0 }; // The absolute path of the shortcut for launching FF X.
     wchar_t path_link_ffx2  [MAX_PATH] = { 0 }; // The absolute path of the shortcut for launching FF X-2.
     wchar_t path_link_ffx2lm[MAX_PATH] = { 0 }; // The absolute path of the shortcut for launching FF X-2 LM.
     wchar_t args_ffx2lm     [MAX_PATH] = { 0 }; // The arguments to launch FF X-2 LM with.
 
+    wchar_t path_stage0     [MAX_PATH] = { 0 }; // The absolute path to `fhstage0.exe`.
+    wchar_t path_dir_fh_bin [MAX_PATH] = { 0 }; // The absolute path to the 'fahrenheit\bin'.
+    wchar_t path_dir_fh     [MAX_PATH] = { 0 }; // The absolute path to the 'fahrenheit' directory.
+
     PathQuoteSpacesW(path_ffx);
     PathQuoteSpacesW(path_ffx2);
 
-    // Link directory prep
-    DWORD path_linkdir_size = GetModuleFileNameW(
+    DWORD path_dir_fh_bin_size = GetModuleFileNameW(
         NULL,
-        path_linkdir,
-        sizeof(path_linkdir) / sizeof(wchar_t)
+        path_dir_fh_bin,
+        sizeof(path_dir_fh_bin) / sizeof(wchar_t)
     );
 
-    if (path_linkdir_size == 0) {
+    if (path_dir_fh_bin_size == 0) {
         fwprintf_s(stderr, L"[!] GetModuleFileNameW() failed with code 0x%X.\n", GetLastError());
         return false;
     }
 
     HRESULT hr;
-    if ((hr = PathCchRemoveFileSpec(path_linkdir, MAX_PATH)) != S_OK) {
-        fwprintf_s(stderr, L"PathCchRemoveFileSpec() failed for path %s, error code: %X\n", path_linkdir, hr);
+    if ((hr = PathCchRemoveFileSpec(path_dir_fh_bin, MAX_PATH)) != S_OK) {
+        fwprintf_s(stderr, L"PathCchRemoveFileSpec() failed for path %s, error code: %X\n", path_dir_fh_bin, hr);
         return false;
     }
 
-    // Working directory prep
-    if (FAILED(StringCchCatW(path_workdir, MAX_PATH, path_linkdir))) {
-        fwprintf_s(stderr, L"[!] Failed to prepare path of game working directory.\n");
-        return false;
-    }
-
-    if (FAILED(StringCchCatW(path_fhstage0, MAX_PATH, path_linkdir     )) ||
-        FAILED(StringCchCatW(path_fhstage0, MAX_PATH, L"\\fhstage0.exe"))
+    if (FAILED(StringCchCatW(path_stage0, MAX_PATH, path_dir_fh_bin)) ||
+        FAILED(StringCchCatW(path_stage0, MAX_PATH, L"\\fhstage0.exe"))
     ) {
         fwprintf_s(stderr, L"[!] Failed to prepare path to Stage 0.\n");
         return false;
     }
 
-    PathQuoteSpacesW(path_fhstage0);
+    PathQuoteSpacesW(path_stage0);
 
-    // Link path prep
-    if ((hr = PathCchRemoveFileSpec(path_linkdir, MAX_PATH)) != S_OK) {
-        fwprintf_s(stderr, L"PathCchRemoveFileSpec() failed for path %s, error code: %X\n", path_linkdir, hr);
+    if (FAILED(StringCchCatW(path_dir_fh, MAX_PATH, path_dir_fh_bin))) {
+        fwprintf_s(stderr, L"[!] Failed to prepare path of game working directory.\n");
         return false;
     }
 
-    if (FAILED(StringCchCatW(path_link_ffx,    MAX_PATH, path_linkdir    )) ||
-        FAILED(StringCchCatW(path_link_ffx2,   MAX_PATH, path_linkdir    )) ||
-        FAILED(StringCchCatW(path_link_ffx2lm, MAX_PATH, path_linkdir    )) ||
+    if ((hr = PathCchRemoveFileSpec(path_dir_fh, MAX_PATH)) != S_OK) {
+        fwprintf_s(stderr, L"PathCchRemoveFileSpec() failed for path %s, error code: %X\n", path_dir_fh, hr);
+        return false;
+    }
+
+    if (FAILED(StringCchCatW(path_link_ffx,    MAX_PATH, path_dir_fh     )) ||
+        FAILED(StringCchCatW(path_link_ffx2,   MAX_PATH, path_dir_fh     )) ||
+        FAILED(StringCchCatW(path_link_ffx2lm, MAX_PATH, path_dir_fh     )) ||
         FAILED(StringCchCatW(path_link_ffx,    MAX_PATH, name_link_ffx   )) ||
         FAILED(StringCchCatW(path_link_ffx2,   MAX_PATH, name_link_ffx2  )) ||
         FAILED(StringCchCatW(path_link_ffx2lm, MAX_PATH, name_link_ffx2lm))
@@ -206,9 +204,9 @@ static bool setup_create_links(
 
     // Link creation
     hr = setup_create_link(
-        path_fhstage0,
+        path_stage0,
         path_link_ffx,
-        path_workdir,
+        path_dir_fh_bin,
         path_ffx
     );
 
@@ -216,9 +214,9 @@ static bool setup_create_links(
         return false;
 
     hr = setup_create_link(
-        path_fhstage0,
+        path_stage0,
         path_link_ffx2,
-        path_workdir,
+        path_dir_fh_bin,
         path_ffx2
     );
 
@@ -226,9 +224,9 @@ static bool setup_create_links(
         return false;
 
     hr = setup_create_link(
-        path_fhstage0,
+        path_stage0,
         path_link_ffx2lm,
-        path_workdir,
+        path_dir_fh_bin,
         args_ffx2lm
     );
 

@@ -21,7 +21,7 @@ bool g_have_net_x64; // Whether a valid x64 .NET Runtime was detected on the las
 
 
 // The folder select dialog callback.
-static void SDLCALL setup_ui_dlg_cb(
+static void SDLCALL setup_ui_dialog_cb(
     void*              userdata, // [in] An app-provided pointer, for the callback's use. Always NULL.
     const char* const* filelist, // [in] The file(s) chosen by the user.
     int                filter    // [in] Index of the selected filter. In our case, zero, because we use none.
@@ -69,7 +69,7 @@ void setup_ui_main() {
 
     if (ImGui::Button("Dialog", { 100, 100 } )) {
         SDL_ShowOpenFolderDialog(
-            &setup_ui_dlg_cb,
+            &setup_ui_dialog_cb,
             nullptr,
             g_sdl_window_ptr,
             nullptr,

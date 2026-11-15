@@ -24,9 +24,17 @@ enum FH_SETUP_GAMEDIR_ERROR {
 
 void setup_ui_main(); // Displays the setup user interface.
 
-bool setup_check_vcredist(      FH_SETUP_REDIST_TYPE type);     // Determines whether the specified VC Redistributable is installed on this system.
-bool setup_check_nethost (      FH_SETUP_REDIST_TYPE type);     // Determines whether the specified .NET Runtime is installed on this system.
-bool setup_check_gamedir (const char*                ptr_path); // Determines whether a given directory is a valid game directory.
+// Determines whether the specified VC Redistributable is installed on this system.
+bool setup_check_vcredist(FH_SETUP_REDIST_TYPE type);
+
+// Determines whether the specified .NET Runtime is installed on this system.
+bool setup_check_nethost (FH_SETUP_REDIST_TYPE type);
+
+// Determines whether a given directory is a valid game directory.
+bool setup_check_gamedir (
+    const char*                   ptr_path,
+          FH_SETUP_GAMEDIR_ERROR& error
+);
 
 inline SDL_Window*   g_sdl_window_ptr;
 inline SDL_WindowID  g_sdl_window_id;

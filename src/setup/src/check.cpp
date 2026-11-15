@@ -192,23 +192,26 @@ bool setup_check_nethost(FH_SETUP_REDIST_TYPE type) {
 }
 
 bool setup_check_gamedir(
-    const char* ptr_path_game_dir // [in] A user-supplied directory to check.
+    const char*                   ptr_path, // [in]  A user-supplied directory to check.
+          FH_SETUP_GAMEDIR_ERROR& error     // [out] The detailed error code, if the function fails.
 ) {
     char path_ffx [MAX_PATH] = { 0 };
     char path_ffx2[MAX_PATH] = { 0 };
     char path_vbf [MAX_PATH] = { 0 };
     char path_vbf2[MAX_PATH] = { 0 };
 
-    if (FAILED(StringCchCatA(path_ffx,  MAX_PATH, ptr_path_game_dir      )) ||
-        FAILED(StringCchCatA(path_ffx2, MAX_PATH, ptr_path_game_dir      )) ||
-        FAILED(StringCchCatA(path_vbf,  MAX_PATH, ptr_path_game_dir      )) ||
-        FAILED(StringCchCatA(path_vbf2, MAX_PATH, ptr_path_game_dir      )) ||
+    if (FAILED(StringCchCatA(path_ffx,  MAX_PATH, ptr_path               )) ||
+        FAILED(StringCchCatA(path_ffx2, MAX_PATH, ptr_path               )) ||
+        FAILED(StringCchCatA(path_vbf,  MAX_PATH, ptr_path               )) ||
+        FAILED(StringCchCatA(path_vbf2, MAX_PATH, ptr_path               )) ||
         FAILED(StringCchCatA(path_ffx,  MAX_PATH, "\\FFX.exe"            )) ||
         FAILED(StringCchCatA(path_ffx2, MAX_PATH, "\\FFX-2.exe"          )) ||
         FAILED(StringCchCatA(path_vbf,  MAX_PATH, "\\data\\FFX_Data.vbf" )) ||
         FAILED(StringCchCatA(path_vbf2, MAX_PATH, "\\data\\FFX2_Data.vbf"))
     ) {
         fwprintf_s(stderr, L"[!] Failed to prepare target names.\n");
+
+        error = INTERNAL_ERROR;
         return false;
     }
 
@@ -220,28 +223,26 @@ bool setup_check_gamedir(
     if ((attr_ffx  == INVALID_FILE_ATTRIBUTES || attr_ffx  & FILE_ATTRIBUTE_DIRECTORY) ||
         (attr_ffx2 == INVALID_FILE_ATTRIBUTES || attr_ffx2 & FILE_ATTRIBUTE_DIRECTORY)
     ) {
-        // MISSING_BIN
-        return true;
+        error = MISSING_BIN;
+        return false;
     }
 
     if ((attr_vbf  == INVALID_FILE_ATTRIBUTES || attr_vbf  & FILE_ATTRIBUTE_DIRECTORY) ||
         (attr_vbf2 == INVALID_FILE_ATTRIBUTES || attr_vbf2 & FILE_ATTRIBUTE_DIRECTORY)
     ) {
-        // MISSING_VBF
-        return true;
+        error = MISSING_VBF;
+        return false;
     }
 
     MSIFILEHASHINFO hash_info = { };
     hash_info.dwFileHashInfoSize = sizeof(MSIFILEHASHINFO);
 
-    UINT hash_rc = MsiGetFileHashA(
-        path_ffx,
-        0,
-        &hash_info
-    );
+    UINT hash_rc = MsiGetFileHashA(path_ffx, 0, &hash_info);
 
     if (hash_rc != ERROR_SUCCESS) {
         fwprintf_s(stderr, L"[!] MsiGetFileHashW(FFX.exe) failed with code 0x%X.\n", hash_rc);
+
+        error = INTERNAL_ERROR;
         return false;
     }
 
@@ -250,18 +251,16 @@ bool setup_check_gamedir(
         hash_info.dwData[2] != 0xD9DFAFCB ||
         hash_info.dwData[3] != 0xB2ED8427
     ) {
-        // INVALID_BIN
+        error = INVALID_BIN;
         return false;
     }
 
-    hash_rc = MsiGetFileHashA(
-        path_ffx2,
-        0,
-        &hash_info
-    );
+    hash_rc = MsiGetFileHashA(path_ffx2, 0, &hash_info);
 
     if (hash_rc != ERROR_SUCCESS) {
         fwprintf_s(stderr, L"[!] MsiGetFileHashW(FFX-2.exe) failed with code 0x%X.\n", hash_rc);
+
+        error = INTERNAL_ERROR;
         return false;
     }
 
@@ -270,7 +269,7 @@ bool setup_check_gamedir(
         hash_info.dwData[2] != 0x49F12153 ||
         hash_info.dwData[3] != 0xFB9E85E1
     ) {
-        // INVALID_BIN
+        error = INVALID_BIN;
         return false;
     }
 

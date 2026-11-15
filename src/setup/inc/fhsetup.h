@@ -15,7 +15,7 @@ enum FH_SETUP_REDIST_TYPE {
     ARM64 = 3,
 };
 
-enum FH_SETUP_GAMEDIR_ERROR {
+enum FH_SETUP_ERROR {
     MISSING_BIN    = 1,      // Either game binary is missing.
     INVALID_BIN    = 2,      // Either game binary is invalid.
     MISSING_VBF    = 3,      // Either VBF archive is missing.
@@ -33,8 +33,8 @@ bool setup_check_nethost (FH_SETUP_REDIST_TYPE type);
 
 // Determines whether a given directory is a valid game directory.
 bool setup_check_gamedir (
-    const char*                   ptr_path,
-          FH_SETUP_GAMEDIR_ERROR& error
+    const wchar_t*        ptr_path,
+          FH_SETUP_ERROR& error
 );
 
 inline SDL_Window*   g_sdl_window_ptr;

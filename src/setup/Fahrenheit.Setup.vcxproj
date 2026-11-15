@@ -78,7 +78,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>inc\nethost</AdditionalLibraryDirectories>
-      <AdditionalDependencies>msi.lib;winmm.lib;setupapi.lib;version.lib;opengl32.lib;pathcch.lib;nethost.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>shlwapi.lib;msi.lib;winmm.lib;setupapi.lib;version.lib;opengl32.lib;pathcch.lib;nethost.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
@@ -100,7 +100,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>inc\nethost</AdditionalLibraryDirectories>
-      <AdditionalDependencies>msi.lib;winmm.lib;setupapi.lib;version.lib;opengl32.lib;pathcch.lib;nethost.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>shlwapi.lib;msi.lib;winmm.lib;setupapi.lib;version.lib;opengl32.lib;pathcch.lib;nethost.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>

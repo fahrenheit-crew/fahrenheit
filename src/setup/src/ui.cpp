@@ -12,16 +12,38 @@
 // ImGui
 #include <imgui.h>
 
-bool vc_x86;
-bool vc_x64;
-bool net_x86;
-bool net_x64;
+const char* g_selected_dir; // The directory the user provides as the game directory.
+
+bool g_have_vc_x86;  // Whether a valid x86 VC++ Redistributable was detected on the last scan.
+bool g_have_vc_x64;  // Whether a valid x86 VC++ Redistributable was detected on the last scan.
+bool g_have_net_x86; // Whether a valid x86 .NET Runtime was detected on the last scan.
+bool g_have_net_x64; // Whether a valid x64 .NET Runtime was detected on the last scan.
+
+
+// The folder select dialog callback.
+static void SDLCALL setup_ui_dlg_cb(
+    void*              userdata, // [in] An app-provided pointer, for the callback's use. Always NULL.
+    const char* const* filelist, // [in] The file(s) chosen by the user.
+    int                filter    // [in] Index of the selected filter. In our case, zero, because we use none.
+) {
+    if (filelist == nullptr) {
+        fwprintf_s(stdout, L"Fault in dialog callback - %hs\n", SDL_GetError());
+        return;
+    }
+
+    if (*filelist == nullptr) {
+        fwprintf_s(stdout, L"No folder selected. The dialog was canceled.\n");
+        return;
+    }
+
+    g_selected_dir = *filelist;
+}
 
 void setup_ui_rescan() {
-    vc_x86  = setup_check_vcredist(X86);
-    vc_x64  = setup_check_vcredist(X64);
-    net_x86 = setup_check_nethost (X86);
-    net_x64 = setup_check_nethost (X64);
+    g_have_vc_x86  = setup_check_vcredist(X86);
+    g_have_vc_x64  = setup_check_vcredist(X64);
+    g_have_net_x86 = setup_check_nethost (X86);
+    g_have_net_x64 = setup_check_nethost (X64);
 }
 
 void setup_ui_main() {
@@ -34,15 +56,25 @@ void setup_ui_main() {
 
     ImGui::BeginDisabled();
 
-    ImGui::Checkbox("VC++ x86", &vc_x86);
-    ImGui::Checkbox("VC++ x64", &vc_x64);
-    ImGui::Checkbox(".NET x86", &net_x86);
-    ImGui::Checkbox(".NET x64", &net_x64);
+    ImGui::Checkbox("VC++ x86", &g_have_vc_x86);
+    ImGui::Checkbox("VC++ x64", &g_have_vc_x64);
+    ImGui::Checkbox(".NET x86", &g_have_net_x86);
+    ImGui::Checkbox(".NET x64", &g_have_net_x64);
 
     ImGui::EndDisabled();
 
     if (ImGui::Button("Rescan", { 100, 100 } )) {
         setup_ui_rescan();
+    }
+
+    if (ImGui::Button("Dialog", { 100, 100 } )) {
+        SDL_ShowOpenFolderDialog(
+            &setup_ui_dlg_cb,
+            nullptr,
+            g_sdl_window_ptr,
+            nullptr,
+            false
+        );
     }
 
     ImGui::End();

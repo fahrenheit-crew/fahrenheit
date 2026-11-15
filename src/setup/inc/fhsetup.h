@@ -22,7 +22,8 @@ enum FH_SETUP_GAMEDIR_ERROR {
     INTERNAL_ERROR = 0xFFFF, // An internal error occurred.
 };
 
-void setup_ui_main(); // Displays the setup user interface.
+// Displays the setup user interface.
+void setup_ui_main();
 
 // Determines whether the specified VC Redistributable is installed on this system.
 bool setup_check_vcredist(FH_SETUP_REDIST_TYPE type);

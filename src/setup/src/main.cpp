@@ -151,14 +151,8 @@ int WINAPI WinMain(
             (int) io.DisplaySize.y
         );
 
-        glClearColor(
-            0.45F,
-            0.55F,
-            0.60F,
-            1.00F
-        );
-
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClearColor(0.45F, 0.55F, 0.60F, 1.00F);
+        glClear     (GL_COLOR_BUFFER_BIT);
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 

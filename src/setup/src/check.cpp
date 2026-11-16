@@ -6,12 +6,12 @@
 #include <fhsetup.h>
 
 // Win32
-#include <strsafe.h>
-#include <pathcch.h>
 #include <msi.h>
+#include <pathcch.h>
+#include <shobjidl.h>
+#include <shlguid.h>
 #include <shlwapi.h>
-#include <ShObjIdl.h>
-#include <ShlGuid.h>
+#include <strsafe.h>
 
 // (U)CRT
 #include <stdio.h>
@@ -127,6 +127,7 @@ static HRESULT setup_create_link(
     return hr;
 }
 
+// Creates shortcuts to launch the supported games using Fahrenheit.
 static bool setup_create_links(
     wchar_t* path_ffx, // [in] The absolute path to `FFX.exe`.
     wchar_t* path_ffx2 // [in] The absolute path to `FFX-2.exe`.

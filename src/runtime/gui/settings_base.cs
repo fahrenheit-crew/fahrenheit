@@ -30,25 +30,29 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
 
     protected const float FONT_SIZE_DEFAULT = 43f;
 
-    protected const uint SOUND_X_MOVE       = FFX.Ids.SoundId.UI_ACTION;
-    protected const uint SOUND_X_ACTION     = FFX.Ids.SoundId.UI_ACTION;
-    protected const uint SOUND_X_CANCEL     = FFX.Ids.SoundId.UI_CANCEL;
+    protected const uint SOUND_X_MOVE   = FFX.Ids.SoundId.UI_ACTION;
+    protected const uint SOUND_X_ACTION = FFX.Ids.SoundId.UI_ACTION;
+    protected const uint SOUND_X_CANCEL = FFX.Ids.SoundId.UI_CANCEL;
 
-    protected const uint SOUND_X2_MOVE       = FFX2.Ids.SoundId.UI_ACTION;
-    protected const uint SOUND_X2_ACTION     = FFX2.Ids.SoundId.UI_ACTION;
-    protected const uint SOUND_X2_CANCEL     = FFX2.Ids.SoundId.UI_CANCEL;
+    protected const uint SOUND_X2_MOVE   = FFX2.Ids.SoundId.UI_ACTION;
+    protected const uint SOUND_X2_ACTION = FFX2.Ids.SoundId.UI_ACTION;
+    protected const uint SOUND_X2_CANCEL = FFX2.Ids.SoundId.UI_CANCEL;
 
     protected const string DIR_X_MENU = "/FFX_Data/GameData/PS3Data/menu/D3D11/";
     protected const string DIR_X_HIKU = "/FFX_Data/GameData/PS3Data/map/hiku/hiku22/2d/tex/D3D11/";
+
+    protected const string DIR_X2_MENU    = "/FFX-2_Data/GameData/PS3Data/menu/D3D11/";
+    protected const string DIR_X2_MAHOJIN = "/FFX-2_Data/GameData/PS3Data/menu/menu_mahojin/tex/D3D11/";
+    protected const string DIR_X2_PLATE   = "/FFX-2_Data/GameData/PS3Data/menu/menu_plate/tex/D3D11/";
 
     protected const uint COLOR_BLACK = 0xFF000000;
     protected const uint COLOR_TRANS = 0x00000000;
 
     protected const float FADE_LENGTH = 0.35f;
 
-    protected static readonly uint SOUND_ID_MOVE       = FhUtil.select(SOUND_X_MOVE,       SOUND_X2_MOVE,       SOUND_X2_MOVE);
-    protected static readonly uint SOUND_ID_ACTION     = FhUtil.select(SOUND_X_ACTION,     SOUND_X2_ACTION,     SOUND_X2_ACTION);
-    protected static readonly uint SOUND_ID_CANCEL     = FhUtil.select(SOUND_X_CANCEL,     SOUND_X2_CANCEL,     SOUND_X2_CANCEL);
+    protected static readonly uint SOUND_ID_MOVE   = FhUtil.select(SOUND_X_MOVE,       SOUND_X2_MOVE,       SOUND_X2_MOVE);
+    protected static readonly uint SOUND_ID_ACTION = FhUtil.select(SOUND_X_ACTION,     SOUND_X2_ACTION,     SOUND_X2_ACTION);
+    protected static readonly uint SOUND_ID_CANCEL = FhUtil.select(SOUND_X_CANCEL,     SOUND_X2_CANCEL,     SOUND_X2_CANCEL);
 
     protected static readonly float ACTION_VOLUME = FhUtil.select(1f, 0.5f, 0.5f);
 
@@ -115,6 +119,8 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
 
     private void post_close(EventArgs e) {
         unload_textures();
+
+        hovered_setting = null;
     }
 
 

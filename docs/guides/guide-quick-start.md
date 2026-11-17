@@ -1,3 +1,5 @@
+# Modding quick-start guide
+
 This guide will ensure you are ready to build Fahrenheit mods by guiding you through building the official mod template.
 
 > [!IMPORTANT]

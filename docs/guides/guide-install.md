@@ -1,3 +1,5 @@
+# Installation guide
+
 Fahrenheit is known to run at least on Windows and Linux systems.
 
 ## Prerequisites

@@ -1,3 +1,5 @@
+# Localization
+
 Fahrenheit mods can use the localization system to automatically adjust to the active game language or a user-provided one.
 
 ## Localization API

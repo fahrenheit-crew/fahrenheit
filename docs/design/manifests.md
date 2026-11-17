@@ -1,3 +1,5 @@
+# Manifests
+
 A manifest describes a mod and any specific behaviors it demands from the framework.
 
 ## Manifest format

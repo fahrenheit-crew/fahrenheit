@@ -1,21 +1,21 @@
 Fahrenheit is the mod loader and framework for the [Final Fantasy X and X-2 HD Remasters](https://store.steampowered.com/app/359870/).
 
 # Guides
-- [Installation](Installation-guide)
-- [Build and deployment](Build-and-deployment-guide)
-- [Compatibility](Compatibility-guide)
-- [Modding quick-start](Modding-quick-start-guide)
+- [Installation](guides/guide-install)
+- [Build and deployment](guides/guide-build)
+- [Compatibility](guides/guide-compat)
+- [Modding quick-start](guides/guide-quick-start)
 
 # System overview
-- [Mod structure](Mod-structure)
-- [Manifests](Manifests)
-- [Modules](Modules)
-- [SDK](SDK)
-- [Startup](Startup)
-- [State](State)
-- [Settings](Settings)
-- [Calls](Calls)
-- [Localization](Localization)
-- [Install structure](Install-structure)
+- [Mod structure](design/mod-structure)
+- [Manifests](design/manifests)
+- [Modules](design/modules)
+- [SDK](design/sdk)
+- [Startup](design/startup)
+- [State](design/state)
+- [Settings](design/settings)
+- [Calls](design/calls)
+- [Localization](design/localization)
+- [Install structure](design/install-structure)
 
 

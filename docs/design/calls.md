@@ -1,3 +1,5 @@
+# Function calls and hooking
+
 Functions in the game and other libraries are called and hooked using [`FhCallHandle<T>`](https://github.com/fahrenheit-crew/fahrenheit/blob/ee0d0f9dc3d8e4ca7315cec3ebc834445721ee05/src/core/handles.cs#L248). 
 
 This page describes where to find them and how to use them.

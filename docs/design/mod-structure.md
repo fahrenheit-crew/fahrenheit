@@ -1,3 +1,5 @@
+# Mod structure
+
 A Fahrenheit mod is contained in its own folder, stored under [`mods`](Install-structure#mods) in the installation directory.
 
 This entry describes its basic building blocks.

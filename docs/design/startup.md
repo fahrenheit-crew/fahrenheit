@@ -1,3 +1,5 @@
+# Startup
+
 In Fahrenheit, startup is a two-stage process from a module's perspective. First comes _construction_, then _initialization_.
 
 It is important to understand which actions are valid to take at which time.

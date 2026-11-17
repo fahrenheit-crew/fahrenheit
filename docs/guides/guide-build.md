@@ -1,3 +1,5 @@
+# Build and deployment guide
+
 > [!IMPORTANT]
 > Ensure the folder you cloned to does not contain special characters. This can cause build errors.
 

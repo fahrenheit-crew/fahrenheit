@@ -1,3 +1,5 @@
+# Install structure
+
 Fahrenheit is a fully self-contained modding system. That is to say:
 - all of its executables and data are contained in its installation directory.
 - it does not write any information or leave any leftovers on your system outside of its installation directory.

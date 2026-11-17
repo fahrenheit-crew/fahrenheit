@@ -1,3 +1,5 @@
+# Modules
+
 A module is a class deriving from [`FhModule`](https://github.com/fahrenheit-crew/fahrenheit/blob/ee0d0f9dc3d8e4ca7315cec3ebc834445721ee05/src/core/module.cs#L76). They are the basic unit of functionality and organization in Fahrenheit mods.
 
 ## Basic properties and purpose

@@ -1,3 +1,5 @@
+# Compatibility guide
+
 This page lists a number of commonly encountered issues when running Fahrenheit standalone, or with other tools.
 
 ## Game version support

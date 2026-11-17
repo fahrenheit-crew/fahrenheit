@@ -1,3 +1,5 @@
+# State
+
 State is arbitrary data [modules](Modules) may save between game sessions. It comes in two varieties:
 - Global state, applicable at all times
 - Local state, specific to each save file

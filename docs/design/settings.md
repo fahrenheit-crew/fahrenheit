@@ -1,6 +1,8 @@
+# Settings
+
 Settings are configurable, persistent, strongly typed values a mod can refer to for configuration.
 
-## Settings
+## Settings API
 Settings derive from [`FhSetting<T>`](https://github.com/fahrenheit-crew/fahrenheit/blob/ee0d0f9dc3d8e4ca7315cec3ebc834445721ee05/src/core/settings.cs#L240), where `T` is the type of value they contain.
 
 Fahrenheit offers several basic derivations out of the box.

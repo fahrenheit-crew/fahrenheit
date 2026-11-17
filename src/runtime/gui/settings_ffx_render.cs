@@ -765,12 +765,12 @@ public partial class FhSettingsUiX {
             if (spin_progress[choice] != 0f)
                 return false;
 
-            if (FhApi.Gui.is_any_down(FhApi.Gui.keys_left)) {
+            if (FhApi.Gui.is_any_pressed(FhApi.Gui.keys_left)) {
                 spin_right(choice);
                 return true;
             }
 
-            if (FhApi.Gui.is_any_down(FhApi.Gui.keys_right)) {
+            if (FhApi.Gui.is_any_pressed(FhApi.Gui.keys_right)) {
                 spin_left(choice);
                 return true;
             }

@@ -667,7 +667,7 @@ public partial class FhSettingsUiX {
                 return;
             }
 
-            float arrow_progress = float.Clamp(spin_progress[carousel] * 5f, 0f, 1f);
+            float arrow_progress = float.Clamp(float.Sign(spin_progress[carousel]) * float.Pow(spin_progress[carousel] * (1f / OPTION_SPIN_DIFF), 2f), -1f, 1f);
 
             Vector2 max_offset   = new(10f, 0f);
 
@@ -681,11 +681,11 @@ public partial class FhSettingsUiX {
             Rect arrow_left  = new() { pos = value_bounds.left  + max_offset };
             Rect arrow_right = new() { pos = value_bounds.right - max_offset };
 
-            arrow_left .expand(arrow_size, new(Alignment.BEGIN, Alignment.CENTER));
-            arrow_right.expand(arrow_size, new(Alignment.END,   Alignment.CENTER));
+            arrow_left  = arrow_left .expand(arrow_size, new(Alignment.BEGIN, Alignment.CENTER));
+            arrow_right = arrow_right.expand(arrow_size, new(Alignment.END,   Alignment.CENTER));
 
             if (arrow_progress < 0f)
-                arrow_left.pos  += Vector2.Lerp(Vector2.Zero, max_offset, arrow_progress);
+                arrow_left.pos  -= Vector2.Lerp(Vector2.Zero, max_offset, float.Abs(arrow_progress));
             else if (arrow_progress > 0f)
                 arrow_right.pos += Vector2.Lerp(Vector2.Zero, max_offset, arrow_progress);
 
@@ -706,8 +706,8 @@ public partial class FhSettingsUiX {
                 battle,
                 arrow_right_suv.p0,
                 arrow_right_suv.p1,
-                arrow_tuv.p0,
-                arrow_tuv.p1
+                new Vector2(arrow_tuv.p1.X, arrow_tuv.p0.Y),
+                new Vector2(arrow_tuv.p0.X, arrow_tuv.p1.Y)
             );
         }
 

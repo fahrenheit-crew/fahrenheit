@@ -24,7 +24,6 @@ public partial class FhSettingsUiX2 : FhSettingsUiBase {
     public readonly FhTexture _texture_freetex  = new(Path.Join(DIR_X2_MENU,    "freetex.dds.phyre"),              FhTextureType.GAME_PHYRE_2D);
     public readonly FhTexture _texture_plate    = new(Path.Join(DIR_X2_PLATE,   "12288_19_0_0_256_256.dds.phyre"), FhTextureType.GAME_PHYRE_2D);
     public readonly FhTexture _texture_window   = new(Path.Join(DIR_X2_MENU,    "window.dds.phyre"),               FhTextureType.GAME_PHYRE_2D);
-    public readonly FhTexture _texture_wave     = new(Path.Join(DIR_X2_MENU,    "texture.dds.phyre"),              FhTextureType.GAME_PHYRE_2D);
     public readonly FhTexture _texture_b_menu1  = new(Path.Join(DIR_X2_MENU,    "b_menu1.dds.phyre"),              FhTextureType.GAME_PHYRE_2D);
 
     private readonly Vector2 _tex_window_size = new(1024f, 256f);
@@ -39,7 +38,6 @@ public partial class FhSettingsUiX2 : FhSettingsUiBase {
         _texture_freetex,
         _texture_plate,
         _texture_window,
-        _texture_wave,
         _texture_b_menu1,
 
         _texture_meswin,
@@ -65,10 +63,6 @@ public partial class FhSettingsUiX2 : FhSettingsUiBase {
             new(1026f, 257f),
             new(   3f,   3f)
         );
-
-        FhInternal.Settings.register_setting_renderer<FhSettingsUiX2>(typeof(FhSettingsCategory), typeof(Renderer_Category));
-        FhInternal.Settings.register_setting_renderer<FhSettingsUiX2>(typeof(FhSettingToggle),    typeof(Renderer_Toggle));
-        FhInternal.Settings.register_setting_renderer<FhSettingsUiX2>(typeof(FhSettingChoice<>),  typeof(Renderer_Choice<>));
     }
 
     // Rendering
@@ -241,16 +235,18 @@ public partial class FhSettingsUiX2 : FhSettingsUiBase {
         );
 
         string text = focus switch {
-            UiFocus.MODS    => localize("help.mod_list"),
-            UiFocus.MODULES => localize("help.module_list"),
-
-            UiFocus.SETTINGS when capturing_renderer != null
-                => capturing_renderer.get_input_help_text(),
-
+            UiFocus.MODS     => localize("help.mod_list"),
+            UiFocus.MODULES  => localize("help.module_list"),
             UiFocus.SETTINGS => hovered_setting!.desc,
 
             _ => throw new NotImplementedException(),
         };
+
+        if (focus == UiFocus.SETTINGS && captured_setting != null) {
+            if (get_setting_renderer(captured_setting, out SettingRenderer? renderer)) {
+                text = ((ICapturingRenderer) renderer).get_input_help_text();
+            }
+        }
 
         Vector2 text_pos = bg_screen.left + new Vector2(219f, 0f) * aspect_scale;
 
@@ -367,15 +363,25 @@ public partial class FhSettingsUiX2 : FhSettingsUiBase {
             plate_config
         );
 
+        draw.PushClipRect(plate_screen.top_left, plate_screen.bottom_right);
+
         Vector2 text_pos = plate_screen.center;
         text_pos.Y -= 1f;
+
+        if (!FhInternal.Settings.try_get_settings(module_ctx.Module, out FhSettingsCategory? settings)) {
+            return;
+        }
+
+        string module_name = settings.name;
 
         Vector2 text_size = FhApi.Gui.draw_text(
             draw,
             text_pos,
-            module_ctx.Module.ModuleType.Split('.')[^1],
+            module_name,
             text_config with { align = Alignment2D.CENTER }
         );
+
+        draw.PopClipRect();
 
         if (mouse_hovered(plate_screen)) {
             scrollable_modules.hovered = global_index;
@@ -418,8 +424,20 @@ public partial class FhSettingsUiX2 : FhSettingsUiBase {
         }
     }
 
+    protected override bool get_setting_renderer(FhSetting setting, [NotNullWhen(true)] out SettingRenderer? renderer) {
+        renderer = 0 switch {
+            _ when setting is FhSettingsCategory     => Renderer_Category     .instance,
+            _ when setting is FhSettingToggle        => Renderer_Toggle       .instance,
+            _ when setting is FhSettingNumber        => Renderer_Number       .instance,
+            _ when setting is FhSettingChoice        => Renderer_Choice       .instance,
+            _ when setting is FhSettingDynamicChoice => Renderer_DynamicChoice.instance,
+            _ => null,
+        };
+        return renderer != null;
+    }
+
     private void ui_setting(FhSetting setting, Rect outer_bounds) {
-        if (!setting.get_renderer<FhSettingsUiX2>(out FhSettingRenderer? renderer)) {
+        if (!get_setting_renderer(setting, out SettingRenderer? renderer)) {
             Rect debug_bounds = new() {
                 pos  = new(610f, 204f + setting_y),
                 size = new(outer_bounds.size.X, 40f),
@@ -462,12 +480,23 @@ public partial class FhSettingsUiX2 : FhSettingsUiBase {
             ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
             Rect scaled_bounds = bounds.scale_to_aspect(aspect_helper);
+            Rect scaled_outer_bounds = outer_bounds.scale_to_aspect(aspect_helper);
 
             draw.PushClipRect(scaled_bounds.top_left, scaled_bounds.bottom_right);
+            draw.PushClipRect(scaled_outer_bounds.top_left, scaled_outer_bounds.bottom_right);
 
             renderer.render(this, setting, bounds);
 
             draw.PopClipRect();
+            draw.PopClipRect();
+
+            if (setting == hovered_setting) {
+                FhApi.Gui.draw_x2_cursor(
+                    draw,
+                    scaled_bounds.left,
+                    cursor_config
+                );
+            }
         }
 
         setting_idx++;
@@ -506,43 +535,9 @@ public partial class FhSettingsUiX2 : FhSettingsUiBase {
 
         Rect scaled_bounds = bounds.scale_to_aspect(aspect_helper);
 
-        draw.PushClipRect(scaled_bounds.top_left, scaled_bounds.bottom_right);
-
         foreach (FhSetting setting in displayed_settings.settings) {
             ui_setting(setting, bounds);
         }
-
-        indent_level += 1;
-
-        foreach (FhSetting setting in displayed_settings.settings) {
-            ui_setting(setting, bounds);
-        }
-
-        indent_level += 1;
-
-        foreach (FhSetting setting in displayed_settings.settings) {
-            ui_setting(setting, bounds);
-        }
-
-        indent_level -= 2;
-
-        foreach (FhSetting setting in displayed_settings.settings) {
-            ui_setting(setting, bounds);
-        }
-
-        indent_level += 1;
-
-        foreach (FhSetting setting in displayed_settings.settings) {
-            ui_setting(setting, bounds);
-        }
-
-        indent_level += 1;
-
-        foreach (FhSetting setting in displayed_settings.settings) {
-            ui_setting(setting, bounds);
-        }
-
-        draw.PopClipRect();
     }
 
     /// <summary>Renders a scrollbar.</summary>

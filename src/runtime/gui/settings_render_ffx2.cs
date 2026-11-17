@@ -6,13 +6,22 @@
 namespace Fahrenheit.Runtime.Gui;
 
 public partial class FhSettingsUiX2 {
-
-    private abstract class Renderer_Base<T> : FhSettingRenderer<T, FhSettingsUiX2>
+    private abstract class Renderer_Base<T> : SettingRenderer
         where T : FhSetting {
 
-        internal protected override Vector2 get_size(FhSettingsUiX2 ui) {
-            return new Vector2(0f, 65f);
+        public override Vector2 get_size(FhSettingsUiBase ui) => get_size((FhSettingsUiX2) ui);
+
+        public override sealed bool handle_input(FhSettingsUiBase ui, FhSetting setting) {
+            return handle_input((FhSettingsUiX2) ui, (T) setting);
         }
+
+        public override sealed void render(FhSettingsUiBase ui, FhSetting setting, Rect max_bounds) {
+            render((FhSettingsUiX2) ui, (T) setting, max_bounds);
+        }
+
+        protected virtual Vector2 get_size(FhSettingsUiX2 ui) => new(0f, 60f);
+        protected abstract bool handle_input(FhSettingsUiX2 ui, T setting);
+        protected abstract void render(FhSettingsUiX2 ui, T setting, Rect max_bounds);
 
         protected bool render_background(
             FhSettingsUiX2 ui,
@@ -94,21 +103,21 @@ public partial class FhSettingsUiX2 {
 
             FhApi.Gui.draw_text(
                 draw,
-                name_bounds.right * ui.aspect_scale + ui.aspect_helper.pos,
+                name_bounds.center * ui.aspect_scale + ui.aspect_helper.pos,
                 name,
-                ui.text_config with { align = Alignment2D.RIGHT }
+                ui.text_config with { align = Alignment2D.CENTER }
             );
         }
     }
 
-    private class Renderer_Category
-        : FhSettingRenderer<FhSettingsCategory, FhSettingsUiX2> {
+    private sealed class Renderer_Category : Renderer_Base<FhSettingsCategory> {
+        public static Renderer_Category instance = new();
 
-        internal protected override Vector2 get_size(FhSettingsUiX2 ui) {
+        protected override Vector2 get_size(FhSettingsUiX2 ui) {
             return new Vector2(0f, 45f);
         }
 
-        internal protected override void render(FhSettingsUiX2 ui, FhSettingsCategory category, Rect max_bounds) {
+        protected override void render(FhSettingsUiX2 ui, FhSettingsCategory category, Rect max_bounds) {
             if (!ui._texture_b_menu1.try_use(out ImTextureRef b_menu1, out FhTextureMetadata? b_menu1_meta)) {
                 return;
             }
@@ -141,7 +150,7 @@ public partial class FhSettingsUiX2 {
                 pos = max_bounds.left with {
                     X = max_bounds.left.X + 35f,
                 },
-                size = new(29f, 25f),
+                size = new(29f, 26f),
             };
 
             arrow_bounds.pos.Y -= arrow_bounds.size.Y / 2f;
@@ -214,18 +223,21 @@ public partial class FhSettingsUiX2 {
             }
         }
 
-        internal protected override void handle_input(FhSettingsUiX2 ui, FhSettingsCategory category) {
-            if (!FhApi.Gui.is_any_pressed(FhApi.Gui.keys_confirm)) return;
+        protected override bool handle_input(FhSettingsUiX2 ui, FhSettingsCategory category) {
+            if (!FhApi.Gui.is_any_pressed(FhApi.Gui.keys_confirm))
+                return false;
 
             category.collapsed ^= true;
+            return true;
         }
     }
 
-    private class Renderer_Toggle : Renderer_Base<FhSettingToggle> {
-        private static string _text_on => FhApi.Localization.localize($"{typeof(FhSettingsUiSelector)}.input.on");
-        private static string _text_off => FhApi.Localization.localize($"{typeof(FhSettingsUiSelector)}.input.off");
+    private sealed class Renderer_Toggle : Renderer_Base<FhSettingToggle> {
+        public static Renderer_Toggle instance = new();
+        private static string _text_on => FhApi.Localization.localize($"{typeof(FhSettingsUi)}.input.on");
+        private static string _text_off => FhApi.Localization.localize($"{typeof(FhSettingsUi)}.input.off");
 
-        protected void render_options(FhSettingsUiX2 ui, FhSettingToggle toggle, Rect value_bounds) {
+        private void render_options(FhSettingsUiX2 ui, FhSettingToggle toggle, Rect value_bounds) {
             if (!ui._texture_meswin.try_use(out ImTextureRef meswin, out FhTextureMetadata? meswin_meta)) {
                 return;
             }
@@ -236,8 +248,8 @@ public partial class FhSettingsUiX2 {
             Vector2 on_pos  = value_bounds.left;
             Vector2 off_pos = value_bounds.left;
 
-            on_pos.X  += value_bounds.size.X * 3f / 12f;
-            off_pos.X += value_bounds.size.X * 8f / 12f;
+            on_pos.X  += value_bounds.size.X * 3.5f / 12f;
+            off_pos.X += value_bounds.size.X * 8.5f / 12f;
 
             FhApi.Gui.draw_text(
                 draw,
@@ -323,7 +335,7 @@ public partial class FhSettingsUiX2 {
             }
         }
 
-        internal protected override void render(FhSettingsUiX2 ui, FhSettingToggle toggle, Rect max_bounds) {
+        protected override void render(FhSettingsUiX2 ui, FhSettingToggle toggle, Rect max_bounds) {
             if (!render_background(
                 ui,
                 max_bounds,
@@ -338,7 +350,7 @@ public partial class FhSettingsUiX2 {
             render_options(ui, toggle, (Rect) value_bounds);
         }
 
-        internal protected override void handle_input(FhSettingsUiX2 ui, FhSettingToggle toggle) {
+        protected override bool handle_input(FhSettingsUiX2 ui, FhSettingToggle toggle) {
             ImGuiKey[] toggle_keys = [
                 .. FhApi.Gui.keys_confirm,
                 .. FhApi.Gui.keys_left,
@@ -347,115 +359,89 @@ public partial class FhSettingsUiX2 {
 
             if (FhApi.Gui.is_any_pressed(toggle_keys)) {
                 toggle.set(!toggle.get());
+                return true;
             }
+
+            return false;
         }
     }
 
-    private class Renderer_Number<T>
-        : FhSettingRenderer<FhSettingNumber<T>, FhSettingsUiX2>
-        where T : unmanaged, INumber<T> {
+    private sealed class Renderer_Number : Renderer_Base<FhSettingNumber> {
+        public static Renderer_Number instance = new();
 
-        internal protected override Vector2 get_size(FhSettingsUiX2 ui) {
-            //TODO: Implement size calculation
-            return new Vector2(0f, 0f);
-        }
-
-        internal protected override void render(FhSettingsUiX2 ui, FhSettingNumber<T> number, Rect max_bounds) {
+        protected override void render(FhSettingsUiX2 ui, FhSettingNumber number, Rect max_bounds) {
             //TODO: Implement rendering
         }
 
-        internal protected override void handle_input(FhSettingsUiX2 ui, FhSettingNumber<T> number) {
+        protected override bool handle_input(FhSettingsUiX2 ui, FhSettingNumber number) {
             //TODO: Implement input handling
+            return false;
         }
     }
 
-    private class Renderer_Choice<T>
-        : Renderer_Base<FhSettingChoice<T>>
-        where T : struct, Enum {
-
-        protected const float SPIN_SPEED = 2f; // in progress per second
-        protected const float OPTION_SPIN_DIFF = 1f/3f;
+    private class Renderer_Carousel<T> : Renderer_Base<FhSettingCarousel<T>> {
+        private const float SPIN_SPEED = 1.6f; // in progress per second
+        private const float OPTION_SPIN_DIFF = 1f/2f;
 
         // Between -1 and 1. 0 when no spin is happening
         // Technically between -OPTION_SPIN_DIFF and OPTION_SPIN_DIFF
         // Equal to the spin progress of the current value
-        protected Dictionary<FhSettingChoice<T>, float> spin_progress = [];
+        private Dictionary<FhSetting, float> spin_progress = [];
 
-        protected int get_prev_index(ReadOnlySpan<T> choices, T choice) {
+        private int get_prev_index(ReadOnlySpan<T> choices, T choice) {
             int index = choices.IndexOf(choice);
             if (index == 0) return choices.Length - 1;
             return index - 1;
         }
 
-        protected int get_next_index(ReadOnlySpan<T> choices, T choice) {
+        private int get_next_index(ReadOnlySpan<T> choices, T choice) {
             int index = choices.IndexOf(choice);
-            if (index == choices.Length - 1) return 0;
-            return index + 1;
+            return (index + 1) % choices.Length;
         }
 
-        protected int get_prev_prev_index(ReadOnlySpan<T> choices, T choice) {
-            int index = choices.IndexOf(choice);
-
-            if (index == 0)
-                index = choices.Length - 1;
-            else
-                index -= 1;
-
-            if (index == 0)
-                return choices.Length - 1;
-
-            return index - 1;
-        }
-
-        protected int get_next_next_index(ReadOnlySpan<T> choices, T choice) {
-            int index = choices.IndexOf(choice);
-
-            if (index == choices.Length - 1)
-                index = 0;
-            else
-                index += 1;
-
-            if (index == choices.Length - 1)
-                return 0;
-
-            return index + 1;
-        }
-
-        protected float map_spin_progress(float progress) {
+        private float remap_spin_progress(float t) {
             // We remap progress to give us a nice arc
-            return (float) (
-                0.7372493987604 * float.Pow(progress, 4)
-                + 0.2627506012396 * float.Pow(progress, 2)
-            );
+            //TODO: Redo this arc: bezier((0,0), (0.25, 0), (0.2, 0.8), (1, 1))
+            float sign = t < 0 ? -1 : 1;
+            return sign * float.Abs(1f - float.Cos((t + 1f) * (float.Pi / 2f)) - 1f);
         }
 
-        protected uint get_alpha_for_spin(float progress) {
-            return (uint) (((byte) (progress * 0xFF) << 24) | 0xFFFFFF);
+        private uint get_alpha_for_spin(float progress) {
+            byte alpha = (byte)(0xFF * float.Pow(1f - remap_spin_progress(progress), 0.5f));
+            return (uint)((alpha << 24) | 0xFFFFFF);
         }
 
-        protected Vector2 get_offset_for_spin(Vector2 center, Vector2 side, float progress) {
+        private Vector2 get_offset_for_spin(Vector2 center, Vector2 side, float progress) {
             Vector2 max_offset = side - center;
 
             bool other_way = progress < 0f;
 
-            progress = map_spin_progress(progress);
+            progress = float.Abs(1f - float.Cos((progress + 1f) * (float.Pi / 2f)) - 1f);
 
-            Vector2 offset = Vector2.Lerp(center, side, progress);
+            Vector2 offset = Vector2.Lerp(Vector2.Zero, max_offset, progress);
 
-            if (other_way) offset.X *= 1f;
+            if (other_way) offset.X *= -1f;
 
             return offset;
         }
 
-        protected void render_option(FhSettingsUiX2 ui, FhSettingChoice<T> choice, int index, float progress, Rect value_bounds) {
+        private void render_option(FhSettingsUiX2 ui, FhSettingCarousel<T> carousel, int index, float progress, Rect value_bounds) {
+            if (progress < -1f || progress > 1f) {
+                return;
+            }
+
             Vector2 center = value_bounds.center;
             Vector2 right  = value_bounds.right;
-            right.X       -= value_bounds.size.X / 6f;
+            right.X -= value_bounds.size.X / 6f;
+
+            ReadOnlySpan<T> choices = carousel.get_choice_values();
+
+            float abs_progress = float.Abs(progress);
 
             Vector2 pos   = center + get_offset_for_spin(center, right, progress);
-            uint    color = get_alpha_for_spin(progress);
-            float   scale = 1f - map_spin_progress(progress) / 3f;
-            string  name  = FhApi.Localization.localize(choice.choice_names[index]);
+            uint    color = get_alpha_for_spin(abs_progress);
+            float   scale = 1f - remap_spin_progress(abs_progress) / 3f;
+            string  name  = FhApi.Localization.localize(carousel.get_choice_name(choices[index]));
 
             ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
@@ -464,21 +450,22 @@ public partial class FhSettingsUiX2 {
                 pos * ui.aspect_scale + ui.aspect_helper.pos,
                 name,
                 ui.text_config with {
-                    align = Alignment2D.CENTER,
+                    align     = Alignment2D.CENTER,
                     font_size = ui.text_config.font_size * scale,
-                    color = color,
+                    color     = color,
                 }
             );
         }
 
-        protected void render_options(FhSettingsUiX2 ui, FhSettingChoice<T> choice, Rect value_bounds) {
-            T curr_choice = choice.get();
+        private void render_options(FhSettingsUiX2 ui, FhSettingCarousel<T> carousel, Rect value_bounds) {
+            T curr_choice = carousel.get();
+            ReadOnlySpan<T> choices = carousel.get_choice_values();
 
-            int curr_index = choice.choices.IndexOf(curr_choice);
-            int prev_index = get_prev_index(choice.choices, curr_choice);
-            int next_index = get_next_index(choice.choices, curr_choice);
+            int curr_index = choices.IndexOf(curr_choice);
+            int prev_index = get_prev_index(choices, curr_choice);
+            int next_index = get_next_index(choices, curr_choice);
 
-            int[] choice_indices = spin_progress[choice] switch {
+            int[] choice_indices = spin_progress[carousel] switch {
                 0f => [
                     prev_index,
                     curr_index,
@@ -486,101 +473,107 @@ public partial class FhSettingsUiX2 {
                 ],
 
                 > 0f => [
+                    get_prev_index(choices, choices[prev_index]),
                     prev_index,
                     curr_index,
                     next_index,
-                    get_next_index(choice.choices, choice.choices[next_index]),
                 ],
 
                 < 0f => [
-                    get_prev_index(choice.choices, choice.choices[prev_index]),
                     prev_index,
                     curr_index,
                     next_index,
+                    get_next_index(choices, choices[next_index]),
                 ],
 
                 _ => throw new UnreachableException(),
             };
 
-            int main_index = spin_progress[choice] switch {
+            int main_index = spin_progress[carousel] switch {
                   0f => 1,
-                > 0f => 1,
-                < 0f => 2,
+                > 0f => 2,
+                < 0f => 1,
 
                 _ => throw new UnreachableException(),
             };
 
             for (int i = 0; i < main_index; i++) {
-                float spin = spin_progress[choice] - OPTION_SPIN_DIFF * (main_index - i);
+                float spin = spin_progress[carousel] - OPTION_SPIN_DIFF * (main_index - i);
 
-                // This shouldn't be necessary but let's do it anyway
-                spin = float.Clamp(spin, -1f, 1f);
-
-                render_option(ui, choice, i, spin, value_bounds);
+                render_option(ui, carousel, choice_indices[i], spin, value_bounds);
             }
 
-            render_option(ui, choice, main_index, spin_progress[choice], value_bounds);
+            render_option(ui, carousel, choice_indices[main_index], spin_progress[carousel], value_bounds);
 
             for (int i = main_index + 1; i < choice_indices.Length; i++) {
-                float spin = spin_progress[choice] + OPTION_SPIN_DIFF * (i - main_index);
+                float spin = spin_progress[carousel] + OPTION_SPIN_DIFF * (i - main_index);
 
-                // This shouldn't be necessary but let's do it anyway
-                spin = float.Clamp(spin, -1f, 1f);
-
-                render_option(ui, choice, i, spin, value_bounds);
+                render_option(ui, carousel, choice_indices[i], spin, value_bounds);
             }
         }
 
-        protected void render_arrows(FhSettingsUiX2 ui, FhSettingChoice<T> choice, Rect value_bounds) {
+        protected void render_arrows(FhSettingsUiX2 ui, FhSettingCarousel<T> carousel, Rect value_bounds) {
             if (!ui._texture_b_menu1.try_use(out ImTextureRef b_menu1, out FhTextureMetadata? b_menu1_meta)) {
                 return;
             }
 
-            float arrow_progress = float.Clamp(spin_progress[choice] * 5f, 0f, 1f);
+            float arrow_progress = float.Clamp(float.Sign(spin_progress[carousel]) * float.Pow(spin_progress[carousel] * (1f / OPTION_SPIN_DIFF), 2f), -1f, 1f);
 
             Vector2 max_offset = new(10f, 0f);
 
-            UV arrow_tuv = new Rect {
+            Rect arrow_tuv = new Rect {
                 pos  = new(965f, 913f),
                 size = new( 54f,  30f),
-            }.as_uv(b_menu1_meta.size);
+            }.scale_raw(Vector2.One / b_menu1_meta.size);
 
-            Vector2 arrow_size = new(30f, 42f);
+            Vector2 arrow_size = new(26f, 31f);
 
             Rect arrow_left  = new() { pos = value_bounds.left  + max_offset };
             Rect arrow_right = new() { pos = value_bounds.right - max_offset };
 
-            arrow_left .expand(arrow_size, new(Alignment.BEGIN, Alignment.CENTER));
-            arrow_right.expand(arrow_size, new(Alignment.END, Alignment.CENTER));
+            arrow_left  = arrow_left .expand(arrow_size, new(Alignment.BEGIN, Alignment.CENTER));
+            arrow_right = arrow_right.expand(arrow_size, new(Alignment.END,   Alignment.CENTER));
 
             if (arrow_progress < 0f)
-                arrow_left.pos += Vector2.Lerp(Vector2.Zero, max_offset, arrow_progress);
+                arrow_left.pos  -= Vector2.Lerp(Vector2.Zero, max_offset, float.Abs(arrow_progress));
             else if (arrow_progress > 0f)
                 arrow_right.pos += Vector2.Lerp(Vector2.Zero, max_offset, arrow_progress);
 
-            UV arrow_left_suv  = arrow_left .scale_to_aspect(ui.aspect_helper).as_uv();
-            UV arrow_right_suv = arrow_right.scale_to_aspect(ui.aspect_helper).as_uv();
+            Rect arrow_left_suv  = arrow_left .scale_to_aspect(ui.aspect_helper);
+            Rect arrow_right_suv = arrow_right.scale_to_aspect(ui.aspect_helper);
 
             ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
-            draw.AddImage(
+            draw.AddImageQuad(
                 b_menu1,
-                arrow_left_suv.p0,
-                arrow_left_suv.p1,
-                arrow_tuv.p1,
-                arrow_tuv.p0
+
+                arrow_left_suv.top_right,
+                arrow_left_suv.bottom_right,
+                arrow_left_suv.bottom_left,
+                arrow_left_suv.top_left,
+
+                arrow_tuv.bottom_left,
+                arrow_tuv.bottom_right,
+                arrow_tuv.top_right,
+                arrow_tuv.top_left
             );
 
-            draw.AddImage(
+            draw.AddImageQuad(
                 b_menu1,
-                arrow_right_suv.p0,
-                arrow_right_suv.p1,
-                arrow_tuv.p0,
-                arrow_tuv.p1
+
+                arrow_right_suv.top_left,
+                arrow_right_suv.bottom_left,
+                arrow_right_suv.bottom_right,
+                arrow_right_suv.top_right,
+
+                arrow_tuv.bottom_left,
+                arrow_tuv.bottom_right,
+                arrow_tuv.top_right,
+                arrow_tuv.top_left
             );
         }
 
-        internal protected override void render(FhSettingsUiX2 ui, FhSettingChoice<T> choice, Rect max_bounds) {
+        protected override void render(FhSettingsUiX2 ui, FhSettingCarousel<T> carousel, Rect max_bounds) {
             if (!render_background(
                 ui,
                 max_bounds,
@@ -590,52 +583,68 @@ public partial class FhSettingsUiX2 {
                 return;
             }
 
-            render_name(ui, (Rect) name_bounds, choice.name);
+            render_name(ui, (Rect)name_bounds, carousel.name);
 
-            if (spin_progress[choice] != 0f) {
+            spin_progress.TryAdd(carousel, 0f);
+
+            if (spin_progress[carousel] != 0f) {
                 float spin_delta = SPIN_SPEED * ImGui.GetIO().DeltaTime;
-                spin_delta = float.Min(spin_delta, spin_progress[choice]);
+                spin_delta = float.Min(spin_delta, float.Abs(spin_progress[carousel]));
 
-                spin_progress[choice] -= spin_delta * float.Sign(spin_progress[choice]);
-                spin_progress[choice] = float.Clamp(spin_progress[choice], 0f, 1f);
+                spin_progress[carousel] -= spin_delta * float.Sign(spin_progress[carousel]);
+                spin_progress[carousel]  = float.Clamp(spin_progress[carousel], -1f, 1f);
             }
 
-            render_options(ui, choice, (Rect) value_bounds);
-            render_arrows(ui, choice, (Rect) value_bounds);
+            render_options(ui, carousel, (Rect)value_bounds);
+            render_arrows (ui, carousel, (Rect)value_bounds);
         }
 
-        protected void spin_left(FhSettingChoice<T> choice) {
-            T   curr_choice = choice.get();
-            int prev_index  = get_prev_index(choice.choices, curr_choice);
-            T   prev_choice = choice.choices[prev_index];
+        private void spin_left(FhSettingCarousel<T> carousel) {
+            ReadOnlySpan<T> choices = carousel.get_choice_values();
 
-            choice.set(prev_choice);
+            T curr_choice = carousel.get();
+            int  prev_index  = get_prev_index(choices, curr_choice);
+            T prev_choice = choices[prev_index];
 
-            spin_progress[choice] = OPTION_SPIN_DIFF;
+            carousel.set(prev_choice);
+
+            spin_progress[carousel] = OPTION_SPIN_DIFF;
         }
 
-        protected void spin_right(FhSettingChoice<T> choice) {
-            T   curr_choice = choice.get();
-            int next_index  = get_next_index(choice.choices, curr_choice);
-            T   next_choice = choice.choices[next_index];
+        private void spin_right(FhSettingCarousel<T> carousel) {
+            ReadOnlySpan<T> choices = carousel.get_choice_values();
 
-            choice.set(next_choice);
+            T curr_choice = carousel.get();
+            int  next_index  = get_next_index(choices, curr_choice);
+            T next_choice = choices[next_index];
 
-            spin_progress[choice] = -OPTION_SPIN_DIFF;
+            carousel.set(next_choice);
+
+            spin_progress[carousel] = -OPTION_SPIN_DIFF;
         }
 
-        internal protected override void handle_input(FhSettingsUiX2 ui, FhSettingChoice<T> choice) {
-            if (spin_progress[choice] != 0f) return;
+        protected override bool handle_input(FhSettingsUiX2 ui, FhSettingCarousel<T> choice) {
+            if (spin_progress[choice] != 0f)
+                return false;
 
-            if (FhApi.Gui.is_any_down(FhApi.Gui.keys_left)) {
+            if (FhApi.Gui.is_any_pressed(FhApi.Gui.keys_left)) {
                 spin_right(choice);
-                return;
+                return true;
             }
 
-            if (FhApi.Gui.is_any_down(FhApi.Gui.keys_right)) {
+            if (FhApi.Gui.is_any_pressed(FhApi.Gui.keys_right)) {
                 spin_left(choice);
-                return;
+                return true;
             }
+
+            return false;
         }
+    }
+
+    private sealed class Renderer_Choice : Renderer_Carousel<long> {
+        public static Renderer_Choice instance = new();
+    }
+    private sealed class Renderer_DynamicChoice : Renderer_Carousel<object> {
+        public static Renderer_DynamicChoice instance = new();
     }
 }

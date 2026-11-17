@@ -119,6 +119,8 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
 
     private void post_close(EventArgs e) {
         unload_textures();
+
+        hovered_setting = null;
     }
 
 

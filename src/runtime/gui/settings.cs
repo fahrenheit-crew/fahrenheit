@@ -78,10 +78,12 @@ public sealed class FhSettingsUiSelector : FhModule {
     public override void render_imgui() {
         if (is_open != (is_open ^= ImGui.IsKeyPressed(ImGuiKey.F7))) {
             if (is_open) {
+                FhApi.Input.lock_on();
                 open();
                 FhApi.Events.Common.GameLoop.PostOpenSettingsMenu.invoke(EventArgs.Empty);
             }
             else {
+                FhApi.Input.lock_off();
                 close();
                 FhApi.Events.Common.GameLoop.PostCloseSettingsMenu.invoke(EventArgs.Empty);
             }

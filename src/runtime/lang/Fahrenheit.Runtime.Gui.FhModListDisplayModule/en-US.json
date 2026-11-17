@@ -1,7 +1,10 @@
 {
-  "main.name": "Category Example",
-  "main.desc": "An example of a category",
+  "settings.name": "Mod List",
+  "settings.desc": "Configure the mod list display",
 
-  "main.mod_count.name": "Display mod count",
-  "main.mod_count.desc": "Whether the mod list should display the amount of mods loaded"
+  "settings.main.name": "Category Example",
+  "settings.main.desc": "An example of a category",
+
+  "settings.main.mod_count.name": "Display mod count",
+  "settings.main.mod_count.desc": "Whether the mod list should display the amount of mods loaded"
 }

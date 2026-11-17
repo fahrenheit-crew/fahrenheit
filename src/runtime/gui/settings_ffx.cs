@@ -31,6 +31,11 @@ public partial class FhSettingsUiX : FhSettingsUiBase {
         _texture_battle_kuang,
     ];
 
+    FhGui.DrawCursorConfig cursor_config => new(_texture_meswin) {
+        cursor_size = new Vector2(92f, 61f) * aspect_scale,
+        max_offset  = 16f * aspect_scale.X,
+    };
+
     // Rendering
 
     /// <summary>Render the background.</summary>
@@ -78,16 +83,18 @@ public partial class FhSettingsUiX : FhSettingsUiBase {
         draw.AddImage(help, bg_suv.p0, bg_suv.p1, bg_tuv.p0, bg_tuv.p1);
 
         string text = focus switch {
-            UiFocus.MODS    => localize("help.mod_list"),
-            UiFocus.MODULES => localize("help.module_list"),
-
-            UiFocus.SETTINGS when capturing_renderer != null
-                => capturing_renderer.get_input_help_text(),
-
+            UiFocus.MODS     => localize("help.mod_list"),
+            UiFocus.MODULES  => localize("help.module_list"),
             UiFocus.SETTINGS => hovered_setting!.desc,
 
             _ => throw new NotImplementedException(),
         };
+
+        if (focus == UiFocus.SETTINGS && captured_setting != null) {
+            if (get_setting_renderer(captured_setting, out SettingRenderer? renderer)) {
+                text = ((ICapturingRenderer)renderer).get_input_help_text();
+            }
+        }
 
         Vector2 text_pos = bg_screen.left + new Vector2(24f, 5f) * aspect_scale;
 
@@ -96,51 +103,6 @@ public partial class FhSettingsUiX : FhSettingsUiBase {
             text_pos,
             text,
             text_config with { align = Alignment2D.LEFT }
-        );
-    }
-
-
-    /// <summary>Render the cursor.</summary>
-    /// <param name="target_pos">The position the cursor should point at.</param>
-    /// <param name="overlap">Whether the cursor should overlap the target like the vanilla game.</param>
-    private void ui_cursor(Vector2 target_pos, bool overlap = true) {
-        if (!_texture_meswin.try_use(out ImTextureRef meswin, out FhTextureMetadata? meswin_meta)) {
-            return;
-        }
-
-        ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
-
-        UV cursor_tuv = new UV(
-            new(157f, 244f),
-            new( 90f, 200f)
-        ).map_to(meswin_meta.size);
-
-        Vector2 cursor_size = new Vector2(76f, 51f) * aspect_scale;
-
-        float max_offset   = 13f * aspect_scale.X;
-        float cycle_length = 0.38f;
-
-        // Multiply by pi so cycle_length can be expressed in seconds.
-        float cycle_t = MathF.Sin((float)ImGui.GetTime() * MathF.PI / cycle_length) / 2f + 0.5f;
-        float offset  = -(max_offset * cycle_t);
-
-        float overlap_amount = overlap ? cursor_size.X * 0.1f : 0f;
-
-        Vector2 cursor_center = new(
-            target_pos.X - cursor_size.X / 2f + overlap_amount - offset,
-            target_pos.Y
-        );
-
-        UV cursor_suv = new Rect { pos = cursor_center }
-            .expand(cursor_size, new(Alignment.CENTER, Alignment.CENTER))
-            .as_uv();
-
-        draw.AddImage(
-            meswin,
-            cursor_suv.p0,
-            cursor_suv.p1,
-            cursor_tuv.p0,
-            cursor_tuv.p1
         );
     }
 
@@ -204,7 +166,11 @@ public partial class FhSettingsUiX : FhSettingsUiBase {
                 cursor_target.X = 60f * aspect_scale.X;
             }
 
-            ui_cursor(cursor_target, false);
+            FhApi.Gui.draw_x_cursor(
+                draw,
+                cursor_target,
+                cursor_config with { overlap = false }
+            );
         }
 
         if (mouse_clicked(plate_screen)) {
@@ -266,16 +232,26 @@ public partial class FhSettingsUiX : FhSettingsUiBase {
             plate_color_mult
         );
 
+        draw.PushClipRect(plate_screen.top_left, plate_screen.bottom_right);
+
         Vector2 text_pos = plate_screen.center;
         text_pos.Y -= plate_shadow_height;
         text_pos.Y += 1f * aspect_scale.Y;
 
+        if (!FhInternal.Settings.try_get_settings(module_ctx.Module, out FhSettingsCategory? settings)) {
+            return;
+        }
+
+        string module_name = settings.name;
+
         Vector2 text_size = FhApi.Gui.draw_text(
             draw,
             text_pos,
-            module_ctx.Module.ModuleType.Split('.')[^1],
+            module_name,
             text_config with { align = Alignment2D.CENTER }
         );
+
+        draw.PopClipRect();
 
         if (mouse_hovered(plate_screen)) {
             scrollable_modules.hovered = global_index;
@@ -290,7 +266,11 @@ public partial class FhSettingsUiX : FhSettingsUiBase {
                 cursor_target.X = 60f * aspect_scale.X;
             }
 
-            ui_cursor(cursor_target, false);
+            FhApi.Gui.draw_x_cursor(
+                draw,
+                cursor_target,
+                cursor_config with { overlap = false }
+            );
         }
 
         if (mouse_clicked(plate_screen)) {
@@ -369,12 +349,23 @@ public partial class FhSettingsUiX : FhSettingsUiBase {
             ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
             Rect scaled_bounds = bounds.scale_to_aspect(aspect_helper);
+            Rect scaled_outer_bounds = outer_bounds.scale_to_aspect(aspect_helper);
 
             draw.PushClipRect(scaled_bounds.top_left, scaled_bounds.bottom_right);
+            draw.PushClipRect(scaled_outer_bounds.top_left, scaled_outer_bounds.bottom_right);
 
             renderer.render(this, setting, bounds);
 
             draw.PopClipRect();
+            draw.PopClipRect();
+
+            if (setting == hovered_setting) {
+                FhApi.Gui.draw_x_cursor(
+                    draw,
+                    scaled_bounds.left,
+                    cursor_config
+                );
+            }
         }
 
         setting_y += size.Y + SETTING_MARGIN_SIZE;
@@ -410,45 +401,9 @@ public partial class FhSettingsUiX : FhSettingsUiBase {
             size = new(1100f, 769f),
         };
 
-        Rect scaled_bounds = bounds.scale_to_aspect(aspect_helper);
-
-        draw.PushClipRect(scaled_bounds.top_left, scaled_bounds.bottom_right);
-
         foreach (FhSetting setting in displayed_settings.settings) {
             ui_setting(setting, bounds);
         }
-
-        indent_level += 1;
-
-        foreach (FhSetting setting in displayed_settings.settings) {
-            ui_setting(setting, bounds);
-        }
-
-        indent_level += 1;
-
-        foreach (FhSetting setting in displayed_settings.settings) {
-            ui_setting(setting, bounds);
-        }
-
-        indent_level -= 2;
-
-        foreach (FhSetting setting in displayed_settings.settings) {
-            ui_setting(setting, bounds);
-        }
-
-        indent_level += 1;
-
-        foreach (FhSetting setting in displayed_settings.settings) {
-            ui_setting(setting, bounds);
-        }
-
-        indent_level += 1;
-
-        foreach (FhSetting setting in displayed_settings.settings) {
-            ui_setting(setting, bounds);
-        }
-
-        draw.PopClipRect();
     }
 
     /// <summary>Renders a scrollbar.</summary>

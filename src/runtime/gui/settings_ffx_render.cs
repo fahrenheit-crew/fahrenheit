@@ -9,17 +9,18 @@ public partial class FhSettingsUiX {
     private abstract class Renderer_Base<T> : SettingRenderer
         where T : FhSetting {
 
-        public override Vector2 get_size(FhSettingsUiX ui) => new(0f, 65f);
+        public override Vector2 get_size(FhSettingsUiBase ui) => get_size((FhSettingsUiX)ui);
 
-        public override void handle_input(FhSettingsUiX ui, FhSetting setting) {
-            handle_input(ui, (T)setting);
+        public override sealed bool handle_input(FhSettingsUiBase ui, FhSetting setting) {
+            return handle_input((FhSettingsUiX)ui, (T)setting);
         }
 
-        public override void render(FhSettingsUiX ui, FhSetting setting, Rect max_bounds) {
-            render(ui, (T)setting, max_bounds);
+        public override sealed void render(FhSettingsUiBase ui, FhSetting setting, Rect max_bounds) {
+            render((FhSettingsUiX)ui, (T)setting, max_bounds);
         }
 
-        protected abstract void handle_input(FhSettingsUiX ui, T setting);
+        protected virtual Vector2 get_size(FhSettingsUiX ui) => new(0f, 65f);
+        protected abstract bool handle_input(FhSettingsUiX ui, T setting);
         protected abstract void render(FhSettingsUiX ui, T setting, Rect max_bounds);
 
         protected bool render_background(
@@ -216,7 +217,7 @@ public partial class FhSettingsUiX {
     private sealed class Renderer_Category : Renderer_Base<FhSettingsCategory> {
         public static Renderer_Category instance = new();
 
-        public override Vector2 get_size(FhSettingsUiX ui) {
+        protected override Vector2 get_size(FhSettingsUiX ui) {
             return new Vector2(0f, 45f);
         }
 
@@ -372,10 +373,12 @@ public partial class FhSettingsUiX {
             }
         }
 
-        protected override void handle_input(FhSettingsUiX ui, FhSettingsCategory category) {
-            if (!FhApi.Gui.is_any_pressed(FhApi.Gui.keys_confirm)) return;
+        protected override bool handle_input(FhSettingsUiX ui, FhSettingsCategory category) {
+            if (!FhApi.Gui.is_any_pressed(FhApi.Gui.keys_confirm))
+                return false;
 
             category.collapsed ^= true;
+            return true;
         }
     }
 
@@ -498,7 +501,7 @@ public partial class FhSettingsUiX {
             render_options(ui, toggle, (Rect)value_bounds);
         }
 
-        protected override void handle_input(FhSettingsUiX ui, FhSettingToggle toggle) {
+        protected override bool handle_input(FhSettingsUiX ui, FhSettingToggle toggle) {
             ImGuiKey[] toggle_keys = [
                 .. FhApi.Gui.keys_confirm,
                 .. FhApi.Gui.keys_left,
@@ -507,30 +510,29 @@ public partial class FhSettingsUiX {
 
             if (FhApi.Gui.is_any_pressed(toggle_keys)) {
                 toggle.set(!toggle.get());
+                return true;
             }
+
+            return false;
         }
     }
 
     private sealed class Renderer_Number : Renderer_Base<FhSettingNumber> {
         public static Renderer_Number instance = new();
 
-        public override Vector2 get_size(FhSettingsUiX ui) {
-            //TODO: Implement size calculation
-            return new Vector2(0f, 0f);
-        }
-
         protected override void render(FhSettingsUiX ui, FhSettingNumber number, Rect max_bounds) {
             //TODO: Implement rendering
         }
 
-        protected override void handle_input(FhSettingsUiX ui, FhSettingNumber number) {
+        protected override bool handle_input(FhSettingsUiX ui, FhSettingNumber number) {
             //TODO: Implement input handling
+            return false;
         }
     }
 
     private class Renderer_Carousel<T> : Renderer_Base<FhSettingCarousel<T>> {
-        private const float SPIN_SPEED = 2f; // in progress per second
-        private const float OPTION_SPIN_DIFF = 1f/3f;
+        private const float SPIN_SPEED = 0.3f; // in progress per second
+        private const float OPTION_SPIN_DIFF = 1f/2f;
 
         // Between -1 and 1. 0 when no spin is happening
         // Technically between -OPTION_SPIN_DIFF and OPTION_SPIN_DIFF
@@ -760,18 +762,21 @@ public partial class FhSettingsUiX {
             spin_progress[carousel] = -OPTION_SPIN_DIFF;
         }
 
-        protected override void handle_input(FhSettingsUiX ui, FhSettingCarousel<T> choice) {
-            if (spin_progress[choice] != 0f) return;
+        protected override bool handle_input(FhSettingsUiX ui, FhSettingCarousel<T> choice) {
+            if (spin_progress[choice] != 0f)
+                return false;
 
             if (FhApi.Gui.is_any_down(FhApi.Gui.keys_left)) {
                 spin_right(choice);
-                return;
+                return true;
             }
 
             if (FhApi.Gui.is_any_down(FhApi.Gui.keys_right)) {
                 spin_left(choice);
-                return;
+                return true;
             }
+
+            return false;
         }
     }
 

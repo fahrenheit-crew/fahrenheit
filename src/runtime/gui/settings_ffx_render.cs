@@ -531,7 +531,7 @@ public partial class FhSettingsUiX {
     }
 
     private class Renderer_Carousel<T> : Renderer_Base<FhSettingCarousel<T>> {
-        private const float SPIN_SPEED = 0.3f; // in progress per second
+        private const float SPIN_SPEED = 1.6f; // in progress per second
         private const float OPTION_SPIN_DIFF = 1f/2f;
 
         // Between -1 and 1. 0 when no spin is happening
@@ -552,13 +552,12 @@ public partial class FhSettingsUiX {
 
         private float remap_spin_progress(float t) {
             // We remap progress to give us a nice arc
-            //TODO: Redo this arc: bezier((0,0), (0.25, 0), (0.2, 0.8), (1, 1))
             float sign = t < 0 ? -1 : 1;
-            return sign * (1 - float.Cos(float.Pow(float.Abs(t), 0.7f) * float.Pi)) / 2f;
+            return sign * float.Abs(1f - float.Cos((t + 1f) * (float.Pi / 2f)) - 1f);
         }
 
         private uint get_alpha_for_spin(float progress) {
-            byte alpha = (byte)(0x60 + (0xFF - 0x60) * (1f - float.Abs(remap_spin_progress(progress))));
+            byte alpha = (byte)(0xFF * float.Pow(1f - remap_spin_progress(progress), 0.5f));
             return (uint)((alpha << 24) | 0xFFFFFF);
         }
 
@@ -567,7 +566,7 @@ public partial class FhSettingsUiX {
 
             bool other_way = progress < 0f;
 
-            progress = float.Abs(remap_spin_progress(progress));
+            progress = float.Abs(1f - float.Cos((progress + 1f) * (float.Pi / 2f)) - 1f);
 
             Vector2 offset = Vector2.Lerp(Vector2.Zero, max_offset, progress);
 
@@ -577,15 +576,21 @@ public partial class FhSettingsUiX {
         }
 
         private void render_option(FhSettingsUiX ui, FhSettingCarousel<T> carousel, int index, float progress, Rect value_bounds) {
+            if (progress < -1f || progress > 1f) {
+                return;
+            }
+
             Vector2 center = value_bounds.center;
             Vector2 right  = value_bounds.right;
             right.X -= value_bounds.size.X / 6f;
 
             ReadOnlySpan<T> choices = carousel.get_choice_values();
 
+            float abs_progress = float.Abs(progress);
+
             Vector2 pos   = center + get_offset_for_spin(center, right, progress);
-            uint    color = get_alpha_for_spin(progress);
-            float   scale = 1f - float.Abs(remap_spin_progress(progress)) / 3f;
+            uint    color = get_alpha_for_spin(abs_progress);
+            float   scale = 1f - remap_spin_progress(abs_progress) / 3f;
             string  name  = FhApi.Localization.localize(carousel.get_choice_name(choices[index]));
 
             ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
@@ -618,17 +623,17 @@ public partial class FhSettingsUiX {
                 ],
 
                 > 0f => [
-                    prev_index,
-                    curr_index,
-                    next_index,
-                    get_next_index(choices, choices[next_index]),
-                ],
-
-                < 0f => [
                     get_prev_index(choices, choices[prev_index]),
                     prev_index,
                     curr_index,
                     next_index,
+                ],
+
+                < 0f => [
+                    prev_index,
+                    curr_index,
+                    next_index,
+                    get_next_index(choices, choices[next_index]),
                 ],
 
                 _ => throw new UnreachableException(),
@@ -636,17 +641,14 @@ public partial class FhSettingsUiX {
 
             int main_index = spin_progress[carousel] switch {
                   0f => 1,
-                > 0f => 1,
-                < 0f => 2,
+                > 0f => 2,
+                < 0f => 1,
 
                 _ => throw new UnreachableException(),
             };
 
             for (int i = 0; i < main_index; i++) {
                 float spin = spin_progress[carousel] - OPTION_SPIN_DIFF * (main_index - i);
-
-                // This shouldn't be necessary but let's do it anyway
-                spin = float.Clamp(spin, -1f, 1f);
 
                 render_option(ui, carousel, choice_indices[i], spin, value_bounds);
             }
@@ -655,9 +657,6 @@ public partial class FhSettingsUiX {
 
             for (int i = main_index + 1; i < choice_indices.Length; i++) {
                 float spin = spin_progress[carousel] + OPTION_SPIN_DIFF * (i - main_index);
-
-                // This shouldn't be necessary but let's do it anyway
-                spin = float.Clamp(spin, -1f, 1f);
 
                 render_option(ui, carousel, choice_indices[i], spin, value_bounds);
             }
@@ -728,7 +727,7 @@ public partial class FhSettingsUiX {
 
             if (spin_progress[carousel] != 0f) {
                 float spin_delta = SPIN_SPEED * ImGui.GetIO().DeltaTime;
-                spin_delta = float.Min(spin_delta, spin_progress[carousel]);
+                spin_delta = float.Min(spin_delta, float.Abs(spin_progress[carousel]));
 
                 spin_progress[carousel] -= spin_delta * float.Sign(spin_progress[carousel]);
                 spin_progress[carousel]  = float.Clamp(spin_progress[carousel], 0f, 1f);

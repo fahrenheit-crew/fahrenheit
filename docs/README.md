@@ -17,5 +17,3 @@ Fahrenheit is the mod loader and framework for the [Final Fantasy X and X-2 HD R
 - [Calls](design/calls.md)
 - [Localization](design/localization.md)
 - [Install structure](design/install-structure.md)
-
-

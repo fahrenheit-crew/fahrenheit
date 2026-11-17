@@ -730,7 +730,7 @@ public partial class FhSettingsUiX {
                 spin_delta = float.Min(spin_delta, float.Abs(spin_progress[carousel]));
 
                 spin_progress[carousel] -= spin_delta * float.Sign(spin_progress[carousel]);
-                spin_progress[carousel]  = float.Clamp(spin_progress[carousel], 0f, 1f);
+                spin_progress[carousel]  = float.Clamp(spin_progress[carousel], -1f, 1f);
             }
 
             render_options(ui, carousel, (Rect)value_bounds);

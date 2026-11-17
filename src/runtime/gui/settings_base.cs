@@ -11,9 +11,9 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
     }
 
     protected abstract class SettingRenderer {
-        public abstract Vector2 get_size(FhSettingsUiX ui);
-        public abstract void handle_input(FhSettingsUiX ui, FhSetting setting);
-        public abstract void render(FhSettingsUiX ui, FhSetting setting, Rect max_bounds);
+        public abstract Vector2 get_size(FhSettingsUiBase ui);
+        public abstract bool handle_input(FhSettingsUiBase ui, FhSetting setting);
+        public abstract void render(FhSettingsUiBase ui, FhSetting setting, Rect max_bounds);
     }
 
     /// <summary>Possible elements for the UI to focus on.</summary>
@@ -30,25 +30,29 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
 
     protected const float FONT_SIZE_DEFAULT = 43f;
 
-    protected const uint SOUND_X_MOVE       = FFX.Ids.SoundId.UI_ACTION;
-    protected const uint SOUND_X_ACTION     = FFX.Ids.SoundId.UI_ACTION;
-    protected const uint SOUND_X_CANCEL     = FFX.Ids.SoundId.UI_CANCEL;
+    protected const uint SOUND_X_MOVE   = FFX.Ids.SoundId.UI_ACTION;
+    protected const uint SOUND_X_ACTION = FFX.Ids.SoundId.UI_ACTION;
+    protected const uint SOUND_X_CANCEL = FFX.Ids.SoundId.UI_CANCEL;
 
-    protected const uint SOUND_X2_MOVE       = FFX2.Ids.SoundId.UI_ACTION;
-    protected const uint SOUND_X2_ACTION     = FFX2.Ids.SoundId.UI_ACTION;
-    protected const uint SOUND_X2_CANCEL     = FFX2.Ids.SoundId.UI_CANCEL;
+    protected const uint SOUND_X2_MOVE   = FFX2.Ids.SoundId.UI_ACTION;
+    protected const uint SOUND_X2_ACTION = FFX2.Ids.SoundId.UI_ACTION;
+    protected const uint SOUND_X2_CANCEL = FFX2.Ids.SoundId.UI_CANCEL;
 
     protected const string DIR_X_MENU = "/FFX_Data/GameData/PS3Data/menu/D3D11/";
     protected const string DIR_X_HIKU = "/FFX_Data/GameData/PS3Data/map/hiku/hiku22/2d/tex/D3D11/";
+
+    protected const string DIR_X2_MENU    = "/FFX-2_Data/GameData/PS3Data/menu/D3D11/";
+    protected const string DIR_X2_MAHOJIN = "/FFX-2_Data/GameData/PS3Data/menu/menu_mahojin/tex/D3D11/";
+    protected const string DIR_X2_PLATE   = "/FFX-2_Data/GameData/PS3Data/menu/menu_plate/tex/D3D11/";
 
     protected const uint COLOR_BLACK = 0xFF000000;
     protected const uint COLOR_TRANS = 0x00000000;
 
     protected const float FADE_LENGTH = 0.35f;
 
-    protected static readonly uint SOUND_ID_MOVE       = FhUtil.select(SOUND_X_MOVE,       SOUND_X2_MOVE,       SOUND_X2_MOVE);
-    protected static readonly uint SOUND_ID_ACTION     = FhUtil.select(SOUND_X_ACTION,     SOUND_X2_ACTION,     SOUND_X2_ACTION);
-    protected static readonly uint SOUND_ID_CANCEL     = FhUtil.select(SOUND_X_CANCEL,     SOUND_X2_CANCEL,     SOUND_X2_CANCEL);
+    protected static readonly uint SOUND_ID_MOVE   = FhUtil.select(SOUND_X_MOVE,       SOUND_X2_MOVE,       SOUND_X2_MOVE);
+    protected static readonly uint SOUND_ID_ACTION = FhUtil.select(SOUND_X_ACTION,     SOUND_X2_ACTION,     SOUND_X2_ACTION);
+    protected static readonly uint SOUND_ID_CANCEL = FhUtil.select(SOUND_X_CANCEL,     SOUND_X2_CANCEL,     SOUND_X2_CANCEL);
 
     protected static readonly float ACTION_VOLUME = FhUtil.select(1f, 0.5f, 0.5f);
 
@@ -69,7 +73,6 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
     protected int   indent_level;
     protected float setting_y;
 
-    protected ICapturingRenderer? capturing_renderer;
     protected FhSetting?          captured_setting;
 
     protected FhSettingsCategory? displayed_settings;
@@ -161,6 +164,10 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
 
         selected_mod_idx        = mod_idx;
         scrollable_mods.hovered = mod_idx;
+
+        scrollable_modules.hovered = 0;
+
+        FhInternal.Settings.try_get_settings(selected_modules[0].Module, out displayed_settings);
     }
 
     protected void hover_module(int module_idx) {
@@ -176,26 +183,71 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
         scrollable_modules.hovered = module_idx;
 
         FhInternal.Settings.try_get_settings(selected_module.Module, out displayed_settings);
+        hovered_setting = displayed_settings!.settings[0];
+    }
+
+    protected void hover_setting_up() {
+        if (!try_get_setting_parent(hovered_setting!, out FhSettingsCategory? parent, out int? index)) {
+            throw new UnreachableException("The main category, which is not displayed, is hovered.");
+        }
+
+        // If we have a parent and the index is zero, the parent category is guaranteed to be directly above us!
+        if (index == 0) {
+            // The displayed settings category is never actually displayed, only its settings
+            if (parent != displayed_settings)
+                hovered_setting = parent;
+            return;
+        }
+
+        FhSetting setting_one_up = parent.settings[(int)index - 1];
+
+        // We have to dive into the previous setting if it's an expanded category
+        while (setting_one_up is FhSettingsCategory category && !category.collapsed) {
+            setting_one_up = category.settings[^1];
+        }
+
+        hovered_setting = setting_one_up;
+    }
+
+    protected void hover_setting_down() {
+        if (!try_get_setting_parent(hovered_setting!, out FhSettingsCategory? parent, out int? index)) {
+            throw new UnreachableException("The main category, which is not displayed, is hovered.");
+        }
+
+        // If we're hovering an expanded category, go into the category
+        if (hovered_setting is FhSettingsCategory category
+            && !category.collapsed
+            && category.settings.Length > 0
+        ) {
+            hovered_setting = category.settings[0];
+        }
+
+        // If there is no next setting in current category, go up until we find one
+        while (parent.settings.Length <= index + 1) {
+            // If the parent is the displayed settings and the condition still passed,
+            // there is no next setting
+            if (parent == displayed_settings)
+                return;
+
+            index  = parent.index_in_parent;
+            parent = parent.parent!;
+        }
+
+        hovered_setting = parent.settings[(int)index + 1];
     }
 
 
     /* ===== Interfacing with renderers ===== */
-    public bool try_capture_setting(ICapturingRenderer renderer, FhSetting setting) {
-        if (capturing_renderer != null) return false;
+    public bool try_capture_setting(FhSetting setting) {
+        if (captured_setting != null) return false;
 
-        capturing_renderer = renderer;
-        captured_setting   = setting;
+        captured_setting = setting;
 
         return true;
     }
 
-    public bool try_release_setting(ICapturingRenderer renderer) {
-        if (capturing_renderer != renderer) return false;
-
-        capturing_renderer = null;
-        captured_setting   = null;
-
-        return true;
+    public void release_setting() {
+        captured_setting = null;
     }
 
     public void indent() {
@@ -254,7 +306,39 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
     }
 
     private void handle_input_settings() {
+        if (captured_setting != null) {
+            if (!get_setting_renderer(captured_setting, out SettingRenderer? capturing_renderer)) {
+                captured_setting = null;
+                return;
+            }
 
+            capturing_renderer.handle_input(this, captured_setting);
+            return;
+        }
+
+        if (hovered_setting != null) {
+            if (get_setting_renderer(hovered_setting, out SettingRenderer? renderer)) {
+                if (renderer.handle_input(this, hovered_setting)) {
+                    return;
+                }
+            }
+        }
+
+        if (FhApi.Gui.is_any_pressed(FhApi.Gui.keys_up)) {
+            hover_setting_up();
+            return;
+        }
+
+        if (FhApi.Gui.is_any_pressed(FhApi.Gui.keys_down)) {
+            hover_setting_down();
+            return;
+        }
+
+        if (FhApi.Gui.is_any_pressed(FhApi.Gui.keys_cancel)) {
+            focus = UiFocus.MODULES;
+            hovered_setting = null;
+            return;
+        }
     }
 
     private void handle_input() {

@@ -461,7 +461,10 @@ public sealed class FhSettingChoice<T> : FhSettingChoice
         SetEventArgs args = new(value);
 
         // This will be unnecessary once we can constrain T to be 'closed'
-        if (!Enum.IsDefined(typeof(T), new_value)) {
+
+        object new_enum_val = Convert.ChangeType(new_value, Enum.GetUnderlyingType(typeof(T)));
+
+        if (!Enum.IsDefined(typeof(T), new_enum_val)) {
             FhInternal.Log.Error($"Value '{new_value}' rejected as invalid for setting '{id}'. Valid values:");
 
             foreach (T valid_value in Enum.GetValues<T>()) {

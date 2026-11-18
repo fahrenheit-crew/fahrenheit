@@ -222,6 +222,7 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
             && category.settings.Length > 0
         ) {
             hovered_setting = category.settings[0];
+            return;
         }
 
         // If there is no next setting in current category, go up until we find one

@@ -701,12 +701,24 @@ static BOOL s0_dbg_w32_module_unload(
 
     s0_dbg_link_send(data_unload);
 
+    /* [fkelava 16/11/26 20:19]
+     * Frustratingly, user-mode debuggers cannot assume that they are actually
+     * in control of the target process. EDR/antimalware solutions and other
+     * kernel-mode software can and will tamper with the process regardless.
+     *
+     * The upshot is that certain poorly written AVs (Kaspersky/MBAM to name a few)
+     * can cause unload notifications for DLLs for which you receive no load notification,
+     * or alternatively unload DLLs under you silently, making SymUnloadModule64 fail.
+     *
+     * It is difficult to describe how insane this is. For now, we work around it.
+     */
+
     if (!SymUnloadModule64(
         h_process,
         (DWORD64) ptr_module_base
     )) {
-        fwprintf_s(stderr, L"[!] SymUnloadModule64() failed with code 0x%X.\n", GetLastError());
-        return FALSE;
+        fwprintf_s(stderr, L"[!] SymUnloadModule64(0x%p) failed with code 0x%X.\n", ptr_module_base, GetLastError());
+        return TRUE;
     }
 
     if (g_checked_symbols.erase(ptr_module_base) != 1 ||

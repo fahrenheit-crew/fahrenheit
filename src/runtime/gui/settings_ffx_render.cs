@@ -868,9 +868,9 @@ public partial class FhSettingsUiX {
         private void spin_left(FhSettingCarousel<T> carousel) {
             ReadOnlySpan<T> choices = carousel.get_choice_values();
 
-            T curr_choice = carousel.get();
-            int  prev_index  = get_prev_index(choices, curr_choice);
-            T prev_choice = choices[prev_index];
+            T   curr_choice = carousel.get();
+            int prev_index  = get_next_index(choices, curr_choice);
+            T   prev_choice = choices[prev_index];
 
             carousel.set(prev_choice);
 
@@ -880,9 +880,9 @@ public partial class FhSettingsUiX {
         private void spin_right(FhSettingCarousel<T> carousel) {
             ReadOnlySpan<T> choices = carousel.get_choice_values();
 
-            T curr_choice = carousel.get();
-            int  next_index  = get_next_index(choices, curr_choice);
-            T next_choice = choices[next_index];
+            T   curr_choice = carousel.get();
+            int next_index  = get_prev_index(choices, curr_choice);
+            T   next_choice = choices[next_index];
 
             carousel.set(next_choice);
 

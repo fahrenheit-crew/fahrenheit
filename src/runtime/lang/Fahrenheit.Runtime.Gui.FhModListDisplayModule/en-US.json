@@ -1,10 +1,49 @@
 {
-  "settings.name": "Mod List",
-  "settings.desc": "Configure the mod list display",
+    "settings.name": "Mod List",
+    "settings.desc": "Configure the mod list display",
 
-  "settings.main.name": "Category Example",
-  "settings.main.desc": "An example of a category",
+    "settings.setting_a.name": "Toggle Setting [A]",
+    "settings.setting_a.desc": "Defaults to false",
 
-  "settings.main.mod_count.name": "Display mod count",
-  "settings.main.mod_count.desc": "Whether the mod list should display the amount of mods loaded"
+    "settings.setting_b.name": "Toggle Setting [B]",
+    "settings.setting_b.desc": "Defaults to true",
+
+    "settings.sub_a.name": "Subcategory [A]",
+    "settings.sub_a.desc": "Contains settings [C] and [D]",
+
+    "settings.sub_a.setting_c.name": "Number Setting [C]",
+    "settings.sub_a.setting_c.desc": "Between 0.0 and 5.0, default 3.0, step 0.2, precision 1",
+
+    "settings.sub_a.setting_d.name": "Number Setting [D]",
+    "settings.sub_a.setting_d.desc": "Between 5 and 20, default 10, step 1, integers only",
+
+    "settings.sub_b.name": "Subcategory [B]",
+    "settings.sub_b.desc": "Contains settings [E] and [F]",
+
+    "settings.sub_b.setting_e.name": "Choice Setting [E]",
+    "settings.sub_b.setting_e.desc": "Alignment; defaults to center",
+
+    "settings.sub_b.setting_e.values.0.name": "Beginning",
+    "settings.sub_b.setting_e.values.0.desc": "The beginning of the container",
+
+    "settings.sub_b.setting_e.values.1.name": "Center",
+    "settings.sub_b.setting_e.values.1.desc": "The center of the container",
+
+    "settings.sub_b.setting_e.values.2.name": "End",
+    "settings.sub_b.setting_e.values.2.desc": "The end of the container",
+
+    "settings.sub_b.setting_f.name": "Choice Setting [F]",
+    "settings.sub_b.setting_f.desc": "GradientDirection; defaults to down",
+
+    "settings.sub_b.setting_f.values.0.name": "Up",
+    "settings.sub_b.setting_f.values.0.desc": "Fade from the bottom to the top of the bounds.",
+
+    "settings.sub_b.setting_f.values.1.name": "Right",
+    "settings.sub_b.setting_f.values.1.desc": "Fade from the left to the right of the bounds.",
+
+    "settings.sub_b.setting_f.values.2.name": "Down",
+    "settings.sub_b.setting_f.values.2.desc": "Fade from the top to the bottom of the bounds.",
+
+    "settings.sub_b.setting_f.values.3.name": "Left",
+    "settings.sub_b.setting_f.values.3.desc": "Fade from the right to the left of the bounds."
 }

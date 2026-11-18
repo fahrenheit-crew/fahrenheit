@@ -13,14 +13,32 @@ public unsafe class FhModListDisplayModule : FhModule {
     private FhSettingsUiSelector? _settings_ui;
 
     private class Settings : FhSettingProvider<FhModListDisplayModule> {
-        public FhSettingToggle show_mod_count = new("mod_count", true);
-
         internal protected override IEnumerable<FhSetting> get() {
-            FhSettingsCategory main_category = new("main", [
-                show_mod_count,
+            FhSettingToggle setting_a = new("setting_a", false);
+            FhSettingToggle setting_b = new("setting_b", true);
+
+            FhSettingNumber setting_c = new("setting_c", 3.0, 0.0, 5.0, 0.2, precision: 1);
+            FhSettingNumber setting_d = new("setting_d", 10, 5, 20, 1, integers_only: true);
+
+            FhSettingChoice<Alignment> setting_e = new("setting_e", Alignment.CENTER);
+            FhSettingChoice<GradientDirection> setting_f = new("setting_f", GradientDirection.DOWN);
+
+            FhSettingsCategory sub_a = new("sub_a", [
+                setting_c,
+                setting_d,
             ]);
 
-            return [ main_category ];
+            FhSettingsCategory sub_b = new("sub_b", [
+                setting_e,
+                setting_f,
+            ]);
+
+            return [
+                setting_a,
+                setting_b,
+                sub_a,
+                sub_b,
+            ];
         }
     }
 
@@ -49,13 +67,10 @@ public unsafe class FhModListDisplayModule : FhModule {
             ImGui.PushFont(FhApi.Gui.FONT_DEFAULT, 18f);
             FhModContext[] mods = [ .. FhApi.Mods.get_mods() ];
 
-            if (_settings.show_mod_count.get())
-                ImGui.Text($"{mods.Length} mods loaded");
-
+            ImGui.Text($"{mods.Length} mods loaded");
             foreach (FhModContext mod_ctx in mods) {
                 ImGui.Text($"{mod_ctx.Manifest.Name} v{mod_ctx.Manifest.Version}");
             }
-
             ImGui.PopFont();
         }
         ImGui.End();

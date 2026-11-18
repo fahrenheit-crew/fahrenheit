@@ -69,4 +69,3 @@ Keeps localization data for your mod, to be used with Fahrenheit's localization 
 
 ### `resources`
 This folder is provided for the mod to use as it deems fit. Its contents are not prescribed in any way or form.
-

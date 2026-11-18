@@ -12,6 +12,38 @@ namespace Fahrenheit.Runtime.Gui;
 public unsafe class FhModListDisplayModule : FhModule {
     private FhSettingsUiSelector? _settings_ui;
 
+    private class Settings : FhSettingProvider<FhModListDisplayModule> {
+        internal protected override IEnumerable<FhSetting> get() {
+            FhSettingToggle setting_a = new("setting_a", false);
+            FhSettingToggle setting_b = new("setting_b", true);
+
+            FhSettingNumber setting_c = new("setting_c", 3.0, 0.0, 5.0, 0.2, precision: 1);
+            FhSettingNumber setting_d = new("setting_d", 10, 5, 20, 1, integers_only: true);
+
+            FhSettingChoice<Alignment> setting_e = new("setting_e", Alignment.CENTER);
+            FhSettingChoice<GradientDirection> setting_f = new("setting_f", GradientDirection.DOWN);
+
+            FhSettingsCategory sub_a = new("sub_a", [
+                setting_c,
+                setting_d,
+            ]);
+
+            FhSettingsCategory sub_b = new("sub_b", [
+                setting_e,
+                setting_f,
+            ]);
+
+            return [
+                setting_a,
+                setting_b,
+                sub_a,
+                sub_b,
+            ];
+        }
+    }
+
+    private Settings _settings = new();
+
     public override bool init(FhModContext mod_context, FileStream global_state_file) {
         return new FhModuleHandle<FhSettingsUiSelector>(this).try_get_module(out _settings_ui);
     }

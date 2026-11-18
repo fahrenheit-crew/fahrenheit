@@ -15,11 +15,11 @@ enum FH_SETUP_REDIST_TYPE {
     ARM64 = 3,
 };
 
-enum FH_SETUP_ERROR {
-    MISSING_BIN    = 1,      // Either game binary is missing.
-    INVALID_BIN    = 2,      // Either game binary is invalid.
-    MISSING_VBF    = 3,      // Either VBF archive is missing.
-    INTERNAL_ERROR = 0xFFFF, // An internal error occurred.
+enum FH_SETUP_ERROR : short {
+    MISSING_BIN    =  1, // Either game binary is missing.
+    INVALID_BIN    =  2, // Either game binary is invalid.
+    MISSING_VBF    =  3, // Either VBF archive is missing.
+    INTERNAL_ERROR = -1, // An internal error occurred.
 };
 
 // Displays the setup user interface.

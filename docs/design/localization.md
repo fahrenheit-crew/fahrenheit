@@ -28,7 +28,7 @@ For this to work, you must provide the necessary localization data. See below.
 
 ## Localization folder
 
-The designated location for localization file storage is your mod's [`lang`](Mod-structure#lang) folder.
+The designated location for localization file storage is your mod's [`lang`](mod-structure.md#lang) folder.
 
 In that folder:
 - Create **one folder per module**, named after the module's full type name. 

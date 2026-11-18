@@ -12,7 +12,7 @@ Fahrenheit offers several basic derivations out of the box.
 | [`FhSettingNumber<T>`](https://github.com/fahrenheit-crew/fahrenheit/blob/ee0d0f9dc3d8e4ca7315cec3ebc834445721ee05/src/core/settings.cs#L369)           | Any [`INumber<T>`](https://learn.microsoft.com/en-us/dotnet/api/system.numerics.inumber-1?view=net-10.0) |
 
 ## Setting providers
-To use settings, create a class inheriting [`FhSettingProvider<T>`](https://github.com/fahrenheit-crew/fahrenheit/blob/ee0d0f9dc3d8e4ca7315cec3ebc834445721ee05/src/core/settings.cs#L29), where `T` is the type of your module. See [Modules](Modules).
+To use settings, create a class inheriting [`FhSettingProvider<T>`](https://github.com/fahrenheit-crew/fahrenheit/blob/ee0d0f9dc3d8e4ca7315cec3ebc834445721ee05/src/core/settings.cs#L29), where `T` is the type of your module. See [Modules](modules.md).
 
 You may arrange this class as you deem fit and control the visibility of both it and its individual settings.
 
@@ -32,7 +32,7 @@ public sealed class MyModule : FhModule
 ```
 There are three requirements for setting providers:
 - `FhSettingProvider` **must** be derived by only one class for a given module.
-- An instance of that class **must** be created in the module's constructor. See [Startup](Startup).
+- An instance of that class **must** be created in the module's constructor. See [Startup](startup.md).
 - In the `get` method, it **must** return the settings it wishes to expose through the mod configuration UI, in display order.
 
 ## The mod configuration UI

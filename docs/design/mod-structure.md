@@ -1,6 +1,6 @@
 # Mod structure
 
-A Fahrenheit mod is contained in its own folder, stored under [`mods`](Install-structure#mods) in the installation directory.
+A Fahrenheit mod is contained in its own folder, stored under [`mods`](install-structure.md#mods) in the installation directory.
 
 This entry describes its basic building blocks.
 
@@ -30,7 +30,7 @@ A few examples of valid IDs:
 
 ### `{mod_id}.manifest.json`
 Describes the mod to Fahrenheit, allowing it to be loaded.
-- Each mod, whether purely file-based or not, **must** contain a manifest. See [Manifests](Manifests).
+- Each mod, whether purely file-based or not, **must** contain a manifest. See [Manifests](manifests.md).
 
 ### `{mod_id}.dll`
 Contains the mod's executable code. If the mod changes game logic in any way, this is where it is done.
@@ -65,7 +65,7 @@ Each of these is taken as the root of their respective VBF. From them, mirror th
 ### `lang`
 Keeps localization data for your mod, to be used with Fahrenheit's localization API.
 - It contains **one folder per module**, named after its full type name. Each contains one or more localization data files.
-- See generally [Localization](Localization) for more details.
+- See generally [Localization](localization.md) for more details.
 
 ### `resources`
 This folder is provided for the mod to use as it deems fit. Its contents are not prescribed in any way or form.

@@ -9,7 +9,7 @@ This guide will ensure you are ready to build Fahrenheit mods by guiding you thr
 > Always read notes marked 'Important'. They are critical to your understanding of a page's subject.
 
 ## Preparation
-Follow the 'Managed component prerequisites' section of the [build and deployment guide](Build-and-deployment-guide#managed-component-prerequisites).
+Follow the 'Managed component prerequisites' section of the [build and deployment guide](guide-build.md#managed-component-prerequisites).
 
 ## Building the template mod
 Navigate to the [template mod](https://github.com/fahrenheit-crew/fh-mods-template), then:
@@ -38,7 +38,7 @@ What follows next depends on the tool you chose in the build and deployment guid
 The build should succeed. You will find the result in `artifacts/deploy/{dbg|rel}/mods`.
 
 > [!IMPORTANT]
-> Read [Mod structure](Mod-structure) at this point to familiarize yourself with what each file does.
+> Read [Mod structure](../design/mod-structure.md) at this point to familiarize yourself with what each file does.
 >
 > At the very least, you should know what the 'mod ID' is to proceed. In this example, it is `fhtemplate`.
 
@@ -51,21 +51,21 @@ Open `src/Fahrenheit.Mods.Template.csproj`, and take note of the `Project` line.
 ```
 Note the version of Fahrenheit you built for. It is the string that follows the forward slash- in this case, `1.0.0-alpha11`.
 
-Install the corresponding version of Fahrenheit according to the [installation guide](Installation-guide#installing).
+Install the corresponding version of Fahrenheit according to the [installation guide](guide-install.md#installing).
 
 ### Installing the mod
-Copy the `mods` folder under `artifacts/deploy/{dbg|rel}` to the Fahrenheit [installation directory](Install-structure).
+Copy the `mods` folder under `artifacts/deploy/{dbg|rel}` to the Fahrenheit [installation directory](../design/install-structure.md).
 
 Create an empty file called `loadorder` under `mods` if it does not already exist.
 
 In it, add the mod ID on an empty line, then save.
 
 ### Launching Fahrenheit
-Run Fahrenheit according to the [installation guide](Installation-guide#running).
+Run Fahrenheit according to the [installation guide](guide-install.md#running).
 
 If you see `Template Mod` in the loaded list in the top left of the screen, you've successfully built and launched your first mod.
 
 ## Next steps
 Now that you know how to build a Fahrenheit mod, you can begin customizing the template!
 
-Begin by changing its mod ID and manifest properties. See [Manifests](Manifests). After that, the world is your oyster. Have fun!
+Begin by changing its mod ID and manifest properties. See [Manifests](../design/manifests.md). After that, the world is your oyster. Have fun!

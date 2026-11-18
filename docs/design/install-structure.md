@@ -43,7 +43,7 @@ Keeps module logging output.
 ### `mods`
 Keeps your mods.
 - Contains **one folder per mod**, plus a **load order file**.
-- For an individual mod directory's structure, see [Mod structure](Mod-structure).
+- For an individual mod directory's structure, see [Mod structure](mod-structure.md).
 > [!IMPORTANT]
 > No mods will load if the load order file is missing. **Do not** delete it.
 
@@ -53,7 +53,7 @@ Keeps your save sets, which keep your save games.
 - Beneath the set folder, the layout is identical to the game's default save directory.
 
 ### `state`
-Keeps your global and local state, which is per-module supplementary information. See [State](State).
+Keeps your global and local state, which is per-module supplementary information. See [State](state.md).
 - Contains **a global state folder** and **one folder for each unique save set hash**, each containing **one folder per save set**.
 
 > [!IMPORTANT]

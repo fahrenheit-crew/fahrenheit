@@ -5,11 +5,11 @@ Fahrenheit is known to run at least on Windows and Linux systems.
 ## Prerequisites
 
 On Windows systems, you require:
-- The [.NET 10 runtime](https://dotnet.microsoft.com/en-us/download/dotnet/10.0), in both x86 and x64 versions.
+- The [.NET 11 runtime](https://dotnet.microsoft.com/en-us/download/dotnet/11.0), in both x86 and x64 versions.
 - The [latest supported Visual C++ Redistributable](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170#latest-supported-redistributable-version), in both x86 and x64 versions.
 
 On Linux systems, you require:
-- To run the tools, the [.NET 10 runtime](https://dotnet.microsoft.com/en-us/download/dotnet/10.0), x64 version.
+- To run the tools, the [.NET 11 runtime](https://dotnet.microsoft.com/en-us/download/dotnet/11.0), x64 version.
     - `dotnet {TOOL_NAME}.dll` will start a Linux-native version of the tool.
 - Proton and Protontricks.
     - Use Protontricks to install the prerequisites for Windows systems into the game's Proton prefix.
@@ -24,7 +24,7 @@ Delete the `bin` folder from your current installation, then extract the content
 
 ## Running
 
-**Read the [compatibility guide](https://github.com/fahrenheit-crew/fahrenheit/wiki/Compatibility-guide) before running.**
+**Read the [compatibility guide](guide-compat.md) before running.**
 
 Start a terminal in `bin`, and execute `.\fhstage0.exe {PATH_TO_GAME_EXECUTABLE}`.
 - On Linux, use Proton to do the same.

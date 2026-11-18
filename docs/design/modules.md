@@ -8,14 +8,14 @@ Mods, unless purely file-based, consist of anywhere from one to an unlimited num
 Modules may retrieve, and interact with, each other at runtime.
 
 Beyond being organizational scopes, modules possess the following properties:
-- Each gets its own global and local state. See [State](state).
+- Each gets its own global and local state. See [State](state.md).
 - Each gets its own log file.
 - Each gets to specify the games it supports.
 
 ## Basic requirements
 A valid module has three basic requirements.
 - It **must** have exactly one, public, parameterless constructor.
-- It **must** implement the `init` method. See [Startup](startup).
+- It **must** implement the `init` method. See [Startup](startup.md).
 - It **must** have the [`FhLoad`](https://github.com/fahrenheit-crew/fahrenheit/blob/6a077ffdf3d9888bad66c74a2740effca4acb36e/src/core/bootloader.cs#L157) attribute applied declaring which games it supports.
 
 For example:

@@ -100,7 +100,7 @@ byte* ptr_location_name_encoded = FhCall.AtelGetSaveDicName.fnptr!(location_id, 
 ## Hooking
 To hook a call through a handle, use the `hook(FhModule, T hook_method)` method. 
 
-As explained in [Startup](startup), you **must** do so in your module's initializer. For example:
+As explained in [Startup](startup.md), you **must** do so in your module's initializer. For example:
 ```cs
 public override bool init(FhModContext mod_context, FileStream global_state_file) {
     something_else();

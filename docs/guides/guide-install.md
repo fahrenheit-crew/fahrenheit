@@ -24,7 +24,7 @@ Delete the `bin` folder from your current installation, then extract the content
 
 ## Running
 
-**Read the [compatibility guide](guide-compat) before running.**
+**Read the [compatibility guide](guide-compat.md) before running.**
 
 Start a terminal in `bin`, and execute `.\fhstage0.exe {PATH_TO_GAME_EXECUTABLE}`.
 - On Linux, use Proton to do the same.

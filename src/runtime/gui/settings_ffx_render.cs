@@ -370,6 +370,9 @@ public partial class FhSettingsUiX {
             );
 
             // Input handling
+            if (ui.focus != UiFocus.SETTINGS)
+                return;
+
             if (ui.mouse_clicked(arrow_hitbox)) {
                 category.collapsed ^= true;
             }
@@ -469,7 +472,10 @@ public partial class FhSettingsUiX {
                 new(Alignment.CENTER, Alignment.BEGIN)
             ).scale_to_aspect(ui.aspect_helper);
 
-            // Extra underline on hover
+            // Input handling
+            if (ui.focus != UiFocus.SETTINGS)
+                return;
+
             if (ui.mouse_hovered(hitbox_inactive, false)) {
                 underline_suv = underline_inactive.as_uv();
 
@@ -572,8 +578,11 @@ public partial class FhSettingsUiX {
             if (progress_arrow_right[number] > 0f)
                 arrow_right.pos += Vector2.Lerp(Vector2.Zero, max_offset, progress_arrow_right[number]);
 
-            UV arrow_left_suv  = arrow_left .scale_to_aspect(ui.aspect_helper).as_uv();
-            UV arrow_right_suv = arrow_right.scale_to_aspect(ui.aspect_helper).as_uv();
+            arrow_left  = arrow_left .scale_to_aspect(ui.aspect_helper);
+            arrow_right = arrow_right.scale_to_aspect(ui.aspect_helper);
+
+            UV arrow_left_suv  = arrow_left .as_uv();
+            UV arrow_right_suv = arrow_right.as_uv();
 
             uint left_color  = number.get() <= number.min ? 0xA0FFFFFF : 0xFFFFFFFF;
             uint right_color = number.get() >= number.max ? 0xA0FFFFFF : 0xFFFFFFFF;
@@ -597,6 +606,25 @@ public partial class FhSettingsUiX {
                 new Vector2(arrow_tuv.p0.X, arrow_tuv.p1.Y),
                 right_color
             );
+
+            if (ui.focus != UiFocus.SETTINGS)
+                return;
+
+            Rect arrow_hitbox_left  = new() { pos = value_bounds.left  + max_offset };
+            Rect arrow_hitbox_right = new() { pos = value_bounds.right - max_offset };
+
+            arrow_hitbox_left  = arrow_hitbox_left .expand(arrow_size + max_offset, Alignment2D.LEFT);
+            arrow_hitbox_right = arrow_hitbox_right.expand(arrow_size + max_offset, Alignment2D.RIGHT);
+
+            if (ui.mouse_clicked(arrow_hitbox_left) && number.get() > number.min) {
+                number.set(number.get() - number.step);
+                progress_arrow_left[number] = 1f;
+            }
+
+            if (ui.mouse_clicked(arrow_hitbox_right) && number.get() < number.max) {
+                number.set(number.get() + number.step);
+                progress_arrow_right[number] = 1f;
+            }
         }
 
         protected override void render(FhSettingsUiX ui, FhSettingNumber number, Rect max_bounds) {
@@ -817,8 +845,11 @@ public partial class FhSettingsUiX {
             else if (arrow_progress > 0f)
                 arrow_right.pos += Vector2.Lerp(Vector2.Zero, max_offset, arrow_progress);
 
-            UV arrow_left_suv  = arrow_left .scale_to_aspect(ui.aspect_helper).as_uv();
-            UV arrow_right_suv = arrow_right.scale_to_aspect(ui.aspect_helper).as_uv();
+            arrow_left  = arrow_left .scale_to_aspect(ui.aspect_helper);
+            arrow_right = arrow_right.scale_to_aspect(ui.aspect_helper);
+
+            UV arrow_left_suv  = arrow_left .as_uv();
+            UV arrow_right_suv = arrow_right.as_uv();
 
             ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
@@ -837,6 +868,23 @@ public partial class FhSettingsUiX {
                 new Vector2(arrow_tuv.p1.X, arrow_tuv.p0.Y),
                 new Vector2(arrow_tuv.p0.X, arrow_tuv.p1.Y)
             );
+
+            if (spin_progress[carousel] != 0f || ui.focus != UiFocus.SETTINGS)
+                return;
+
+            Rect arrow_hitbox_left  = new() { pos = value_bounds.left  + max_offset };
+            Rect arrow_hitbox_right = new() { pos = value_bounds.right - max_offset };
+
+            arrow_hitbox_left  = arrow_hitbox_left .expand(arrow_size + max_offset, Alignment2D.LEFT);
+            arrow_hitbox_right = arrow_hitbox_right.expand(arrow_size + max_offset, Alignment2D.RIGHT);
+
+            if (ui.mouse_clicked(arrow_hitbox_left)) {
+                spin_left(carousel);
+            }
+
+            if (ui.mouse_clicked(arrow_hitbox_right)) {
+                spin_right(carousel);
+            }
         }
 
         protected override void render(FhSettingsUiX ui, FhSettingCarousel<T> carousel, Rect max_bounds) {

@@ -693,10 +693,15 @@ public partial class FhSettingsUiX {
         private const float SPIN_SPEED = 1.6f; // in progress per second
         private const float OPTION_SPIN_DIFF = 1f/2f;
 
+        private const float ARROW_PROGRESS_DECAY = 7f; // per second
+
+        private static readonly Dictionary<FhSettingCarousel<T>, float> progress_arrow_left  = [];
+        private static readonly Dictionary<FhSettingCarousel<T>, float> progress_arrow_right = [];
+
         // Between -1 and 1. 0 when no spin is happening
         // Technically between -OPTION_SPIN_DIFF and OPTION_SPIN_DIFF
         // Equal to the spin progress of the current value
-        private static readonly Dictionary<FhSettingCarousel<T>, float> spin_progress = [];
+        private static readonly Dictionary<FhSettingCarousel<T>, float> progress_spin = [];
 
         private int get_prev_index(ReadOnlySpan<T> choices, T choice) {
             int index = choices.IndexOf(choice);
@@ -774,7 +779,7 @@ public partial class FhSettingsUiX {
             int prev_index = get_prev_index(choices, curr_choice);
             int next_index = get_next_index(choices, curr_choice);
 
-            int[] choice_indices = spin_progress[carousel] switch {
+            int[] choice_indices = progress_spin[carousel] switch {
                 0f => [
                     prev_index,
                     curr_index,
@@ -798,7 +803,7 @@ public partial class FhSettingsUiX {
                 _ => throw new UnreachableException(),
             };
 
-            int main_index = spin_progress[carousel] switch {
+            int main_index = progress_spin[carousel] switch {
                   0f => 1,
                 > 0f => 2,
                 < 0f => 1,
@@ -807,15 +812,15 @@ public partial class FhSettingsUiX {
             };
 
             for (int i = 0; i < main_index; i++) {
-                float spin = spin_progress[carousel] - OPTION_SPIN_DIFF * (main_index - i);
+                float spin = progress_spin[carousel] - OPTION_SPIN_DIFF * (main_index - i);
 
                 render_option(ui, carousel, choice_indices[i], spin, value_bounds);
             }
 
-            render_option(ui, carousel, choice_indices[main_index], spin_progress[carousel], value_bounds);
+            render_option(ui, carousel, choice_indices[main_index], progress_spin[carousel], value_bounds);
 
             for (int i = main_index + 1; i < choice_indices.Length; i++) {
-                float spin = spin_progress[carousel] + OPTION_SPIN_DIFF * (i - main_index);
+                float spin = progress_spin[carousel] + OPTION_SPIN_DIFF * (i - main_index);
 
                 render_option(ui, carousel, choice_indices[i], spin, value_bounds);
             }
@@ -825,8 +830,6 @@ public partial class FhSettingsUiX {
             if (!ui._texture_battle.try_use(out ImTextureRef battle, out FhTextureMetadata? battle_meta)) {
                 return;
             }
-
-            float arrow_progress = float.Clamp(float.Sign(spin_progress[carousel]) * float.Pow(spin_progress[carousel] * (1f / OPTION_SPIN_DIFF), 2f), -1f, 1f);
 
             Vector2 max_offset = new(10f, 0f);
 
@@ -843,10 +846,11 @@ public partial class FhSettingsUiX {
             arrow_left  = arrow_left .expand(arrow_size, Alignment2D.LEFT);
             arrow_right = arrow_right.expand(arrow_size, Alignment2D.RIGHT);
 
-            if (arrow_progress < 0f)
-                arrow_left.pos  -= Vector2.Lerp(Vector2.Zero, max_offset, float.Abs(arrow_progress));
-            else if (arrow_progress > 0f)
-                arrow_right.pos += Vector2.Lerp(Vector2.Zero, max_offset, arrow_progress);
+            if (progress_arrow_left[carousel] > 0f)
+                arrow_left.pos  -= Vector2.Lerp(Vector2.Zero, max_offset, progress_arrow_left[carousel]);
+
+            if (progress_arrow_right[carousel] > 0f)
+                arrow_right.pos += Vector2.Lerp(Vector2.Zero, max_offset, progress_arrow_right[carousel]);
 
             arrow_left  = arrow_left .scale_to_aspect(ui.aspect_helper);
             arrow_right = arrow_right.scale_to_aspect(ui.aspect_helper);
@@ -872,7 +876,7 @@ public partial class FhSettingsUiX {
                 new Vector2(arrow_tuv.p0.X, arrow_tuv.p1.Y)
             );
 
-            if (spin_progress[carousel] != 0f || ui.focus != UiFocus.SETTINGS)
+            if (progress_spin[carousel] != 0f || ui.focus != UiFocus.SETTINGS)
                 return;
 
             Rect arrow_hitbox_left  = new() { pos = value_bounds.left  + max_offset };
@@ -905,14 +909,35 @@ public partial class FhSettingsUiX {
 
             render_name(ui, (Rect)name_bounds, carousel.name);
 
-            spin_progress.TryAdd(carousel, 0f);
+            progress_spin.TryAdd(carousel, 0f);
 
-            if (spin_progress[carousel] != 0f) {
+            progress_arrow_left .TryAdd(carousel, 0f);
+            progress_arrow_right.TryAdd(carousel, 0f);
+
+            if (progress_spin[carousel] != 0f) {
                 float spin_delta = SPIN_SPEED * ImGui.GetIO().DeltaTime;
-                spin_delta = float.Min(spin_delta, float.Abs(spin_progress[carousel]));
+                spin_delta = float.Min(spin_delta, float.Abs(progress_spin[carousel]));
 
-                spin_progress[carousel] -= spin_delta * float.Sign(spin_progress[carousel]);
-                spin_progress[carousel]  = float.Clamp(spin_progress[carousel], -1f, 1f);
+                progress_spin[carousel] -= spin_delta * float.Sign(progress_spin[carousel]);
+                progress_spin[carousel]  = float.Clamp(progress_spin[carousel], -1f, 1f);
+            }
+
+            if (progress_arrow_left[carousel] != 0f) {
+                float decay = ARROW_PROGRESS_DECAY * ImGui.GetIO().DeltaTime;
+                float decay_scale = float.Lerp(progress_arrow_left[carousel], 1f, 0.5f);
+
+                decay = float.Min(progress_arrow_left[carousel], decay * decay_scale);
+
+                progress_arrow_left[carousel] -= decay;
+            }
+
+            if (progress_arrow_right[carousel] != 0f) {
+                float decay = ARROW_PROGRESS_DECAY * ImGui.GetIO().DeltaTime;
+                float decay_scale = float.Lerp(progress_arrow_right[carousel], 1f, 0.5f);
+
+                decay = float.Min(progress_arrow_right[carousel], decay * decay_scale);
+
+                progress_arrow_right[carousel] -= decay;
             }
 
             render_options(ui, carousel, (Rect)value_bounds);
@@ -928,7 +953,8 @@ public partial class FhSettingsUiX {
 
             carousel.set(prev_choice);
 
-            spin_progress[carousel] = OPTION_SPIN_DIFF;
+            progress_spin       [carousel] = OPTION_SPIN_DIFF;
+            progress_arrow_right[carousel] = 1f;
         }
 
         private void spin_right(FhSettingCarousel<T> carousel) {
@@ -940,11 +966,12 @@ public partial class FhSettingsUiX {
 
             carousel.set(next_choice);
 
-            spin_progress[carousel] = -OPTION_SPIN_DIFF;
+            progress_spin      [carousel] = -OPTION_SPIN_DIFF;
+            progress_arrow_left[carousel] = 1f;
         }
 
         protected override bool handle_input(FhSettingsUiX ui, FhSettingCarousel<T> choice) {
-            if (spin_progress[choice] != 0f)
+            if (progress_spin[choice] != 0f)
                 return false;
 
             if (FhApi.Gui.is_any_pressed(FhApi.Gui.keys_left)) {

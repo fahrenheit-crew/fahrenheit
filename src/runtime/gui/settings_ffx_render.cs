@@ -139,6 +139,11 @@ public partial class FhSettingsUiX {
             separator_bl *= ui.aspect_scale;
             separator_br *= ui.aspect_scale;
 
+            separator_tl += ui.aspect_helper.pos;
+            separator_tr += ui.aspect_helper.pos;
+            separator_bl += ui.aspect_helper.pos;
+            separator_br += ui.aspect_helper.pos;
+
             FhApi.Gui.draw_quad_gradient(
                 draw,
                 [

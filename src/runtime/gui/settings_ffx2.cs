@@ -478,10 +478,10 @@ public partial class FhSettingsUiX2 : FhSettingsUiBase {
         if (bounds.bottom.Y > outer_bounds.top.Y) {
             ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
-            Rect scaled_bounds = bounds.scale_to_aspect(aspect_helper);
+            Rect scaled_bounds       = bounds.scale_to_aspect(aspect_helper);
             Rect scaled_outer_bounds = outer_bounds.scale_to_aspect(aspect_helper);
 
-            draw.PushClipRect(scaled_bounds.top_left, scaled_bounds.bottom_right);
+            draw.PushClipRect(scaled_bounds.top_left,       scaled_bounds.bottom_right);
             draw.PushClipRect(scaled_outer_bounds.top_left, scaled_outer_bounds.bottom_right);
 
             renderer.render(this, setting, bounds);

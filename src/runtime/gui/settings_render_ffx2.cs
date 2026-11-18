@@ -11,14 +11,14 @@ public partial class FhSettingsUiX2 {
     private abstract class Renderer_Base<T> : SettingRenderer
         where T : FhSetting {
 
-        public override Vector2 get_size(FhSettingsUiBase ui) => get_size((FhSettingsUiX2) ui);
+        public override Vector2 get_size(FhSettingsUiBase ui) => get_size((FhSettingsUiX2)ui);
 
         public override sealed bool handle_input(FhSettingsUiBase ui, FhSetting setting) {
-            return handle_input((FhSettingsUiX2) ui, (T) setting);
+            return handle_input((FhSettingsUiX2)ui, (T) setting);
         }
 
         public override sealed void render(FhSettingsUiBase ui, FhSetting setting, Rect max_bounds) {
-            render((FhSettingsUiX2) ui, (T) setting, max_bounds);
+            render((FhSettingsUiX2)ui, (T) setting, max_bounds);
         }
 
         protected virtual Vector2 get_size(FhSettingsUiX2 ui) => new(0f, 60f);
@@ -45,26 +45,18 @@ public partial class FhSettingsUiX2 {
 
             // Background
             // Divide the bounds width into plate, gap, and window
-            float plate_width = max_bounds.size.X / 2.5f;
-
-            float gap = plate_width / 8.8f;
-
-            float window_width = float.Max(0f, max_bounds.size.X - plate_width - gap);
+            float plate_width  = max_bounds.size.X / 2.5f;
+            float gap_width    = plate_width / 8.8f;
+            float window_width = float.Max(0f, max_bounds.size.X - plate_width - gap_width);
 
             Rect plate_bounds = new() {
-                pos = max_bounds.pos,
-                size = max_bounds.size with {
-                    X = plate_width
-                }
+                pos  = max_bounds.pos,
+                size = max_bounds.size with { X = plate_width }
             };
 
             Rect window_bounds = new() {
-                pos = max_bounds.pos with {
-                    X = plate_bounds.right.X + gap
-                },
-                size = max_bounds.size with {
-                    X = window_width
-                }
+                pos  = max_bounds.pos  with { X = plate_bounds.right.X + gap_width },
+                size = max_bounds.size with { X = window_width }
             };
 
             FhApi.Gui.draw_x2_plate(
@@ -135,7 +127,7 @@ public partial class FhSettingsUiX2 {
                 max_bounds.scale_to_aspect(ui.aspect_helper),
                 2,
                 ui.plate_config with {
-                    color = 0xFFFFFFFF,
+                    color       = 0xFFFFFFFF,
                     draw_header = true,
                 }
             );
@@ -152,9 +144,7 @@ public partial class FhSettingsUiX2 {
             arrow_tuv.size.Y *= -1f;
 
             Rect arrow_bounds = new() {
-                pos = max_bounds.left with {
-                    X = max_bounds.left.X + 35f,
-                },
+                pos = max_bounds.left with { X = max_bounds.left.X + 35f, },
                 size = new(28f, 24f),
             };
 
@@ -213,8 +203,8 @@ public partial class FhSettingsUiX2 {
 
             // Name
             Vector2 name_pos = arrow_bounds.right;
-            name_pos.X      += 30f;
-            name_pos.Y      -=  1f;
+            name_pos.X += 30f;
+            name_pos.Y -=  1f;
 
             FhApi.Gui.draw_text(
                 draw,
@@ -222,7 +212,7 @@ public partial class FhSettingsUiX2 {
                 category.name,
                 ui.text_config with {
                     font_size = 40f * ui.font_scale,
-                    align = Alignment2D.LEFT
+                    align     = Alignment2D.LEFT
                 }
             );
 
@@ -246,7 +236,7 @@ public partial class FhSettingsUiX2 {
 
     private sealed class Renderer_Toggle : Renderer_Base<FhSettingToggle> {
         public static readonly Renderer_Toggle instance = new();
-        private static string _text_on => FhApi.Localization.localize($"{typeof(FhSettingsUi)}.input.on");
+        private static string _text_on  => FhApi.Localization.localize($"{typeof(FhSettingsUi)}.input.on");
         private static string _text_off => FhApi.Localization.localize($"{typeof(FhSettingsUi)}.input.off");
 
         private void render_options(FhSettingsUiX2 ui, FhSettingToggle toggle, Rect value_bounds) {
@@ -360,8 +350,7 @@ public partial class FhSettingsUiX2 {
                 return;
             }
 
-            render_name(ui, (Rect) name_bounds, toggle.name);
-
+            render_name   (ui, (Rect) name_bounds, toggle.name);
             render_options(ui, toggle, (Rect) value_bounds);
         }
 
@@ -425,7 +414,7 @@ public partial class FhSettingsUiX2 {
             Rect arrow_left  = new() { pos = value_bounds.left  + max_offset };
             Rect arrow_right = new() { pos = value_bounds.right - max_offset };
 
-            arrow_left = arrow_left.expand(arrow_size, Alignment2D.LEFT);
+            arrow_left  = arrow_left .expand(arrow_size, Alignment2D.LEFT);
             arrow_right = arrow_right.expand(arrow_size, Alignment2D.RIGHT);
 
             if (progress_arrow_left[number] > 0f)
@@ -528,8 +517,8 @@ public partial class FhSettingsUiX2 {
                 progress_arrow_right[number] -= decay;
             }
 
-            render_name(ui, (Rect)name_bounds, number.name);
-            render_value(ui, number, (Rect)value_bounds);
+            render_name  (ui, (Rect)name_bounds, number.name);
+            render_value (ui, number, (Rect)value_bounds);
             render_arrows(ui, number, (Rect)value_bounds);
         }
 
@@ -557,7 +546,7 @@ public partial class FhSettingsUiX2 {
     }
 
     private class Renderer_Carousel<T> : Renderer_Base<FhSettingCarousel<T>> {
-        private const float SPIN_SPEED = 1.6f; // in progress per second
+        private const float SPIN_SPEED       = 1.6f; // in progress per second
         private const float OPTION_SPIN_DIFF = 1f/2f;
 
         private const float ARROW_PROGRESS_DECAY = 7f; // per second
@@ -589,7 +578,7 @@ public partial class FhSettingsUiX2 {
         }
 
         private uint get_alpha_for_spin(float progress) {
-            byte alpha = (byte)(0xFF * float.Pow(1f - remap_spin_progress(progress), 0.5f));
+            byte alpha = (byte)(0xFF * float.Pow(1f - remap_spin_progress(progress), 0.3f));
             return (uint)((alpha << 24) | 0xFFFFFF);
         }
 
@@ -830,7 +819,7 @@ public partial class FhSettingsUiX2 {
 
             carousel.set(prev_choice);
 
-            progress_spin[carousel] = OPTION_SPIN_DIFF;
+            progress_spin[carousel]        = OPTION_SPIN_DIFF;
             progress_arrow_right[carousel] = 1f;
         }
 
@@ -843,7 +832,7 @@ public partial class FhSettingsUiX2 {
 
             carousel.set(next_choice);
 
-            progress_spin[carousel] = -OPTION_SPIN_DIFF;
+            progress_spin[carousel]       = -OPTION_SPIN_DIFF;
             progress_arrow_left[carousel] = 1f;
         }
 

@@ -453,7 +453,9 @@ public partial class FhSettingsUiX2 {
                 arrow_tuv.bottom_left,
                 arrow_tuv.bottom_right,
                 arrow_tuv.top_right,
-                arrow_tuv.top_left
+                arrow_tuv.top_left,
+
+                left_color
             );
 
             draw.AddImageQuad(
@@ -467,7 +469,9 @@ public partial class FhSettingsUiX2 {
                 arrow_tuv.bottom_left,
                 arrow_tuv.bottom_right,
                 arrow_tuv.top_right,
-                arrow_tuv.top_left
+                arrow_tuv.top_left,
+
+                right_color
             );
 
             if (ui.focus != UiFocus.SETTINGS)

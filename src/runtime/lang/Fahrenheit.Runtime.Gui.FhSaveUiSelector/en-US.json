@@ -5,9 +5,9 @@
     "settings.selected_ui.name": "UI",
     "settings.selected_ui.desc": "Select which UI to use for the save/load menu",
 
-    "settings.selected_ui.Fahrenheit.Runtime.Gui.FhSaveUiX.name": "FFX",
-    "settings.selected_ui.Fahrenheit.Runtime.Gui.FhSaveUiX.desc": "The default UI for FFX",
+    "settings.selected_ui.values.Fahrenheit.Runtime.Gui.FhSaveUiX.name": "FFX",
+    "settings.selected_ui.values.Fahrenheit.Runtime.Gui.FhSaveUiX.desc": "The default UI for FFX",
 
-    "settings.selected_ui.Fahrenheit.Runtime.Gui.FhSaveUiX2.name": "FFX-2",
-    "settings.selected_ui.Fahrenheit.Runtime.Gui.FhSaveUiX2.desc": "The default UI for FFX-2"
+    "settings.selected_ui.values.Fahrenheit.Runtime.Gui.FhSaveUiX2.name": "FFX-2",
+    "settings.selected_ui.values.Fahrenheit.Runtime.Gui.FhSaveUiX2.desc": "The default UI for FFX-2"
 }

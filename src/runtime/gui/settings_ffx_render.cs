@@ -209,7 +209,7 @@ public partial class FhSettingsUiX {
 
             FhApi.Gui.draw_text(
                 draw,
-                name_bounds.right * ui.aspect_scale,
+                name_bounds.right * ui.aspect_scale + ui.aspect_helper.pos,
                 name,
                 ui.text_config with { align = Alignment2D.RIGHT }
             );
@@ -364,7 +364,7 @@ public partial class FhSettingsUiX {
 
             FhApi.Gui.draw_text(
                 draw,
-                name_pos * ui.aspect_scale,
+                name_pos * ui.aspect_scale + ui.aspect_helper.pos,
                 category.name,
                 ui.text_config with { align = Alignment2D.LEFT }
             );
@@ -409,14 +409,14 @@ public partial class FhSettingsUiX {
 
             FhApi.Gui.draw_text(
                 draw,
-                on_pos * ui.aspect_scale,
+                on_pos * ui.aspect_scale + ui.aspect_helper.pos,
                 _text_on,
                 ui.text_config with { align = Alignment2D.CENTER }
             );
 
             FhApi.Gui.draw_text(
                 draw,
-                off_pos * ui.aspect_scale,
+                off_pos * ui.aspect_scale + ui.aspect_helper.pos,
                 _text_off,
                 ui.text_config with { align = Alignment2D.CENTER }
             );
@@ -546,7 +546,7 @@ public partial class FhSettingsUiX {
 
             FhApi.Gui.draw_text(
                 draw,
-                value_pos * ui.aspect_scale,
+                value_pos * ui.aspect_scale + ui.aspect_helper.pos,
                 value_text,
                 ui.text_config with { align = Alignment2D.CENTER }
             );
@@ -761,7 +761,7 @@ public partial class FhSettingsUiX {
 
             FhApi.Gui.draw_text(
                 draw,
-                pos * ui.aspect_scale,
+                pos * ui.aspect_scale + ui.aspect_helper.pos,
                 name,
                 ui.text_config with {
                     align     = Alignment2D.CENTER,

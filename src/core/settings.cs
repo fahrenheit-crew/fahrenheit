@@ -428,8 +428,8 @@ public abstract class FhSettingCarousel<T> : FhSetting<T> {
 }
 
 public abstract class FhSettingChoice(string id, long def_value) : FhSettingCarousel<long>(id, def_value) {
-    public override string get_choice_name(long choice) => $"{id}.{choice}.name";
-    public override string get_choice_desc(long choice) => $"{id}.{choice}.desc";
+    public override string get_choice_name(long choice) => $"{id}.values.{choice}.name";
+    public override string get_choice_desc(long choice) => $"{id}.values.{choice}.desc";
 }
 
 public sealed class FhSettingChoice<T> : FhSettingChoice
@@ -481,8 +481,8 @@ public abstract class FhSettingDynamicChoice(string id, object def_value) : FhSe
     internal List<object> choices = [];
 
     public sealed override ReadOnlySpan<object> get_choice_values() => CollectionsMarshal.AsSpan(choices);
-    public sealed override string get_choice_name(object choice) => $"{id}.{choice}.name";
-    public sealed override string get_choice_desc(object choice) => $"{id}.{choice}.desc";
+    public sealed override string get_choice_name(object choice) => $"{id}.values.{choice}.name";
+    public sealed override string get_choice_desc(object choice) => $"{id}.values.{choice}.desc";
 
     internal sealed override void set(object new_value) {
         SetEventArgs args = new(value);

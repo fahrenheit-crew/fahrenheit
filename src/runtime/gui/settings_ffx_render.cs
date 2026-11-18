@@ -885,11 +885,11 @@ public partial class FhSettingsUiX {
             arrow_hitbox_right = arrow_hitbox_right.scale_to_aspect(ui.aspect_helper);
 
             if (ui.mouse_clicked(arrow_hitbox_left)) {
-                spin_left(carousel);
+                spin_right(carousel);
             }
 
             if (ui.mouse_clicked(arrow_hitbox_right)) {
-                spin_right(carousel);
+                spin_left(carousel);
             }
         }
 

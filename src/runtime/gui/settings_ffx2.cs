@@ -184,8 +184,8 @@ public partial class FhSettingsUiX2 : FhSettingsUiBase {
 
         // Saving this one as a rect to more easily calculate the text position later
         Rect bg_screen = new Rect {
-            pos  = new(   0f, 86f),
-            size = new(1920f, 46f),
+            pos  = new(   0f, 85f),
+            size = new(1920f, 47f),
         }.scale_to_aspect(aspect_helper);
 
         UV bg_suv = bg_screen.as_uv();
@@ -269,7 +269,7 @@ public partial class FhSettingsUiX2 : FhSettingsUiBase {
 
         Vector2 plate_screen_size = new(475f, 60f);
 
-        float plate_screen_dy = plate_screen_size.Y + 18f;
+        float plate_screen_dy = plate_screen_size.Y + 20f;
 
         Rect plate_screen = new Rect {
             pos  = new(35f, 174f + plate_screen_dy * local_index),
@@ -344,13 +344,10 @@ public partial class FhSettingsUiX2 : FhSettingsUiBase {
 
         Vector2 plate_screen_size = new(415f, 60f);
 
-        float plate_screen_dy = plate_screen_size.Y + 18f;
-
-        float x_pos = 95f;
-        // TODO: insert slide in/out animation here when a mod is selected
+        float plate_screen_dy = plate_screen_size.Y + 10f;
 
         Rect plate_screen = new Rect {
-            pos  = new(x_pos, 174f + plate_screen_dy * local_index),
+            pos  = new(95f, 179f + plate_screen_dy * local_index),
             size = plate_screen_size,
         }.scale_to_aspect(aspect_helper);
 
@@ -360,7 +357,9 @@ public partial class FhSettingsUiX2 : FhSettingsUiBase {
             draw,
             plate_screen,
             local_index + 1,
-            plate_config
+            plate_config with {
+                color = 0xFFC6B1AF
+            }
         );
 
         draw.PushClipRect(plate_screen.top_left, plate_screen.bottom_right);

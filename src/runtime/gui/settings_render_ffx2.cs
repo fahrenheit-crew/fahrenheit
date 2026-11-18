@@ -101,9 +101,12 @@ public partial class FhSettingsUiX2 {
         protected void render_name(FhSettingsUiX2 ui, Rect name_bounds, string name) {
             ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
+            Vector2 text_pos = name_bounds.center;
+            text_pos.Y -= 1f;
+
             FhApi.Gui.draw_text(
                 draw,
-                name_bounds.center * ui.aspect_scale + ui.aspect_helper.pos,
+                text_pos * ui.aspect_scale + ui.aspect_helper.pos,
                 name,
                 ui.text_config with { align = Alignment2D.CENTER }
             );
@@ -114,7 +117,7 @@ public partial class FhSettingsUiX2 {
         public static Renderer_Category instance = new();
 
         protected override Vector2 get_size(FhSettingsUiX2 ui) {
-            return new Vector2(0f, 45f);
+            return new Vector2(0f, 40f);
         }
 
         protected override void render(FhSettingsUiX2 ui, FhSettingsCategory category, Rect max_bounds) {
@@ -150,7 +153,7 @@ public partial class FhSettingsUiX2 {
                 pos = max_bounds.left with {
                     X = max_bounds.left.X + 35f,
                 },
-                size = new(29f, 26f),
+                size = new(28f, 24f),
             };
 
             arrow_bounds.pos.Y -= arrow_bounds.size.Y / 2f;
@@ -209,12 +212,16 @@ public partial class FhSettingsUiX2 {
             // Name
             Vector2 name_pos = arrow_bounds.right;
             name_pos.X      += 30f;
+            name_pos.Y      -=  1f;
 
             FhApi.Gui.draw_text(
                 draw,
                 name_pos * ui.aspect_scale + ui.aspect_helper.pos,
                 category.name,
-                ui.text_config with { align = Alignment2D.LEFT }
+                ui.text_config with {
+                    font_size = 40f * ui.font_scale,
+                    align = Alignment2D.LEFT
+                }
             );
 
             // Input handling

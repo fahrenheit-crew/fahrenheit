@@ -372,6 +372,7 @@ public class FhSettingNumber : FhSetting<double> {
     public readonly double step;
 
     public readonly bool integers_only;
+    public readonly int  precision;
 
     public FhSettingNumber(
         string id,
@@ -379,7 +380,8 @@ public class FhSettingNumber : FhSetting<double> {
         double min           = 0.0,
         double max           = 1.0,
         double step          = 1.0,
-        bool   integers_only = false
+        bool   integers_only = false,
+        int    precision     = 1
     ) : base(id, def_value) {
         ArgumentOutOfRangeException.ThrowIfLessThan   (def_value, min);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(def_value, max);
@@ -390,6 +392,8 @@ public class FhSettingNumber : FhSetting<double> {
             ArgumentOutOfRangeException.ThrowIfEqual(double.IsInteger(min),  false);
             ArgumentOutOfRangeException.ThrowIfEqual(double.IsInteger(max),  false);
             ArgumentOutOfRangeException.ThrowIfEqual(double.IsInteger(step), false);
+
+            precision = 0;
         }
 
         this.min  = min;
@@ -397,6 +401,7 @@ public class FhSettingNumber : FhSetting<double> {
         this.step = step;
 
         this.integers_only = integers_only;
+        this.precision     = precision;
     }
 
     internal override void set(double new_value) {

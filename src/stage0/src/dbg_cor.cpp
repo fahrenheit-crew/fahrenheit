@@ -281,7 +281,7 @@ HRESULT s0_dbg_cor_stack_walk(
 
     clr_ver_actual   .wStructVersion = 0;
     clr_ver_supported.wStructVersion = 0;
-    clr_ver_supported.wMajor         = 10;
+    clr_ver_supported.wMajor         = 11;
     clr_ver_supported.wMinor         = 0;
     clr_ver_supported.wBuild         = 65535;
     clr_ver_supported.wRevision      = 65535;

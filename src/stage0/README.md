@@ -1,4 +1,4 @@
-The "Stage 0" loader creates a target process and injects the ["Stage 1" loader](https://github.com/fahrenheit-crew/fahrenheit/tree/main/src/stage1)), which bootstraps .NET, and then Fahrenheit.
+The "Stage 0" loader creates a target process and injects the ["Stage 1" loader](https://github.com/fahrenheit-crew/fahrenheit/tree/main/src/stage1), which bootstraps .NET, and then Fahrenheit.
 
 It then acts as a stub Win32 user-mode debugger and the target's standard input/output pipe.
 

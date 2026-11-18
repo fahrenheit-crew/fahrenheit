@@ -9,11 +9,11 @@ Construction is the stage at which a module's constructor runs. These restrictio
 
 During construction, you **must**:
 - Initialize your module's local variables.
-- If your module has [settings](Settings), create an instance of its `FhSettingProvider<T>`.
+- If your module has [settings](settings), create an instance of its `FhSettingProvider<T>`.
 
 During construction, you **cannot**:
 - Use module handles, and hence interact with other modules.
-- Use [call handles](Calls), and hence call or hook game functions.
+- Use [call handles](calls), and hence call or hook game functions.
 - Call any member or method of `FhApi`.
 
 ## Initialization
@@ -26,7 +26,7 @@ Initialization is the stage at which a module's `init` method runs. These restri
 During and after initialization, you **can**:
 - Use module handles, and hence interact with other modules.
 - Call any member or method of `FhApi`.
-- Access your module's [global state](State#Global-state).
+- Access your module's [global state](state#Global-state).
 
 After initialization, you **can**:
 - Use call handles to call game functions.

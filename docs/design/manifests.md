@@ -25,7 +25,7 @@ The manifest is a [JSON file](https://www.json.org/json-en.html) containing one 
 
 ## Manifests for code mods
 
-The [Fahrenheit SDK](SDK) automatically generates your mod's manifest based on details from your [C# project file](https://learn.microsoft.com/en-us/dotnet/core/project-sdk/overview#project-files) at build time.
+The [Fahrenheit SDK](sdk) automatically generates your mod's manifest based on details from your [C# project file](https://learn.microsoft.com/en-us/dotnet/core/project-sdk/overview#project-files) at build time.
 
 The following manifest properties map to the following project file properties:
 - `Id` -> `AssemblyName`

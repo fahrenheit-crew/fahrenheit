@@ -1,6 +1,6 @@
 # State
 
-State is arbitrary data [modules](Modules) may save between game sessions. It comes in two varieties:
+State is arbitrary data [modules](modules) may save between game sessions. It comes in two varieties:
 - Global state, applicable at all times
 - Local state, specific to each save file
 
@@ -10,7 +10,7 @@ State is arbitrary data [modules](Modules) may save between game sessions. It co
 > **Always** use global and local state for data storage.
 
 ## Global state
-In its [`init`](Startup#Initialization) method, each module receives a `FileStream` of their global state file.
+In its [`init`](startup#Initialization) method, each module receives a `FileStream` of their global state file.
 
 The module may store the handle and use this file as it deems fit. The format of global state is not prescribed.
 
@@ -42,7 +42,7 @@ These callbacks:
 ## Local state versioning
 When loading local state, a supplementary `FhLocalStateInfo` is provided. 
 
-This structure contains the [manifest](Manifests) `Version` of your mod that last wrote that state file. 
+This structure contains the [manifest](manifests) `Version` of your mod that last wrote that state file. 
 
 > [!TIP]
 > You may use this information to safely handle updating the format of your state file, or refuse to load it altogether.

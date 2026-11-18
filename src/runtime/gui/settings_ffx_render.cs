@@ -726,7 +726,7 @@ public partial class FhSettingsUiX {
         }
 
         private uint get_alpha_for_spin(float progress) {
-            byte alpha = (byte)(0xFF * float.Pow(1f - remap_spin_progress(progress), 0.5f));
+            byte alpha = (byte)(0xFF * float.Pow(1f - remap_spin_progress(progress), 0.3f));
             return (uint)((alpha << 24) | 0xFFFFFF);
         }
 

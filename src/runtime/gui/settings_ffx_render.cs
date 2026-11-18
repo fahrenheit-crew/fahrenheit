@@ -616,6 +616,9 @@ public partial class FhSettingsUiX {
             arrow_hitbox_left  = arrow_hitbox_left .expand(arrow_size + max_offset, Alignment2D.LEFT);
             arrow_hitbox_right = arrow_hitbox_right.expand(arrow_size + max_offset, Alignment2D.RIGHT);
 
+            arrow_hitbox_left  = arrow_hitbox_left .scale_to_aspect(ui.aspect_helper);
+            arrow_hitbox_right = arrow_hitbox_right.scale_to_aspect(ui.aspect_helper);
+
             if (ui.mouse_clicked(arrow_hitbox_left) && number.get() > number.min) {
                 number.set(number.get() - number.step);
                 progress_arrow_left[number] = 1f;
@@ -877,6 +880,9 @@ public partial class FhSettingsUiX {
 
             arrow_hitbox_left  = arrow_hitbox_left .expand(arrow_size + max_offset, Alignment2D.LEFT);
             arrow_hitbox_right = arrow_hitbox_right.expand(arrow_size + max_offset, Alignment2D.RIGHT);
+
+            arrow_hitbox_left  = arrow_hitbox_left .scale_to_aspect(ui.aspect_helper);
+            arrow_hitbox_right = arrow_hitbox_right.scale_to_aspect(ui.aspect_helper);
 
             if (ui.mouse_clicked(arrow_hitbox_left)) {
                 spin_left(carousel);

@@ -107,18 +107,14 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src/main.cpp" />
+    <ClInclude Include="inc\fhsetup.h" />
+    <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\check.cpp" />
     <ClCompile Include="src\ui.cpp" />
-    <ResourceCompile Include="inc/fhsetup.rc" />
+    <ResourceCompile Include="inc\fhsetup.rc" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\assets\fh_arrow_256.ico" />
   </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="inc\fhsetup.h" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets">
-  </ImportGroup>
 </Project>

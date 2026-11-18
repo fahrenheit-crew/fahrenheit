@@ -288,7 +288,7 @@ bool setup_check_vcredist(FH_SETUP_REDIST_TYPE type) {
     /* [fkelava 13/11/26 15:35]
      * https://devblogs.microsoft.com/oldnewthing/20221219-00/?p=107601/
      * > If the compiler’s self-reported version is `aa.bb.ccccc.dd`, then _MSC_VER is `aabb` and _MSC_FULL_VER is `aabbccccc`.
-     * > In other words, `_MSC_VER = aa * 100 + bb` and `_MSC_FULL_VER = aa * 10000000 + bb * 100000 + cc`.
+     * > In other words, `_MSC_VER = aa * 100 + bb` and `_MSC_FULL_VER = aa * 10000000 + bb * 100000 + ccccc`.
      */
 
     const int MSC_MAJOR = _MSC_FULL_VER / 10000000;

@@ -10,10 +10,16 @@ global using SDLWindowPtrB = Hexa.NET.ImGui.Backends.SDL3.SDLWindowPtr;
 
 // C# stdlib essentials
 global using System;
+global using System.Collections.Generic;
+global using System.Diagnostics;
 global using System.Drawing;
+global using System.IO;
+global using System.IO.Compression;
+global using System.Numerics;
 global using System.Runtime.CompilerServices;
 global using System.Runtime.InteropServices;
 global using System.Runtime.Versioning;
+global using System.Text.Json;
 
 // ImGui C# binding
 global using Hexa.NET.ImGui;
@@ -25,3 +31,6 @@ global using Hexa.NET.SDL3;
 global using Hexa.NET.OpenGL;
 
 global using HexaGen.Runtime;
+
+// Native file dialog bindings
+global using NativeFileDialogCore;

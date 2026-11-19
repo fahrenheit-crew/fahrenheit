@@ -1,6 +1,11 @@
 # Fahrenheit Mod Manager
 
-A GUI to perform basic manipulation of Fahrenheit mods.
+A GUI to perform basic manipulation of Fahrenheit mods: 
+- enabling/disabling
+- reordering loadorder
+- importing/exporting mod packs
+- importing loose EFL file trees
+- launching Final Fantasy `X`, `X-2`, `X-2 Last Mission` through Fahrenheit with optional arguments
 
 This is a work in progress. The program stub, which is a basic Win32/D3D11 ImGui desktop application,
-is available for inspection, but no user interface has as of yet been committed.
+is available for inspection with a limited user interface.

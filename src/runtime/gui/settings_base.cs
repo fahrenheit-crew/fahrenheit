@@ -186,6 +186,8 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
 
         FhInternal.Settings.try_get_settings(selected_module.Module, out displayed_settings);
         hovered_setting = displayed_settings!.settings[0];
+
+        scrollable_settings.current = 0f;
     }
 
     protected void hover_setting_up() {
@@ -196,8 +198,11 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
         // If we have a parent and the index is zero, the parent category is guaranteed to be directly above us!
         if (index == 0) {
             // The displayed settings category is never actually displayed, only its settings
-            if (parent != displayed_settings)
+            if (parent != displayed_settings) {
                 hovered_setting = parent;
+                ensure_setting_visible(hovered_setting);
+            }
+
             return;
         }
 
@@ -209,6 +214,7 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
         }
 
         hovered_setting = setting_one_up;
+        ensure_setting_visible(hovered_setting);
     }
 
     protected void hover_setting_down() {
@@ -222,6 +228,7 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
             && category.settings.Length > 0
         ) {
             hovered_setting = category.settings[0];
+            ensure_setting_visible(hovered_setting);
             return;
         }
 
@@ -237,6 +244,77 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
         }
 
         hovered_setting = parent.settings[(int)index + 1];
+        ensure_setting_visible(hovered_setting);
+    }
+
+    private float get_setting_height(FhSetting setting) {
+        if (!get_setting_renderer(setting, out SettingRenderer? renderer)) {
+            return 0f;
+        }
+
+        float height = 0f;
+
+        height += renderer.get_size(this).Y;
+
+        if (setting is not FhSettingsCategory category || category.collapsed) {
+            return height;
+        }
+
+        foreach (FhSetting inner_setting in category.settings) {
+            height += get_setting_height(inner_setting);
+        }
+
+        return height;
+    }
+
+    protected abstract float get_setting_margin(FhSetting setting);
+
+    protected float calculate_setting_top(FhSetting setting) {
+        if (setting == displayed_settings) {
+            return 0f;
+        }
+
+        float top = 0f;
+
+        if (!try_get_setting_parent(setting, out FhSettingsCategory? parent, out int? index)) {
+            throw new UnreachableException();
+        }
+
+        while (parent != null) {
+            for (int i = 0; i < index; i++) {
+                top += get_setting_height(parent.settings[i]);
+                top += get_setting_margin(parent.settings[i]);
+            }
+
+            try_get_setting_parent(parent, out parent, out index);
+        }
+
+        return top;
+    }
+
+    protected void ensure_setting_visible(FhSetting setting) {
+        if (!get_setting_renderer(setting, out SettingRenderer? renderer)) {
+            throw new NotImplementedException();
+        }
+
+        float top = calculate_setting_top(setting);
+
+        Rect setting_bounds = new() {
+            pos  = new Vector2(0f, top),
+            size = renderer.get_size(this),
+        };
+
+        float margin = get_setting_margin(setting);
+
+        float min_top    = setting_bounds.top.Y    - margin;
+        float min_bottom = setting_bounds.bottom.Y + margin;
+
+        if (scrollable_settings.get_clip_start() < min_top) {
+            scrollable_settings.current = min_top;
+        }
+        else if (scrollable_settings.get_clip_end() < min_bottom) {
+            scrollable_settings.current = min_bottom - scrollable_settings.visible;
+        }
     }
 
 

@@ -36,6 +36,12 @@ public partial class FhSettingsUiX : FhSettingsUiBase {
         max_offset  = 16f * aspect_scale.X,
     };
 
+    protected override float get_setting_margin(FhSetting setting) {
+        return setting is FhSettingsCategory
+            ? CATEGORY_MARGIN_SIZE
+            : SETTING_MARGIN_SIZE;
+    }
+
     // Rendering
 
     /// <summary>Render the background.</summary>
@@ -345,7 +351,7 @@ public partial class FhSettingsUiX : FhSettingsUiBase {
             size = size,
         };
 
-        if (bounds.bottom.Y > outer_bounds.top.Y) {
+        if (bounds.bottom.Y >= outer_bounds.top.Y) {
             ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
             Rect scaled_bounds = bounds.scale_to_aspect(aspect_helper);
@@ -358,6 +364,11 @@ public partial class FhSettingsUiX : FhSettingsUiBase {
 
             draw.PopClipRect();
             draw.PopClipRect();
+
+            if (focus == UiFocus.SETTINGS && mouse_hovered(scaled_bounds)) {
+                hovered_setting = setting;
+                ensure_setting_visible(hovered_setting);
+            }
 
             if (setting == hovered_setting) {
                 FhApi.Gui.draw_x_cursor(

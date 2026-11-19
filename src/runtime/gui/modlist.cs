@@ -38,6 +38,16 @@ public unsafe class FhModListDisplayModule : FhModule {
                 setting_b,
                 sub_a,
                 sub_b,
+                setting_a,
+                setting_b,
+                sub_a,
+                sub_b,
+                setting_a,
+                setting_b,
+                sub_a,
+                sub_b,
+                setting_a,
+                setting_b,
             ];
         }
     }

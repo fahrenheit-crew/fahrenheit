@@ -5,7 +5,7 @@
 
 namespace Fahrenheit.FFX.Battle;
 
-[StructLayout(LayoutKind.Sequential)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public struct ChrItemLoot {
     public ushort item_primary_common;
     public ushort item_primary_rare;

@@ -5,8 +5,8 @@
 
 namespace Fahrenheit.Atel;
 
-[StructLayout(LayoutKind.Sequential, Size = 0x4C)]
-public unsafe struct AtelWorkThread {
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
+public struct AtelWorkThread {
     public InlineArray4<int>   script_offset_stack;
     public InlineArray4<short> script_idx_stack;
 

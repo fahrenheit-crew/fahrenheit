@@ -10,6 +10,9 @@ namespace Fahrenheit.Tests;
 [TestFixture]
 public class FhLayoutTests {
 
+    [Test] public unsafe void __ALLOC_STRUCT() => Assert.That(sizeof(__ALLOC_STRUCT), Is.EqualTo(0x30));
+    [Test] public unsafe void __ALLOC_DATA  () => Assert.That(sizeof(__ALLOC_DATA),   Is.EqualTo(0x18));
+
     [Test] public unsafe void Atel_AtelSignal()            => Assert.That(sizeof(AtelSignal),            Is.EqualTo(0x16));
     [Test] public unsafe void Atel_AtelWorkThread()        => Assert.That(sizeof(AtelWorkThread),        Is.EqualTo(0x4C));
     [Test] public unsafe void Atel_AtelWorkThreadStorage() => Assert.That(sizeof(AtelWorkThreadStorage), Is.EqualTo(0x14));

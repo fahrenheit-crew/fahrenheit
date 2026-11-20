@@ -8,7 +8,7 @@ namespace Fahrenheit;
 /// <summary>
 ///     An opaque structure used by the game's allocator.
 /// </summary>
-[StructLayout(LayoutKind.Sequential)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 internal struct __ALLOC_STRUCT {
     public CRITICAL_SECTION crit_sec;
     public __ALLOC_DATA     data;
@@ -17,7 +17,7 @@ internal struct __ALLOC_STRUCT {
 /// <summary>
 ///     An opaque structure used by the game's allocator.
 /// </summary>
-[StructLayout(LayoutKind.Sequential)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 internal struct __ALLOC_DATA {
     public uint size;
     public uint __0x04;

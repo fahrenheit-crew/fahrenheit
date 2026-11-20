@@ -11,11 +11,11 @@ namespace Fahrenheit.Runtime.Gui;
 [FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
 public sealed unsafe class FhOpeningSequenceModule : FhModule {
 
-    private static readonly FhTexture _tex_sqex         = new("/FFX_Data/PS3Data/GameData/map/titl/titl02/2d/tex/D3D11/0_0_512_448_0.dds.phyre",        FhTextureType.GAME_PHYRE_2D);
-    private static readonly FhTexture _tex_proj_x       = new("/FFX_Data/PS3Data/GameData/map/titl/titl02/2d/tex/D3D11/0_1_512_448_0.dds.phyre",        FhTextureType.GAME_PHYRE_2D);
-    private static readonly FhTexture _tex_proj_x2_logo = new("/FFX-2_Data/PS3Data/GameData/magic/magic_0353/tex/D3D11/13120_19_0_0_128_256.dds.phyre", FhTextureType.GAME_PHYRE_2D);
-    private static readonly FhTexture _tex_proj_x2_text = new("/FFX-2_Data/PS3Data/GameData/magic/magic_0353/tex/D3D11/8064_19_0_0_512_64.dds.phyre",   FhTextureType.GAME_PHYRE_2D);
-    private static readonly FhTexture _tex_proj_x2_year = new("/FFX-2_Data/PS3Data/GameData/magic/magic_0353/tex/D3D11/14464_19_0_0_256_256.dds.phyre", FhTextureType.GAME_PHYRE_2D);
+    private static readonly FhTexture _tex_sqex         = new("/FFX_Data/GameData/PS3Data/map/titl/titl02/2d/tex/D3D11/0_0_512_448_0.dds.phyre",        FhTextureType.GAME_PHYRE_2D);
+    private static readonly FhTexture _tex_proj_x       = new("/FFX_Data/GameData/PS3Data/map/titl/titl02/2d/tex/D3D11/0_1_512_448_0.dds.phyre",        FhTextureType.GAME_PHYRE_2D);
+    private static readonly FhTexture _tex_proj_x2_logo = new("/FFX-2_Data/GameData/PS3Data/magic/magic_0353/tex/D3D11/13120_19_0_0_128_256.dds.phyre", FhTextureType.GAME_PHYRE_2D);
+    private static readonly FhTexture _tex_proj_x2_text = new("/FFX-2_Data/GameData/PS3Data/magic/magic_0353/tex/D3D11/8064_19_0_0_512_64.dds.phyre",   FhTextureType.GAME_PHYRE_2D);
+    private static readonly FhTexture _tex_proj_x2_year = new("/FFX-2_Data/GameData/PS3Data/magic/magic_0353/tex/D3D11/14464_19_0_0_256_256.dds.phyre", FhTextureType.GAME_PHYRE_2D);
 
     private static readonly Stopwatch _stopwatch  = new();
     private static readonly TimeSpan  _duration   = TimeSpan.FromSeconds(1);

@@ -4,12 +4,13 @@
 // It is licensed to you under the GNU Lesser General Public License, version 3.0 or later. See COPYING, COPYING.LESSER.
 
 /* [fkelava 23/6/25 13:47]
- * This is exclusively permitted to the runtime library so it can fulfill the contracts specified
+ * This is exclusively permitted to the runtime and test libraries so they can fulfill the contracts specified
  * in the Fahrenheit API. If you need access to something currently marked internal, open an issue
  * or contact the developers and explain the use case instead of extending IVT to your mod.
  */
 
 [assembly: InternalsVisibleTo("fhr")]
+[assembly: InternalsVisibleTo("fhtest")]
 
 namespace Fahrenheit;
 

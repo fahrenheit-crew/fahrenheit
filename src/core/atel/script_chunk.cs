@@ -5,7 +5,7 @@
 
 namespace Fahrenheit.Atel;
 
-[StructLayout(LayoutKind.Sequential, Size = 0x20)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public struct MapEntrance {
     public short __0x00;
     public short __0x02;
@@ -21,7 +21,7 @@ public struct MapEntrance {
     public readonly Vector3 pos => new(x, y, z);
 }
 
-[StructLayout(LayoutKind.Sequential, Size = 0x38)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public unsafe struct AtelScriptChunk {
     public  uint   code_length;
     public  uint   map_start;

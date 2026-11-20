@@ -5,6 +5,7 @@
 
 namespace Fahrenheit.Atel;
 
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public struct AtelRequest {
     public  ushort worker_idx;
     private ushort __0x2;

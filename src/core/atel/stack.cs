@@ -5,12 +5,6 @@
 
 namespace Fahrenheit.Atel;
 
-public class AtelStackOverflowException : Exception {
-    public AtelStackOverflowException()                                         : base()                        { }
-    public AtelStackOverflowException(string message)                           : base(message)                 { }
-    public AtelStackOverflowException(string message, Exception innerException) : base(message, innerException) { }
-}
-
 public enum AtelStackType : byte {
     I32  = 0x01,
     F32  = 0x02,
@@ -30,10 +24,10 @@ public struct AtelStackValueArray {
     [UnscopedRef] public Span<float> as_float() { return MemoryMarshal.Cast<byte, float>((Span<byte>)this); }
 }
 
-[StructLayout(LayoutKind.Explicit, Pack = 1, Size = 0x4)]
+[ExtendedLayout(ExtendedLayoutKind.CUnion)]
 public unsafe struct AtelStackVar {
-    [FieldOffset(0x0)] public int   as_int;
-    [FieldOffset(0x0)] public float as_float;
+    public int   as_int;
+    public float as_float;
 }
 
 public struct AtelStack {
@@ -44,7 +38,8 @@ public struct AtelStack {
     public AtelStackTypeArray  types;
 
     public int pop_int() {
-        if (size <= 0) throw new AtelStackOverflowException("Attempted to pop from an empty stack");
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(size, nameof(size));
+
         int i = size - 1;
 
         AtelStackVar value = this[i].var;
@@ -61,7 +56,8 @@ public struct AtelStack {
     }
 
     public float pop_float() {
-        if (size <= 0) throw new AtelStackOverflowException("Attempted to pop from an empty stack");
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(size, nameof(size));
+
         int i = size - 1;
 
         AtelStackVar value = this[i].var;
@@ -78,7 +74,7 @@ public struct AtelStack {
     }
 
     public void push_int(int value) {
-        if (size >= MAX_SIZE) throw new AtelStackOverflowException("Attempted to push onto a full stack");
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(size, MAX_SIZE, nameof(size));
 
         types[size] = AtelStackType.I32;
         values.as_int()[size] = value;
@@ -86,7 +82,7 @@ public struct AtelStack {
     }
 
     public void push_float(float value) {
-        if (size >= MAX_SIZE) throw new AtelStackOverflowException("Attempted to push onto a full stack");
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(size, MAX_SIZE, nameof(size));
 
         types[size] = AtelStackType.F32;
         values.as_float()[size] = value;

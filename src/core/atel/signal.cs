@@ -12,8 +12,8 @@ public enum AtelSignalState : byte {
     ACKNOWLEDGED = 0x3,
 }
 
-[StructLayout(LayoutKind.Sequential, Size = 0x16)]
-public unsafe struct AtelSignal {
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct AtelSignal {
     public AtelSignal* ptr_next;
     public AtelSignal* ptr_prev;
 

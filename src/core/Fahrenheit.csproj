@@ -40,6 +40,11 @@
         <EnableDynamicLoading>true</EnableDynamicLoading>
     </PropertyGroup>
 
+    <!-- UNSAFE V2: REMOVE WITH .NET 12/C# 16 -->
+    <PropertyGroup>
+        <LangVersion>preview</LangVersion>
+    </PropertyGroup>
+
     <!-- ASSEMBLY ADDITIONAL PROPERTIES -->
     <PropertyGroup>
         <AssemblyName>fh</AssemblyName>

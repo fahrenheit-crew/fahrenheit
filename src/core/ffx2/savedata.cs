@@ -73,29 +73,30 @@ public unsafe struct SaveData {
         public byte* raw  { get { fixed (byte* temp = _name) return temp; } }
     }
 
+    [InlineArray(30)]
     public struct LearnJobs {
-        public fixed ushort jobs[30];
+        private ushort _e0;
 
-        public ushort gunner        { get { return jobs[ 1]; } set { jobs[ 1] = value; } }
-        public ushort gun_mage      { get { return jobs[ 2]; } set { jobs[ 2] = value; } }
-        public ushort alchemist     { get { return jobs[ 3]; } set { jobs[ 3] = value; } }
-        public ushort warrior       { get { return jobs[ 4]; } set { jobs[ 4] = value; } }
-        public ushort samurai       { get { return jobs[ 5]; } set { jobs[ 5] = value; } }
-        public ushort dark_knight   { get { return jobs[ 6]; } set { jobs[ 6] = value; } }
-        public ushort berserker     { get { return jobs[ 7]; } set { jobs[ 7] = value; } }
-        public ushort songstress    { get { return jobs[ 8]; } set { jobs[ 8] = value; } }
-        public ushort black_mage    { get { return jobs[ 9]; } set { jobs[ 9] = value; } }
-        public ushort white_mage    { get { return jobs[10]; } set { jobs[10] = value; } }
-        public ushort thief         { get { return jobs[11]; } set { jobs[11] = value; } }
-        public ushort trainer       { get { return jobs[12]; } set { jobs[12] = value; } }
-        public ushort lady_luck     { get { return jobs[13]; } set { jobs[13] = value; } }
-        public ushort mascot        { get { return jobs[14]; } set { jobs[14] = value; } }
-        public ushort special       { get { return jobs[15]; } set { jobs[15] = value; } }
-        public ushort special_right { get { return jobs[16]; } set { jobs[16] = value; } } // Used by child 1
-        public ushort special_left  { get { return jobs[17]; } set { jobs[17] = value; } } // Used by child 2
+        public ushort gunner        { get { return this[ 1]; } set { this[ 1] = value; } }
+        public ushort gun_mage      { get { return this[ 2]; } set { this[ 2] = value; } }
+        public ushort alchemist     { get { return this[ 3]; } set { this[ 3] = value; } }
+        public ushort warrior       { get { return this[ 4]; } set { this[ 4] = value; } }
+        public ushort samurai       { get { return this[ 5]; } set { this[ 5] = value; } }
+        public ushort dark_knight   { get { return this[ 6]; } set { this[ 6] = value; } }
+        public ushort berserker     { get { return this[ 7]; } set { this[ 7] = value; } }
+        public ushort songstress    { get { return this[ 8]; } set { this[ 8] = value; } }
+        public ushort black_mage    { get { return this[ 9]; } set { this[ 9] = value; } }
+        public ushort white_mage    { get { return this[10]; } set { this[10] = value; } }
+        public ushort thief         { get { return this[11]; } set { this[11] = value; } }
+        public ushort trainer       { get { return this[12]; } set { this[12] = value; } }
+        public ushort lady_luck     { get { return this[13]; } set { this[13] = value; } }
+        public ushort mascot        { get { return this[14]; } set { this[14] = value; } }
+        public ushort special       { get { return this[15]; } set { this[15] = value; } }
+        public ushort special_right { get { return this[16]; } set { this[16] = value; } } // Used by child 1
+        public ushort special_left  { get { return this[17]; } set { this[17] = value; } } // Used by child 2
 
-        public ushort psychic       { get { return jobs[28]; } set { jobs[28] = value; } }
-        public ushort festivalist   { get { return jobs[29]; } set { jobs[29] = value; } }
+        public ushort psychic       { get { return this[28]; } set { this[28] = value; } }
+        public ushort festivalist   { get { return this[29]; } set { this[29] = value; } }
     }
 
     [StructLayout(LayoutKind.Explicit, Pack = 4)]

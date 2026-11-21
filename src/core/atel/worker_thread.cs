@@ -5,8 +5,8 @@
 
 namespace Fahrenheit.Atel;
 
-[StructLayout(LayoutKind.Sequential, Size = 0x4C)]
-public unsafe struct AtelWorkThread {
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
+public struct AtelWorkThread {
     public InlineArray4<int>   script_offset_stack;
     public InlineArray4<short> script_idx_stack;
 
@@ -30,32 +30,7 @@ public unsafe struct AtelWorkThread {
     public void* rotation;
 }
 
-[StructLayout(LayoutKind.Explicit, Pack = 1, Size = 0x14)]
-public unsafe struct AtelWorkThreadStorage {
-    private static void throw_if_var_oversized<T>(int offset, bool is_read) where T : unmanaged {
-        int oversized_by = offset + sizeof(T) - sizeof(AtelWorkThreadStorage);
-
-        if (oversized_by > 0) {
-            throw new ArgumentOutOfRangeException(
-                paramName: nameof(offset),
-                message:   $"Cannot {(is_read ? "read" : "write")} value of type {typeof(T).FullName} from AtelWorkThread storage at offset {offset}; the value is {oversized_by} bytes too large."
-            );
-        }
-    }
-
-    public T get_value<T>(int offset) where T : unmanaged {
-        throw_if_var_oversized<T>(offset, is_read: true);
-
-        fixed (AtelWorkThreadStorage* storage = &this) {
-            return *(T*)((nint)storage + offset);
-        }
-    }
-
-    public void set_value<T>(int offset, T value) where T : unmanaged {
-        throw_if_var_oversized<T>(offset, is_read: false);
-
-        fixed (AtelWorkThreadStorage* storage = &this) {
-            *(T*)((nint)storage + offset) = value;
-        }
-    }
+[InlineArray(20)]
+public struct AtelWorkThreadStorage {
+    private byte _e0;
 }

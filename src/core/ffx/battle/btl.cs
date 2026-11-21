@@ -59,59 +59,85 @@ public unsafe class BtlAreasHelper(BtlArea* pBase) {
     public Vector4* chunk_end => (Vector4*)((nint)pBase + areas[0].btlArea.offset_chunk_end);
 }
 
-[StructLayout(LayoutKind.Explicit, Pack = 4, Size = 0x10)]
-public unsafe struct PosAreaSomeInfo {
-    [FieldOffset(0x00)] public   uint offset_something;
-    [FieldOffset(0x06)] public   byte count_something;
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
+public struct PosAreaSomeInfo {
+    public uint   offset_something;
+    public ushort __0x04;
+    public byte   count_something;
+    public byte   __0x07;
+    public uint   __0x08;
+    public uint   __0x0C;
 }
 
-[StructLayout(LayoutKind.Explicit, Pack = 4, Size = 0x60)]
-public unsafe struct BtlArea {
-    [FieldOffset(0x0)]  public   byte    area_type;
-    [FieldOffset(0x1)]  public   byte    area_count;
-    [FieldOffset(0x4)]  public   byte    count_party_pos;
-    [FieldOffset(0x5)]  public   byte    count_aeon_pos;
-    [FieldOffset(0x6)]  public   byte    count_enemy_pos;
-    [FieldOffset(0x8)]  public   byte    count_some_info;
-    [FieldOffset(0x10)] public   uint    offset_party_pos;
-    [FieldOffset(0x14)] public   uint    offset_party_run_pos;
-    [FieldOffset(0x18)] public   uint    offset_aeon_pos;
-    [FieldOffset(0x1C)] public   uint    offset_aeon_run_pos;
-    [FieldOffset(0x20)] public   uint    offset_enemy_pos;
-    [FieldOffset(0x24)] public   uint    offset_enemy_run_pos;
-    [FieldOffset(0x28)] public   uint    offset_some_info;
-    [FieldOffset(0x2C)] public   uint    offset_chunk_end;
-    [FieldOffset(0x30)] public   Vector4 a;
-    [FieldOffset(0x40)] public   Vector4 b;
-    [FieldOffset(0x50)] public   Vector4 c;
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
+public struct BtlArea {
+    public byte    area_type;
+    public byte    area_count;
+    public ushort  __0x02;
+    public byte    count_party_pos;
+    public byte    count_aeon_pos;
+    public byte    count_enemy_pos;
+    public byte    __0x07;
+    public byte    count_some_info;
+    public byte    __0x09;
+    public byte    __0x0A;
+    public byte    __0x0B;
+    public uint    __0x0C;
+    public uint    offset_party_pos;
+    public uint    offset_party_run_pos;
+    public uint    offset_aeon_pos;
+    public uint    offset_aeon_run_pos;
+    public uint    offset_enemy_pos;
+    public uint    offset_enemy_run_pos;
+    public uint    offset_some_info;
+    public uint    offset_chunk_end;
+    public Vector4 a;
+    public Vector4 b;
+    public Vector4 c;
 }
 
-[StructLayout(LayoutKind.Explicit, Pack = 1, Size = 0x28)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public struct BtlDebugFlags {
-    [FieldOffset(0x0)] public bool invincible_mon;
-    [FieldOffset(0x1)] public bool invincible_ply;
-    [FieldOffset(0x2)] public bool mon_control;
-
-    [FieldOffset(0x4)] public bool free_camera;
-
-    [FieldOffset(0x8)] public bool no_magic_effects;
-    [FieldOffset(0x9)] public bool no_mp_cost;
-
-    [FieldOffset(0x10)] public bool no_variance;
-    [FieldOffset(0x11)] public bool never_crit;
-    [FieldOffset(0x12)] public bool always_hit;
-    [FieldOffset(0x14)] public bool always_available_overdrive;
-    [FieldOffset(0x15)] public bool always_crit;
-    [FieldOffset(0x16)] public bool always_1_dmg;
-    [FieldOffset(0x17)] public bool always_9999_dmg;
-    [FieldOffset(0x18)] public bool always_99999_dmg;
-    [FieldOffset(0x19)] public bool always_rare_steal;
-    [FieldOffset(0x1A)] public bool ap_x100;
-    [FieldOffset(0x1B)] public bool gil_x100;
-    [FieldOffset(0x1C)] public bool never_overkill;
-    [FieldOffset(0x1D)] public bool permanent_sensor;
-    [FieldOffset(0x1E)] public bool never_charge_overdrive;
-    [FieldOffset(0x27)] public bool never_hit;
+    public bool invincible_mon;
+    public bool invincible_ply;
+    public bool mon_control;
+    public bool __0x03;
+    public bool free_camera;
+    public bool __0x05;
+    public bool __0x06;
+    public bool __0x07;
+    public bool no_magic_effects;
+    public bool no_mp_cost;
+    public bool __0x0A;
+    public bool __0x0B;
+    public bool __0x0C;
+    public bool __0x0D;
+    public bool __0x0E;
+    public bool __0x0F;
+    public bool no_variance;
+    public bool never_crit;
+    public bool always_hit;
+    public bool __0x13;
+    public bool always_available_overdrive;
+    public bool always_crit;
+    public bool always_1_dmg;
+    public bool always_9999_dmg;
+    public bool always_99999_dmg;
+    public bool always_rare_steal;
+    public bool ap_x100;
+    public bool gil_x100;
+    public bool never_overkill;
+    public bool permanent_sensor;
+    public bool never_charge_overdrive;
+    public bool __0x1F;
+    public bool __0x20;
+    public bool __0x21;
+    public bool __0x22;
+    public bool __0x23;
+    public bool __0x24;
+    public bool __0x25;
+    public bool __0x26;
+    public bool never_hit;
 }
 
 [StructLayout(LayoutKind.Explicit, Pack = 4, Size = 0x2150)]
@@ -146,10 +172,10 @@ public unsafe struct Btl {
         private byte _b;
     }
 
-    [FieldOffset(0x10)]   public   byte          battle_state;
-    [FieldOffset(0x12)]   public   byte          battle_trigger;
+    [FieldOffset(0x10)]   public byte battle_state;
+    [FieldOffset(0x12)]   public byte battle_trigger;
 
-    [FieldOffset(0x28)]   public   BtlDebugFlags debug;
+    [FieldOffset(0x28)]   public BtlDebugFlags debug;
 
     [FieldOffset(0x5C)]   internal byte* ptr_command_bin;
     [FieldOffset(0x60)]   internal byte* ptr_monmagic1_bin;
@@ -167,60 +193,58 @@ public unsafe struct Btl {
     [FieldOffset(0x90)]   internal byte* ptr_sum_grow_bin;
     [FieldOffset(0x94)]   internal byte* ptr_kaizou_bin;
 
-    // Fahrenheit overwrites these, and makes the game support nint-sized excel files instead.
-    [FieldOffset(0x98)]   public       ushort size_command_bin;
-    [FieldOffset(0x9A)]   public       ushort size_ply_rom_bin;
-    [FieldOffset(0x9E)]   public       ushort size_item_bin;
-    [FieldOffset(0xA0)]   public       ushort size_a_ability_bin;
-    [FieldOffset(0xA2)]   public       ushort size_sum_assure_bin;
-    [FieldOffset(0xA4)]   public       ushort size_ctb_base_bin;
-    [FieldOffset(0xA6)]   public       ushort size_magic_bin;
-    [FieldOffset(0xA8)]   public       ushort size_st_number_bin;
-    [FieldOffset(0xAA)]   public       ushort size_mot_bin;
-    [FieldOffset(0xAE)]   public       ushort size_sum_grow_bin;
-    [FieldOffset(0xB0)]   public       ushort size_kaizou_bin;
+    [FieldOffset(0x98)]   public ushort size_command_bin;
+    [FieldOffset(0x9A)]   public ushort size_ply_rom_bin;
+    [FieldOffset(0x9E)]   public ushort size_item_bin;
+    [FieldOffset(0xA0)]   public ushort size_a_ability_bin;
+    [FieldOffset(0xA2)]   public ushort size_sum_assure_bin;
+    [FieldOffset(0xA4)]   public ushort size_ctb_base_bin;
+    [FieldOffset(0xA6)]   public ushort size_magic_bin;
+    [FieldOffset(0xA8)]   public ushort size_st_number_bin;
+    [FieldOffset(0xAA)]   public ushort size_mot_bin;
+    [FieldOffset(0xAE)]   public ushort size_sum_grow_bin;
+    [FieldOffset(0xB0)]   public ushort size_kaizou_bin;
 
-    [FieldOffset(0xE0)]   public       BtlArea* ptr_pos_def;
+    [FieldOffset(0xE0)]   public BtlArea* ptr_pos_def;
 
-    [FieldOffset(0xF4)]   public       uint   ptr_btl_bin;
-    [FieldOffset(0xF8)]   public       uint   ptr_btl_bin_fields;
-    [FieldOffset(0xFC)]   public       uint   ptr_btl_bin_encounters;
-    [FieldOffset(0x100)]  public       ushort btl_bin_field_count;
-    [FieldOffset(0x102)]  public       ushort size_btl_bin;
-    [FieldOffset(0x104)]  public       byte   encounter_type;
-    [FieldOffset(0x105)]  public       byte   screen_transition;
-    [FieldOffset(0x106)]  public       byte   grace;
-    [FieldOffset(0x108)]  public       float  walked_dist;
-    [FieldOffset(0x10C)]  public       float  walked_dist_total;
+    [FieldOffset(0xF4)]   public uint   ptr_btl_bin;
+    [FieldOffset(0xF8)]   public uint   ptr_btl_bin_fields;
+    [FieldOffset(0xFC)]   public uint   ptr_btl_bin_encounters;
+    [FieldOffset(0x100)]  public ushort btl_bin_field_count;
+    [FieldOffset(0x102)]  public ushort size_btl_bin;
+    [FieldOffset(0x104)]  public byte   encounter_type;
+    [FieldOffset(0x105)]  public byte   screen_transition;
+    [FieldOffset(0x106)]  public byte   grace;
+    [FieldOffset(0x108)]  public float  walked_dist;
+    [FieldOffset(0x10C)]  public float  walked_dist_total;
 
-    [FieldOffset(0x120)]  public       uint   ptr_btl_bin_cur_field;
-    [FieldOffset(0x124)]  public       uint   ptr_btl_bin_cur_encounter;
-    [FieldOffset(0x128)]  public       uint   ptr_btl_bin_cur_group;
-    [FieldOffset(0x12C)]  public       uint   ptr_btl_bin_cur_formation;
+    [FieldOffset(0x120)]  public uint ptr_btl_bin_cur_field;
+    [FieldOffset(0x124)]  public uint ptr_btl_bin_cur_encounter;
+    [FieldOffset(0x128)]  public uint ptr_btl_bin_cur_group;
+    [FieldOffset(0x12C)]  public uint ptr_btl_bin_cur_formation;
 
-    [FieldOffset(0x130)]  public       CtbList ctb_list;
+    [FieldOffset(0x130)]  public CtbList ctb_list;
 
-    [FieldOffset(0x1B0)]  public       InputCueList  input_cues;
-    [FieldOffset(0x3a0)]  public       AttackCueList attack_cues;
-    [FieldOffset(0x1510)] public       byte          input_cues_size;
-    [FieldOffset(0x1511)] public       byte          attack_cues_size;
+    [FieldOffset(0x1B0)]  public InputCueList  input_cues;
+    [FieldOffset(0x3a0)]  public AttackCueList attack_cues;
+    [FieldOffset(0x1510)] public byte          input_cues_size;
+    [FieldOffset(0x1511)] public byte          attack_cues_size;
 
     // I don't know what this is; `BtlMimic` struct has size 0x48
     // [FieldOffset(0x1568] public        BtlMimic      mimic;
 
-    [FieldOffset(0x15C0)] public       uint   chosen_gil;
+    [FieldOffset(0x15C0)] public uint chosen_gil;
 
-    [FieldOffset(0x15D0)] public       ReadCueList   read_cues;
-    [FieldOffset(0x1751)] public       byte          read_cues_size;
+    [FieldOffset(0x15D0)] public ReadCueList read_cues;
+    [FieldOffset(0x1751)] public byte        read_cues_size;
 
     // 128 long list of 4-byte structs, something to do with sound
     // [FieldOffset(0x175C)] public       undefined4    sep[128];
 
-
-    [FieldOffset(0x1984)] public       ushort battlefield_id;
-    [FieldOffset(0x1986)] public       ushort field_idx;
-    [FieldOffset(0x1988)] public       byte   group_idx;
-    [FieldOffset(0x1989)] public       byte   formation_idx;
+    [FieldOffset(0x1984)] public ushort    battlefield_id;
+    [FieldOffset(0x1986)] public ushort    field_idx;
+    [FieldOffset(0x1988)] public byte      group_idx;
+    [FieldOffset(0x1989)] public byte      formation_idx;
     [FieldOffset(0x198A)] public FieldName field_name;
 
     // [FieldOffset(0x1C56)] public undefined2 __0x1C56[200]; // Something related to weapons, model ids?
@@ -249,7 +273,6 @@ public unsafe struct Btl {
     // - save_data->tidus_limit_uses only increases if not 2.
     // - Cannot steal if 2?
     // - PlySave battle_count and enemies_defeated fields only increment if not 2.
-    [FieldOffset(0x2115)] public       byte   battle_type;
-
-    [FieldOffset(0x2121)] public       byte   battle_end_type;
+    [FieldOffset(0x2115)] public byte battle_type;
+    [FieldOffset(0x2121)] public byte battle_end_type;
 }

@@ -10,7 +10,7 @@ namespace Fahrenheit;
  * which has a separate font, the files are still loaded by the games for an unknown purpose.
  */
 
-[StructLayout(LayoutKind.Sequential)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public struct FTCX_TILE_INFO {
     public uint   tile_count;
     public ushort tile_width;
@@ -19,7 +19,7 @@ public struct FTCX_TILE_INFO {
     public uint   padding2;
 }
 
-[StructLayout(LayoutKind.Sequential)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public struct FTCX_IMAGE_INFO {
     public uint   data_ptr;
     public uint   data_size;
@@ -28,7 +28,7 @@ public struct FTCX_IMAGE_INFO {
     public uint   padding;
 };
 
-[StructLayout(LayoutKind.Sequential)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public struct FTCX_WIDTH_INFO {
     public uint data_ptr;
     public uint data_size;
@@ -36,7 +36,7 @@ public struct FTCX_WIDTH_INFO {
     public uint padding2;
 };
 
-[StructLayout(LayoutKind.Sequential)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public struct FTCX {
     public uint            magic;
     public ushort          reserved1; // seems constant (200), must be > 199

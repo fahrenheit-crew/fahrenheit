@@ -25,7 +25,7 @@ public struct AtelStackValueArray {
 }
 
 [ExtendedLayout(ExtendedLayoutKind.CUnion)]
-public unsafe struct AtelStackVar {
+public struct AtelStackVar {
     public int   as_int;
     public float as_float;
 }

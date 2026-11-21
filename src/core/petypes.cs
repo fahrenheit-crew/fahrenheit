@@ -32,14 +32,14 @@ namespace Fahrenheit;
 ///     A <see cref="PClassMember"/> can be a field, function or method. Thus, it has no <see cref="PType"/>.
 ///     For fields, derived types <see cref="PClassData"/> and/or <see cref="PClassDataMember"/> carry type information.
 /// </remarks>
-[StructLayout(LayoutKind.Sequential, Size = 0x14, Pack = 4)]
-internal unsafe struct PClassMember {
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
+internal struct PClassMember {
     public PSimpleDoubleListElement<PClassMember> base_PSimpleDoubleListElement;
     public PClassDescriptor*                      m_classDescriptor; // name: +70EA88 -> +3A362
     public nint                                   ptr_name;          // null-terminated ANSI/UTF-8 string
     public uint                                   m_flags;           // name: +70EA80 -> +3A316
 
-    public override string ToString() {
+    public override unsafe string ToString() {
         return $"{(*m_classDescriptor).base_PType}::{Marshal.PtrToStringAnsi(ptr_name)}";
     }
 }
@@ -53,12 +53,12 @@ internal unsafe struct PClassMember {
 /// <summary>
 ///     Describes a unique member of a Phyre class which has a concrete <see cref="PType"/>.
 /// </summary>
-[StructLayout(LayoutKind.Sequential, Size = 0x18, Pack = 4)]
-internal unsafe struct PClassData {
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
+internal struct PClassData {
     public PClassMember base_PClassMember;
     public PType*       m_type; // name: +70F994 -> +465A6
 
-    public override string ToString() {
+    public override unsafe string ToString() {
         return $"{*m_type} {base_PClassMember}";
     }
 }
@@ -72,7 +72,7 @@ internal unsafe struct PClassData {
 ///     Describes a unique field of a Phyre class which has a concrete <see cref="PType"/>, offset,
 ///     and may have <see cref="PAnnotation"/>s associated with it.
 /// </summary>
-[StructLayout(LayoutKind.Sequential, Size = 0x2C, Pack = 4)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 internal struct PClassDataMember {
     public nint         vftable;
     public PClassData   base_PClassData;   // 0x4
@@ -94,7 +94,7 @@ internal struct PClassDataMember {
  * size inferred from +5758D3 - PNamedSemanticDescriptor::.ctor()
  */
 
-[StructLayout(LayoutKind.Sequential, Size = 0x8, Pack = 4)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 internal struct PAnnotationSemantic {
     public nint __0x00;
     public nint __0x04;
@@ -108,8 +108,8 @@ internal struct PAnnotationSemantic {
 /// <summary>
 ///     Annotations are arbitrary tags attached to Phyre types.
 /// </summary>
-[StructLayout(LayoutKind.Sequential, Size = 0x18, Pack = 4)]
-internal unsafe struct PAnnotation {
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
+internal struct PAnnotation {
     public nint                                  vftable;
     public PSimpleDoubleListElement<PAnnotation> base_PSimpleDoubleListElement;
     public PAnnotationSemantic*                  __0x0C;
@@ -126,7 +126,7 @@ internal unsafe struct PAnnotation {
 /// <summary>
 ///     Indicates that a Phyre type can have <see cref="PAnnotation"/>s, arbitrary tags, associated with it.
 /// </summary>
-[StructLayout(LayoutKind.Sequential, Size = 0x8, Pack = 4)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 internal struct PAnnotatable {
     public PSimpleDoubleListElement<PAnnotation> __0x00;
 }
@@ -137,7 +137,7 @@ internal struct PAnnotatable {
  * RTTI inheritance graph -> +792758
  */
 
-[StructLayout(LayoutKind.Sequential, Size = 0x8, Pack = 4)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 internal struct PHashEntryConstKey {
     public nint __0x00;
     public nint __0x04;
@@ -149,7 +149,7 @@ internal struct PHashEntryConstKey {
  * RTTI inheritance graph -> +7926C4
  */
 
-[StructLayout(LayoutKind.Sequential, Size = 0x14, Pack = 4)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 internal struct PHashEntryConst {
     public PRedBlackTreeNode<PUnknown> base_PRedBlackTreeNode;
     public PHashEntryConstKey          base_PHashEntryConstKey;
@@ -161,8 +161,8 @@ internal struct PHashEntryConst {
  * RTTI inheritance graph -> +792720
  */
 
-[StructLayout(LayoutKind.Sequential, Size = 0xC, Pack = 4)]
-internal unsafe struct PRedBlackTreeNode<T> where T : unmanaged {
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
+internal struct PRedBlackTreeNode<T> where T : unmanaged {
 
     /* [fkelava 25/03/26 16:36]
      * https://www.eecs.umich.edu/courses/eecs380/ALG/red_black.html
@@ -186,7 +186,7 @@ internal unsafe struct PRedBlackTreeNode<T> where T : unmanaged {
 /// <remarks>
 ///     Classes have a derived <see cref="PClassDescriptor"/> instead, providing information about their members, layout, and inheritance chain.
 /// </remarks>
-[StructLayout(LayoutKind.Sequential, Size = 0x2C, Pack = 4)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 internal struct PType {
     public nint            vftable;
     public PHashEntryConst base_PHashEntryConst;
@@ -212,8 +212,8 @@ internal struct PType {
 /// <summary>
 ///     Stores instances of derived asset types contained in a <see cref="PCluster"/>.
 /// </summary>
-[StructLayout(LayoutKind.Sequential, Size = 0x4C, Pack = 4)]
-internal unsafe struct PInstanceList {
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
+internal struct PInstanceList {
     public PSimpleDoubleListElement<PInstanceList> base_PSimpleDoubleListElement;
     public PFreeList<PUnknown>                     __0x08_free_list;
     public PSimpleDoubleListElement<PUnknown>      __0x20;
@@ -227,7 +227,7 @@ internal unsafe struct PInstanceList {
     public nint                                    __0x44;
     public nint                                    __0x48;
 
-    public override string ToString() {
+    public override unsafe string ToString() {
         return $"{nameof(PInstanceList)}<{(*ptr_class_descriptor).base_PType}>";
     }
 }
@@ -241,8 +241,8 @@ internal unsafe struct PInstanceList {
 /// <remarks>
 ///     Basic type information such as name, size and alignment is provided by the base class <see cref="PType"/>.
 /// </remarks>
-[StructLayout(LayoutKind.Sequential, Size = 0x94, Pack = 4)]
-internal unsafe struct PClassDescriptor {
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
+internal struct PClassDescriptor {
 
     /* [fkelava 25/03/26 17:25]
      * Plenty of things remain unclear.
@@ -285,7 +285,7 @@ internal unsafe struct PClassDescriptor {
  */
 
 /// <inheritdoc cref="PClassDescriptor"/>
-[StructLayout(LayoutKind.Sequential, Size = 0xB8, Pack = 4)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 internal struct PClassDescriptorDynamic {
     public PClassDescriptor base_PClassDescriptor;     // 0x0
     public ushort           __0x94;
@@ -308,17 +308,17 @@ internal struct PClassDescriptorDynamic {
 ///     Unlike typical implementations, the absence of an element is not denoted by <c>null</c>,
 ///     but by the next and/or previous pointer being equal to the head pointer.
 /// </remarks>
-[StructLayout(LayoutKind.Sequential, Size = 0x8, Pack = 4)]
-internal unsafe readonly struct PSimpleDoubleListElement<T> where T : unmanaged {
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
+internal readonly struct PSimpleDoubleListElement<T> where T : unmanaged {
     public readonly PSimpleDoubleListElement<T>* ptr_next;
     public readonly PSimpleDoubleListElement<T>* ptr_prev;
 
-    public readonly PSimpleDoubleListElement<T>* next(PSimpleDoubleListElement<T>* head) {
+    public unsafe readonly PSimpleDoubleListElement<T>* next(PSimpleDoubleListElement<T>* head) {
         if (ptr_next == head) return null;
         return ptr_next;
     }
 
-    public readonly PSimpleDoubleListElement<T>* prev(PSimpleDoubleListElement<T>* head) {
+    public unsafe readonly PSimpleDoubleListElement<T>* prev(PSimpleDoubleListElement<T>* head) {
         if (ptr_prev == head) return null;
         return ptr_prev;
     }
@@ -332,8 +332,8 @@ internal unsafe readonly struct PSimpleDoubleListElement<T> where T : unmanaged 
 /// <summary>
 ///     A free list of <typeparamref name="T"/>.
 /// </summary>
-[StructLayout(LayoutKind.Sequential, Size = 0x18, Pack = 4)]
-internal unsafe struct PFreeList<T> where T : unmanaged {
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
+internal struct PFreeList<T> where T : unmanaged {
     public T*   __0x00_head;      // inferred from various iterator methods
     public nint __0x04_size;
     public nint __0x08_block_size;
@@ -353,7 +353,7 @@ internal unsafe struct PFreeList<T> where T : unmanaged {
 /// <summary>
 ///     A namespace is a group of <see cref="PClassDescriptor"/>s. It can contain nested namespaces as well.
 /// </summary>
-[StructLayout(LayoutKind.Sequential, Size = 0x1C, Pack = 4)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 internal struct PNamespace {
     public PSimpleDoubleListElement<PNamespace>       base_PSimpleDoubleListElement;
     public PSimpleDoubleListElement<PClassDescriptor> __0x08_class_descriptors;
@@ -370,8 +370,8 @@ internal struct PNamespace {
 ///     On disk, a cluster contains the asset in question, references to other
 ///     assets that must be simultaneously loaded, and more.
 /// </remarks>
-[StructLayout(LayoutKind.Sequential, Size = 0x50, Pack = 4)]
-internal unsafe struct PCluster {
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
+internal struct PCluster {
     public PNamespace                              __0x00_namespace;
     public PSimpleDoubleListElement<PInstanceList> __0x1C_instance_lists;
     public nint                                    __0x24;
@@ -388,7 +388,7 @@ internal unsafe struct PCluster {
  * but _not_ the RTTI inheritance graph which would perhaps shed more light.
  */
 
-[StructLayout(LayoutKind.Sequential, Size = 0x34, Pack = 4)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 internal struct PNamedSemanticDescriptor {
     public PType                              base_PType;
     public PSimpleDoubleListElement<PUnknown> base_PSimpleDoubleListElement;
@@ -396,7 +396,7 @@ internal struct PNamedSemanticDescriptor {
 
 /// <summary>A stub that corresponds to no Phyre type.</summary>
 /// <remarks>Used when a target Phyre type is not known, as a placeholder.</remarks>
-[StructLayout(LayoutKind.Sequential, Size = 0x80, Pack = 4)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public struct PUnknown {
     public nint __0x00;
     public nint __0x04;
@@ -445,7 +445,7 @@ public struct PUnknown {
 /// <summary>
 ///     A simple null-terminated string.
 /// </summary>
-[StructLayout(LayoutKind.Sequential, Pack = 0x4)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 internal struct PString {
     public nint m_buffer;
 
@@ -464,13 +464,13 @@ internal struct PString {
  * In Ghidra each specialization is presented explicitly.
  */
 
-[StructLayout(LayoutKind.Sequential, Size = 0x8, Pack = 0x4)]
-internal unsafe struct PArray<T> where T : unmanaged {
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
+internal struct PArray<T> where T : unmanaged {
     public uint m_count; // name: +70FD3C -> +90AE0 (and many others)
     public T*   m_els;   // name: +70FD80 -> +90BC1 (and many others)
 
     [UnscopedRef]
-    public readonly Span<T> as_span() => new Span<T>(m_els, int.CreateChecked(m_count));
+    public readonly unsafe Span<T> as_span() => new Span<T>(m_els, int.CreateChecked(m_count));
 }
 
 /* [fkelava 25/03/26 18:30]
@@ -481,8 +481,8 @@ internal unsafe struct PArray<T> where T : unmanaged {
  * In Ghidra each specialization is presented explicitly.
  */
 
-[StructLayout(LayoutKind.Sequential, Size = 0x8, Pack = 0x4)]
-internal unsafe struct PSharray<T> where T : unmanaged {
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
+internal struct PSharray<T> where T : unmanaged {
    /* [fkelava 02/05/26 02:00]
     * In reality m_u is a union of T and T*,
     * but this cannot be modeled in a generic.
@@ -501,8 +501,8 @@ internal unsafe struct PSharray<T> where T : unmanaged {
  * Field meanings were deduced by debugger inspection.
  */
 
-[StructLayout(LayoutKind.Sequential, Size = 0x14, Pack = 0x4)]
-internal unsafe struct PTextureFormatBase {
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
+internal struct PTextureFormatBase {
     public nint                __0x00_format_name;
     public PTextureFormatBase* __0x04;
     public nint                __0x08_flags;
@@ -519,8 +519,8 @@ internal unsafe struct PTextureFormatBase {
  * PClassDescriptor<PTextureCommonBase>          -> +8A3530
  */
 
-[StructLayout(LayoutKind.Sequential, Size = 0x1C, Pack = 0x4)]
-internal unsafe struct PTextureCommonBase {
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
+internal struct PTextureCommonBase {
     public PTextureFormatBase* m_format;       // 0x0
     public byte                m_memoryType;   // 0x5
     public byte                __0x06;
@@ -537,7 +537,7 @@ internal unsafe struct PTextureCommonBase {
  * PClassDescriptor<PTexture2DBase>          -> +8A3738
  */
 
-[StructLayout(LayoutKind.Sequential, Size = 0x24, Pack = 0x4)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 internal struct PTexture2DBase {
     public PTextureCommonBase base_PTextureCommonBase;
     public uint               m_width;  // 0x1C
@@ -548,7 +548,7 @@ internal struct PTexture2DBase {
  * PClassDescriptor<PTexture2DD3D11> -> +8B39A0
  */
 
-[StructLayout(LayoutKind.Sequential, Size = 0x74, Pack = 0x4)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 internal unsafe struct PTexture2DD3D11 {
     public PTexture2DBase  base_PTexture2DBase;
     public uint            __0x24;
@@ -578,7 +578,7 @@ internal unsafe struct PTexture2DD3D11 {
  * PClassDescriptor<PTexture2D>          -> +8A37D0
  */
 
-[StructLayout(LayoutKind.Sequential, Size = 0x74, Pack = 0x4)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 internal struct PTexture2D {
     public PTexture2DD3D11 base_PTexture2DD3D11;
 }
@@ -588,8 +588,13 @@ internal struct PTexture2D {
  * PClassDescriptor<PWorld> -> +890E30
  */
 
-[StructLayout(LayoutKind.Sequential, Size = 0x10, Pack = 0x4)]
-internal struct PWorld { }
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
+internal struct PWorld {
+    public uint __0x00;
+    public uint __0x04;
+    public uint __0x08;
+    public uint __0x0C;
+}
 
 /* [fkelava 26/04/26 14:52]
  * Phyre::PSerialization::PStreamFile::PStreamFile() -> +207D80
@@ -598,7 +603,8 @@ internal struct PWorld { }
 /// <summary>
 ///     A file as seen by the game. Can be backed by either a VBF or OS handle.
 /// </summary>
-internal unsafe struct PStreamFile {
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
+internal struct PStreamFile {
     public HANDLE handle_os;
     public VFile* handle_vbf;
 }
@@ -607,6 +613,6 @@ internal unsafe struct PStreamFile {
  * PClassDescriptor<PApplication> -> +8C9D20
  */
 
-[StructLayout(LayoutKind.Explicit, Size = 0x3A0, Pack = 0x10)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public struct PApplication { }
 // this class (descriptor) has a parent; PClassDescriptor<PBase (sz 0x0, align 0x1)>

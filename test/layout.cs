@@ -10,6 +10,33 @@ namespace Fahrenheit.Tests;
 [TestFixture]
 public class FhLayoutTests {
 
+    /* [fkelava 21/11/26 02:38]
+     * The generic Phyre classes have the same size in all generic instantiations, so testing any of them suffices.
+     */
+
+    [Test] public unsafe void PE_PClassMember()             => Assert.That(sizeof(PClassMember),                  Is.EqualTo(0x14));
+    [Test] public unsafe void PE_PClassData()               => Assert.That(sizeof(PClassData),                    Is.EqualTo(0x18));
+    [Test] public unsafe void PE_PClassDataMember()         => Assert.That(sizeof(PClassDataMember),              Is.EqualTo(0x2C));
+    [Test] public unsafe void PE_PType()                    => Assert.That(sizeof(PType),                         Is.EqualTo(0x2C));
+    [Test] public unsafe void PE_PAnnotationSemantic()      => Assert.That(sizeof(PAnnotationSemantic),           Is.EqualTo(0x08));
+    [Test] public unsafe void PE_PApplication()             => Assert.That(sizeof(PApplication),                  Is.EqualTo(0x3A0));
+    [Test] public unsafe void PE_PStreamFile()              => Assert.That(sizeof(PStreamFile),                   Is.EqualTo(0x08));
+    [Test] public unsafe void PE_PWorld()                   => Assert.That(sizeof(PWorld),                        Is.EqualTo(0x10));
+    [Test] public unsafe void PE_PTexture2D()               => Assert.That(sizeof(PTexture2D),                    Is.EqualTo(0x74));
+    [Test] public unsafe void PE_PTexture2DD3D11()          => Assert.That(sizeof(PTexture2DD3D11),               Is.EqualTo(0x74));
+    [Test] public unsafe void PE_PTexture2DBase()           => Assert.That(sizeof(PTexture2DBase),                Is.EqualTo(0x24));
+    [Test] public unsafe void PE_PTextureCommonBase()       => Assert.That(sizeof(PTextureCommonBase),            Is.EqualTo(0x1C));
+    [Test] public unsafe void PE_PTextureFormatBase()       => Assert.That(sizeof(PTextureFormatBase),            Is.EqualTo(0x14));
+    [Test] public unsafe void PE_PArray()                   => Assert.That(sizeof(PArray<int>),                   Is.EqualTo(0x08));
+    [Test] public unsafe void PE_PSharray()                 => Assert.That(sizeof(PSharray<int>),                 Is.EqualTo(0x08));
+    [Test] public unsafe void PE_PString()                  => Assert.That(sizeof(PString),                       Is.EqualTo(0x04));
+    [Test] public unsafe void PE_PNamedSemanticDescriptor() => Assert.That(sizeof(PNamedSemanticDescriptor),      Is.EqualTo(0x34));
+    [Test] public unsafe void PE_PCluster()                 => Assert.That(sizeof(PCluster),                      Is.EqualTo(0x50));
+    [Test] public unsafe void PE_PNamespace()               => Assert.That(sizeof(PNamespace),                    Is.EqualTo(0x1C));
+    [Test] public unsafe void PE_PFreeList()                => Assert.That(sizeof(PFreeList<int>),                Is.EqualTo(0x18));
+    [Test] public unsafe void PE_PSimpleDoubleListElement() => Assert.That(sizeof(PSimpleDoubleListElement<int>), Is.EqualTo(0x08));
+    [Test] public unsafe void PE_PClassDescriptorDynamic()  => Assert.That(sizeof(PClassDescriptorDynamic),       Is.EqualTo(0xB8));
+
     [Test] public unsafe void __ALLOC_STRUCT() => Assert.That(sizeof(__ALLOC_STRUCT), Is.EqualTo(0x30));
     [Test] public unsafe void __ALLOC_DATA  () => Assert.That(sizeof(__ALLOC_DATA),   Is.EqualTo(0x18));
 

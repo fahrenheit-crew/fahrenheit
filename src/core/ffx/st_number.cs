@@ -8,7 +8,7 @@ namespace Fahrenheit.FFX;
 /// <summary>
 ///     Responsible for displaying commands the player has unlocked in menus.
 /// </summary>
-[StructLayout(LayoutKind.Sequential)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public struct StNumber {
     /// <summary>
     ///     Can either be a valid <see cref="Ids.PlySaveId"> or submenu ID.

@@ -8,7 +8,7 @@ namespace Fahrenheit;
 /// <summary>
 ///     A pointer to text in an Excel container.
 /// </summary>
-[StructLayout(LayoutKind.Sequential)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public struct ExcelTextOffset {
     /// <summary>
     ///     The offset to the text.
@@ -20,7 +20,7 @@ public struct ExcelTextOffset {
 /// <summary>
 ///     A pointer to text with an alternate simplified version in an Excel container.
 /// </summary>
-[StructLayout(LayoutKind.Sequential)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public struct ExcelSimplifiableTextOffset {
     /// <summary>
     ///     The offset to the standard text.

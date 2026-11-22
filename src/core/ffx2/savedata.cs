@@ -8,7 +8,7 @@ namespace Fahrenheit.FFX2;
 /// <summary>
 ///     The save game header for FF X-2.
 /// </summary>
-[StructLayout(LayoutKind.Sequential)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public struct SaveHeader {
     [InlineArray(0x3)]
     public struct Party {

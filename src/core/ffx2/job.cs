@@ -9,6 +9,7 @@ namespace Fahrenheit.FFX2;
 ///     Variable data used for the HP growth formula.<br/>
 ///     The formula is: `base` + `linear_mult` * level - (level^2) / (`quadratic_div` / 10)
 /// </summary>
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public struct StatGrowthHp {
     public byte linear_mult;
     public byte quadratic_div;
@@ -19,6 +20,7 @@ public struct StatGrowthHp {
 ///     Variable data used for the MP growth formula.<br/>
 ///     The formula is: `base` + (`linear_mult` / 10) * level - (level^2) / `quadratic_div`
 /// </summary>
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public struct StatGrowthMp {
     public byte linear_mult;
     public byte quadratic_div;
@@ -31,6 +33,7 @@ public struct StatGrowthMp {
 ///     agility, accuracy, evasion, and luck.<br/>
 ///     The formula is: `base` + (`linear_mult` / 10) * level + level / `linear_div` - (level^2 / 16) / `quadratic_div_a` / `quadratic_div_b`
 /// </summary>
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public struct StatGrowthGeneric {
     public byte linear_mult;
     public byte linear_div;
@@ -44,13 +47,13 @@ public struct StatGrowthGeneric {
 ///     `requirement` can be the index of a Garment Grid gate, a minimum AP requirement,
 ///     or a level requirement for creatures.
 /// </remarks>
-[StructLayout(LayoutKind.Sequential, Size = 0x4)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public struct UnlockableAbility {
     public ushort requirement;
     public ushort ability;
 }
 
-[StructLayout(LayoutKind.Sequential, Size = 0xA)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public struct StatChanges {
     public sbyte hp;
     public sbyte mp;
@@ -64,7 +67,7 @@ public struct StatChanges {
     public sbyte luck;
 }
 
-[StructLayout(LayoutKind.Sequential, Size = 0x4)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public struct JobWeaponData {
     public ushort weapon_model;
     public ushort weapon_position;
@@ -86,7 +89,7 @@ public struct JobCreatureData {
     [FieldOffset(0x28)] public FeedStatChanges level_growth; // Which stat increases on Level Up
 }
 
-[StructLayout(LayoutKind.Sequential)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public struct Job {
     public ExcelTextOffset name;
     public ExcelTextOffset help;

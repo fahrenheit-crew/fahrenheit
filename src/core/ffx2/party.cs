@@ -14,7 +14,7 @@ public enum AtbSpeed : byte {
     FAST   = 2
 }
 
-[StructLayout(LayoutKind.Sequential)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public struct Party {
     public int  config;
     public uint unlocked_primers;

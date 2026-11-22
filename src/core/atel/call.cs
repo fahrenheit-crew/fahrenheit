@@ -5,7 +5,7 @@
 
 namespace Fahrenheit.Atel;
 
-[StructLayout(LayoutKind.Sequential)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public struct AtelCallTarget {
     public delegate* unmanaged[Cdecl]<AtelBasicWorker*, int*, AtelStack*, void>  fnptr_init;
     public delegate* unmanaged[Cdecl]<AtelBasicWorker*, int*,             int>   fnptr_exec;

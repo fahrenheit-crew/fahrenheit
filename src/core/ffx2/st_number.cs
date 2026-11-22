@@ -8,7 +8,7 @@
 
 namespace Fahrenheit.FFX2;
 
-[StructLayout(LayoutKind.Sequential)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public struct StNumber {
     public byte   category;
     public byte   type;

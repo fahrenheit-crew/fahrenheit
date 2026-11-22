@@ -21,7 +21,7 @@ public struct PlySaveCreatureData {
     [FieldOffset(0x22)] public CreatureSize size;
 }
 
-[StructLayout(LayoutKind.Sequential)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public struct PlySave {
     public ExcelTextOffset name;
 

@@ -8,7 +8,7 @@ namespace Fahrenheit;
 /// <summary>
 ///     The base class handling all VBF-related operations.
 /// </summary>
-[StructLayout(LayoutKind.Sequential)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 internal struct BigFileStream {
     public uint              ptr_hcryptprov; // https://learn.microsoft.com/en-us/windows/win32/seccrypto/hcryptprov
     public uint              _0x04;
@@ -32,7 +32,7 @@ internal struct BigFileStream {
 /// <summary>
 ///     A handle to an individual VBF archive.
 /// </summary>
-[StructLayout(LayoutKind.Sequential)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 internal struct BigFileHandle {
     public uint              _0x00;
     public uint              _0x04;
@@ -58,7 +58,7 @@ internal struct BigFileHandle {
 /// <summary>
 ///     A descriptor of an individual object in a VBF archive.
 /// </summary>
-[StructLayout(LayoutKind.Sequential)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 internal struct BigFileContent {
     public uint _0x00;
     public uint _0x04;
@@ -69,7 +69,7 @@ internal struct BigFileContent {
 /// <summary>
 ///    A individual file in a VBF archive.
 /// </summary>
-[StructLayout(LayoutKind.Sequential)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 internal struct VFile {
     public byte            is_assigned;
     public uint            ptr_file;

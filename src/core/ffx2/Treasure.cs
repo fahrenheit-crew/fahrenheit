@@ -9,6 +9,7 @@
 
 namespace Fahrenheit.FFX2;
 
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public partial struct Treasure
 {
     public byte type;

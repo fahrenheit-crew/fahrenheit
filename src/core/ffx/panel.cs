@@ -5,7 +5,7 @@
 
 namespace Fahrenheit.FFX;
 
-[StructLayout(LayoutKind.Sequential)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public struct SphereGridNodeType {
     public ExcelSimplifiableTextOffset name;
     public ExcelSimplifiableTextOffset help;

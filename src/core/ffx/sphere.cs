@@ -32,7 +32,7 @@ public enum SphereTargets : ushort {
     ABILITY       = 1 << 10
 }
 
-[StructLayout(LayoutKind.Sequential)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public struct Sphere {
     public ExcelSimplifiableTextOffset help;
 

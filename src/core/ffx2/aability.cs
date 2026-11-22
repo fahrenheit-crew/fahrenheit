@@ -19,7 +19,7 @@ public enum AAbilityFlags : uint {
     TURBO = 1 <<  3, // Only toggled on Turbo Swordplay and Turbo Instinct?
 }
 
-[StructLayout(LayoutKind.Sequential)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public struct AutoAbility {
     public ExcelTextOffset name;
     public ExcelTextOffset help;

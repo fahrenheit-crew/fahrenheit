@@ -9,7 +9,7 @@ namespace Fahrenheit.FFX;
  * TODO: Decide whether this should be dissected into a separate 'item' and 'gear' shop.
  */
 
-[StructLayout(LayoutKind.Sequential)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public struct Shop {
 
     [InlineArray(0x10)]

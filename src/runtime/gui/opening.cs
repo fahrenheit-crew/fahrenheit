@@ -11,14 +11,9 @@ namespace Fahrenheit.Runtime.Gui;
 [FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
 public sealed unsafe class FhOpeningSequenceModule : FhModule {
 
-    private static readonly FhTexture _tex_se           = new("/FFX_Data/GameData/PS3Data/map/titl/titl02/2d/tex/D3D11/0_0_512_448_0.dds.phyre",        FhTextureType.GAME_PHYRE_2D);
-    private static readonly FhTexture _tex_proj_x       = new("/FFX_Data/GameData/PS3Data/map/titl/titl02/2d/tex/D3D11/0_1_512_448_0.dds.phyre",        FhTextureType.GAME_PHYRE_2D);
-    private static readonly FhTexture _tex_proj_x2_logo = new("/FFX-2_Data/GameData/PS3Data/magic/magic_0353/tex/D3D11/13120_19_0_0_128_256.dds.phyre", FhTextureType.GAME_PHYRE_2D);
-    private static readonly FhTexture _tex_proj_x2_text = new("/FFX-2_Data/GameData/PS3Data/magic/magic_0353/tex/D3D11/8064_19_0_0_512_64.dds.phyre",   FhTextureType.GAME_PHYRE_2D);
-    private static readonly FhTexture _tex_proj_x2_year = new("/FFX-2_Data/GameData/PS3Data/magic/magic_0353/tex/D3D11/14464_19_0_0_256_256.dds.phyre", FhTextureType.GAME_PHYRE_2D);
-
-    private static FhTexture? _tex_fh_x;
-    private static FhTexture? _tex_fh_x2;
+    private static readonly FhTexture  _tex_se = new("/FFX_Data/GameData/PS3Data/map/titl/titl02/2d/tex/D3D11/0_0_512_448_0.dds.phyre", FhTextureType.GAME_PHYRE_2D);
+    private static          FhTexture? _tex_fh_x;
+    private static          FhTexture? _tex_fh_x2;
 
     private static float _time   = 4F;
     private static bool  _active = false;
@@ -46,12 +41,8 @@ public sealed unsafe class FhOpeningSequenceModule : FhModule {
 
         *(uint*) (ptr_this + FhUtil.select(0x10DC8, 0xFFF0, 0xFFF0)) = 0;
 
-        if (!FhApi.Resources.load_texture(_tex_se)           ||
-            !FhApi.Resources.load_texture(_tex_proj_x)       ||
-            !FhApi.Resources.load_texture(_tex_proj_x2_logo) ||
-            !FhApi.Resources.load_texture(_tex_proj_x2_text) ||
-            !FhApi.Resources.load_texture(_tex_proj_x2_year) ||
-            !FhApi.Resources.load_texture(_tex_fh_x!)        ||
+        if (!FhApi.Resources.load_texture(_tex_se)    ||
+            !FhApi.Resources.load_texture(_tex_fh_x!) ||
             !FhApi.Resources.load_texture(_tex_fh_x2!)
         ) {
             _logger.Warning("Failed to load opening sequence textures.");
@@ -67,12 +58,8 @@ public sealed unsafe class FhOpeningSequenceModule : FhModule {
         if (rv == 0) {
             _active = false;
 
-            if (!FhApi.Resources.unload_texture(_tex_se)           ||
-                !FhApi.Resources.unload_texture(_tex_proj_x)       ||
-                !FhApi.Resources.unload_texture(_tex_proj_x2_logo) ||
-                !FhApi.Resources.unload_texture(_tex_proj_x2_text) ||
-                !FhApi.Resources.unload_texture(_tex_proj_x2_year) ||
-                !FhApi.Resources.unload_texture(_tex_fh_x!)        ||
+            if (!FhApi.Resources.unload_texture(_tex_se)    ||
+                !FhApi.Resources.unload_texture(_tex_fh_x!) ||
                 !FhApi.Resources.unload_texture(_tex_fh_x2!)
             ) {
                 _logger.Warning("Failed to unload opening sequence textures.");

@@ -67,10 +67,10 @@ internal unsafe struct SaveDataManager {
 
 [StructLayout(LayoutKind.Explicit, Pack = 4, Size = 0x16660)]
 public unsafe struct SaveData {
-    public struct Name {
-        private fixed byte _name[40];
 
-        public byte* raw  { get { fixed (byte* temp = _name) return temp; } }
+    [InlineArray(40)]
+    public struct Name {
+        private byte _e0;
     }
 
     [InlineArray(30)]

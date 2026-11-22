@@ -18,7 +18,7 @@ public sealed unsafe class FhOpeningSequenceModule : FhModule {
     private static readonly FhTexture _tex_proj_x2_year = new("/FFX-2_Data/GameData/PS3Data/magic/magic_0353/tex/D3D11/14464_19_0_0_256_256.dds.phyre", FhTextureType.GAME_PHYRE_2D);
 
     private static readonly Stopwatch _stopwatch  = new();
-    private static readonly TimeSpan  _duration   = TimeSpan.FromSeconds(1);
+    private static readonly TimeSpan  _duration   = TimeSpan.FromSeconds(2);
 
     public override bool init(FhModContext mod_context, FileStream global_state_file) {
         return FhCall.PhyreScene_beginRenderOpeningScreen.hook(this, h_open_begin)
@@ -37,7 +37,7 @@ public sealed unsafe class FhOpeningSequenceModule : FhModule {
          * pointer to null or the game will take an access violation.
          */
 
-        *(uint*)(ptr_this + FhUtil.select(0x10DC8, 0xFFF0, 0xFFF0)) = 0;
+        *(uint*) (ptr_this + FhUtil.select(0x10DC8, 0xFFF0, 0xFFF0)) = 0;
 
         if (!FhApi.Resources.load_texture(_tex_sqex)         ||
             !FhApi.Resources.load_texture(_tex_proj_x)       ||
@@ -71,13 +71,42 @@ public sealed unsafe class FhOpeningSequenceModule : FhModule {
         return rv;
     }
 
+    public void ui_opening_sqex() {
+        if (!_tex_sqex.try_use(out ImTextureRef tex_sqex, out FhTextureMetadata? tex_sqex_data))
+            return;
+
+        ImGuiIOPtr       ptr_io       = ImGui.GetIO();
+        ImGuiViewportPtr ptr_viewport = ImGui.GetMainViewport();
+        ImDrawListPtr    ptr_draw     = ImGui.GetBackgroundDrawList();
+
+        Vector2 logo_sqex_pos         = new(676f, 719f);
+        Vector2 logo_sqex_size        = new(697f,  97f);
+        Vector2 logo_sqex_scaled_size = new(654f,  68f);
+
+        Rect screen    = new() { pos = ptr_viewport.WorkSize / 2f };
+        UV   screen_uv = screen
+            .expand(logo_sqex_scaled_size, Alignment2D.CENTER)
+            .as_uv ();
+
+        UV tex_uv = new Rect {
+            pos  = logo_sqex_pos,
+            size = logo_sqex_size,
+        }.as_uv(tex_sqex_data.size);
+
+        ptr_draw.AddImage(
+            tex_sqex,
+            screen_uv.p0,
+            screen_uv.p1,
+            tex_uv.p0,
+            tex_uv.p1
+        );
+    }
+
     public override void render_imgui() {
         if (!_is_active)
             return;
 
-        if (_tex_sqex.try_use(out ImTextureRef tex_ref, out FhTextureMetadata? tex_data)) {
-            // UI
-        }
+        ui_opening_sqex();
     }
 
 }

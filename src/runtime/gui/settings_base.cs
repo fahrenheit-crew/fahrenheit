@@ -114,7 +114,10 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
 
         fade.restart(COLOR_BLACK, COLOR_TRANS, FADE_LENGTH);
 
-        scrollable_mods.max = settings_map.Count;
+        scrollable_mods    .max = settings_map.Count;
+        scrollable_settings.max = 0f;
+
+        scrollable_settings.scroll_step_size = 60f * aspect_scale.Y;
     }
 
     private void post_close(EventArgs e) {
@@ -176,6 +179,9 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
         FhModule hovered_module = selected_modules[module_idx].Module;
 
         FhInternal.Settings.try_get_settings(hovered_module, out displayed_settings);
+
+        scrollable_settings.current = 0f;
+        recalculate_settings_scrollable();
     }
 
     protected void select_module(int module_idx) {
@@ -188,22 +194,27 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
         hovered_setting = displayed_settings!.settings[0];
 
         scrollable_settings.current = 0f;
+        recalculate_settings_scrollable();
     }
 
-    protected void hover_setting_up() {
-        if (!try_get_setting_parent(hovered_setting!, out FhSettingsCategory? parent, out int? index)) {
-            throw new UnreachableException("The main category, which is not displayed, is hovered.");
+    protected bool try_get_previous_setting(FhSetting setting, [NotNullWhen(true)] out FhSetting? prev_setting) {
+        ArgumentOutOfRangeException.ThrowIfEqual(setting, displayed_settings);
+
+        if (!try_get_setting_parent(setting, out FhSettingsCategory? parent, out int? index)) {
+            throw new UnreachableException();
         }
+
+        prev_setting = null;
 
         // If we have a parent and the index is zero, the parent category is guaranteed to be directly above us!
         if (index == 0) {
             // The displayed settings category is never actually displayed, only its settings
-            if (parent != displayed_settings) {
-                hovered_setting = parent;
-                ensure_setting_visible(hovered_setting);
+            if (parent == displayed_settings) {
+                return false;
             }
 
-            return;
+            prev_setting = parent;
+            return true;
         }
 
         FhSetting setting_one_up = parent.settings[(int)index - 1];
@@ -213,23 +224,26 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
             setting_one_up = category.settings[^1];
         }
 
-        hovered_setting = setting_one_up;
-        ensure_setting_visible(hovered_setting);
+        prev_setting = setting_one_up;
+        return true;
     }
 
-    protected void hover_setting_down() {
-        if (!try_get_setting_parent(hovered_setting!, out FhSettingsCategory? parent, out int? index)) {
-            throw new UnreachableException("The main category, which is not displayed, is hovered.");
+    protected bool try_get_next_setting(FhSetting setting, [NotNullWhen(true)] out FhSetting? next_setting) {
+        ArgumentOutOfRangeException.ThrowIfEqual(setting, displayed_settings);
+
+        if (!try_get_setting_parent(setting, out FhSettingsCategory? parent, out int? index)) {
+            throw new UnreachableException();
         }
 
-        // If we're hovering an expanded category, go into the category
-        if (hovered_setting is FhSettingsCategory category
+        next_setting = null;
+
+        // If the setting is an expanded category, go into the category
+        if (setting is FhSettingsCategory category
             && !category.collapsed
             && category.settings.Length > 0
         ) {
-            hovered_setting = category.settings[0];
-            ensure_setting_visible(hovered_setting);
-            return;
+            next_setting = category.settings[0];
+            return true;
         }
 
         // If there is no next setting in current category, go up until we find one
@@ -237,19 +251,101 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
             // If the parent is the displayed settings and the condition still passed,
             // there is no next setting
             if (parent == displayed_settings)
-                return;
+                return false;
 
             index  = parent.index_in_parent;
             parent = parent.parent!;
         }
 
-        hovered_setting = parent.settings[(int)index + 1];
+        next_setting = parent.settings[(int)index + 1];
+        return true;
+    }
+
+    protected void hover_setting_up() {
+        if (!try_get_previous_setting(hovered_setting!, out FhSetting? prev_setting)) {
+            return;
+        }
+
+        hovered_setting = prev_setting;
         ensure_setting_visible(hovered_setting);
     }
 
-    private float get_setting_height(FhSetting setting) {
+    protected void hover_setting_down() {
+        if (!try_get_next_setting(hovered_setting!, out FhSetting? next_setting)) {
+            return;
+        }
+
+        hovered_setting = next_setting;
+        ensure_setting_visible(next_setting);
+    }
+
+    private bool page_scroll_iterate(FhSetting setting, float threshold, ref float total) {
         if (!get_setting_renderer(setting, out SettingRenderer? renderer)) {
-            return 0f;
+            throw new NotImplementedException();
+        }
+
+        total += renderer.get_size(this).Y;
+
+        if (total >= threshold) {
+            hovered_setting = setting;
+            ensure_setting_visible(hovered_setting);
+            return true;
+        }
+
+        total += get_setting_margin(setting);
+
+        if (setting is not FhSettingsCategory category || category.collapsed)
+            return false;
+
+        foreach (FhSetting inner_setting in category.settings) {
+            if (page_scroll_iterate(inner_setting, threshold, ref total))
+                return true;
+        }
+
+        return false;
+    }
+
+    protected void scroll_page_up() {
+        scrollable_settings.scroll_page_up();
+
+        float running_total = 0f;
+        foreach (FhSetting setting in displayed_settings!.settings) {
+            if (page_scroll_iterate(setting, scrollable_settings.current, ref running_total))
+                return;
+        }
+    }
+
+    protected void scroll_page_down() {
+        scrollable_settings.scroll_page_down();
+
+        float running_total = 0f;
+        foreach (FhSetting setting in displayed_settings!.settings) {
+            if (page_scroll_iterate(setting, scrollable_settings.current, ref running_total))
+                return;
+        }
+    }
+
+    protected void scroll_begin() {
+        scrollable_settings.scroll_begin();
+
+        hovered_setting = displayed_settings!.settings[0];
+    }
+
+    protected void scroll_end() {
+        scrollable_settings.scroll_end();
+
+        FhSetting bottom_setting = displayed_settings!.settings[^1];
+
+        while (bottom_setting is FhSettingsCategory category && !category.collapsed) {
+            bottom_setting = category.settings[^1];
+        }
+
+        hovered_setting = bottom_setting;
+    }
+
+    protected float get_setting_height(FhSetting setting) {
+        if (!get_setting_renderer(setting, out SettingRenderer? renderer)) {
+            throw new NotImplementedException();
         }
 
         float height = 0f;
@@ -262,6 +358,7 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
 
         foreach (FhSetting inner_setting in category.settings) {
             height += get_setting_height(inner_setting);
+            height += get_setting_margin(inner_setting);
         }
 
         return height;
@@ -286,6 +383,16 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
                 top += get_setting_margin(parent.settings[i]);
             }
 
+            if (parent == displayed_settings)
+                break;
+
+            if (!get_setting_renderer(parent, out SettingRenderer? renderer)) {
+                throw new NotImplementedException();
+            }
+
+            top += renderer.get_size(this).Y;
+            top += get_setting_margin(parent);
+
             try_get_setting_parent(parent, out parent, out index);
         }
 
@@ -297,6 +404,10 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
             throw new NotImplementedException();
         }
 
+        if (!try_get_setting_parent(setting, out FhSettingsCategory? parent, out int? index)) {
+            throw new UnreachableException();
+        }
+
         float top = calculate_setting_top(setting);
 
         Rect setting_bounds = new() {
@@ -304,17 +415,46 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
             size = renderer.get_size(this),
         };
 
-        float margin = get_setting_margin(setting);
+        bool has_prev = try_get_previous_setting(setting, out FhSetting? prev_setting);
+        bool has_next = try_get_next_setting(setting, out FhSetting? next_setting);
 
-        float min_top    = setting_bounds.top.Y    - margin;
-        float min_bottom = setting_bounds.bottom.Y + margin;
+        float margin_top = has_prev
+            ? float.Min(get_setting_margin(setting), get_setting_margin(prev_setting!))
+            : get_setting_margin(setting);
 
-        if (scrollable_settings.get_clip_start() < min_top) {
+        float margin_bottom = has_next
+            ? float.Min(get_setting_margin(setting), get_setting_margin(next_setting!))
+            : get_setting_margin(setting);
+
+        float min_top    = setting_bounds.top.Y    - margin_top;
+        float min_bottom = setting_bounds.bottom.Y + margin_bottom;
+
+        min_top = float.Max(min_top, 0f);
+        min_bottom = float.Min(min_bottom, scrollable_settings.max);
+
+        if (scrollable_settings.get_clip_start() > min_top) {
             scrollable_settings.current = min_top;
         }
         else if (scrollable_settings.get_clip_end() < min_bottom) {
             scrollable_settings.current = min_bottom - scrollable_settings.visible;
         }
+    }
+
+    protected void recalculate_settings_scrollable() {
+        float height = 0f;
+
+        foreach (FhSetting setting in displayed_settings!.settings) {
+            height += get_setting_height(setting);
+            height += get_setting_margin(setting);
+        }
+
+        height -= get_setting_margin(displayed_settings.settings[^1]);
+
+        scrollable_settings.max = height;
+
+        float max_current = scrollable_settings.max - scrollable_settings.visible;
+
+        scrollable_settings.current = float.Clamp(scrollable_settings.current, 0f, max_current);
     }
 
 
@@ -337,6 +477,12 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
 
     public void unindent() {
         indent_level -= 1;
+    }
+
+    protected void toggle_category_collapsed(FhSettingsCategory category) {
+        category.collapsed = !category.collapsed;
+
+        recalculate_settings_scrollable();
     }
 
 
@@ -405,13 +551,78 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
             }
         }
 
-        if (FhApi.Gui.is_any_pressed(FhApi.Gui.keys_up)) {
+        // We must control the scrollable ourselves to hover settings properly
+
+        if (FhApi.Gui.is_any_pressed(FhApi.Gui.keys_up, repeat: true)) {
             hover_setting_up();
             return;
         }
 
-        if (FhApi.Gui.is_any_pressed(FhApi.Gui.keys_down)) {
+        if (FhApi.Gui.is_any_pressed(FhApi.Gui.keys_down, repeat: true)) {
             hover_setting_down();
+            return;
+        }
+
+        ImGuiKey[] keys_pg_up = [
+            ImGuiKey.PageUp,
+            ImGuiKey.GamepadL1,
+        ];
+
+        ImGuiKey[] keys_pg_dn = [
+            ImGuiKey.PageDown,
+            ImGuiKey.GamepadR1,
+        ];
+
+        ImGuiKey[] keys_home = [
+            ImGuiKey.Home,
+            ImGuiKey.GamepadL2,
+        ];
+
+        ImGuiKey[] keys_end = [
+            ImGuiKey.End,
+            ImGuiKey.GamepadR2,
+        ];
+
+        if (FhApi.Gui.is_any_pressed(keys_pg_up, repeat: true)
+            && scrollable_settings.current > 0f
+        ) {
+            scroll_page_up();
+
+            return;
+        }
+
+        if (FhApi.Gui.is_any_pressed(keys_pg_dn, repeat: true)
+            && scrollable_settings.current < scrollable_settings.max - scrollable_settings.visible
+        ) {
+            float old_current = scrollable_settings.current;
+            scroll_page_down();
+
+            if (old_current == scrollable_settings.current) {
+                scroll_end();
+            }
+
+            return;
+        }
+
+        if (FhApi.Gui.is_any_pressed(keys_home, repeat: true)) {
+            scroll_begin();
+            return;
+        }
+
+        if (FhApi.Gui.is_any_pressed(keys_end, repeat: true)) {
+            scroll_end();
+            return;
+        }
+
+        float mouse_wheel = ImGui.GetIO().MouseWheel;
+
+        if (mouse_wheel > 0) {
+            scrollable_settings.scroll(-scrollable_settings.scroll_step_size);
+            return;
+        }
+
+        if (mouse_wheel < 0) {
+            scrollable_settings.scroll(scrollable_settings.scroll_step_size);
             return;
         }
 

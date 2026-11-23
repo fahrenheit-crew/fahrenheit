@@ -452,7 +452,7 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
 
         scrollable_settings.max = height;
 
-        float max_current = scrollable_settings.max - scrollable_settings.visible;
+        float max_current = float.Max(0f, scrollable_settings.max - scrollable_settings.visible);
 
         scrollable_settings.current = float.Clamp(scrollable_settings.current, 0f, max_current);
     }

@@ -61,12 +61,9 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
     // Display
     protected readonly FadeHelper fade;
 
-    protected int selected_mod_idx;
-    protected int selected_module_idx;
-
-    protected FhModContext          selected_mod     => settings_map.GetAt(selected_mod_idx).Key;
-    protected List<FhModuleContext> selected_modules => settings_map.GetAt(selected_mod_idx).Value;
-    protected FhModuleContext       selected_module  => settings_map.GetAt(selected_mod_idx).Value[selected_module_idx];
+    protected FhModContext          selected_mod     => settings_map.GetAt(scrollable_mods.hovered).Key;
+    protected List<FhModuleContext> selected_modules => settings_map.GetAt(scrollable_mods.hovered).Value;
+    protected FhModuleContext       selected_module  => settings_map.GetAt(scrollable_mods.hovered).Value[scrollable_modules.hovered];
 
     protected FhSetting? hovered_setting;
 
@@ -167,7 +164,6 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
     protected void select_mod(int mod_idx) {
         focus = UiFocus.MODULES;
 
-        selected_mod_idx        = mod_idx;
         scrollable_mods.hovered = mod_idx;
 
         scrollable_modules.hovered = 0;
@@ -176,7 +172,9 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
     }
 
     protected void hover_module(int module_idx) {
-        FhModule hovered_module = selected_modules[module_idx].Module;
+        scrollable_modules.hovered = module_idx;
+
+        FhModule hovered_module = selected_module.Module;
 
         FhInternal.Settings.try_get_settings(hovered_module, out displayed_settings);
 
@@ -187,7 +185,6 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
     protected void select_module(int module_idx) {
         focus = UiFocus.SETTINGS;
 
-        selected_module_idx        = module_idx;
         scrollable_modules.hovered = module_idx;
 
         FhInternal.Settings.try_get_settings(selected_module.Module, out displayed_settings);
@@ -527,7 +524,7 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
 
         if (FhApi.Gui.is_any_pressed(FhApi.Gui.keys_cancel)) {
             focus = UiFocus.MODS;
-            selected_module_idx = 0;
+            scrollable_modules.hovered = 0;
             return;
         }
     }

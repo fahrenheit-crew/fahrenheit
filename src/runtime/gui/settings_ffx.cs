@@ -272,7 +272,7 @@ public partial class FhSettingsUiX : FhSettingsUiBase {
         draw.PopClipRect();
 
         if (focus == UiFocus.MODULES && mouse_hovered(plate_screen)) {
-            scrollable_modules.hovered = global_index;
+            hover_module(global_index);
         }
 
         if (global_index == scrollable_modules.hovered) {

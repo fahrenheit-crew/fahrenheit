@@ -186,6 +186,10 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
     // Display
     protected readonly FadeHelper fade;
 
+    protected readonly Fahrenheit.Gui.Timer audio_fade_helper = new(30f);
+
+    protected bool audio_fade_helper_restart = true;
+
     protected FhModContext          selected_mod     => settings_map.GetAt(scrollable_mods.hovered).Key;
     protected List<FhModuleContext> selected_modules => settings_map.GetAt(scrollable_mods.hovered).Value;
     protected FhModuleContext       selected_module  => settings_map.GetAt(scrollable_mods.hovered).Value[scrollable_modules.hovered];
@@ -204,6 +208,30 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
     protected readonly SettingsScrollable scrollable_settings;
 
     protected BaseScrollable? current_scrollable;
+
+    protected bool     scrollbar_dragging;
+    protected Vector2? scrollbar_held_pos;
+
+    protected struct ScrollbarData<T> where T : INumber<T> {
+        public BaseScrollable<T> scrollable;
+        public float             current_progress;
+        public bool              at_top;
+        public bool              at_bottom;
+
+        public T current     => T.CreateChecked(scrollable.current);
+        public T visible     => T.CreateChecked(scrollable.visible);
+        public T max         => T.CreateChecked(scrollable.max);
+        public T max_current => max - visible;
+
+        public float visible_percentage => float.CreateChecked(visible) / float.CreateChecked(T.Max(T.One, max));
+
+        public Rect  bounds_track;
+        public float scrollable_height;   // only filled after ui_scrollbar_get_thumb_bounds()
+        public Rect  bounds_thumb;        // only filled after ui_scrollbar_get_thumb_bounds()
+        public Rect  bounds_thumb_hitbox; // only filled after ui_scrollbar_get_thumb_bounds()
+        public Rect  bounds_arrow_begin;  // only filled after ui_scrollbar_get_arrow_bounds()
+        public Rect  bounds_arrow_end;    // only filled after ui_scrollbar_get_arrow_bounds()
+    }
 
     protected virtual float font_size => FONT_SIZE_DEFAULT * font_scale;
 
@@ -254,6 +282,14 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
     /* ===== Helper Methods ===== */
     protected string localize(string key) {
         return FhApi.Localization.localize($"{typeof(FhSettingsUi)}.{key}");
+    }
+
+    /// <summary>Get the volume a move sound should play at.</summary>
+    /// <returns>The desired volume.</returns>
+    protected float get_move_volume() {
+        float min_volume = ACTION_VOLUME * 0.5f;
+
+        return min_volume + (1f - audio_fade_helper.progress) * (1f - min_volume);
     }
 
     /// <summary>Attempt to load all of the textures the UI requires to display properly.</summary>
@@ -682,4 +718,268 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
     protected abstract void ui_list_modules();
     protected abstract void ui_list_settings();
     protected abstract void ui_scrollbars();
+
+    /// <summary>Render a scrollbar for a given scrollable at a given position.</summary>
+    /// <param name="scrollable">The scrollable to render a scrollbar for.</param>
+    /// <param name="track_bounds">The bounds of the scrollbar's track.</param>
+    protected void ui_scrollbar<T>(BaseScrollable<T> scrollable, Rect track_bounds)
+        where T : INumber<T> {
+
+        if (scrollable.max <= scrollable.visible) {
+            return;
+        }
+
+        float current_progress = scrollable.get_progress();
+
+        bool at_top;
+        bool at_bottom;
+
+        if (scrollable is SteppedScrollable stepped) {
+            at_top    = stepped.hovered == 0;
+            at_bottom = stepped.hovered >= stepped.max - 1;
+        }
+        else {
+            at_top    = current_progress == 0f;
+            at_bottom = current_progress == 1f;
+        }
+
+        ScrollbarData<T> data = new() {
+            scrollable       = scrollable,
+            current_progress = scrollable.get_progress(),
+            at_top           = at_top,
+            at_bottom        = at_bottom,
+            bounds_track     = track_bounds
+        };
+
+        ui_scrollbar_get_thumb_bounds(ref data);
+        ui_scrollbar_get_arrow_bounds(ref data);
+
+        data.bounds_track = data.bounds_track.scale_to_aspect(aspect_helper);
+
+        // Render
+        ui_scrollbar_direct(ref data);
+
+        // Handle input
+        float expanded_track_height = data.scrollable_height + (data.bounds_track.size.X - data.bounds_thumb.size.X);
+
+        if (mouse_clicked(data.bounds_thumb_hitbox)) {
+            scrollbar_dragging = true;
+            scrollbar_held_pos = ImGui.GetMousePos() - data.bounds_thumb_hitbox.pos;
+        }
+
+        if (scrollbar_dragging) {
+            Vector2 new_held_pos = ImGui.GetMousePos() - data.bounds_thumb_hitbox.pos;
+
+            float drag_delta     = new_held_pos.Y - scrollbar_held_pos!.Value.Y;
+            float progress_delta = drag_delta / expanded_track_height;
+
+            float new_progress   = data.current_progress + progress_delta;
+
+            if (scrollable is SteppedScrollable stepped_dragging) {
+                stepped_dragging.set_progress(new_progress, true);
+            }
+            else {
+                scrollable.set_progress(new_progress);
+            }
+
+            if (ImGui.IsMouseReleased(ImGuiMouseButton.Left)) {
+                scrollbar_dragging = false;
+                scrollbar_held_pos = null;
+            }
+
+            return;
+        }
+
+        if (scrollable is SteppedScrollable stepped_scrollable) {
+            if (!data.at_top && mouse_clicked(data.bounds_arrow_begin, repeat: true)) {
+                FhApi.Audio.play_sound(SOUND_ID_MOVE, volume: get_move_volume());
+                audio_fade_helper.tick(1f);
+
+                stepped_scrollable.move_hover(-1);
+            }
+
+            if (!data.at_bottom && mouse_clicked(data.bounds_arrow_end, repeat: true)) {
+                FhApi.Audio.play_sound(SOUND_ID_MOVE, volume: get_move_volume());
+                audio_fade_helper.tick(1f);
+
+                stepped_scrollable.move_hover(1);
+            }
+        }
+        else {
+            if (!data.at_top && mouse_clicked(data.bounds_arrow_begin, repeat: true)) {
+                scrollable.scroll(-scrollable.scroll_step_size);
+            }
+
+            if (!data.at_bottom && mouse_clicked(data.bounds_arrow_end, repeat: true)) {
+                scrollable.scroll(scrollable.scroll_step_size);
+            }
+        }
+
+        if ((mouse_hovered(data.bounds_arrow_begin, false) || mouse_hovered(data.bounds_arrow_end, false))
+            && ImGui.IsMouseDown(ImGuiMouseButton.Left)
+        ) {
+            audio_fade_helper_restart = false;
+        }
+    }
+
+    protected virtual void ui_scrollbar_get_thumb_bounds<T>(
+        ref ScrollbarData<T> data
+    ) where T : INumber<T> {
+        Rect track = data.bounds_track;
+
+        Vector2 thumb_margin = new(2f);
+
+        float thumb_width = track.size.X - thumb_margin.X * 2f;
+
+        float scrollable_height = track.size.Y - thumb_margin.Y * 2;
+
+        float thumb_height_max = 0.8f * scrollable_height;
+        float thumb_height_min = float.Min(20f, thumb_height_max);
+
+        float thumb_height = float.Lerp(
+            thumb_height_min,
+            thumb_height_max,
+            data.visible_percentage
+        );
+
+        Vector2 thumb_size = new(thumb_width, thumb_height);
+
+        data.scrollable_height = track.size.Y - thumb_margin.Y * 2 - thumb_size.Y;
+        float thumb_progress   = data.current_progress * data.scrollable_height;
+
+        Rect thumb = new() {
+            pos = new(
+                track.top_left.X + thumb_margin.X,
+                track.top_left.Y + thumb_margin.Y + thumb_progress
+            ),
+            size = thumb_size,
+        };
+
+        track = track.scale_to_aspect(aspect_helper);
+        thumb = thumb.scale_to_aspect(aspect_helper);
+
+        // Make sure that the thumb is still in the middle of the track after scaling
+        thumb.size.X = float.Round(track.size.X) - float.Round(thumb_margin.X * aspect_scale.X) * 2f;
+        thumb.pos.X  = float.Round(track.pos.X) + (float.Round(track.size.X) - thumb.size.X) / 2f;
+
+        data.scrollable_height *= aspect_scale.Y;
+
+        data.bounds_thumb = thumb;
+
+        // Allow grabbing the thumb on the entire track width (hitbox)
+        data.bounds_thumb_hitbox = thumb.expand(
+            new(track.size.X - thumb.size.X),
+            Alignment2D.CENTER
+        );
+    }
+
+    protected virtual void ui_scrollbar_get_arrow_bounds<T>(
+        ref ScrollbarData<T> data
+    ) where T : INumber<T> {
+        Rect track_bounds = data.bounds_track;
+
+        float arrow_width  = 2.24f  * track_bounds.size.X;
+        float arrow_height = 0.625f * arrow_width;
+
+        Vector2 arrow_size = new(arrow_width, arrow_height);
+
+        float triangle_gap = 13f;
+
+        Rect arrow_top = new() {
+            pos = new(
+                track_bounds.top.X - arrow_size.X / 2f,
+                track_bounds.top.Y - triangle_gap - arrow_size.Y
+            ),
+            size = arrow_size,
+        };
+
+        Rect arrow_bottom = new() {
+            pos = new(
+                track_bounds.bottom.X - arrow_size.X / 2f,
+                track_bounds.bottom.Y + triangle_gap
+            ),
+            size = arrow_size,
+        };
+
+        arrow_top    = arrow_top   .scale_to_aspect(aspect_helper);
+        arrow_bottom = arrow_bottom.scale_to_aspect(aspect_helper);
+
+        data.bounds_arrow_begin = arrow_top;
+        data.bounds_arrow_end   = arrow_bottom;
+    }
+
+    protected virtual void ui_scrollbar_direct<T>(
+        ref ScrollbarData<T> data
+    ) where T : INumber<T> {
+        uint track_color = 0xFF000000;
+
+        uint thumb_color_top    = 0xFFCCCCCC;
+        uint thumb_color_bottom = 0xFF808080;
+
+        uint arrow_color_top    = 0xFFC0C0C0;
+        uint arrow_color_bottom = 0xFF808080;
+
+        ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
+
+        draw.AddRectFilled(
+            data.bounds_track.top_left,
+            data.bounds_track.bottom_right,
+            track_color
+        );
+
+        draw.AddRectFilledMultiColor(
+            data.bounds_thumb.top_left,
+            data.bounds_thumb.bottom_right,
+            thumb_color_top,
+            thumb_color_top,
+            thumb_color_bottom,
+            thumb_color_bottom
+        );
+
+        Rect top_arrow_outline_bounds = data.bounds_arrow_begin.expand(
+            Vector2.Round(new Vector2(2f, 1f) * new Vector2(1f) * aspect_scale) * 2f,
+            Alignment2D.CENTER
+        );
+
+        Rect bot_arrow_outline_bounds = data.bounds_arrow_end.expand(
+            Vector2.Round(new Vector2(2f, 1f) * new Vector2(1f) * aspect_scale) * 2f,
+            Alignment2D.CENTER
+        );
+
+        FhApi.Gui.draw_triangle_gradient(
+            draw,
+            top_arrow_outline_bounds,
+            GradientDirection.UP,
+            0xFF000000,
+            0xFF000000,
+            0xFF000000
+        );
+
+        FhApi.Gui.draw_triangle_gradient(
+            draw,
+            bot_arrow_outline_bounds,
+            GradientDirection.DOWN,
+            0xFF000000,
+            0xFF000000,
+            0xFF000000
+        );
+
+        FhApi.Gui.draw_triangle_gradient(
+            draw,
+            data.bounds_arrow_begin,
+            GradientDirection.UP,
+            arrow_color_bottom,
+            arrow_color_bottom,
+            arrow_color_top
+        );
+
+        FhApi.Gui.draw_triangle_gradient(
+            draw,
+            data.bounds_arrow_end,
+            GradientDirection.DOWN,
+            arrow_color_bottom,
+            arrow_color_bottom,
+            arrow_color_top
+        );
+    }
 }

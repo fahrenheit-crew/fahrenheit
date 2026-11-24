@@ -23,7 +23,7 @@ public enum SpecialImmunities : ushort {
     MAGIC_CANCEL    = 1 << 9, // ?
 }
 
-[StructLayout(LayoutKind.Sequential)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public struct Monster {
     public ExcelTextOffset name;
     public ExcelTextOffset help;

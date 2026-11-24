@@ -64,7 +64,7 @@ public unsafe struct SphereGridLink {
     }
 }
 
-[StructLayout(LayoutKind.Sequential)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public struct SphereGridLinkPoint {
     public float x;
     public float y;
@@ -187,8 +187,8 @@ public unsafe struct SphereGridNodeTypeUiInfo {
     public Vector2 size => new Vector2(width, height) * new Vector2(Globals.SphereGrid.lpamng->current_zoom);
 }
 
-[StructLayout(LayoutKind.Sequential)]
-public unsafe struct SphereGridChrInfo {
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
+public struct SphereGridChrInfo {
     public  Vector4 pos;
     public  Vector4 label_pos;
     public  uint    a;

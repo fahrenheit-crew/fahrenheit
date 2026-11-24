@@ -5,7 +5,7 @@
 
 namespace Fahrenheit.FFX.Battle;
 
-[StructLayout(LayoutKind.Sequential, Size = 0x4)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public struct CtbEntry {
     private byte  __0x0;
     private short __0x2;
@@ -15,6 +15,7 @@ public struct CtbEntry {
 /// <summary>
 ///     CTB constants for a given agility value.
 /// </summary>
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public struct CtbBaseData {
     /// <summary>
     ///     How much delay a rank 1 command incurs.

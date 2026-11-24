@@ -12,6 +12,7 @@ namespace Fahrenheit.FFX;
 ///     In vanilla, this total is calculated with the formula<br/>
 ///     <c>hp/100 + mp/10 + strength + defense + magic + magic_defense + agility + evasion + accuracy</c>.
 /// </summary>
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public struct AeonStatBoostsScaling {
     /// <summary>
     ///     Contributes <c>yuna_total * hp_total</c> to the Aeon's HP.
@@ -108,7 +109,7 @@ public struct AeonStatBoostsScaling {
 ///     Data detailing the minimum stat boost for an Aeon based on the battle count.<br/>
 ///     In vanilla, this boost increases every 30 battles, starting at 60.
 /// </summary>
-[StructLayout(LayoutKind.Sequential)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public struct AeonStatBoostsMinimum {
     /// <summary>
     ///     The boost to the Aeon's HP.

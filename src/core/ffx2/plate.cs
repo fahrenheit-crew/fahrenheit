@@ -22,7 +22,7 @@ public struct PlateCreatureData {
     [FieldOffset(0x2C)] public StatChanges stat_changes;
 }
 
-[StructLayout(LayoutKind.Sequential)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public struct Plate {
     public ExcelTextOffset name;
     public ExcelTextOffset help;

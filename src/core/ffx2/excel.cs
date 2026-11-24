@@ -15,7 +15,7 @@ namespace Fahrenheit.FFX2;
 
 /// <summary>The prologue of an Excel container. Describes it in enough detail to construct a reader.</summary>
 /// <remarks>To iterate over its contents, use an <see cref="ExcelReader{T}"/>.</remarks>
-[StructLayout(LayoutKind.Sequential)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public struct ExcelProlog {
     /// <summary>
     ///     The amount of headers that map out this container.
@@ -32,7 +32,7 @@ public struct ExcelProlog {
 /// <summary>
 ///     The header that defines a section of an Excel container.
 /// </summary>
-[StructLayout(LayoutKind.Sequential)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public struct ExcelHeader {
     /// <summary>
     ///     The index of the first element in the section.

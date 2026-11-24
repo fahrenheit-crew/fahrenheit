@@ -5,7 +5,7 @@
 
 namespace Fahrenheit.Atel;
 
-[StructLayout(LayoutKind.Sequential)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public struct AtelScriptHeader {
     public ushort script_type;
     public ushort var_count;
@@ -45,15 +45,15 @@ public enum AtelScriptVarType {
     F32 = 0x06
 }
 
-[StructLayout(LayoutKind.Explicit, Pack = 1, Size = 0x4)]
+[ExtendedLayout(ExtendedLayoutKind.CUnion)]
 public struct AtelScriptVarValue {
-    [FieldOffset(0x0)] public byte   as_byte;
-    [FieldOffset(0x0)] public sbyte  as_sbyte;
-    [FieldOffset(0x0)] public ushort as_ushort;
-    [FieldOffset(0x0)] public short  as_short;
-    [FieldOffset(0x0)] public uint   as_uint;
-    [FieldOffset(0x0)] public int    as_int;
-    [FieldOffset(0x0)] public float  as_float;
+    public byte   u8;
+    public sbyte  i8;
+    public ushort u16;
+    public short  i16;
+    public uint   u32;
+    public int    i32;
+    public float  f32;
 }
 
 [StructLayout(LayoutKind.Explicit, Pack = 1, Size = 0x8)]

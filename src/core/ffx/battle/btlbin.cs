@@ -7,16 +7,16 @@ namespace Fahrenheit.FFX.Battle;
 
 // BtlBin related structs have been migrated in current state from Archipelago, in order to support call.cs delegate migration
 // May require further refining.
-[StructLayout(LayoutKind.Sequential)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public unsafe struct BtlBinField {
     [InlineArray(8)]
     public struct FieldName {
         private byte _data;
     }
 
-    public short id;
-    public short data_offset;
-    public short __0x4;
+    public short     id;
+    public short     data_offset;
+    public short     __0x4;
     public FieldName name;
 }
 
@@ -49,7 +49,7 @@ public unsafe struct BtlBinGroup {
     //public Span<BtlBinFormation> formations => MemoryMarshal.CreateSpan(ref _first_formation, formation_count);
 }
 
-[StructLayout(LayoutKind.Sequential)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public unsafe struct BtlBinFormation {
     public byte index;
     public byte weight;

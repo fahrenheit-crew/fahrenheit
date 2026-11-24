@@ -5,7 +5,7 @@
 
 namespace Fahrenheit.FFX2;
 
-[StructLayout(LayoutKind.Sequential)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public struct StatusMap {
     public byte death;
     public byte petrification;
@@ -34,7 +34,7 @@ public struct StatusMap {
     private byte unused5;
 }
 
-[StructLayout(LayoutKind.Sequential)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public struct StatusDurationMap {
     public int death;
     public int petrification;

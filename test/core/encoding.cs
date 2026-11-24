@@ -66,9 +66,9 @@ public class FhEncodingRegressionTests {
     [TestCase("Amulet x 90", FhLangId.Chinese,  FhGameId.FFX)]
     [TestCase("Amulet x 90", FhLangId.Japanese, FhGameId.FFX)]
     [TestCase("Amulet x 90", FhLangId.Korean,   FhGameId.FFX)]
-    [TestCase("Amulet x 90", FhLangId.Chinese,  FhGameId.FFX2, Ignore = "CJK encodings for FF X-2 are not yet supported.")]
-    [TestCase("Amulet x 90", FhLangId.Japanese, FhGameId.FFX2, Ignore = "CJK encodings for FF X-2 are not yet supported.")]
-    [TestCase("Amulet x 90", FhLangId.Korean,   FhGameId.FFX2, Ignore = "CJK encodings for FF X-2 are not yet supported.")]
+    [TestCase("Amulet x 90", FhLangId.Chinese,  FhGameId.FFX2, Ignore = "Chinese encoding for FF X-2 is not yet supported.")]
+    [TestCase("Amulet x 90", FhLangId.Japanese, FhGameId.FFX2)]
+    [TestCase("Amulet x 90", FhLangId.Korean,   FhGameId.FFX2)]
     public void ffx_cjk_extension(string input, FhLangId lang, FhGameId game) {
         ReadOnlySpan<byte> utf8_bytes_input = Encoding.UTF8.GetBytes(input);
         FhEncodingFlags    flags            = FhEncodingFlags.IMPLICIT_CJK_EXTENSION;

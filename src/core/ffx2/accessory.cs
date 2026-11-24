@@ -8,7 +8,7 @@
 
 namespace Fahrenheit.FFX2;
 
-[StructLayout(LayoutKind.Sequential)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public struct FeedStatChanges {
     public int  hp;
     public int  mp;
@@ -33,7 +33,7 @@ public struct AccessoryCreatureData {
     [FieldOffset(0x20)] public FeedStatChanges feed_stats;
 }
 
-[StructLayout(LayoutKind.Sequential)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public struct Accessory {
     public ExcelTextOffset name;
     public ExcelTextOffset help;

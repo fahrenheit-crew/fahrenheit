@@ -8,7 +8,7 @@
 
 namespace Fahrenheit.FFX2;
 
-[StructLayout(LayoutKind.Sequential)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public struct KeyItem {
     public ExcelTextOffset name;
     public ExcelTextOffset help;

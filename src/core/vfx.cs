@@ -5,7 +5,7 @@
 
 namespace Fahrenheit;
 
-[StructLayout(LayoutKind.Sequential, Size = 0x6C)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 [DebuggerDisplay("{name}")]
 public unsafe struct DynGeoDataSegment {
     public uint  _0x00;
@@ -39,7 +39,7 @@ public unsafe struct DynGeoDataSegment {
     public string? name => Marshal.PtrToStringAnsi((nint)ptr_name);
 }
 
-[StructLayout(LayoutKind.Sequential, Size = 0xD0)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public unsafe struct DynGeoData {
     public Matrix4x4          _0x00;
     public Matrix4x4          _0x40;
@@ -67,7 +67,7 @@ public unsafe struct DynGeoData {
     public uint               _0xCC;
 }
 
-[StructLayout(LayoutKind.Sequential, Size = 0xD0)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public unsafe struct ClassDynamicGeometry {
     public uint        ptr_vftable;
     public uint        _0x04;
@@ -125,7 +125,7 @@ public unsafe struct ClassDynamicGeometry {
     public uint        _0xCC;
 }
 
-[StructLayout(LayoutKind.Sequential, Size = 0xF8)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public unsafe struct VFXDynamicGeometry {
     public ClassDynamicGeometry base_ClassDynamicGeometry;
 
@@ -138,7 +138,7 @@ public unsafe struct VFXDynamicGeometry {
     public Vector4 _0xE8;
 }
 
-[StructLayout(LayoutKind.Sequential, Size = 0x50)]
+[ExtendedLayout(ExtendedLayoutKind.CStruct)]
 public unsafe struct ClassVFXRenderDataTable {
     public uint                _0x00;
     public uint                _0x04;

@@ -379,7 +379,7 @@ public partial class FhSettingsUiX {
                 return;
 
             if (ui.mouse_clicked(arrow_hitbox)) {
-                category.collapsed ^= true;
+                ui.toggle_category_collapsed(category);
             }
         }
 
@@ -387,7 +387,7 @@ public partial class FhSettingsUiX {
             if (!FhApi.Gui.is_any_pressed(FhApi.Gui.keys_confirm))
                 return false;
 
-            category.collapsed ^= true;
+            ui.toggle_category_collapsed(category);
             return true;
         }
     }

@@ -11,6 +11,8 @@ public partial class FhSettingsUiX : FhSettingsUiBase {
     public const int   INDENT_MAX  = 5;
     public const float INDENT_SIZE = 40f;
 
+    public const float SETTINGS_LIST_HEIGHT = 769f;
+
     public const float SETTING_MARGIN_SIZE  = 22f;
     public const float CATEGORY_MARGIN_SIZE = 10f;
 
@@ -36,9 +38,19 @@ public partial class FhSettingsUiX : FhSettingsUiBase {
         max_offset  = 16f * aspect_scale.X,
     };
 
+    public FhSettingsUiX() {
+        scrollable_settings.visible = SETTINGS_LIST_HEIGHT;
+    }
+
     protected override float get_setting_margin(FhSetting setting) {
-        return setting is FhSettingsCategory
-            ? CATEGORY_MARGIN_SIZE
+        ArgumentOutOfRangeException.ThrowIfEqual(setting, displayed_settings);
+
+        if (!try_get_setting_parent(setting, out FhSettingsCategory? parent, out int? index)) {
+            throw new UnreachableException();
+        }
+
+        return index == parent.settings.Length - 1
+            ? SETTING_MARGIN_SIZE + CATEGORY_MARGIN_SIZE
             : SETTING_MARGIN_SIZE;
     }
 
@@ -286,7 +298,7 @@ public partial class FhSettingsUiX : FhSettingsUiBase {
 
     /// <summary>Renders all module plates.</summary>
     protected override void ui_list_modules() {
-        ui_mod(selected_mod, selected_mod_idx, 0);
+        ui_mod(selected_mod, scrollable_mods.hovered, 0);
 
         //TODO: Move this line to when a mod is selected
         scrollable_modules.max = selected_modules.Count;
@@ -405,14 +417,30 @@ public partial class FhSettingsUiX : FhSettingsUiBase {
         indent_level = 0;
         setting_y    = 0f;
 
-        ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
-
         Rect bounds = new() {
             pos  = new( 610f, 202f),
-            size = new(1100f, 769f),
+            size = new(1100f, SETTINGS_LIST_HEIGHT),
         };
 
+        float clip_start = scrollable_settings.get_clip_start();
+        float clip_end   = scrollable_settings.get_clip_end();
+
         foreach (FhSetting setting in displayed_settings.settings) {
+            float top    = calculate_setting_top(setting);
+            float height = get_setting_height(setting);
+
+            // off-screen on the top
+            if (top + height < clip_start)
+                continue;
+
+            // off-screen on the bottom
+            if (top > clip_end)
+                continue;
+
+            if (setting_y == 0f && top < scrollable_settings.get_clip_start()) {
+                setting_y = top - scrollable_settings.get_clip_start();
+            }
+
             ui_setting(setting, bounds);
         }
     }
@@ -586,9 +614,17 @@ public partial class FhSettingsUiX : FhSettingsUiBase {
             size = new( 17f, 777f),
         };
 
-        if (focus == UiFocus.MODS)
+        Rect scrollbar_settings = new() {
+            pos  = new(1730f, 202f),
+            size = new(  17f, SETTINGS_LIST_HEIGHT),
+        };
+
+        if (focus == UiFocus.MODS) {
             ui_scrollbar(scrollable_mods, scrollbar_mods);
-        else
-            ui_scrollbar(scrollable_modules, scrollbar_mods);
+            return;
+        }
+
+        ui_scrollbar(scrollable_modules,  scrollbar_mods);
+        ui_scrollbar(scrollable_settings, scrollbar_settings);
     }
 }

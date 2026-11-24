@@ -445,168 +445,6 @@ public partial class FhSettingsUiX : FhSettingsUiBase {
         }
     }
 
-    /// <summary>Renders a scrollbar.</summary>
-    /// <param name="scrollable">The scrollable to draw the scrollbar for.</param>
-    /// <param name="track_bounds">The bounding rectangle of the scrollbar's track.</param>
-    private void ui_scrollbar<T>(BaseScrollable<T> scrollable, Rect track_bounds)
-        where T : INumber<T> {
-
-        if (scrollable.max <= scrollable.visible) {
-            return;
-        }
-
-        float progress = scrollable.get_progress();
-
-        float visible_percentage = float.CreateChecked(scrollable.visible)
-            / float.CreateChecked(scrollable.max);
-
-        float thumb_margin = 2f * aspect_scale.X;
-
-        float scrollable_height = track_bounds.size.Y - thumb_margin * 2f;
-
-        float thumb_height_max = 0.8f * scrollable_height;
-        float thumb_height_min = float.Min(60f * aspect_scale.Y, thumb_height_max);
-        float thumb_height     = float.Clamp(
-            scrollable_height * visible_percentage,
-            thumb_height_min,
-            thumb_height_max
-        );
-
-        float thumb_y = scrollable.get_progress() * (scrollable_height - thumb_height);
-
-        Rect track = track_bounds;
-
-        Rect thumb = new() {
-            pos  = track.top_left + new Vector2(thumb_margin, thumb_margin + thumb_y),
-            size = new(track.size.X - thumb_margin * 2f, thumb_height),
-        };
-
-        Vector2 triangle_size = new(36f, 18f);
-        float   triangle_gap  = triangle_size.Y * 0.8f;
-
-        Rect triangle_top = new() {
-            pos = new(
-                track.top.X - triangle_size.X / 2f,
-                track.top.Y - triangle_gap - triangle_size.Y
-            ),
-            size = triangle_size,
-        };
-
-        Rect triangle_bottom = new() {
-            pos = new(
-                track.bottom.X - triangle_size.X / 2f,
-                track.bottom.Y + triangle_gap
-            ),
-            size = triangle_size,
-        };
-
-        uint track_color = 0xFF000000;
-
-        uint gradient_top    = 0xFFCBCBCB;
-        uint gradient_bottom = 0xFF808080;
-
-        ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
-
-        float thumb_max_y    = scrollable_height - thumb.size.Y;
-        float thumb_progress = progress * thumb_max_y;
-
-        Rect scaled_track = track.scale_to_aspect(aspect_helper);
-        Rect scaled_thumb = thumb.scale_to_aspect(aspect_helper);
-
-        // Make sure that the thumb is still in the middle of the track after scaling
-        scaled_thumb.size.X = float.Round(scaled_track.size.X)
-            - (float.Round(scaled_thumb.pos.X) - float.Round(scaled_track.pos.X)) * 2f;
-
-        Rect scaled_triangle_top    = triangle_top   .scale_to_aspect(aspect_helper);
-        Rect scaled_triangle_bottom = triangle_bottom.scale_to_aspect(aspect_helper);
-
-        float scaled_thumb_max_y = thumb_max_y * aspect_scale.Y;
-
-        draw.AddRectFilled(
-            scaled_track.top_left,
-            scaled_track.bottom_right,
-            track_color
-        );
-
-        draw.AddRectFilledMultiColor(
-            scaled_thumb.top_left,
-            scaled_thumb.bottom_right,
-            gradient_top,
-            gradient_top,
-            gradient_bottom,
-            gradient_bottom
-        );
-
-        FhApi.Gui.draw_triangle_gradient(
-            draw,
-            scaled_triangle_top,
-            GradientDirection.UP,
-            gradient_bottom,
-            gradient_bottom,
-            gradient_top
-        );
-
-        FhApi.Gui.draw_triangle_gradient(
-            draw,
-            scaled_triangle_bottom,
-            GradientDirection.DOWN,
-            gradient_bottom,
-            gradient_bottom,
-            gradient_top
-        );
-
-        // Handle input
-        if (scrollable != current_scrollable) return;
-
-        // Allow grabbing the thumb on the entire track width
-        Rect expanded_thumb = thumb.expand(
-            new(track.size.X - thumb.size.X),
-            new(Alignment.CENTER, Alignment.CENTER)
-        );
-
-        float expanded_track_height = thumb_max_y + (track.size.X - thumb.size.X);
-
-        // if (mouse_clicked(expanded_thumb)) {
-        //     _scrollbar_dragging = true;
-        //     _scrollbar_held_pos = ImGui.GetMousePos() - expanded_thumb.pos;
-        // }
-        //
-        // if (_scrollbar_dragging) {
-        //     Vector2 new_held_pos = ImGui.GetMousePos() - expanded_thumb.pos;
-        //
-        //     float drag_delta     = new_held_pos.Y - _scrollbar_held_pos!.Value.Y;
-        //     float progress_delta = drag_delta / expanded_track_height;
-        //
-        //     _current_scrollable.set_progress(progress + progress_delta, true);
-        //
-        //     if (ImGui.IsMouseReleased(ImGuiMouseButton.Left)) {
-        //         _scrollbar_dragging = false;
-        //         _scrollbar_held_pos = null;
-        //     }
-        //
-        //     return;
-        // }
-
-        if (scrollable is SteppedScrollable stepped) {
-            if (mouse_clicked(triangle_top, repeat: true)) {
-                stepped.move_hover(-1);
-            }
-
-            if (mouse_clicked(triangle_bottom, repeat: true)) {
-                stepped.move_hover(1);
-            }
-        }
-        else {
-            if (mouse_clicked(triangle_top, repeat: true)) {
-                scrollable.scroll(-scrollable.scroll_step_size);
-            }
-
-            if (mouse_clicked(triangle_bottom, repeat: true)) {
-                scrollable.scroll(scrollable.scroll_step_size);
-            }
-        }
-    }
-
     /// <summary>Renders all scrollbars.</summary>
     protected override void ui_scrollbars() {
         Rect scrollbar_mods = new() {
@@ -626,5 +464,61 @@ public partial class FhSettingsUiX : FhSettingsUiBase {
 
         ui_scrollbar(scrollable_modules,  scrollbar_mods);
         ui_scrollbar(scrollable_settings, scrollbar_settings);
+    }
+
+    protected override void ui_scrollbar_direct<T>(
+        ref ScrollbarData<T> data
+    ) {
+        if (!_texture_battle.try_use(out ImTextureRef battle, out FhTextureMetadata? battle_meta)) {
+            return;
+        }
+
+        uint track_color = 0xFF1A1A1A;
+
+        uint thumb_color_left  = 0xFFC9ADAD;
+        uint thumb_color_right = 0xFFAA8082;
+
+        ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
+
+        draw.AddRectFilled(
+            data.bounds_track.top_left,
+            data.bounds_track.bottom_right,
+            track_color
+        );
+
+        draw.AddRectFilledMultiColor(
+            data.bounds_thumb.top_left,
+            data.bounds_thumb.bottom_right,
+            thumb_color_left,
+            thumb_color_right,
+            thumb_color_right,
+            thumb_color_left
+        );
+
+        UV triangle_top_suv    = data.bounds_arrow_begin.as_uv();
+        UV triangle_bottom_suv = data.bounds_arrow_end  .as_uv();
+
+        UV triangle_tuv = new Rect {
+            pos  = new(708f, 425f),
+            size = new( 45f,  26f),
+        }.as_uv(battle_meta.size);
+
+        draw.AddImage(
+            battle,
+            triangle_top_suv.p0,
+            triangle_top_suv.p1,
+            triangle_tuv.p1,
+            triangle_tuv.p0,
+            !data.at_top ? 0xFFFFFFFF : 0x90D0D0D0
+        );
+
+        draw.AddImage(
+            battle,
+            triangle_bottom_suv.p0,
+            triangle_bottom_suv.p1,
+            triangle_tuv.p0,
+            triangle_tuv.p1,
+            !data.at_bottom ? 0xFFFFFFFF : 0x90D0D0D0
+        );
     }
 }

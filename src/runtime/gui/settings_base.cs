@@ -6,6 +6,131 @@
 namespace Fahrenheit.Runtime.Gui;
 
 public abstract class FhSettingsUiBase : FhSettingsUi {
+    protected class SettingsScrollable(FhSettingsUiBase ui) : Scrollable {
+        protected override ImGuiKey[] keys_pg_up => [
+            ImGuiKey.PageUp,
+            ImGuiKey.GamepadL1,
+        ];
+
+        protected override ImGuiKey[] keys_pg_dn => [
+            ImGuiKey.PageDown,
+            ImGuiKey.GamepadR1,
+        ];
+
+        protected bool scroll_page_iterate(FhSetting setting, ref float total) {
+            if (!ui.get_setting_renderer(setting, out SettingRenderer? renderer)) {
+                throw new NotImplementedException();
+            }
+
+            total += renderer.get_size(ui).Y;
+
+            if (total >= current) {
+                ui.hovered_setting = setting;
+                ui.ensure_setting_visible(ui.hovered_setting);
+                return true;
+            }
+
+            total += ui.get_setting_margin(setting);
+
+            if (setting is not FhSettingsCategory category || category.collapsed)
+                return false;
+
+            foreach (FhSetting inner_setting in category.settings) {
+                if (scroll_page_iterate(inner_setting, ref total))
+                    return true;
+            }
+
+            return false;
+        }
+
+        public override void scroll_page_up() {
+            current -= visible;
+            current = float.Clamp(current, 0f, float.Max(0f, max_current));
+
+            float running_total = 0f;
+            foreach (FhSetting setting in ui.displayed_settings!.settings) {
+                if (scroll_page_iterate(setting, ref running_total))
+                    return;
+            }
+        }
+
+        public override void scroll_page_down() {
+            current += visible;
+            current = float.Clamp(current, 0f, float.Max(0f, max_current));
+
+            float running_total = 0f;
+            foreach (FhSetting setting in ui.displayed_settings!.settings) {
+                if (scroll_page_iterate(setting, ref running_total))
+                    return;
+            }
+        }
+
+        public override void scroll_begin() {
+            current = 0f;
+
+            ui.hovered_setting = ui.displayed_settings!.settings[0];
+        }
+
+        public override void scroll_end() {
+            current = max <= visible ? 0f : max_current;
+
+            FhSetting bottom_setting = ui.displayed_settings!.settings[^1];
+
+            while (bottom_setting is FhSettingsCategory category && !category.collapsed) {
+                bottom_setting = category.settings[^1];
+            }
+
+            ui.hovered_setting = bottom_setting;
+        }
+
+        public override bool handle_input() {
+            if (FhApi.Gui.is_any_pressed(keys_pg_up, repeat: true)
+                && current > 0f
+            ) {
+                scroll_page_up();
+
+                return true;
+            }
+
+            if (FhApi.Gui.is_any_pressed(keys_pg_dn, repeat: true)
+                && current < max_current
+            ) {
+                float old_current = current;
+                scroll_page_down();
+
+                if (old_current == current) {
+                    scroll_end();
+                }
+
+                return true;
+            }
+
+            if (FhApi.Gui.is_any_pressed(keys_home)) {
+                scroll_begin();
+                return true;
+            }
+
+            if (FhApi.Gui.is_any_pressed(keys_end)) {
+                scroll_end();
+                return true;
+            }
+
+            float mouse_wheel = ImGui.GetIO().MouseWheel;
+
+            if (mouse_wheel > 0) {
+                scroll(-scroll_step_size);
+                return true;
+            }
+
+            if (mouse_wheel < 0) {
+                scroll(scroll_step_size);
+                return true;
+            }
+
+            return false;
+        }
+    }
+
     public interface ICapturingRenderer {
         public string get_input_help_text();
     }
@@ -74,9 +199,9 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
 
     protected FhSettingsCategory? displayed_settings;
 
-    protected readonly SteppedScrollable scrollable_mods     = new(visible: 11);
-    protected readonly SteppedScrollable scrollable_modules  = new(visible: 10);
-    protected readonly Scrollable        scrollable_settings = new();
+    protected readonly SteppedScrollable  scrollable_mods     = new(visible: 11);
+    protected readonly SteppedScrollable  scrollable_modules  = new(visible: 10);
+    protected readonly SettingsScrollable scrollable_settings;
 
     protected BaseScrollable? current_scrollable;
 
@@ -93,6 +218,8 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
     protected override Vector2 get_ref_size() => new(1920f, 1080f);
 
     protected FhSettingsUiBase() {
+        scrollable_settings = new(this);
+
         current_scrollable = null;
 
         fade = new(0, 0, FADE_LENGTH);
@@ -274,70 +401,6 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
 
         hovered_setting = next_setting;
         ensure_setting_visible(next_setting);
-    }
-
-    private bool page_scroll_iterate(FhSetting setting, float threshold, ref float total) {
-        if (!get_setting_renderer(setting, out SettingRenderer? renderer)) {
-            throw new NotImplementedException();
-        }
-
-        total += renderer.get_size(this).Y;
-
-        if (total >= threshold) {
-            hovered_setting = setting;
-            ensure_setting_visible(hovered_setting);
-            return true;
-        }
-
-        total += get_setting_margin(setting);
-
-        if (setting is not FhSettingsCategory category || category.collapsed)
-            return false;
-
-        foreach (FhSetting inner_setting in category.settings) {
-            if (page_scroll_iterate(inner_setting, threshold, ref total))
-                return true;
-        }
-
-        return false;
-    }
-
-    protected void scroll_page_up() {
-        scrollable_settings.scroll_page_up();
-
-        float running_total = 0f;
-        foreach (FhSetting setting in displayed_settings!.settings) {
-            if (page_scroll_iterate(setting, scrollable_settings.current, ref running_total))
-                return;
-        }
-    }
-
-    protected void scroll_page_down() {
-        scrollable_settings.scroll_page_down();
-
-        float running_total = 0f;
-        foreach (FhSetting setting in displayed_settings!.settings) {
-            if (page_scroll_iterate(setting, scrollable_settings.current, ref running_total))
-                return;
-        }
-    }
-
-    protected void scroll_begin() {
-        scrollable_settings.scroll_begin();
-
-        hovered_setting = displayed_settings!.settings[0];
-    }
-
-    protected void scroll_end() {
-        scrollable_settings.scroll_end();
-
-        FhSetting bottom_setting = displayed_settings!.settings[^1];
-
-        while (bottom_setting is FhSettingsCategory category && !category.collapsed) {
-            bottom_setting = category.settings[^1];
-        }
-
-        hovered_setting = bottom_setting;
     }
 
     protected float get_setting_height(FhSetting setting) {
@@ -548,8 +611,6 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
             }
         }
 
-        // We must control the scrollable ourselves to hover settings properly
-
         if (FhApi.Gui.is_any_pressed(FhApi.Gui.keys_up, repeat: true)) {
             hover_setting_up();
             return;
@@ -560,66 +621,7 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
             return;
         }
 
-        ImGuiKey[] keys_pg_up = [
-            ImGuiKey.PageUp,
-            ImGuiKey.GamepadL1,
-        ];
-
-        ImGuiKey[] keys_pg_dn = [
-            ImGuiKey.PageDown,
-            ImGuiKey.GamepadR1,
-        ];
-
-        ImGuiKey[] keys_home = [
-            ImGuiKey.Home,
-            ImGuiKey.GamepadL2,
-        ];
-
-        ImGuiKey[] keys_end = [
-            ImGuiKey.End,
-            ImGuiKey.GamepadR2,
-        ];
-
-        if (FhApi.Gui.is_any_pressed(keys_pg_up, repeat: true)
-            && scrollable_settings.current > 0f
-        ) {
-            scroll_page_up();
-
-            return;
-        }
-
-        if (FhApi.Gui.is_any_pressed(keys_pg_dn, repeat: true)
-            && scrollable_settings.current < scrollable_settings.max - scrollable_settings.visible
-        ) {
-            float old_current = scrollable_settings.current;
-            scroll_page_down();
-
-            if (old_current == scrollable_settings.current) {
-                scroll_end();
-            }
-
-            return;
-        }
-
-        if (FhApi.Gui.is_any_pressed(keys_home, repeat: true)) {
-            scroll_begin();
-            return;
-        }
-
-        if (FhApi.Gui.is_any_pressed(keys_end, repeat: true)) {
-            scroll_end();
-            return;
-        }
-
-        float mouse_wheel = ImGui.GetIO().MouseWheel;
-
-        if (mouse_wheel > 0) {
-            scrollable_settings.scroll(-scrollable_settings.scroll_step_size);
-            return;
-        }
-
-        if (mouse_wheel < 0) {
-            scrollable_settings.scroll(scrollable_settings.scroll_step_size);
+        if (scrollable_settings.handle_input()) {
             return;
         }
 

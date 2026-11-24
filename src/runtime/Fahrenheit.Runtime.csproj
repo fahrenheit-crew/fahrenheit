@@ -57,6 +57,10 @@
         <None Include="$(SolutionDir)\assets\*.ttf" LinkBase="resources\fonts">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
+
+        <None Include="$(SolutionDir)\assets\fh_base_500.png" LinkBase="resources">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
 
     <Target Name="__FhEmitManifest" AfterTargets="Publish">

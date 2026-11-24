@@ -14,30 +14,47 @@ public unsafe class FhModListDisplayModule : FhModule {
 
     private class Settings : FhSettingProvider<FhModListDisplayModule> {
         internal protected override IEnumerable<FhSetting> get() {
-            FhSettingToggle setting_a = new("setting_a", false);
-            FhSettingToggle setting_b = new("setting_b", true);
-
-            FhSettingNumber setting_c = new("setting_c", 3.0, 0.0, 5.0, 0.2, precision: 1);
-            FhSettingNumber setting_d = new("setting_d", 10, 5, 20, 1, integers_only: true);
-
-            FhSettingChoice<Alignment> setting_e = new("setting_e", Alignment.CENTER);
-            FhSettingChoice<GradientDirection> setting_f = new("setting_f", GradientDirection.DOWN);
-
-            FhSettingsCategory sub_a = new("sub_a", [
-                setting_c,
-                setting_d,
-            ]);
-
-            FhSettingsCategory sub_b = new("sub_b", [
-                setting_e,
-                setting_f,
-            ]);
-
             return [
-                setting_a,
-                setting_b,
-                sub_a,
-                sub_b,
+                new FhSettingToggle("setting_a", false),
+                new FhSettingToggle("setting_b", true),
+                new FhSettingsCategory("sub_a", [
+                    new FhSettingNumber("setting_c", 3.0, 0.0, 5.0, 0.2, precision: 1),
+                    new FhSettingNumber("setting_d", 10, 5, 20, 1, integers_only: true),
+                ]),
+                new FhSettingsCategory("sub_b", [
+                    new FhSettingChoice<Alignment>("setting_e", Alignment.CENTER),
+                    new FhSettingChoice<GradientDirection>("setting_f", GradientDirection.DOWN),
+                ]),
+                new FhSettingToggle("setting_a", false),
+                new FhSettingToggle("setting_b", true),
+                new FhSettingsCategory("sub_a", [
+                    new FhSettingNumber("setting_c", 3.0, 0.0, 5.0, 0.2, precision: 1),
+                    new FhSettingNumber("setting_d", 10, 5, 20, 1, integers_only: true),
+                ]),
+                new FhSettingsCategory("sub_b", [
+                    new FhSettingChoice<Alignment>("setting_e", Alignment.CENTER),
+                    new FhSettingChoice<GradientDirection>("setting_f", GradientDirection.DOWN),
+                ]),
+                new FhSettingToggle("setting_a", false),
+                new FhSettingToggle("setting_b", true),
+                new FhSettingsCategory("sub_a", [
+                    new FhSettingNumber("setting_c", 3.0, 0.0, 5.0, 0.2, precision: 1),
+                    new FhSettingNumber("setting_d", 10, 5, 20, 1, integers_only: true),
+                ]),
+                new FhSettingsCategory("sub_b", [
+                    new FhSettingChoice<Alignment>("setting_e", Alignment.CENTER),
+                    new FhSettingChoice<GradientDirection>("setting_f", GradientDirection.DOWN),
+                ]),
+                new FhSettingToggle("setting_a", false),
+                new FhSettingToggle("setting_b", true),
+                new FhSettingsCategory("sub_a", [
+                    new FhSettingNumber("setting_c", 3.0, 0.0, 5.0, 0.2, precision: 1),
+                    new FhSettingNumber("setting_d", 10, 5, 20, 1, integers_only: true),
+                ]),
+                new FhSettingsCategory("sub_b", [
+                    new FhSettingChoice<Alignment>("setting_e", Alignment.CENTER),
+                    new FhSettingChoice<GradientDirection>("setting_f", GradientDirection.DOWN),
+                ]),
             ];
         }
     }

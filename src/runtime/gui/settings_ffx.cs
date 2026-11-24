@@ -472,7 +472,7 @@ public partial class FhSettingsUiX : FhSettingsUiBase {
             thumb_height_max
         );
 
-        float thumb_y = scrollable.get_progress() * scrollable_height;
+        float thumb_y = scrollable.get_progress() * (scrollable_height - thumb_height);
 
         Rect track = track_bounds;
 

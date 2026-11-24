@@ -11,7 +11,9 @@ public partial class FhSettingsUiX2 : FhSettingsUiBase {
     public const int   INDENT_MAX  = 5;
     public const float INDENT_SIZE = 40f;
 
-    public const float SETTING_MARGIN_SIZE  = 22f;
+    public const float SETTINGS_LIST_HEIGHT = 760f;
+
+    public const float SETTING_MARGIN_SIZE  = 18f;
     public const float CATEGORY_MARGIN_SIZE = 10f;
 
     private int setting_idx; // Used for plate texture UV
@@ -57,12 +59,26 @@ public partial class FhSettingsUiX2 : FhSettingsUiBase {
     private readonly NineSliceHelper window_helper;
 
     public FhSettingsUiX2() {
+        scrollable_settings.visible = SETTINGS_LIST_HEIGHT;
+
         window_helper = NineSliceHelper.create(
             _tex_window_size,
             new(  -2f,  -1f),
             new(1026f, 257f),
             new(   3f,   3f)
         );
+    }
+
+    protected override float get_setting_margin(FhSetting setting) {
+        ArgumentOutOfRangeException.ThrowIfEqual(setting, displayed_settings);
+
+        if (!try_get_setting_parent(setting, out FhSettingsCategory? parent, out int? index)) {
+            throw new UnreachableException();
+        }
+
+        return index == parent.settings.Length - 1
+            ? SETTING_MARGIN_SIZE + CATEGORY_MARGIN_SIZE
+            : SETTING_MARGIN_SIZE;
     }
 
     // Rendering
@@ -313,9 +329,7 @@ public partial class FhSettingsUiX2 : FhSettingsUiBase {
             FhApi.Gui.draw_x2_cursor(
                 draw,
                 cursor_target,
-                cursor_config with {
-                    overlap = false
-                }
+                cursor_config with { overlap = false }
             );
         }
 
@@ -357,9 +371,7 @@ public partial class FhSettingsUiX2 : FhSettingsUiBase {
             draw,
             plate_screen,
             local_index + 1,
-            plate_config with {
-                color = 0xFFC6B1AF
-            }
+            plate_config with { color = 0xFFFFFFFF }
         );
 
         draw.PushClipRect(plate_screen.top_left, plate_screen.bottom_right);
@@ -383,7 +395,7 @@ public partial class FhSettingsUiX2 : FhSettingsUiBase {
         draw.PopClipRect();
 
         if (focus == UiFocus.MODULES && mouse_hovered(plate_screen)) {
-            scrollable_modules.hovered = global_index;
+            hover_module(global_index);
         }
 
         if (global_index == scrollable_modules.hovered) {
@@ -398,9 +410,7 @@ public partial class FhSettingsUiX2 : FhSettingsUiBase {
             FhApi.Gui.draw_x2_cursor(
                 draw,
                 cursor_target,
-                cursor_config with {
-                    overlap = false
-                }
+                cursor_config with { overlap = false }
             );
         }
 
@@ -411,7 +421,7 @@ public partial class FhSettingsUiX2 : FhSettingsUiBase {
 
     /// <summary>Renders all module plates.</summary>
     protected override void ui_list_modules() {
-        ui_mod(selected_mod, selected_mod_idx, 0);
+        ui_mod(selected_mod, scrollable_mods.hovered, 0);
 
         //TODO: Move this line to when a mod is selected
         scrollable_modules.max = selected_modules.Count;
@@ -432,6 +442,7 @@ public partial class FhSettingsUiX2 : FhSettingsUiBase {
             _ when setting is FhSettingDynamicChoice => Renderer_DynamicChoice.instance,
             _ => null,
         };
+
         return renderer != null;
     }
 
@@ -454,7 +465,7 @@ public partial class FhSettingsUiX2 : FhSettingsUiBase {
             return;
         }
 
-        float indent_size = indent_level * INDENT_SIZE;
+        float indent_size = int.Min(indent_level, INDENT_MAX) * INDENT_SIZE;
 
         Vector2 pos = new(610f, 204f);
         pos.X += indent_size;
@@ -475,19 +486,24 @@ public partial class FhSettingsUiX2 : FhSettingsUiBase {
             size = size,
         };
 
-        if (bounds.bottom.Y > outer_bounds.top.Y) {
+        if (bounds.bottom.Y >= outer_bounds.top.Y) {
             ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
 
-            Rect scaled_bounds       = bounds.scale_to_aspect(aspect_helper);
+            Rect scaled_bounds       = bounds      .scale_to_aspect(aspect_helper);
             Rect scaled_outer_bounds = outer_bounds.scale_to_aspect(aspect_helper);
 
-            draw.PushClipRect(scaled_bounds.top_left,       scaled_bounds.bottom_right);
+            draw.PushClipRect(scaled_bounds      .top_left, scaled_bounds      .bottom_right);
             draw.PushClipRect(scaled_outer_bounds.top_left, scaled_outer_bounds.bottom_right);
 
             renderer.render(this, setting, bounds);
 
             draw.PopClipRect();
             draw.PopClipRect();
+
+            if (focus == UiFocus.SETTINGS && mouse_hovered(scaled_bounds)) {
+                hovered_setting = setting;
+                ensure_setting_visible(hovered_setting);
+            }
 
             if (setting == hovered_setting) {
                 FhApi.Gui.draw_x2_cursor(
@@ -509,6 +525,7 @@ public partial class FhSettingsUiX2 : FhSettingsUiBase {
             }
 
             unindent();
+
             setting_y += CATEGORY_MARGIN_SIZE;
         }
     }
@@ -525,16 +542,30 @@ public partial class FhSettingsUiX2 : FhSettingsUiBase {
         setting_y    = 0f;
         setting_idx  = 0;
 
-        ImDrawListPtr draw = ImGui.GetBackgroundDrawList();
-
         Rect bounds = new() {
             pos  = new( 610f, 204f),
-            size = new(1100f, 769f),
+            size = new(1100f, SETTINGS_LIST_HEIGHT),
         };
 
-        Rect scaled_bounds = bounds.scale_to_aspect(aspect_helper);
+        float clip_start = scrollable_settings.get_clip_start();
+        float clip_end   = scrollable_settings.get_clip_end();
 
         foreach (FhSetting setting in displayed_settings.settings) {
+            float top    = calculate_setting_top(setting);
+            float height = get_setting_height(setting);
+
+            // off-screen on the top
+            if (top + height < clip_start)
+                continue;
+
+            // off-screen on the bottom
+            if (top > clip_end)
+                continue;
+
+            if (setting_y == 0f && top < scrollable_settings.get_clip_start()) {
+                setting_y = top - scrollable_settings.get_clip_start();
+            }
+
             ui_setting(setting, bounds);
         }
     }
@@ -568,7 +599,7 @@ public partial class FhSettingsUiX2 : FhSettingsUiBase {
             thumb_height_max
         );
 
-        float thumb_y = scrollable.get_progress() * scrollable_height;
+        float thumb_y = scrollable.get_progress() * (scrollable_height - thumb_height);
 
         Rect track = track_bounds;
 
@@ -707,9 +738,17 @@ public partial class FhSettingsUiX2 : FhSettingsUiBase {
             size = new(  8f, 784f),
         };
 
-        if (focus == UiFocus.MODS)
+        Rect scrollbar_settings = new() {
+            pos  = new(1730f, 202f),
+            size = new(   8f, SETTINGS_LIST_HEIGHT),
+        };
+
+        if (focus == UiFocus.MODS) {
             ui_scrollbar(scrollable_mods, scrollbar_mods);
-        else
-            ui_scrollbar(scrollable_modules, scrollbar_mods);
+            return;
+        }
+
+        ui_scrollbar(scrollable_modules,  scrollbar_mods);
+        ui_scrollbar(scrollable_settings, scrollbar_settings);
     }
 }

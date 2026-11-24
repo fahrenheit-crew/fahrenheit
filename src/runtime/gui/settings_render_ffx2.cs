@@ -36,7 +36,7 @@ public partial class FhSettingsUiX2 {
             if (!ui._texture_plate    .try_use(out ImTextureRef plate,  out FhTextureMetadata? plate_meta)
                 || !ui._texture_window.try_use(out ImTextureRef window, out FhTextureMetadata? window_meta)
             ) {
-                name_bounds = null;
+                name_bounds  = null;
                 value_bounds = null;
                 return false;
             }
@@ -144,7 +144,9 @@ public partial class FhSettingsUiX2 {
             arrow_tuv.size.Y *= -1f;
 
             Rect arrow_bounds = new() {
-                pos = max_bounds.left with { X = max_bounds.left.X + 35f, },
+                pos = max_bounds.left with {
+                    X = max_bounds.left.X + 35f,
+                },
                 size = new(28f, 24f),
             };
 
@@ -161,7 +163,6 @@ public partial class FhSettingsUiX2 {
             ).scale_to_aspect(ui.aspect_helper);
 
             bool hovering_arrow = ui.mouse_hovered(arrow_hitbox, false);
-
             uint arrow_color = hovering_arrow ? 0xFFA0F0FF : 0xFFFFFFFF;
 
             if (category.collapsed) {
@@ -221,7 +222,7 @@ public partial class FhSettingsUiX2 {
                 return;
 
             if (ui.mouse_clicked(arrow_hitbox)) {
-                category.collapsed ^= true;
+                ui.toggle_category_collapsed(category);
             }
         }
 
@@ -229,13 +230,14 @@ public partial class FhSettingsUiX2 {
             if (!FhApi.Gui.is_any_pressed(FhApi.Gui.keys_confirm))
                 return false;
 
-            category.collapsed ^= true;
+            ui.toggle_category_collapsed(category);
             return true;
         }
     }
 
     private sealed class Renderer_Toggle : Renderer_Base<FhSettingToggle> {
         public static readonly Renderer_Toggle instance = new();
+
         private static string _text_on  => FhApi.Localization.localize($"{typeof(FhSettingsUi)}.input.on");
         private static string _text_off => FhApi.Localization.localize($"{typeof(FhSettingsUi)}.input.off");
 
@@ -250,8 +252,8 @@ public partial class FhSettingsUiX2 {
             Vector2 on_pos  = value_bounds.left;
             Vector2 off_pos = value_bounds.left;
 
-            on_pos.X  += value_bounds.size.X * 3.5f / 12f;
-            off_pos.X += value_bounds.size.X * 8.5f / 12f;
+            on_pos.X  += value_bounds.size.X * 3.5f/12f;
+            off_pos.X += value_bounds.size.X * 8.5f/12f;
 
             FhApi.Gui.draw_text(
                 draw,
@@ -288,7 +290,7 @@ public partial class FhSettingsUiX2 {
 
             (Rect underline_active, Rect underline_inactive) =
                 toggle.get()
-                    ? (underline_on, underline_off)
+                    ? (underline_on,  underline_off)
                     : (underline_off, underline_on);
 
             UV underline_tuv = new Rect {
@@ -418,7 +420,7 @@ public partial class FhSettingsUiX2 {
             arrow_right = arrow_right.expand(arrow_size, Alignment2D.RIGHT);
 
             if (progress_arrow_left[number] > 0f)
-                arrow_left.pos -= Vector2.Lerp(Vector2.Zero, max_offset, progress_arrow_left[number]);
+                arrow_left.pos  -= Vector2.Lerp(Vector2.Zero, max_offset, progress_arrow_left[number]);
 
             if (progress_arrow_right[number] > 0f)
                 arrow_right.pos += Vector2.Lerp(Vector2.Zero, max_offset, progress_arrow_right[number]);
@@ -572,7 +574,6 @@ public partial class FhSettingsUiX2 {
 
         private float remap_spin_progress(float t) {
             // We remap progress to give us a nice arc
-            //TODO: Redo this arc: bezier((0,0), (0.25, 0), (0.2, 0.8), (1, 1))
             float sign = t < 0 ? -1 : 1;
             return sign * float.Abs(1f - float.Cos((t + 1f) * (float.Pi / 2f)) - 1f);
         }
@@ -683,7 +684,7 @@ public partial class FhSettingsUiX2 {
             }
         }
 
-        protected void render_arrows(FhSettingsUiX2 ui, FhSettingCarousel<T> carousel, Rect value_bounds) {
+        private void render_arrows(FhSettingsUiX2 ui, FhSettingCarousel<T> carousel, Rect value_bounds) {
             if (!ui._texture_b_menu1.try_use(out ImTextureRef b_menu1, out FhTextureMetadata? b_menu1_meta)) {
                 return;
             }
@@ -704,7 +705,7 @@ public partial class FhSettingsUiX2 {
             arrow_right = arrow_right.expand(arrow_size, Alignment2D.RIGHT);
 
             if (progress_arrow_left[carousel] > 0f)
-                arrow_left.pos -= Vector2.Lerp(Vector2.Zero, max_offset, progress_arrow_left[carousel]);
+                arrow_left.pos  -= Vector2.Lerp(Vector2.Zero, max_offset, progress_arrow_left[carousel]);
 
             if (progress_arrow_right[carousel] > 0f)
                 arrow_right.pos += Vector2.Lerp(Vector2.Zero, max_offset, progress_arrow_right[carousel]);
@@ -819,7 +820,7 @@ public partial class FhSettingsUiX2 {
 
             carousel.set(prev_choice);
 
-            progress_spin[carousel]        = OPTION_SPIN_DIFF;
+            progress_spin       [carousel] = OPTION_SPIN_DIFF;
             progress_arrow_right[carousel] = 1f;
         }
 
@@ -832,7 +833,7 @@ public partial class FhSettingsUiX2 {
 
             carousel.set(next_choice);
 
-            progress_spin[carousel]       = -OPTION_SPIN_DIFF;
+            progress_spin      [carousel] = -OPTION_SPIN_DIFF;
             progress_arrow_left[carousel] = 1f;
         }
 
@@ -857,6 +858,7 @@ public partial class FhSettingsUiX2 {
     private sealed class Renderer_Choice : Renderer_Carousel<long> {
         public static readonly Renderer_Choice instance = new();
     }
+
     private sealed class Renderer_DynamicChoice : Renderer_Carousel<object> {
         public static readonly Renderer_DynamicChoice instance = new();
     }

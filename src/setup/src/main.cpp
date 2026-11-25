@@ -43,14 +43,13 @@ int WINAPI WinMain(
 
     SDL_WindowFlags sdl_window_flags =
           SDL_WINDOW_OPENGL
-        | SDL_WINDOW_RESIZABLE
         | SDL_WINDOW_HIDDEN
         | SDL_WINDOW_HIGH_PIXEL_DENSITY;
 
     g_sdl_window_ptr = SDL_CreateWindow(
         "Fahrenheit Setup",
-        (int) (1280 * main_display_scale),
-        (int) (800  * main_display_scale),
+        (int) (300 * main_display_scale),
+        (int) (160 * main_display_scale),
         sdl_window_flags
     );
 
@@ -99,7 +98,6 @@ int WINAPI WinMain(
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
     io.IniFilename = nullptr; // Do not save any settings.
 
@@ -117,6 +115,9 @@ int WINAPI WinMain(
 
     bool      quit = false;
     SDL_Event event;
+
+    // We perform a scan automatically on launch
+    setup_ui_rescan();
 
     while (!quit) {
         // Poll and handle events (inputs, window resize, etc.)
@@ -155,21 +156,6 @@ int WINAPI WinMain(
         glClear     (GL_COLOR_BUFFER_BIT);
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-        // Update and Render additional Platform Windows
-        // (Platform functions may change the current OpenGL context, so we save/restore it to make it easier to paste this code elsewhere.)
-        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-            SDL_Window*   current_window  = SDL_GL_GetCurrentWindow();
-            SDL_GLContext current_context = SDL_GL_GetCurrentContext();
-
-            ImGui::UpdatePlatformWindows();
-            ImGui::RenderPlatformWindowsDefault();
-
-            if (!SDL_GL_MakeCurrent(current_window, current_context)) {
-                fwprintf_s(stdout, L"Fault in SDL_GL_MakeCurrent() - %hs\n", SDL_GetError());
-                return 1;
-            }
-        }
 
         if (!SDL_GL_SwapWindow(g_sdl_window_ptr)) {
             fwprintf_s(stdout, L"Fault in SDL_GL_SwapWindow() - %hs\n", SDL_GetError());

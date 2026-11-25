@@ -9,34 +9,45 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_opengl.h>
 
-enum FH_SETUP_REDIST_TYPE {
+// The possible types of redistributable checks.
+enum FH_CHECK_TYPE {
     X86   = 1,
     X64   = 2,
     ARM64 = 3,
 };
 
-enum FH_SETUP_ERROR : short {
-    MISSING_BIN    =  1, // Either game binary is missing.
-    INVALID_BIN    =  2, // Either game binary is invalid.
-    MISSING_VBF    =  3, // Either VBF archive is missing.
+// The possible results of a system check function.
+enum FH_CHECK_RESULT : short {
+    SUCCESS        =  1, // The check was successful.
+    FAILURE        =  2, // The check failed. The requisite object is not present.
+    MISSING_BIN    =  3, // Either game binary is missing.
+    INVALID_BIN    =  4, // Either game binary is invalid.
+    MISSING_VBF    =  5, // Either VBF archive is missing.
     INTERNAL_ERROR = -1, // An internal error occurred.
 };
 
 // Displays the setup user interface.
 void setup_ui_main();
 
+// Rescans all dependencies.
+void setup_ui_rescan();
+
 // Determines whether the specified VC Redistributable is installed on this system.
-bool setup_check_vcredist(FH_SETUP_REDIST_TYPE type);
+FH_CHECK_RESULT setup_check_vcredist(
+    FH_CHECK_TYPE type // [in] The type of VC++ redistributable to query.
+);
 
 // Determines whether the specified .NET Runtime is installed on this system.
-bool setup_check_nethost (FH_SETUP_REDIST_TYPE type);
+FH_CHECK_RESULT setup_check_nethost (
+    FH_CHECK_TYPE type // [in] The type of .NET runtime to query.
+);
 
 // Determines whether a given directory is a valid game directory.
-bool setup_check_gamedir (
-    const wchar_t*        ptr_path,
-          FH_SETUP_ERROR& error
+FH_CHECK_RESULT setup_check_gamedir (
+    const wchar_t* ptr_path // [in] An absolute path to a user-supplied directory to check.
 );
 
 inline SDL_Window*   g_sdl_window_ptr;
 inline SDL_WindowID  g_sdl_window_id;
 inline SDL_GLContext g_sdl_context;
+

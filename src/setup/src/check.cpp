@@ -234,7 +234,9 @@ static bool setup_create_links(
     return SUCCEEDED(hr);
 }
 
-bool setup_check_vcredist(FH_SETUP_REDIST_TYPE type) {
+FH_CHECK_RESULT setup_check_vcredist(
+    FH_CHECK_TYPE type
+) {
     /* [fkelava 12/11/26 17:43]
      * There are many ways of checking for VC++ presence, but we use the only semi-official one. Per MSDN:
      *
@@ -248,7 +250,7 @@ bool setup_check_vcredist(FH_SETUP_REDIST_TYPE type) {
     LPCWSTR key_name;
     if      (type == X86) key_name = L"SOFTWARE\\Microsoft\\VisualStudio\\14.0\\VC\\Runtimes\\X86";
     else if (type == X64) key_name = L"SOFTWARE\\Microsoft\\VisualStudio\\14.0\\VC\\Runtimes\\X64";
-    else return false;
+    else return INTERNAL_ERROR;
 
     REGSAM sam = KEY_READ;
     if      (type == X86) sam |= KEY_WOW64_32KEY;
@@ -265,7 +267,7 @@ bool setup_check_vcredist(FH_SETUP_REDIST_TYPE type) {
 
     if (ret != ERROR_SUCCESS) {
         fwprintf_s(stderr, L"[!] RegOpenKeyExW() failed with code 0x%X.\n", ret);
-        return false;
+        return INTERNAL_ERROR;
     }
 
     DWORD val_installed = 0;
@@ -282,7 +284,7 @@ bool setup_check_vcredist(FH_SETUP_REDIST_TYPE type) {
         RegGetValueW(key, nullptr, L"Bld",       reg_flags, nullptr, &val_bld,       &reg_type_sz) != ERROR_SUCCESS
     ) {
         fwprintf_s(stderr, L"[!] RegGetValueW() failed with code 0x%X.\n", ret);
-        return false;
+        return INTERNAL_ERROR;
     }
 
     /* [fkelava 13/11/26 15:35]
@@ -300,20 +302,26 @@ bool setup_check_vcredist(FH_SETUP_REDIST_TYPE type) {
      * > The MSVC build tools that ship with Visual Studio 2026 and later start at version 14.50, and _MSC_VER starts at 1950.
      */
 
-    return val_installed == 1
-        && val_major     >= (MSC_MAJOR - 5)
-        && val_minor     >=  MSC_MINOR
-        && val_bld       >=  MSC_BUILD;
+    bool ok = val_installed == 1
+           && val_major     >= (MSC_MAJOR - 5)
+           && val_minor     >=  MSC_MINOR
+           && val_bld       >=  MSC_BUILD;
+
+    return ok
+        ? SUCCESS
+        : FAILURE;
 }
 
-bool setup_check_nethost(FH_SETUP_REDIST_TYPE type) {
+FH_CHECK_RESULT setup_check_nethost(
+    FH_CHECK_TYPE type
+) {
     if (!setup_check_hostfxr())
-        return false;
+        return FAILURE;
 
     LPCWSTR rtcfg_name;
     if      (type == X86) rtcfg_name = L"\\fhr.runtimeconfig.json";      // Or anything else known to be x86 only.
     else if (type == X64) rtcfg_name = L"\\fhmodmgr.runtimeconfig.json"; // Or anything else known to be x64 only.
-    else return false;
+    else return INTERNAL_ERROR;
 
     wchar_t path_fh_dir       [MAX_PATH] = { 0 };
     wchar_t path_runtimeconfig[MAX_PATH] = { 0 };
@@ -326,20 +334,20 @@ bool setup_check_nethost(FH_SETUP_REDIST_TYPE type) {
 
     if (path_fh_dir_size == 0) {
         fwprintf_s(stderr, L"[!] GetModuleFileNameW() failed with code 0x%X.\n", GetLastError());
-        return false;
+        return INTERNAL_ERROR;
     }
 
     HRESULT hr = PathCchRemoveFileSpec(path_fh_dir, MAX_PATH);
     if (hr != S_OK) {
         fwprintf_s(stderr, L"PathCchRemoveFileSpec() failed for path %s, error code: %X\n", path_fh_dir, hr);
-        return false;
+        return INTERNAL_ERROR;
     }
 
     if (FAILED(StringCchCatW(path_runtimeconfig, MAX_PATH, path_fh_dir)) ||
         FAILED(StringCchCatW(path_runtimeconfig, MAX_PATH, rtcfg_name))
     ) {
         fwprintf_s(stderr, L"[!] StringCchCatW() failed.\n");
-        return false;
+        return INTERNAL_ERROR;
     }
 
     hostfxr_handle cxt = nullptr;
@@ -357,19 +365,18 @@ bool setup_check_nethost(FH_SETUP_REDIST_TYPE type) {
             fwprintf_s(stderr, L"hostfxr: failed to close.\n");
         }
 
-        return false;
+        return FAILURE;
     }
 
     if (g_fnptr_hostfxr_close(cxt) != 0) {
         fwprintf_s(stderr, L"hostfxr: failed to close.\n");
     }
 
-    return true;
+    return SUCCESS;
 }
 
-bool setup_check_gamedir(
-    const wchar_t*        ptr_path, // [in]  A user-supplied directory to check.
-          FH_SETUP_ERROR& error     // [out] The detailed error code, if the function fails.
+FH_CHECK_RESULT setup_check_gamedir(
+    const wchar_t* ptr_path
 ) {
     wchar_t path_ffx [MAX_PATH] = { 0 };
     wchar_t path_ffx2[MAX_PATH] = { 0 };
@@ -386,9 +393,7 @@ bool setup_check_gamedir(
         FAILED(StringCchCatW(path_vbf2, MAX_PATH, L"\\data\\FFX2_Data.vbf"))
     ) {
         fwprintf_s(stderr, L"[!] Failed to prepare target names.\n");
-
-        error = INTERNAL_ERROR;
-        return false;
+        return INTERNAL_ERROR;
     }
 
     DWORD attr_ffx  = GetFileAttributesW(path_ffx );
@@ -399,15 +404,13 @@ bool setup_check_gamedir(
     if ((attr_ffx  == INVALID_FILE_ATTRIBUTES || attr_ffx  & FILE_ATTRIBUTE_DIRECTORY) ||
         (attr_ffx2 == INVALID_FILE_ATTRIBUTES || attr_ffx2 & FILE_ATTRIBUTE_DIRECTORY)
     ) {
-        error = MISSING_BIN;
-        return false;
+        return MISSING_BIN;
     }
 
     if ((attr_vbf  == INVALID_FILE_ATTRIBUTES || attr_vbf  & FILE_ATTRIBUTE_DIRECTORY) ||
         (attr_vbf2 == INVALID_FILE_ATTRIBUTES || attr_vbf2 & FILE_ATTRIBUTE_DIRECTORY)
     ) {
-        error = MISSING_VBF;
-        return false;
+        return MISSING_VBF;
     }
 
     MSIFILEHASHINFO hash_info = { };
@@ -417,9 +420,7 @@ bool setup_check_gamedir(
 
     if (hash_rc != ERROR_SUCCESS) {
         fwprintf_s(stderr, L"[!] MsiGetFileHashW(FFX.exe) failed with code 0x%X.\n", hash_rc);
-
-        error = INTERNAL_ERROR;
-        return false;
+        return INTERNAL_ERROR;
     }
 
     if (hash_info.dwData[0] != 0x67239580 ||
@@ -427,17 +428,14 @@ bool setup_check_gamedir(
         hash_info.dwData[2] != 0xD9DFAFCB ||
         hash_info.dwData[3] != 0xB2ED8427
     ) {
-        error = INVALID_BIN;
-        return false;
+        return INVALID_BIN;
     }
 
     hash_rc = MsiGetFileHashW(path_ffx2, 0, &hash_info);
 
     if (hash_rc != ERROR_SUCCESS) {
         fwprintf_s(stderr, L"[!] MsiGetFileHashW(FFX-2.exe) failed with code 0x%X.\n", hash_rc);
-
-        error = INTERNAL_ERROR;
-        return false;
+        return INTERNAL_ERROR;
     }
 
     if (hash_info.dwData[0] != 0xF2059BB3 ||
@@ -445,14 +443,11 @@ bool setup_check_gamedir(
         hash_info.dwData[2] != 0x49F12153 ||
         hash_info.dwData[3] != 0xFB9E85E1
     ) {
-        error = INVALID_BIN;
-        return false;
+        return INVALID_BIN;
     }
 
-    if (!setup_create_links(path_ffx, path_ffx2)) {
-        error = INTERNAL_ERROR;
-        return false;
-    }
+    if (!setup_create_links(path_ffx, path_ffx2))
+        return INTERNAL_ERROR;
 
-    return true;
+    return SUCCESS;
 }

@@ -5,6 +5,9 @@
 
 #include <fhsetup.h>
 
+// Win32
+#include <pathcch.h>
+
 // ImGui
 #include <imgui.h>
 
@@ -12,6 +15,15 @@ bool g_have_vc_x86;  // Whether a valid x86 VC++ Redistributable was detected on
 bool g_have_vc_x64;  // Whether a valid x86 VC++ Redistributable was detected on the last scan.
 bool g_have_net_x86; // Whether a valid x86 .NET Runtime was detected on the last scan.
 bool g_have_net_x64; // Whether a valid x64 .NET Runtime was detected on the last scan.
+
+FH_CHECK_RESULT g_game_result; // The result of the game directory check, if any.
+
+const ImVec4 g_col_green = ImVec4(0.2f, 1.0f, 0.2f, 1.0f);
+const ImVec4 g_col_red   = ImVec4(1.0f, 0.2f, 0.2f, 1.0f);
+
+const SDL_DialogFileFilter g_game_filters[] = {
+    { "Game Executables", "exe" }
+};
 
 // The folder select dialog callback.
 static void SDLCALL setup_ui_dialog_cb(
@@ -36,10 +48,13 @@ static void SDLCALL setup_ui_dialog_cb(
         return;
     }
 
-    FH_SETUP_ERROR error;
-    if (!setup_check_gamedir(path, error)) {
-        // Show error as you please
+    HRESULT hr = PathCchRemoveFileSpec(path, MAX_PATH);
+    if (hr != S_OK) {
+        fwprintf_s(stderr, L"PathCchRemoveFileSpec() failed for path %s, error code: %X\n", path, hr);
+        return;
     }
+
+    g_game_result = setup_check_gamedir(path);
 }
 
 void setup_ui_rescan() {
@@ -49,32 +64,82 @@ void setup_ui_rescan() {
     g_have_net_x64 = setup_check_nethost (X64);
 }
 
-void setup_ui_main() {
-    ImGui::ShowDemoWindow();
+void setup_ui_status(
+    const char* label,
+    const char* status,
+    ImVec4      status_color
+) {
+    ImGui::Text       (label);
+    ImGui::SameLine   (130);
+    ImGui::TextColored(status_color, status);
+}
 
-    if (!ImGui::Begin("WOW")) {
+void setup_ui_flag(
+    const char* text,
+          bool  found
+) {
+    setup_ui_status(
+        text,
+        found ? "FOUND"     : "NOT FOUND",
+        found ? g_col_green : g_col_red
+    );
+}
+
+void setup_ui_main() {
+    ImGuiViewport* viewport = ImGui::GetMainViewport();
+    ImGuiStyle&    style    = ImGui::GetStyle();
+
+    ImGui::SetNextWindowPos (viewport->WorkPos);
+    ImGui::SetNextWindowSize(viewport->WorkSize);
+
+    if (!ImGui::Begin(
+        "Fahrenheit Setup Helper",
+        nullptr,
+        ImGuiWindowFlags_NoDecoration
+    )) {
         ImGui::End();
         return;
     }
 
-    ImGui::BeginDisabled();
+    setup_ui_flag("VC++ x86:", g_have_vc_x86);
+    setup_ui_flag("VC++ x64:", g_have_vc_x64);
 
-    ImGui::Checkbox("VC++ x86", &g_have_vc_x86);
-    ImGui::Checkbox("VC++ x64", &g_have_vc_x64);
-    ImGui::Checkbox(".NET x86", &g_have_net_x86);
-    ImGui::Checkbox(".NET x64", &g_have_net_x64);
+    setup_ui_flag(".NET Runtime x86:", g_have_net_x86);
+    setup_ui_flag(".NET Runtime x64:", g_have_net_x64);
 
-    ImGui::EndDisabled();
+    const char* game_label  = "Game:";
+    const char* game_status = "NOT FOUND";
 
-    if (ImGui::Button("Rescan", { 100, 100 } )) {
+    switch (g_game_result) {
+        case SUCCESS:        game_status = "ALL GOOD";           break;
+        case FAILURE:        game_status = "NOT FOUND";          break;
+        case MISSING_BIN:    game_status = "MISSING EXECUTABLE"; break;
+        case INVALID_BIN:    game_status = "INVALID EXECUTABLE"; break;
+        case MISSING_VBF:    game_status = "MISSING DATA";       break;
+        case INTERNAL_ERROR: game_status = "INTERNAL ERROR";     break;
+    }
+
+    setup_ui_status(
+        game_label,
+        game_status,
+        g_game_result == SUCCESS ? g_col_green : g_col_red
+    );
+
+    float  btn_size_x = 300 - style.WindowPadding.x * 2;
+    float  btn_size_y = 26;
+    ImVec2 btn_size   = ImVec2(btn_size_x, btn_size_y);
+
+    if (ImGui::Button("Rescan", btn_size)) {
         setup_ui_rescan();
     }
 
-    if (ImGui::Button("Dialog", { 100, 100 } )) {
-        SDL_ShowOpenFolderDialog(
+    if (ImGui::Button("Locate Game", btn_size)) {
+        SDL_ShowOpenFileDialog(
             &setup_ui_dialog_cb,
             nullptr,
             g_sdl_window_ptr,
+            g_game_filters,
+            1,
             nullptr,
             false
         );

@@ -591,10 +591,10 @@ public partial class FhSettingsUiX2 : FhSettingsUiBase {
         ui_scrollbar(scrollable_settings, scrollbar_settings);
     }
 
-    protected override void ui_scrollbar_direct<T>(
-        ref ScrollbarData<T> data
-    ) {
-        if (!_texture_b_menu1.try_use(out ImTextureRef b_menu1, out FhTextureMetadata? b_menu1_meta)) return;
+    protected override void ui_scrollbar_direct<T>(ref ScrollbarData<T> data) {
+        if (!_texture_b_menu1.try_use(out ImTextureRef b_menu1, out FhTextureMetadata? b_menu1_meta)) {
+            return;
+        }
 
         uint track_color = 0xFF010101;
         uint thumb_color = 0xFFFCFCFC;

@@ -209,8 +209,8 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
 
     protected BaseScrollable? current_scrollable;
 
-    protected bool     scrollbar_dragging;
-    protected Vector2? scrollbar_held_pos;
+    protected BaseScrollable? scrollbar_dragging;
+    protected Vector2?        scrollbar_held_pos;
 
     protected struct ScrollbarData<T> where T : INumber<T> {
         public BaseScrollable<T> scrollable;
@@ -748,7 +748,7 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
             current_progress = scrollable.get_progress(),
             at_top           = at_top,
             at_bottom        = at_bottom,
-            bounds_track     = track_bounds
+            bounds_track     = track_bounds,
         };
 
         ui_scrollbar_get_thumb_bounds(ref data);
@@ -763,11 +763,16 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
         float expanded_track_height = data.scrollable_height + (data.bounds_track.size.X - data.bounds_thumb.size.X);
 
         if (mouse_clicked(data.bounds_thumb_hitbox)) {
-            scrollbar_dragging = true;
+            scrollbar_dragging = scrollable;
             scrollbar_held_pos = ImGui.GetMousePos() - data.bounds_thumb_hitbox.pos;
         }
 
-        if (scrollbar_dragging) {
+        if (ImGui.IsMouseReleased(ImGuiMouseButton.Left)) {
+            scrollbar_dragging = null;
+            scrollbar_held_pos = null;
+        }
+
+        if (scrollbar_dragging == scrollable) {
             Vector2 new_held_pos = ImGui.GetMousePos() - data.bounds_thumb_hitbox.pos;
 
             float drag_delta     = new_held_pos.Y - scrollbar_held_pos!.Value.Y;
@@ -775,17 +780,10 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
 
             float new_progress   = data.current_progress + progress_delta;
 
-            if (scrollable is SteppedScrollable stepped_dragging) {
+            if (scrollable is SteppedScrollable stepped_dragging)
                 stepped_dragging.set_progress(new_progress, true);
-            }
-            else {
+            else
                 scrollable.set_progress(new_progress);
-            }
-
-            if (ImGui.IsMouseReleased(ImGuiMouseButton.Left)) {
-                scrollbar_dragging = false;
-                scrollbar_held_pos = null;
-            }
 
             return;
         }

@@ -466,9 +466,7 @@ public partial class FhSettingsUiX : FhSettingsUiBase {
         ui_scrollbar(scrollable_settings, scrollbar_settings);
     }
 
-    protected override void ui_scrollbar_direct<T>(
-        ref ScrollbarData<T> data
-    ) {
+    protected override void ui_scrollbar_direct<T>(ref ScrollbarData<T> data) {
         if (!_texture_battle.try_use(out ImTextureRef battle, out FhTextureMetadata? battle_meta)) {
             return;
         }

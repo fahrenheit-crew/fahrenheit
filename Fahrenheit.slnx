@@ -20,7 +20,11 @@
   <Project Path="src/modmgr/Fahrenheit.Tools.ModManager.csproj" />
   <Project Path="src/runtime/Fahrenheit.Runtime.csproj" />
   <Project Path="src/sdk/Fahrenheit.Sdk.csproj" />
-  <Project Path="src/Fahrenheit.NativeDeps.csproj" />
+  <Project Path="src/Fahrenheit.NativeDeps.csproj" />  
+  <Project Path="src/setup/Fahrenheit.Setup.vcxproj" Id="454ac0a9-9ed9-4498-8897-e94f1f0f83fb">
+    <BuildDependency Project="src/Fahrenheit.NativeDeps.csproj" />
+    <Platform Solution="*|Any CPU" Project="Win32" />
+  </Project>
   <Project Path="src/stage0/Fahrenheit.Stage0.vcxproj" Id="287d8ee5-e211-4cd5-923c-3e82ad4be07d">
     <BuildDependency Project="src/Fahrenheit.NativeDeps.csproj" />
     <BuildDependency Project="src/stage1/Fahrenheit.Stage1.vcxproj" />

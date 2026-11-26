@@ -42,7 +42,7 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="inc\fh_arrow_256.ico">
+    <Image Include="..\..\assets\fh_arrow_256.ico">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

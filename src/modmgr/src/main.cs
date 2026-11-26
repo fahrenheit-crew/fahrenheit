@@ -19,7 +19,7 @@ namespace Fahrenheit.Tools.ModManager;
  * Legibility is thus rather poor. You have been warned.
  */
 
-internal sealed unsafe class Program {
+internal unsafe sealed class Program {
 
     // SDL3
     private static SDLWindow*   _sdl_window;
@@ -107,7 +107,7 @@ internal sealed unsafe class Program {
         io.ConfigFlags |= ImGuiConfigFlags.ViewportsEnable;   // Enable Multi-Viewport / Platform Windows
 
         // Setup Dear ImGui style
-        ImGui.StyleColorsDark();
+        //ModManager.Gui.init();
 
         // Setup scaling
         style.ScaleAllSizes(main_display_scale); // Bake a fixed style scale. (Changing this requires resetting Style + calling this again).
@@ -128,6 +128,8 @@ internal sealed unsafe class Program {
 
         ImGuiImplOpenGL3.SetCurrentContext(ctx);
         ImGuiImplOpenGL3.Init             ((byte*)null);
+
+        ModManager.init();
 
         /* [fkelava 20/07/26 00:17]
          * See comment beneath main loop body.
@@ -164,7 +166,7 @@ internal sealed unsafe class Program {
             ImGui           .NewFrame();
 
             // Draw the mod manager UI
-            ModManager.UI();
+            ModManager.render();
 
             // Rendering
             ImGui.Render();

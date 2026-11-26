@@ -10,6 +10,7 @@
  */
 
 [assembly: InternalsVisibleTo("fhr")]
+[assembly: InternalsVisibleTo("fhmodmgr")]
 
 namespace Fahrenheit;
 

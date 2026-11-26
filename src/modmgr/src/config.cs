@@ -21,8 +21,8 @@ internal record struct ModManagerConfig() {
 }
 
 internal static partial class ModManager {
-    internal static ModManagerConfig Config;
-    internal static ModManagerConfig config_backup;
+    internal static ModManagerConfig Config        = new();
+    internal static ModManagerConfig config_backup = new();
 
     internal const string config_name = "fhmodmgr.config.json";
     //internal static string config_fn => Path.Join(FhEnvironment.Finder.Config.FullName, config_name);
@@ -46,6 +46,19 @@ internal static partial class ModManager {
         _show_config_window = true;
     }
 
+    internal static void render_config_path(string label, ref string path, int max_length) {
+        ImGui.SetNextItemWidth(250f);
+        ImGui.InputText($"###input-{label}", ref path, (nuint)max_length);
+
+        ImGui.SameLine();
+        if (ImGui.Button($"Locate##{label}")) {
+            //TODO: Add path location
+        }
+
+        ImGui.SameLine();
+        ImGui.Text(label);
+    }
+
     internal static bool _show_config_window;
     internal static void render_config() {
         if (!_show_config_window) return;
@@ -58,32 +71,20 @@ internal static partial class ModManager {
         ImGui.Checkbox("Show Advanced Options", ref config_backup.show_advanced_options);
 
         // Unfortunately `PathInternal.MaxShortPath` is internal, so we must hardcode 260
-        ImGui.InputText("Path to Game", ref config_backup.path_game, 260);
-
-        ImGui.SameLine();
-        if (ImGui.Button("Locate##path_game")) {
-            //TODO: Add locating game
-        }
+        render_config_path("Path to Game", ref config_backup.path_game, 260);
 
         if (OperatingSystem.IsLinux()) {
-            ImGui.InputText("Path to Proton Executable", ref config_backup.path_proton_exe, 4096);
-
-            ImGui.SameLine();
-            if (ImGui.Button("Locate##path_proton_exe")) {
-            }
-
-            ImGui.InputText("Path to Proton Prefix", ref config_backup.path_proton_prefix, 4096);
-
-            ImGui.SameLine();
-            if (ImGui.Button("Locate##path_proton_game")) {
-            }
+            render_config_path("Path to Proton Executable", ref config_backup.path_proton_exe,    4096);
+            render_config_path("Path to Proton Prefix",     ref config_backup.path_proton_prefix, 4096);
         }
+
+        ImGui.Separator();
 
         if (ImGui.Button("Reset to Defaults")) {
             config_backup = new();
         }
 
-        ImGui.Separator();
+        ImGui.SameLine();
 
         if (Config == config_backup) {
             ImGui.BeginDisabled();
@@ -94,6 +95,7 @@ internal static partial class ModManager {
         }
 
         ImGui.SameLine();
+
         if (ImGui.Button("Cancel")) {
             _show_config_window = false;
             config_backup = Config;

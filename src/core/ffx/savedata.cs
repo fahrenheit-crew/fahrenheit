@@ -230,7 +230,7 @@ public unsafe struct SaveData {
             private T_XBlitzPrizeId prize;
         }
 
-        [InlineArray(240)]
+        [InlineArray(60)]
         public struct UncoveredTechPage {
             private uint _data;
         }

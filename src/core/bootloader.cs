@@ -95,7 +95,7 @@ internal static class FhEnvironment {
     private static string[] _init_load_order() {
         try {
             string load_order_path = Path.Join(Finder.Mods.FullName, "loadorder");
-            return [ "fhr", .. File.ReadAllLines(load_order_path) ];
+            return [ .. File.ReadAllLines(load_order_path), "fhr" ];
         }
         catch (Exception e) {
             FhInternal.Log.Warning("Load order file could not be found or processed. No mods will load.");

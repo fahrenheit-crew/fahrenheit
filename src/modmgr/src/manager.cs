@@ -7,6 +7,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
 
+using Fahrenheit.Gui;
+
 namespace Fahrenheit.Tools.ModManager;
 
 internal enum ModLoadResult {
@@ -18,6 +20,8 @@ internal enum ModLoadResult {
 }
 
 internal static partial class ModManager {
+    internal static FhGui Gui = new();
+
     internal static LinkedList<ModData> installed_mods = [];
 
     internal static void init() {

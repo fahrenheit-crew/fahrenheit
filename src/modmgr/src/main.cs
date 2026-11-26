@@ -107,7 +107,7 @@ internal unsafe sealed class Program {
         io.ConfigFlags |= ImGuiConfigFlags.ViewportsEnable;   // Enable Multi-Viewport / Platform Windows
 
         // Setup Dear ImGui style
-        ModManager.Gui.init();
+        //ModManager.Gui.init();
 
         // Setup scaling
         style.ScaleAllSizes(main_display_scale); // Bake a fixed style scale. (Changing this requires resetting Style + calling this again).

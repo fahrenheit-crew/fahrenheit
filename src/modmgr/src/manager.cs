@@ -20,13 +20,13 @@ internal enum ModLoadResult {
 }
 
 internal static partial class ModManager {
-    internal static FhGui Gui = new();
+    //internal static FhGui Gui = new();
 
     internal static LinkedList<ModData> installed_mods = [];
 
     internal static void init() {
         load_config();
-        populate_installed_mods();
+        //populate_installed_mods();
     }
 
     internal static void populate_installed_mods() {

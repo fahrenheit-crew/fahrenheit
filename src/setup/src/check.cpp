@@ -305,6 +305,10 @@ FH_CHECK_RESULT setup_check_vcredist(
     const int MSC_BUILD = _MSC_FULL_VER % 100000;
 
     /* [fkelava 13/11/26 15:35]
+     * https://learn.microsoft.com/en-us/cpp/porting/binary-compat-2015-2017?view=msvc-170
+     * > The Redistributable your app uses has a similar binary-compatibility restriction. When you mix binaries built by different
+     * > supported versions of the build tools, the Redistributable version must be at least as new as the latest build tools used by any app component.
+     *
      * https://learn.microsoft.com/en-us/cpp/overview/compiler-versions?view=msvc-170#visual-studio-2026-and-later
      * > The MSVC build tools that ship with Visual Studio 2026 and later start at version 14.50, and _MSC_VER starts at 1950.
      */

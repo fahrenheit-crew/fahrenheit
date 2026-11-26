@@ -11,13 +11,6 @@
 // ImGui
 #include <imgui.h>
 
-bool g_have_vc_x86;  // Whether a valid x86 VC++ Redistributable was detected on the last scan.
-bool g_have_vc_x64;  // Whether a valid x86 VC++ Redistributable was detected on the last scan.
-bool g_have_net_x86; // Whether a valid x86 .NET Runtime was detected on the last scan.
-bool g_have_net_x64; // Whether a valid x64 .NET Runtime was detected on the last scan.
-
-FH_CHECK_RESULT g_game_result; // The result of the game directory check, if any.
-
 const ImVec4 g_col_green = ImVec4(0.2f, 1.0f, 0.2f, 1.0f);
 const ImVec4 g_col_red   = ImVec4(1.0f, 0.2f, 0.2f, 1.0f);
 
@@ -54,17 +47,10 @@ static void SDLCALL setup_ui_dialog_cb(
         return;
     }
 
-    g_game_result = setup_check_gamedir(path);
+    g_check_game = setup_check_gamedir(path);
 }
 
-void setup_ui_rescan() {
-    g_have_vc_x86  = setup_check_vcredist(X86);
-    g_have_vc_x64  = setup_check_vcredist(X64);
-    g_have_net_x86 = setup_check_nethost (X86);
-    g_have_net_x64 = setup_check_nethost (X64);
-}
-
-void setup_ui_status(
+static void setup_ui_status(
     const char* label,
     const char* status,
     ImVec4      status_color
@@ -74,15 +60,19 @@ void setup_ui_status(
     ImGui::TextColored(status_color, status);
 }
 
-void setup_ui_flag(
-    const char* text,
-          bool  found
+static void setup_ui_flag(
+    const char*           label,
+          FH_CHECK_RESULT check_result
 ) {
-    setup_ui_status(
-        text,
-        found ? "FOUND"     : "NOT FOUND",
-        found ? g_col_green : g_col_red
-    );
+    const char*  status = "NOT FOUND";
+          ImVec4 color  = g_col_red;
+
+    if (check_result == SUCCESS) {
+        status = "FOUND";
+        color  = g_col_green;
+    }
+
+    setup_ui_status(label, status, color);
 }
 
 void setup_ui_main() {
@@ -101,18 +91,17 @@ void setup_ui_main() {
         return;
     }
 
-    setup_ui_flag("VC++ x86:", g_have_vc_x86);
-    setup_ui_flag("VC++ x64:", g_have_vc_x64);
+    setup_ui_flag("VC++ x86:", g_check_vc_x86);
+    setup_ui_flag("VC++ x64:", g_check_vc_x64);
 
-    setup_ui_flag(".NET Runtime x86:", g_have_net_x86);
-    setup_ui_flag(".NET Runtime x64:", g_have_net_x64);
+    setup_ui_flag(".NET Runtime x86:", g_check_net_x86);
+    setup_ui_flag(".NET Runtime x64:", g_check_net_x64);
 
     const char* game_label  = "Game:";
     const char* game_status = "NOT FOUND";
 
-    switch (g_game_result) {
+    switch (g_check_game) {
         case SUCCESS:        game_status = "ALL GOOD";           break;
-        case FAILURE:        game_status = "NOT FOUND";          break;
         case MISSING_BIN:    game_status = "MISSING EXECUTABLE"; break;
         case INVALID_BIN:    game_status = "INVALID EXECUTABLE"; break;
         case MISSING_VBF:    game_status = "MISSING DATA";       break;
@@ -122,7 +111,7 @@ void setup_ui_main() {
     setup_ui_status(
         game_label,
         game_status,
-        g_game_result == SUCCESS ? g_col_green : g_col_red
+        g_check_game == SUCCESS ? g_col_green : g_col_red
     );
 
     float  btn_size_x = 300 - style.WindowPadding.x * 2;
@@ -130,7 +119,7 @@ void setup_ui_main() {
     ImVec2 btn_size   = ImVec2(btn_size_x, btn_size_y);
 
     if (ImGui::Button("Rescan", btn_size)) {
-        setup_ui_rescan();
+        setup_check_rescan();
     }
 
     if (ImGui::Button("Locate Game", btn_size)) {

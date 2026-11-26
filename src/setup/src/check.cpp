@@ -234,6 +234,13 @@ static bool setup_create_links(
     return SUCCEEDED(hr);
 }
 
+void setup_check_rescan() {
+    g_check_vc_x86  = setup_check_vcredist(X86);
+    g_check_vc_x64  = setup_check_vcredist(X64);
+    g_check_net_x86 = setup_check_nethost (X86);
+    g_check_net_x64 = setup_check_nethost (X64);
+}
+
 FH_CHECK_RESULT setup_check_vcredist(
     FH_CHECK_TYPE type
 ) {

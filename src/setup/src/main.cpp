@@ -117,7 +117,7 @@ int WINAPI WinMain(
     SDL_Event event;
 
     // We perform a scan automatically on launch
-    setup_ui_rescan();
+    setup_check_rescan();
 
     while (!quit) {
         // Poll and handle events (inputs, window resize, etc.)

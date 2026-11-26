@@ -30,7 +30,7 @@ enum FH_CHECK_RESULT : short {
 void setup_ui_main();
 
 // Rescans all dependencies.
-void setup_ui_rescan();
+void setup_check_rescan();
 
 // Determines whether the specified VC Redistributable is installed on this system.
 FH_CHECK_RESULT setup_check_vcredist(
@@ -46,6 +46,12 @@ FH_CHECK_RESULT setup_check_nethost (
 FH_CHECK_RESULT setup_check_gamedir (
     const wchar_t* ptr_path // [in] An absolute path to a user-supplied directory to check.
 );
+
+inline FH_CHECK_RESULT g_check_vc_x86;  // The result of the last x86 VC++ Redistributable scan.
+inline FH_CHECK_RESULT g_check_vc_x64;  // The result of the last x64 VC++ Redistributable scan.
+inline FH_CHECK_RESULT g_check_net_x86; // The result of the last x86 .NET Runtime scan.
+inline FH_CHECK_RESULT g_check_net_x64; // The result of the last x64 .NET Runtime scan.
+inline FH_CHECK_RESULT g_check_game;    // The result of the game directory check, if any.
 
 inline SDL_Window*   g_sdl_window_ptr;
 inline SDL_WindowID  g_sdl_window_id;

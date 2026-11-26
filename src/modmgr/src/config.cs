@@ -8,29 +8,16 @@ using System.Text.Json;
 
 namespace Fahrenheit.Tools.ModManager;
 
-internal struct ModManagerConfig() : IEquatable<ModManagerConfig> {
-    public bool show_advanced_options = false;
+internal record struct ModManagerConfig() {
+    public bool   show_advanced_options = false;
+    public string path_game             = string.Empty;
 
-    public bool Equals(ModManagerConfig other) {
-        return other.show_advanced_options == show_advanced_options;
-    }
+    // Linux only
+    public string path_proton_exe    = string.Empty;
+    public string path_proton_prefix = string.Empty;
 
-    public override bool Equals(object? other) {
-        return other is ModManagerConfig other_config
-            && Equals(other_config);
-    }
-
-    public override int GetHashCode() {
-        return show_advanced_options.GetHashCode();
-    }
-
-    public static bool operator ==(ModManagerConfig left, ModManagerConfig right) {
-        return left.Equals(right);
-    }
-
-    public static bool operator !=(ModManagerConfig left, ModManagerConfig right) {
-        return !left.Equals(right);
-    }
+    public string path_proton_install =>
+        Path.GetFullPath(Path.Combine(path_proton_exe, "..", "..", ".."));
 }
 
 internal static partial class ModManager {
@@ -69,6 +56,30 @@ internal static partial class ModManager {
         }
 
         ImGui.Checkbox("Show Advanced Options", ref config_backup.show_advanced_options);
+
+        // Unfortunately `PathInternal.MaxShortPath` is internal, so we must hardcode 260
+        string path_game = config_backup.path_game;
+        ImGui.InputText("Path to Game", ref path_game, 260);
+        config_backup.path_game = path_game;
+
+        ImGui.SameLine();
+        if (ImGui.Button("Locate##path_game")) {
+            //TODO: Add locating game
+        }
+
+        if (OperatingSystem.IsLinux()) {
+            ImGui.InputText("Path to Proton Executable", ref config_backup.path_proton_exe, 4096);
+
+            ImGui.SameLine();
+            if (ImGui.Button("Locate##path_proton_exe")) {
+            }
+
+            ImGui.InputText("Path to Proton Prefix", ref config_backup.path_proton_prefix, 4096);
+
+            ImGui.SameLine();
+            if (ImGui.Button("Locate##path_proton_game")) {
+            }
+        }
 
         if (ImGui.Button("Reset to Defaults")) {
             config_backup = new();

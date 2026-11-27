@@ -317,14 +317,14 @@ public sealed class FhSettingsCategory : FhSetting {
 
 /// <summary>A text input setting, with flags.</summary>
 /// <remarks>Callbacks are not currently supported.</remarks>
-internal sealed class FhSettingText(
-    string              id,
-    string              def_value,
-    ImGuiInputTextFlags flags = ImGuiInputTextFlags.None
-) : FhSetting<string>(id, def_value) {
-
-    public const int MAX_LENGTH = 1024;
-}
+// internal sealed class FhSettingText(
+//     string              id,
+//     string              def_value,
+//     ImGuiInputTextFlags flags = ImGuiInputTextFlags.None
+// ) : FhSetting<string>(id, def_value) {
+//
+//     public const int MAX_LENGTH = 1024;
+// }
 
 /// <summary>A numeric input.</summary>
 public class FhSettingNumber : FhSetting<double> {

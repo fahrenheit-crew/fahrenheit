@@ -41,39 +41,6 @@ public abstract class FhSettingProvider<T> where T : FhModule {
     internal protected abstract IEnumerable<FhSetting> get();
 }
 
-// /// <summary>
-// ///     A reference takes over setting display for <typeparamref name="T"/>.
-// ///     Its settings will be rendered in place of the reference.
-// /// </summary>
-// /// <remarks>
-// ///     This is used to present a unified settings panel for a number of disparate modules.
-// ///     Only one reference can target any given module.
-// /// </remarks>
-// public sealed class FhSettingReference<T> : FhSetting<FhSettingsCategory?> where T : FhModule {
-//     private static readonly ConcurrentDictionary<Type, byte> _s_refs = [];
-//
-//     private FhSettingsCategory? _settings = null;
-//
-//     public FhSettingReference(string id) : base(id, null) {
-//         Type module_type = typeof(T);
-//
-//         if (!_s_refs.TryAdd(module_type, 0)) {
-//             throw new Exception($"Only one {nameof(FhSettingReference<T>)} can exist for module {module_type}.");
-//         }
-//     }
-//
-//     internal override void save(Utf8JsonWriter writer) { }
-//     internal override void load(Utf8JsonReader reader) { }
-//
-//     public override FhSettingsCategory? get() {
-//         if (_settings == null) {
-//             FhInternal.Settings.try_bind_reference<T>(out _settings);
-//         }
-//
-//         return _settings;
-//     }
-// }
-
 /// <summary>
 ///     Carries out setting-related operations.
 /// </summary>
@@ -359,13 +326,7 @@ internal sealed class FhSettingText(
     public const int MAX_LENGTH = 1024;
 }
 
-/// <summary>A numeric/spinbox input.</summary>
-/// <param name="id">The setting's identifier.</param>
-/// <param name="def_value">The default value of the setting.</param>
-/// <param name="min">The smallest accepted number. Defaults to 0.</param>
-/// <param name="max">The biggest accepted number. Defaults to 1.</param>
-/// <param name="step">The amount the arrows increase/decrease the value. Defaults to 1. Set to 0 to disable the arrows.</param>
-/// <typeparam name="T">The underlying numeric type for the value.</typeparam>
+/// <summary>A numeric input.</summary>
 public class FhSettingNumber : FhSetting<double> {
     public readonly double min;
     public readonly double max;
@@ -374,6 +335,14 @@ public class FhSettingNumber : FhSetting<double> {
     public readonly bool integers_only;
     public readonly int  precision;
 
+    /// <summary>Create a new FhSettingNumber.</summary>
+    /// <param name="id">The setting's identifier.</param>
+    /// <param name="def_value">The default value of the setting.</param>
+    /// <param name="min">The smallest accepted number. Defaults to 0.</param>
+    /// <param name="max">The biggest accepted number. Defaults to 1.</param>
+    /// <param name="step">The amount the arrows increase/decrease the value. Defaults to 1. Set to 0 to disable the arrows.</param>
+    /// <param name="integers_only">Whether the setting should only accept integers. Defaults to false.</param>
+    /// <param name="precision">How many decimal places should be shown when displaying the number. Defaults to 1. Forced to 0 when <paramref name="integers_only"/>.</param>
     public FhSettingNumber(
         string id,
         double def_value,

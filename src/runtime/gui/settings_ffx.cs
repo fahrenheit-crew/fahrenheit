@@ -201,7 +201,7 @@ public partial class FhSettingsUiX : FhSettingsUiBase {
         int max_i = int.Min(scrollable_mods.max, scrollable_mods.visible);
 
         for (int i = 0, mod_i = scrollable_mods.current; i < max_i; i++, mod_i++) {
-            ui_mod(settings_map.GetAt(mod_i).Key, mod_i, i);
+            ui_mod(settings_map[mod_i].mod, mod_i, i);
         }
     }
 

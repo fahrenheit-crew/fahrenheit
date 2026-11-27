@@ -41,39 +41,6 @@ public abstract class FhSettingProvider<T> where T : FhModule {
     internal protected abstract IEnumerable<FhSetting> get();
 }
 
-// /// <summary>
-// ///     A reference takes over setting display for <typeparamref name="T"/>.
-// ///     Its settings will be rendered in place of the reference.
-// /// </summary>
-// /// <remarks>
-// ///     This is used to present a unified settings panel for a number of disparate modules.
-// ///     Only one reference can target any given module.
-// /// </remarks>
-// public sealed class FhSettingReference<T> : FhSetting<FhSettingsCategory?> where T : FhModule {
-//     private static readonly ConcurrentDictionary<Type, byte> _s_refs = [];
-//
-//     private FhSettingsCategory? _settings = null;
-//
-//     public FhSettingReference(string id) : base(id, null) {
-//         Type module_type = typeof(T);
-//
-//         if (!_s_refs.TryAdd(module_type, 0)) {
-//             throw new Exception($"Only one {nameof(FhSettingReference<T>)} can exist for module {module_type}.");
-//         }
-//     }
-//
-//     internal override void save(Utf8JsonWriter writer) { }
-//     internal override void load(Utf8JsonReader reader) { }
-//
-//     public override FhSettingsCategory? get() {
-//         if (_settings == null) {
-//             FhInternal.Settings.try_bind_reference<T>(out _settings);
-//         }
-//
-//         return _settings;
-//     }
-// }
-
 /// <summary>
 ///     Carries out setting-related operations.
 /// </summary>
@@ -262,7 +229,7 @@ public abstract class FhSetting<T>(string id, T defval) : FhSetting(id) {
 
     internal T dirty_value = defval;
 
-    public virtual T get() => value;
+    public T get() => value;
 
     internal virtual void set(T new_value) {
         SetEventArgs args = new(value);
@@ -272,12 +239,12 @@ public abstract class FhSetting<T>(string id, T defval) : FhSetting(id) {
         PostSet.invoke(args);
     }
 
-    internal override void save(Utf8JsonWriter writer) {
+    internal sealed override void save(Utf8JsonWriter writer) {
         writer.WritePropertyName(id);
         JsonSerializer.Serialize(writer, value, FhUtil.InternalJsonOpts);
     }
 
-    internal override void load(Utf8JsonReader reader) {
+    internal sealed override void load(Utf8JsonReader reader) {
         /* [fkelava 22/06/26 17:50]
          * A `Utf8JsonReader` is forward-only. Since `try_find_key_and_deserialize` will read
          * as far ahead as necessary to find the key, we need to copy the reader.
@@ -359,13 +326,7 @@ internal sealed class FhSettingText(
     public const int MAX_LENGTH = 1024;
 }
 
-/// <summary>A numeric/spinbox input.</summary>
-/// <param name="id">The setting's identifier.</param>
-/// <param name="def_value">The default value of the setting.</param>
-/// <param name="min">The smallest accepted number. Defaults to 0.</param>
-/// <param name="max">The biggest accepted number. Defaults to 1.</param>
-/// <param name="step">The amount the arrows increase/decrease the value. Defaults to 1. Set to 0 to disable the arrows.</param>
-/// <typeparam name="T">The underlying numeric type for the value.</typeparam>
+/// <summary>A numeric input.</summary>
 public class FhSettingNumber : FhSetting<double> {
     public readonly double min;
     public readonly double max;
@@ -374,6 +335,14 @@ public class FhSettingNumber : FhSetting<double> {
     public readonly bool integers_only;
     public readonly int  precision;
 
+    /// <summary>Create a new FhSettingNumber.</summary>
+    /// <param name="id">The setting's identifier.</param>
+    /// <param name="def_value">The default value of the setting.</param>
+    /// <param name="min">The smallest accepted number. Defaults to 0.</param>
+    /// <param name="max">The biggest accepted number. Defaults to 1.</param>
+    /// <param name="step">The amount the arrows increase/decrease the value. Defaults to 1. Set to 0 to disable the arrows.</param>
+    /// <param name="integers_only">Whether the setting should only accept integers. Defaults to false.</param>
+    /// <param name="precision">How many decimal places should be shown when displaying the number. Defaults to 1. Forced to 0 when <paramref name="integers_only"/>.</param>
     public FhSettingNumber(
         string id,
         double def_value,
@@ -423,14 +392,12 @@ public abstract class FhSettingCarousel<T> : FhSetting<T> {
     protected FhSettingCarousel(string id, T def_value) : base(id, def_value) { }
 
     public abstract ReadOnlySpan<T> get_choice_values();
-    public abstract string get_choice_name(T choice);
-    public abstract string get_choice_desc(T choice);
+
+    public string get_choice_name(T choice) => $"{id}.values.{choice}.name";
+    public string get_choice_desc(T choice) => $"{id}.values.{choice}.desc";
 }
 
-public abstract class FhSettingChoice(string id, long def_value) : FhSettingCarousel<long>(id, def_value) {
-    public override string get_choice_name(long choice) => $"{id}.values.{choice}.name";
-    public override string get_choice_desc(long choice) => $"{id}.values.{choice}.desc";
-}
+public abstract class FhSettingChoice(string id, long def_value) : FhSettingCarousel<long>(id, def_value);
 
 public sealed class FhSettingChoice<T> : FhSettingChoice
     where T : struct, Enum {
@@ -455,6 +422,10 @@ public sealed class FhSettingChoice<T> : FhSettingChoice
             false,
             nameof(def_value)
         );
+    }
+
+    public new T get() {
+        return (T)Enum.ToObject(typeof(T), base.get());
     }
 
     internal override void set(long new_value) {
@@ -484,8 +455,6 @@ public abstract class FhSettingDynamicChoice(string id, object def_value) : FhSe
     internal List<object> choices = [];
 
     public sealed override ReadOnlySpan<object> get_choice_values() => CollectionsMarshal.AsSpan(choices);
-    public sealed override string get_choice_name(object choice) => $"{id}.values.{choice}.name";
-    public sealed override string get_choice_desc(object choice) => $"{id}.values.{choice}.desc";
 
     internal sealed override void set(object new_value) {
         SetEventArgs args = new(value);
@@ -513,7 +482,7 @@ public abstract class FhSettingDynamicChoice(string id, object def_value) : FhSe
 }
 
 public abstract class FhSettingDynamicChoice<T>(string id, T def_value) : FhSettingDynamicChoice(id, def_value!) {
-    internal new T get() {
+    public new T get() {
         return (T)base.get();
     }
 }

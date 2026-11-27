@@ -315,17 +315,6 @@ public sealed class FhSettingsCategory : FhSetting {
     }
 }
 
-/// <summary>A text input setting, with flags.</summary>
-/// <remarks>Callbacks are not currently supported.</remarks>
-// internal sealed class FhSettingText(
-//     string              id,
-//     string              def_value,
-//     ImGuiInputTextFlags flags = ImGuiInputTextFlags.None
-// ) : FhSetting<string>(id, def_value) {
-//
-//     public const int MAX_LENGTH = 1024;
-// }
-
 /// <summary>A numeric input.</summary>
 public class FhSettingNumber : FhSetting<double> {
     public readonly double min;
@@ -386,8 +375,13 @@ public class FhSettingNumber : FhSetting<double> {
     }
 }
 
+/// <summary>An ON/OFF toggle.</summary>
+/// <param name="id">The setting's identifier.</param>
+/// <param name="def_value">The default value of the setting.</param>
 public class FhSettingToggle(string id, bool def_value) : FhSetting<bool>(id, def_value);
 
+/// <summary>A carousel of options to choose from.</summary>
+/// <typeparam name="T">The type of options to choose from.</typeparam>
 public abstract class FhSettingCarousel<T> : FhSetting<T> {
     protected FhSettingCarousel(string id, T def_value) : base(id, def_value) { }
 
@@ -399,6 +393,8 @@ public abstract class FhSettingCarousel<T> : FhSetting<T> {
 
 public abstract class FhSettingChoice(string id, long def_value) : FhSettingCarousel<long>(id, def_value);
 
+/// <summary>A carousel of enum members to choose from.</summary>
+/// <typeparam name="T">The enum to select a member of.</typeparam>
 public sealed class FhSettingChoice<T> : FhSettingChoice
     where T : struct, Enum {
 
@@ -481,6 +477,9 @@ public abstract class FhSettingDynamicChoice(string id, object def_value) : FhSe
     protected abstract IReadOnlyList<object> init_choices();
 }
 
+/// <summary>A carousel of options to choose from. The possible options are initialized after the module construction.</summary>
+/// <param name="id">The setting's identifier.</param>
+/// <param name="def_value">The default value of the setting.</param>
 public abstract class FhSettingDynamicChoice<T>(string id, T def_value) : FhSettingDynamicChoice(id, def_value!) {
     public new T get() {
         return (T)base.get();

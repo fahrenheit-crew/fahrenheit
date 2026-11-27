@@ -5,23 +5,20 @@
 
 namespace Fahrenheit.Runtime;
 
-internal sealed class FhPrintControlSettings : FhSettingProvider<FhPrintControlModule> {
-    protected internal override IEnumerable<FhSetting> get() => [
-        enable,
-    ];
-
-    public readonly FhSettingToggle enable = new("enable", false);
-}
-
 /// <summary>
 ///     Controls the game's emission of debug prints.
 /// </summary>
 [FhLoad(FhGameId.FFX | FhGameId.FFX2 | FhGameId.FFX2LM)]
 public unsafe sealed class FhPrintControlModule : FhModule {
+    private sealed class Settings : FhSettingProvider<FhPrintControlModule> {
+        protected internal override IEnumerable<FhSetting> get() => [
+            enable,
+        ];
 
-    private readonly FhPrintControlSettings _settings = new();
+        public readonly FhSettingToggle enable = new("enable", false);
+    }
 
-    public FhPrintControlModule() { }
+    private readonly Settings _settings = new();
 
     public override bool init(FhModContext mod_context, FileStream global_state_file) {
         return FhCall.FUN_000354f0_0048cd70.hook(this, h_pprintf) &&

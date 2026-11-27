@@ -229,7 +229,7 @@ public abstract class FhSetting<T>(string id, T defval) : FhSetting(id) {
 
     internal T dirty_value = defval;
 
-    public virtual T get() => value;
+    public T get() => value;
 
     internal virtual void set(T new_value) {
         SetEventArgs args = new(value);
@@ -239,12 +239,12 @@ public abstract class FhSetting<T>(string id, T defval) : FhSetting(id) {
         PostSet.invoke(args);
     }
 
-    internal override void save(Utf8JsonWriter writer) {
+    internal sealed override void save(Utf8JsonWriter writer) {
         writer.WritePropertyName(id);
         JsonSerializer.Serialize(writer, value, FhUtil.InternalJsonOpts);
     }
 
-    internal override void load(Utf8JsonReader reader) {
+    internal sealed override void load(Utf8JsonReader reader) {
         /* [fkelava 22/06/26 17:50]
          * A `Utf8JsonReader` is forward-only. Since `try_find_key_and_deserialize` will read
          * as far ahead as necessary to find the key, we need to copy the reader.
@@ -392,14 +392,12 @@ public abstract class FhSettingCarousel<T> : FhSetting<T> {
     protected FhSettingCarousel(string id, T def_value) : base(id, def_value) { }
 
     public abstract ReadOnlySpan<T> get_choice_values();
-    public abstract string get_choice_name(T choice);
-    public abstract string get_choice_desc(T choice);
+
+    public string get_choice_name(T choice) => $"{id}.values.{choice}.name";
+    public string get_choice_desc(T choice) => $"{id}.values.{choice}.desc";
 }
 
-public abstract class FhSettingChoice(string id, long def_value) : FhSettingCarousel<long>(id, def_value) {
-    public override string get_choice_name(long choice) => $"{id}.values.{choice}.name";
-    public override string get_choice_desc(long choice) => $"{id}.values.{choice}.desc";
-}
+public abstract class FhSettingChoice(string id, long def_value) : FhSettingCarousel<long>(id, def_value);
 
 public sealed class FhSettingChoice<T> : FhSettingChoice
     where T : struct, Enum {
@@ -424,6 +422,10 @@ public sealed class FhSettingChoice<T> : FhSettingChoice
             false,
             nameof(def_value)
         );
+    }
+
+    public new T get() {
+        return (T)Enum.ToObject(typeof(T), base.get());
     }
 
     internal override void set(long new_value) {
@@ -453,8 +455,6 @@ public abstract class FhSettingDynamicChoice(string id, object def_value) : FhSe
     internal List<object> choices = [];
 
     public sealed override ReadOnlySpan<object> get_choice_values() => CollectionsMarshal.AsSpan(choices);
-    public sealed override string get_choice_name(object choice) => $"{id}.values.{choice}.name";
-    public sealed override string get_choice_desc(object choice) => $"{id}.values.{choice}.desc";
 
     internal sealed override void set(object new_value) {
         SetEventArgs args = new(value);
@@ -482,7 +482,7 @@ public abstract class FhSettingDynamicChoice(string id, object def_value) : FhSe
 }
 
 public abstract class FhSettingDynamicChoice<T>(string id, T def_value) : FhSettingDynamicChoice(id, def_value!) {
-    internal new T get() {
+    public new T get() {
         return (T)base.get();
     }
 }

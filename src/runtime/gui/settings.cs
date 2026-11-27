@@ -76,6 +76,18 @@ public sealed class FhSettingsUiSelector : FhModule {
     }
 
     public override void render_imgui() {
+        if (FhSaves.pal_state_screen != SaveScreenState.CLOSED) {
+            if (is_open) {
+                is_open = false;
+
+                FhApi.Input.lock_off();
+                close();
+                FhApi.Events.Common.GameLoop.PostCloseSettingsMenu.invoke(EventArgs.Empty);
+            }
+
+            return;
+        }
+
         if (ImGui.IsKeyPressed(ImGuiKey.F7)) {
             is_open = !is_open;
 

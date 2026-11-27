@@ -7,8 +7,14 @@ namespace Fahrenheit.Events;
 
 public partial class GameLoopEvents {
     /// <summary>Raised after the save/load menu is opened.</summary>
-    public FhEvent<EventArgs> PostOpenSaveMenu = new();
+    internal FhEvent<EventArgs> PostOpenSaveMenu = new();
 
     /// <summary>Raised after the save/load menu is closed.</summary>
-    public FhEvent<EventArgs> PostCloseSaveMenu = new();
+    internal FhEvent<EventArgs> PostCloseSaveMenu = new();
+
+    /// <summary>Raised after the Fahrenheit settings menu is opened.</summary>
+    internal FhEvent<EventArgs> PostOpenSettingsMenu = new();
+
+    /// <summary>Raised after the Fahrenheit settings menu is closed.</summary>
+    internal FhEvent<EventArgs> PostCloseSettingsMenu = new();
 }

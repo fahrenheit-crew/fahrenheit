@@ -190,9 +190,9 @@ public abstract class FhSettingsUiBase : FhSettingsUi {
 
     protected bool audio_fade_helper_restart = true;
 
-    protected FhModContext          selected_mod     => settings_map.GetAt(scrollable_mods.hovered).Key;
-    protected List<FhModuleContext> selected_modules => settings_map.GetAt(scrollable_mods.hovered).Value;
-    protected FhModuleContext       selected_module  => settings_map.GetAt(scrollable_mods.hovered).Value[scrollable_modules.hovered];
+    protected FhModContext          selected_mod     => settings_map[scrollable_mods.hovered].mod;
+    protected List<FhModuleContext> selected_modules => settings_map[scrollable_mods.hovered].modules;
+    protected FhModuleContext       selected_module  => settings_map[scrollable_mods.hovered].modules[scrollable_modules.hovered];
 
     protected FhSetting? hovered_setting;
 
